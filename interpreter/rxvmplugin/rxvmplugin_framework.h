@@ -50,6 +50,7 @@ struct rxvmplugin_factory_entry {
     unsigned char retired;
     rxvmplugin_library *library;
     rxvmplugin_factory_entry *retired_next;
+    unsigned int decimal_sync_contract; /* Checked ABI 3 opt-in, immutable. */
 };
 
 typedef struct rxvmplugin_instance {
@@ -90,6 +91,7 @@ size_t rxvmplugin_live_instance_count(void);
 
 // typedef for dynamic plugin register function
 typedef void (*rxvmplugin_register_function)(register_rxvmplugin_factory register_func);
+typedef int (*rxvmdecimal_register_function_v3)(register_rxvm_decimal_factory_v3 register_func);
 
 // Helper function for decimal plugins to reformat a number string (should be valid, errors not checked)
 // to remove the exponent, to make the number in simple format

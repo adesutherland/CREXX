@@ -1,0 +1,96 @@
+/* cREXX License (MIT). Exact executable provider view; no copied proof owner. */
+options levelb
+namespace lltargetbodyview expose view
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+
+/** A caller operation and the provider's original executable/analysis owners.
+ * Supplying a peer does not select it: the caller's checked target must name
+ * that exact module, procedure and transfer profile. No body is projected into
+ * a different arena, and record IDs always remain in their original owner.
+ * This view supplies availability only, never signal/activation permission. */
+view: class
+  _caller = reference .lltargetflow..analysis
+  _points = reference .lltargetflow..analysis
+  _target = .lltargetflow..targetfact
+  _operation = .int
+  _callerid = .int
+  _providerid = .int
+  _profileid = .int
+  _cfgid = .int
+  _bound = .int
+  _status = .string
+  _reason = .string
+  *: factory
+    arg caller = reference .lltargetflow..analysis, operation = .int, ?provider = reference .lltargetflow..analysis, reason = 'target.bodyview.provider.facts.unavailable'
+    _caller = caller; _operation = operation; _reason = reason; _status = 'unknown'
+    if <refvalid>(caller) = 0 then return
+    incoming = dereference caller
+    if incoming.status() <> 'ok' then do; _status = incoming.status(); _reason = incoming.reason(); return; end
+    _target = incoming.targetat(operation)
+    if _target.status() <> 'proved' then do; _reason = _target.reason(); return; end
+    if ?provider = 0 then return
+    if <refvalid>(provider) = 0 then return
+    _points = provider; points = dereference provider
+    if points.status() <> 'ok' then do; _status = points.status(); _reason = points.reason(); return; end
+    selected = _target.provider(); actual = points.owner()
+    if (selected <refsame> actual) = 0 then do; _reason = 'target.bodyview.provider.owner.mismatch'; return; end
+    selectedprofile = _target.transfers(); actualprofile = points.transfers()
+    if <refvalid>(selectedprofile) = 0 then do; _reason = 'target.bodyview.provider.profile.unavailable'; return; end
+    if (selectedprofile <refsame> actualprofile) = 0 then do; _reason = 'target.bodyview.provider.profile.mismatch'; return; end
+    profile = dereference actualprofile; cfgref = points.cfg(); cfg = dereference cfgref
+    if profile.matches(actual) = 0 | cfg.valid() = 0 then return
+    source = dereference actual; body = source.body(_target.procedure())
+    if body.functionid() <> _target.procedure() then do; _reason = 'target.bodyview.procedure.unavailable'; return; end
+    _callerid = incoming.identity(); _providerid = points.identity()
+    _profileid = profile.identity(); _cfgid = cfg.identity(); _bound = 1; _reason = ''
+    return
+  unavailable: factory
+    arg caller = reference .lltargetflow..analysis, operation = .int, reason = .string, status = 'unknown'
+    _caller = caller; _operation = operation; _reason = reason; _status = status
+    return
+  valid: method = .int
+    if _bound = 0 | <refvalid>(_caller) = 0 | <refvalid>(_points) = 0 then return 0
+    incoming = dereference _caller; points = dereference _points
+    if incoming.valid() = 0 | points.valid() = 0 | _target.valid() = 0 then return 0
+    if incoming.identity() <> _callerid | points.identity() <> _providerid then return 0
+    actual = points.owner(); selected = _target.provider()
+    if (actual <refsame> selected) = 0 then return 0
+    profileref = points.transfers(); selectedprofile = _target.transfers()
+    if (profileref <refsame> selectedprofile) = 0 then return 0
+    profile = dereference profileref; cfgref = points.cfg(); cfg = dereference cfgref
+    return profile.matches(actual) & profile.identity() = _profileid & cfg.valid() & cfg.identity() = _cfgid
+  status: method = .string
+    if valid() then return 'proved'
+    if _bound then return 'invalid'
+    if _status = '' then return 'unknown'
+    return _status
+  reason: method = .string
+    if _bound & valid() = 0 then return 'target.bodyview.owner.expired.or.replaced'
+    return _reason
+  require: method = .void
+    if valid() = 0 then assembler signal "ERROR","LL_TARGET_BODYVIEW: exact provider unavailable"
+    return
+  operation: method = .int
+    return _operation
+  procedure: method = .int
+    call require(); return _target.procedure()
+  caller: method = reference .lltargetflow..analysis
+    return _caller
+  points: method = reference .lltargetflow..analysis
+    call require(); return _points
+  owner: method = reference .lltarget..module
+    call require(); return _target.provider()
+  transfers: method = reference .lltargettransfer..profile
+    call require(); return _target.transfers()
+  cfg: method = reference .lltargetcfg..graph
+    call require(); points = dereference _points; return points.cfg()
+  foreign: method = .int
+    call require(); incoming = dereference _caller
+    caller = incoming.owner(); provider = _target.provider()
+    return (caller <refsame> provider) = 0
+  body: method = .lltarget..body
+    call require(); owner = _target.provider(); provider = dereference owner
+    return provider.body(_target.procedure())

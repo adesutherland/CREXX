@@ -939,6 +939,7 @@ foreach(_case selector range)
     --module "${_fixture}" --profile closed-main-default-halt.v1
     -o "${_product}.rxas" "${FIXTURES}/${_fixture}")
   string(STRIP "${_last_stderr}" _retention_reason)
+  string(REGEX REPLACE " \\[category=[^\r\n]*\\]$" "" _retention_reason "${_retention_reason}")
   if(NOT _retention_reason STREQUAL "LL_INLINE_KEEP: ${_reason}")
     message(FATAL_ERROR "${_case} refusal lost its exact reason: '${_retention_reason}'")
   endif()
@@ -1056,6 +1057,7 @@ foreach(_case rebound window)
     --module "${_fixture}" --profile closed-main-default-halt.v1
     -o "${_product}.rxas" "${FIXTURES}/${_fixture}")
   string(STRIP "${_last_stderr}" _retention_reason)
+  string(REGEX REPLACE " \\[category=[^\r\n]*\\]$" "" _retention_reason "${_retention_reason}")
   if(NOT _retention_reason STREQUAL "LL_INLINE_KEEP: ${_reason}")
     message(FATAL_ERROR "global ${_case} lost its exact keep reason: '${_retention_reason}'")
   endif()
@@ -1137,6 +1139,7 @@ run_checked("retain unproved overflow write" "${VM}" "${CLI}" ${RUNTIME} -a
   --module io-overflow.rxas --profile closed-main-default-halt.v1
   -o "${WORK}/io-overflow.rxas" "${FIXTURES}/io-overflow.rxas")
 string(STRIP "${_last_stderr}" _overflow_reason)
+string(REGEX REPLACE " \\[category=[^\r\n]*\\]$" "" _overflow_reason "${_overflow_reason}")
 if(NOT _overflow_reason STREQUAL "LL_INLINE_KEEP: arithmetic.write.availability.unproved")
   message(FATAL_ERROR "overflow retention reason differs: '${_overflow_reason}'")
 endif()

@@ -1,0 +1,10 @@
+/* No global exposure: storage is reachable only by exact executable binding. */
+.globals=2
+boot() .locals=0
+  .meta "private.provider.boot"="b" ".void" boot() ""
+  .meta "private.provider.boot"=".initializer" ".void" boot() ""
+  load g0,0
+  load g1,321
+  ret
+unused() .locals=0
+  ret

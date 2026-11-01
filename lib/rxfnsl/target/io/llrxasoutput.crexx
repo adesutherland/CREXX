@@ -59,6 +59,7 @@ render: procedure = .llrxasoutput..emission
           name = item.operand(1); locals = item.operand(2); exportname = item.operand(3)
           text = name.text() || '() .locals=' || locals.index()
           if exportname.text() <> '' then text = text || ' .expose=' || exportname.text()
+          if item.operands() = 4 then text = text || ' .entry=program-default'
         end
         when kind = '.import' then do
           name = item.operand(1); exportname = item.operand(2)
@@ -92,13 +93,14 @@ render: procedure = .llrxasoutput..emission
           name = item.operand(1); type = item.operand(2)
           text = '.const ' || name.text() || ' ' || type.text() || ' ' || operandtext(item.operand(3))
         end
-        when kind = '.srcstep' | kind = '.traceevent' then do
+        when kind = '.srcstep' | kind = '.traceevent' | kind = '.inlineframe' then do
           text = kind
           do j = 1 to item.operands()
             if kind = '.traceevent' & wordpos(j as .string,'1 3 4 5') > 0 then text = text || ' ' || codetext(item.operand(j))
             else text = text || ' ' || operandtext(item.operand(j))
           end
         end
+        when kind = '.inlinemap' then text = kind || ' ' || operandtext(item.operand(1)) || ',' || operandtext(item.operand(2)) || ',' || operandtext(item.operand(3))
         otherwise return failed(module,'LL_RXAS_PROFILE: unsupported rendered record ' || kind)
       end
       call output.line(text,at.id())
@@ -148,6 +150,7 @@ recordbytes: procedure = .int
     when kind = 'procedure' then do
       size = 10; exposed = item.operand(3)
       if exposed.text() <> '' then size = size + 9
+      if count = 4 then size = size + 23
     end
     when kind = '.import' then size = 10
     when kind = '.globalexpose' then size = 11
@@ -158,11 +161,12 @@ recordbytes: procedure = .int
       if count > 1 then size = size + 1 + max(0,count - 2)
     end
     when kind = '.const' then size = 10
-    when kind = '.srcstep' | kind = '.traceevent' then size = 1 + <blen>(kind as .binary) + count
+    when kind = '.srcstep' | kind = '.traceevent' | kind = '.inlineframe' | kind = '.inlinemap' then size = 1 + <blen>(kind as .binary) + count
     otherwise assembler signal "ERROR","LL_RXAS_PROFILE: unsupported rendered record"
   end
   if size > limit then return -1
   do i = 1 to count
+    if kind = 'procedure' & i = 4 then iterate
     if i = recipeordinal & ?encoded then amount = fieldbytes(encoded,work,limit - size)
     else if kind = '.traceevent' & wordpos(i as .string,'1 3 4 5') > 0 then amount = codebytes(item.operand(i),work,limit - size)
     else amount = fieldbytes(item.operand(i),work,limit - size)

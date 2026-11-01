@@ -195,6 +195,61 @@ if(CREXX_VM_PROFILING)
     endif()
 endif()
 if(BUILD_TESTING)
+    add_executable(test_program_defaults tests/test_program_defaults.c)
+    target_include_directories(test_program_defaults PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    add_test(NAME program_defaults COMMAND test_program_defaults)
+    set_tests_properties(program_defaults PROPERTIES
+            PASS_REGULAR_EXPRESSION "PROGRAM_DEFAULTS[|]failures=0"
+            TIMEOUT 30 LABELS "unit;interpreter;entry;regression")
+    crexx_register_test_prep_targets(TESTS program_defaults TARGETS test_program_defaults)
+
+    add_executable(inlined_private-rxbvml tests/test_inlined_private.c)
+    target_link_libraries(inlined_private-rxbvml PRIVATE rxbvml)
+    target_compile_definitions(inlined_private-rxbvml PRIVATE NTHREADED=1)
+    target_include_directories(inlined_private-rxbvml PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+            ${CMAKE_CURRENT_SOURCE_DIR}/rxvml ${CMAKE_SOURCE_DIR}/assembler
+            ${CMAKE_SOURCE_DIR}/binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+            ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+            ${CMAKE_SOURCE_DIR}/third_party/utf8)
+    add_test(NAME inlined_private_integration
+            COMMAND ${CMAKE_COMMAND}
+                -DASSEMBLER=$<TARGET_FILE:rxas> -DLINKER=$<TARGET_FILE:rxlink>
+                -DDISASSEMBLER=$<TARGET_FILE:rxdas> -DVM=$<TARGET_FILE:rxbvm>
+                -DHARNESS=$<TARGET_FILE:inlined_private-rxbvml>
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/tests
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inlined-private-work
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/inlined_private.cmake)
+    set_tests_properties(inlined_private_integration PROPERTIES
+            PASS_REGULAR_EXPRESSION "INLINED_PRIVATE_INTEGRATION[|]failures=0"
+            TIMEOUT 120 LABELS "interpreter;inline;linker;ownership;regression")
+    crexx_register_test_prep_targets(TESTS inlined_private_integration
+            TARGETS rxas rxlink rxdas rxbvm inlined_private-rxbvml)
+
+    add_executable(program_entry-rxbvml tests/test_program_entry.c)
+    target_link_libraries(program_entry-rxbvml PRIVATE rxbvml)
+    target_compile_definitions(program_entry-rxbvml PRIVATE NTHREADED=1)
+    target_include_directories(program_entry-rxbvml PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+            ${CMAKE_CURRENT_SOURCE_DIR}/rxvml ${CMAKE_SOURCE_DIR}/assembler
+            ${CMAKE_SOURCE_DIR}/binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+            ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+            ${CMAKE_SOURCE_DIR}/third_party/utf8)
+    add_test(NAME program_entry_integration
+            COMMAND ${CMAKE_COMMAND}
+                -DASSEMBLER=$<TARGET_FILE:rxas> -DLINKER=$<TARGET_FILE:rxlink>
+                -DDISASSEMBLER=$<TARGET_FILE:rxdas> -DVM=$<TARGET_FILE:rxbvm>
+                -DHARNESS=$<TARGET_FILE:program_entry-rxbvml>
+                -DRECORDS=$<TARGET_FILE:test_entry_state> -DMUTATOR=$<TARGET_FILE:mutate_inline_rxbin>
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/tests
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/program-entry-work
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/program_entry.cmake)
+    set_tests_properties(program_entry_integration PROPERTIES
+            PASS_REGULAR_EXPRESSION "PROGRAM_ENTRY_INTEGRATION[|]failures=0"
+            TIMEOUT 120 LABELS "interpreter;entry;linker;regression")
+    crexx_register_test_prep_targets(TESTS program_entry_integration
+            TARGETS rxas rxlink rxdas rxbvm program_entry-rxbvml test_entry_state mutate_inline_rxbin)
+
     crexx_add_rxvm_core_objects(rxbvm_instrumented_core_objects)
     target_compile_definitions(rxbvm_instrumented_core_objects PRIVATE
             NTHREADED=1
@@ -1483,14 +1538,15 @@ if(BUILD_TESTING)
     add_test(NAME inline_signal_diagnostics
             COMMAND ${CMAKE_COMMAND}
                 -DVM=$<TARGET_FILE:rxbvm> -DASSEMBLER=$<TARGET_FILE:rxas>
+                -DLINKER=$<TARGET_FILE:rxlink>
                 -DMUTATOR=$<TARGET_FILE:mutate_inline_rxbin>
                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-signal-diagnostic-work
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/inline_signal_diagnostics.cmake)
     set_tests_properties(inline_signal_diagnostics PROPERTIES
             PASS_REGULAR_EXPRESSION "INLINE_SIGNAL_DIAGNOSTICS[|]failures=0"
-            TIMEOUT 120 LABELS "interpreter;inline;signal;diagnostics;regression")
+            TIMEOUT 180 LABELS "interpreter;inline;signal;diagnostics;regression")
     crexx_register_test_prep_targets(TESTS inline_signal_diagnostics
-            TARGETS rxbvm rxas mutate_inline_rxbin)
+            TARGETS rxbvm rxas rxlink mutate_inline_rxbin)
 endif()
 foreach(_diagnostic_vm rxbvm rxtvm)
     if(TARGET ${_diagnostic_vm})
@@ -2421,6 +2477,39 @@ add_executable(module_initializers-rxbvml tests/test_module_initializers.c)
 target_link_libraries(module_initializers-rxbvml PRIVATE rxbvml)
 target_compile_definitions(module_initializers-rxbvml PRIVATE NTHREADED=1)
 crexx_configure_module_initializer_test(module_initializers-rxbvml)
+
+# An initializer may call its own helpers, while a host callback cannot borrow
+# that call lineage to enter the still-initializing module.
+add_custom_command(
+        OUTPUT test_initializer_lineage.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o test_initializer_lineage
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_initializer_lineage
+        DEPENDS tests/test_initializer_lineage.rxas rxas
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Assembling initializer lineage fixture ...")
+add_custom_target(test_initializer_lineage_bin
+        DEPENDS test_initializer_lineage.rxbin)
+add_executable(initializer_lineage-rxbvml tests/test_initializer_lineage.c)
+target_link_libraries(initializer_lineage-rxbvml PRIVATE rxbvml)
+target_compile_definitions(initializer_lineage-rxbvml PRIVATE NTHREADED=1)
+target_include_directories(initializer_lineage-rxbvml PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvml
+        ${CMAKE_SOURCE_DIR}/assembler
+        ${CMAKE_SOURCE_DIR}/binutils/include
+        ${CMAKE_SOURCE_DIR}/rxpa
+        ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+        ${CMAKE_SOURCE_DIR}/third_party/utf8)
+add_dependencies(initializer_lineage-rxbvml test_initializer_lineage_bin)
+add_test(NAME initializer_lineage-rxbvml
+        COMMAND initializer_lineage-rxbvml
+                ${CMAKE_CURRENT_BINARY_DIR}/test_initializer_lineage.rxbin)
+set_tests_properties(initializer_lineage-rxbvml PROPERTIES
+        LABELS "interpreter;initializers;regression")
+crexx_register_test_prep_targets(TESTS initializer_lineage-rxbvml
+        TARGETS initializer_lineage-rxbvml test_initializer_lineage_bin)
 
 if(CREXX_THREADED_VM_SUPPORTED)
     add_executable(module_initializers-rxtvml

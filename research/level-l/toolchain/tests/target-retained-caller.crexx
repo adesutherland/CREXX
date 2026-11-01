@@ -1,0 +1,335 @@
+/* cREXX License (MIT). A CALL-to-clone proof preserves opaque root cleanup. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetsummary
+import lltargetremap
+import llrxascatalog
+import llrxasoutput
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(name,fields,at)
+sourcepoint: procedure = .int
+  arg body = .lltarget..bodydraft, id = .int, line = .int, at = .llir..origin
+  values = .object[]
+  values[1] = .lltarget..operand.integer(id) as .object; values[2] = .lltarget..operand.integer(9) as .object
+  values[3] = .lltarget..operand.integer(1) as .object; values[4] = .lltarget..operand.string('retained.fixture' as .binary) as .object
+  values[5] = .lltarget..operand.integer(line) as .object; values[6] = .lltarget..operand.integer(2) as .object
+  values[7] = .lltarget..operand.integer(5) as .object; values[8] = .lltarget..operand.string('fixture clause' as .binary) as .object
+  return body.record('.srcstep',values,at)
+tracepoint: procedure = .int
+  arg body = .lltarget..bodydraft, at = .llir..origin
+  values = .object[]
+  values[1] = .lltarget..operand.string('V' as .binary) as .object; values[2] = .lltarget..operand.integer(4) as .object
+  values[3] = .lltarget..operand.string('R' as .binary) as .object; values[4] = .lltarget..operand.string('I' as .binary) as .object
+  values[5] = .lltarget..operand.string('g' as .binary) as .object
+  do i = 6 to 9; values[i] = .lltarget..operand.integer(0) as .object; end
+  values[10] = .lltarget..operand.string('global' as .binary) as .object; values[11] = .lltarget..operand.string('' as .binary) as .object
+  return body.record('.traceevent',values,at)
+fields: procedure = .object[]
+  arg item = .lltarget..record, body = .lltarget..bodydraft
+  result = .object[]
+  do i = 1 to item.operands()
+    value = item.operand(i)
+    if value.kind() = 'R' then value = body.reg(value.bank(),value.index())
+    result[i] = value as .object
+  end
+  return result
+
+sample: procedure = .lltarget..module
+  arg mode = .int, expose called = .int, expose mainret = .int, expose leafret = .int, expose printed = .int, expose written = .int
+  values = .object[]; empty = .object[]; ignored = .int
+  globals = 0; if mode = 3 | mode = 9 | mode = 10 | mode = 11 then globals = 1
+  draft = .lltarget..draft('retained.caller.boundary','fixture:retained.caller',globals)
+  at = draft.synthetic('caller root remains physical; only zero-cell callee disappears')
+  root = draft.procedure('main',0,at)
+  if mode = 12 then ignored = sourcepoint(root,1,7,at)
+  if mode = 10 then do
+    values[1] = root.reg('g',0) as .object; values[2] = .lltarget..operand.integer(0) as .object
+    ignored = root.emit('load',values,at)
+  end
+  if mode = 9 then do
+    values[1] = .lltarget..operand.symbol('after') as .object; values[2] = root.reg('g',0) as .object
+    ignored = root.emit('brt',values,at)
+  end
+  called = one(root,'call',.lltarget..operand.procedure('leaf'),at)
+  if mode = 10 then do
+    call objectarraydrop values; values[1] = root.reg('g',0) as .object; values[2] = .lltarget..operand.integer(1) as .object
+    ignored = root.emit('load',values,at)
+  end
+  if mode = 11 then ignored = tracepoint(root,at)
+  if mode = 12 then ignored = sourcepoint(root,2,44,at)
+  if mode = 9 then do
+    call objectarraydrop values; values[1] = .lltarget..operand.symbol('after') as .object
+    ignored = root.record('label',values,at)
+  end
+  printed = one(root,'say',.lltarget..operand.string('retained-tail' as .binary),at)
+  mainret = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('leaf',0,at)
+  if mode = 3 then do
+    values[1] = leaf.reg('g',0) as .object; values[2] = .lltarget..operand.integer(17) as .object
+    written = leaf.emit('load',values,at)
+  end
+  if mode = 9 | mode = 10 | mode = 11 then do
+    call objectarraydrop values; values[1] = .lltarget..operand.symbol('leaf.loop') as .object
+    ignored = leaf.record('label',values,at)
+    if mode = 10 then do
+      call objectarraydrop values; values[1] = .lltarget..operand.symbol('leaf.loop') as .object; values[2] = leaf.reg('g',0) as .object
+      ignored = leaf.emit('brt',values,at)
+      leafret = leaf.emit('ret',empty,at)
+    end
+    else ignored = one(leaf,'br',.lltarget..operand.symbol('leaf.loop'),at)
+  end
+  else leafret = leaf.emit('ret',empty,at)
+  return draft.finish()
+
+premises: procedure = .lltargettransfer..profile
+  arg owner = reference .lltarget..module, mode = .int, called = .int, mainret = .int, leafret = .int, printed = .int, written = .int
+  source = dereference owner; catalog = .llrxascatalog..catalog()
+  draft = .lltargettransfer..profiledraft(owner,'independent.retained.caller.' || mode)
+  integer = draft.domain('component','retained.integer',catalog.componentmask('I'))
+  ignored = .int; subject = .int; item = .lltarget..record; observation = .string; i = .int
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = draft.operation(item.id()); observation = 'none'
+    if mode = 13 & item.id() = printed then observation = 'frame'
+    ignored = draft.relocation(item.id(),observation)
+  end
+  if mode <> 5 then do
+    observation = 'none'; if mode = 4 then observation = 'frame'
+    ignored = draft.boundary(source.procedureid('main'),observation)
+  end
+  target = draft.ref(called,1,'procedure','symbolic')
+  /* CALL snapshots the original active pointers after preparation. Omitting
+   * this operational checkpoint (mode14) cannot prove a callee global maps
+   * to the caller's entry global even when its numeric spelling matches. */
+  if mode <> 14 then ignored = draft.event(called,'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.call')
+  ignored = draft.event(called,'call',0,0,'reference',target)
+  /* Abstract stdout has an explicitly complete empty activation-relative
+   * observer set above. intrinsicfootprint=1 describes the output effect;
+   * it does not imply that set. Canonical HOST output is not granted this
+   * independent premise (mode13 supplies the physical-observer control). */
+  ignored = draft.event(printed,'external',0,0,'none',0,.lltarget..operand(),'must','normal','none','fixture.stdout',0,'unknown',1)
+  ignored = draft.event(mainret,'return',0,integer,'literal',0,.lltarget..operand.integer(0))
+  if leafret > 0 then ignored = draft.event(leafret,'return',0,0)
+  /* These are operational native ABI obligations, never claimed absence.
+   * The raw main RET remains unknown/possible; the exact invocation resolves
+   * the removed leaf's separate retirement. */
+  ignored = draft.event(mainret,'callback',0,0,'none',0,.lltarget..operand(),'may','all','none','catalog.callback.abi',0,'physical')
+  if leafret > 0 then ignored = draft.event(leafret,'callback',0,0,'none',0,.lltarget..operand(),'may','all','none','catalog.callback.abi',0,'physical')
+  if mode = 9 | mode = 10 | mode = 11 | mode = 14 then do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'brt' then do
+      ignored = draft.ref(item.id(),1,'label','symbolic'); subject = draft.ref(item.id(),2)
+      ignored = draft.event(item.id(),'read',subject,integer)
+    end
+    if item.mnemonic() = 'br' then ignored = draft.ref(item.id(),1,'label','symbolic')
+    if (mode = 10 | mode = 14) & item.mnemonic() = 'load' then do
+      subject = draft.ref(item.id(),1); value = item.operand(2)
+      ignored = draft.event(item.id(),'write',subject,integer,'literal',0,value)
+    end
+  end
+  if mode = 3 then do
+    subject = draft.ref(written,1)
+    ignored = draft.event(written,'write',subject,integer,'literal',0,.lltarget..operand.integer(17))
+  end
+  if mode = 6 | mode = 7 then do
+    phase = 'after'; if mode = 7 then phase = 'unknown'
+    ignored = draft.event(called,'edge',0,0,'literal',0,.lltarget..operand.string('OTHER' as .binary),'may','failure',phase,'terminal')
+  end
+  if mode = 8 then ignored = draft.event(printed,'callback',0,0,'none',0,.lltarget..operand(),'may','all','after','fixture.physical.observer',0,'physical')
+  return draft.finish()
+
+candidate: procedure = .lltarget..module
+  arg owner = reference .lltarget..module, called = .int, mode = .int, expose sourceops = .int[], expose candidateops = .int[], expose counts = .int[]
+  source = dereference owner; graphref = source.ir()
+  draft = .lltarget..draft(source.name(),'fixture:retained.caller',source.globals())
+  sources = .object[]; origins = .object[]; values = .object[]; ignored = .int; ordinal = .int
+  i = .int; j = .int; p = .int
+  originalrecord = .lltarget..record; item = .lltarget..record; catalog = .llrxascatalog..catalog(); pending = .int
+  childat = .llir..origin
+  do p = 1 to source.procedures()
+    original = source.procedure(p)
+    /* Procedure function IDs are not record IDs; use the first matching
+     * procedure record and preserve its source origin explicitly. */
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.kind() = 'procedure' & item.procedureid() = original.functionid() then do; originalrecord = item; leave; end
+    end
+    at = lltargetremap..copyorigin(graphref,originalrecord.origin(),reference draft,reference sources,reference origins)
+    locals = original.locals(); if mode = 2 & original.name() = 'main' then locals = locals + 1
+    body = draft.procedure(original.name(),locals,at,original.expose(),original.entrykind())
+    do i = 1 to original.records()
+      item = original.record(i)
+      at = lltargetremap..copyorigin(graphref,item.origin(),reference draft,reference sources,reference origins)
+      if mode = 10 & item.id() = called then do; pending = 1; iterate; end
+      if mode = 10 & pending & item.kind() = 'instruction' & item.mnemonic() = 'load' then do
+        /* Move the whole clone after the original post-CALL global write.
+         * Its read-only BRt now loops on g0=1 instead of returning on g0=0. */
+        ignored = body.emit(item.mnemonic(),fields(item,body),at); pending = 0
+        item = source.at(called)
+        at = lltargetremap..copyorigin(graphref,item.origin(),reference draft,reference sources,reference origins)
+      end
+      if item.id() = called then do
+        if mode = 9 then do
+          /* Hostile but structurally valid: move the original bypass label
+           * to the clone entry. The BRt now enters an infinite provider loop. */
+          call objectarraydrop values; values[1] = .lltarget..operand.symbol('after') as .object
+          ignored = body.record('label',values,at)
+        end
+        if mode = 11 then ignored = tracepoint(body,at)
+        call objectarraydrop values
+        values[1] = .lltarget..operand.integer(10) as .object; values[2] = .lltarget..operand.integer(0) as .object
+        values[3] = .lltarget..operand.string(source.name() as .binary) as .object; values[4] = .lltarget..operand.string('leaf' as .binary) as .object
+        step = 0; if mode = 12 then step = 1
+        values[5] = .lltarget..operand.integer(step) as .object
+        ignored = body.record('.inlineframe',values,at)
+        call objectarraydrop values; values[1] = .lltarget..operand.symbol('clone.begin') as .object
+        ignored = body.record('label',values,at)
+        call objectarraydrop values
+        do j = 1 to 8
+          if j = 4 | j = 8 then values[j] = .lltarget..operand.string('' as .binary) as .object
+          else values[j] = .lltarget..operand.integer(0) as .object
+        end
+        ignored = body.record('.srcstep',values,at)
+        provider = source.body(source.procedureid('leaf'))
+        do j = 1 to provider.records()
+          child = provider.record(j)
+          if child.kind() = 'label' & (mode = 9 | mode = 10 | mode = 11) then do
+            childat = lltargetremap..copyorigin(graphref,child.origin(),reference draft,reference sources,reference origins)
+            call objectarraydrop values; values[1] = .lltarget..operand.symbol('clone.leaf.loop') as .object
+            ignored = body.record('label',values,childat); iterate
+          end
+          if child.kind() <> 'instruction' then iterate
+          childat = lltargetremap..copyorigin(graphref,child.origin(),reference draft,reference sources,reference origins)
+          ordinal = ordinal + 1; sourceops[ordinal] = child.id(); counts[ordinal] = 1
+          if mode = 9 | mode = 11 then candidateops[ordinal] = one(body,'br',.lltarget..operand.symbol('clone.leaf.loop'),childat)
+          else if mode = 10 & child.mnemonic() = 'brt' then do
+            call objectarraydrop values; values[1] = .lltarget..operand.symbol('clone.leaf.loop') as .object; values[2] = body.reg('g',0) as .object
+            candidateops[ordinal] = body.emit('brt',values,childat)
+          end
+          else if catalog.returnkind(child.opcode()) > 0 then candidateops[ordinal] = one(body,'br',.lltarget..operand.symbol('clone.after'),childat)
+          else candidateops[ordinal] = body.emit(child.mnemonic(),fields(child,body),childat)
+        end
+        call objectarraydrop values; values[1] = .lltarget..operand.symbol('clone.after') as .object
+        ignored = body.record('label',values,at)
+        call objectarraydrop values; values[1] = .lltarget..operand.symbol('clone.begin') as .object; values[2] = .lltarget..operand.symbol('clone.after') as .object; values[3] = .lltarget..operand.integer(10) as .object
+        ignored = body.record('.inlinemap',values,at)
+        iterate
+      end
+      if mode = 9 & original.name() = 'main' & item.kind() = 'label' then iterate
+      if mode = 11 & original.name() = 'main' & item.kind() = '.traceevent' then iterate
+      if item.kind() = 'instruction' then do
+        if mode = 1 & original.name() = 'main' & item.mnemonic() = 'ret' then ignored = one(body,'ret',.lltarget..operand.integer(99),at)
+        else ignored = body.emit(item.mnemonic(),fields(item,body),at)
+      end
+      else do
+        values = fields(item,body)
+        if mode = 12 & original.name() = 'main' & item.kind() = '.srcstep' then do
+          field = item.operand(1)
+          if field.index() = 2 then values[5] = .lltarget..operand.integer(45) as .object
+        end
+        ignored = body.record(item.kind(),values,at)
+      end
+    end
+  end
+  return draft.finish()
+
+run: procedure = .int
+  arg mode = .int, expose emitted = .lltarget..module
+  called = .int; mainret = .int; leafret = .int; printed = .int; written = .int; failures = 0
+  lastgood = .lltarget..module
+  plan = .lltargetsummary..scopefreefact
+  sourceops = .int[]; candidateops = .int[]; counts = .int[]
+  scenario = mode; if mode = 14 then scenario = 10
+  source = sample(scenario,called,mainret,leafret,printed,written)
+  profile = premises(reference source,mode,called,mainret,leafret,printed,written)
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(source.valid() & profile.status() = 'ok' & cfg.status() = 'ok' & flow.status() = 'ok','source operational model builds ' || mode)
+  if failures > 0 then do; say profile.message(); say cfg.message(); say flow.reason(); return failures; end
+  summaries = .lltargetsummary..analysis(reference flow)
+  output = candidate(reference source,called,scenario,sourceops,candidateops,counts)
+  failures = failures + check(output.valid(),'candidate model validates ' || mode || ': ' || output.error())
+  if failures > 0 then return failures
+  clone = .lltargetsummary..diagnosticclone(reference summaries,called,reference output,10,sourceops,candidateops,counts)
+  if mode >= 9 & mode <= 12 then failures = failures + check(clone.valid(),'hostile candidate passes provider-only diagnostic correspondence ' || mode || ': ' || clone.reason())
+  if mode = 10 then do
+    plan = summaries.directplan(called)
+    failures = failures + check(plan.draftallowed(),'stable global capture admits the source plan before checking the hostile clone cut: ' || plan.reason())
+  end
+  proof = summaries.directequivalence(called,clone)
+  if mode = 0 then do
+    failures = failures + check(clone.valid() & proof.allowed() & proof.preserved(),'actual CALL-to-clone preserves its opaque caller tail: ' || proof.reason())
+    raw = flow.abicallbackat(mainret)
+    failures = failures + check(raw.status() = 'unknown' & raw.possible() & raw.rows() = 0,'paired preservation never changes raw root ABI uncertainty')
+    plan = summaries.directplan(called)
+    failures = failures + check(plan.draftallowed() & plan.allowed() = 0,'source-only direct plan is not final publication permission')
+    emitted = proof.result(); calls = 0; entries = 0; catalog = .llrxascatalog..catalog()
+    do i = 1 to emitted.records()
+      item = emitted.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if catalog.callinvokes(item.opcode()) then calls = calls + 1
+      if item.mnemonic() = 'inlenter' then entries = entries + 1
+    end
+    failures = failures + check(calls = 0 & entries = 0 & emitted.body(emitted.procedureid('main')).locals() = 0,'certified output has no CALL, INLENTER or extra caller cell')
+    limited = summaries.directequivalence(called,clone,1)
+    lastgood = limited.result()
+    failures = failures + check(limited.status() = 'limit' & limited.allowed() = 0 & lastgood.identity() = source.identity(),'tiny final budget retains the exact last-good source')
+    peer = .lltargetsummary..analysis(reference flow)
+    mismatched = peer.directequivalence(called,clone)
+    failures = failures + check(mismatched.status() = 'invalid' & mismatched.allowed() = 0,'different summary owner cannot borrow a clone certificate')
+    replacement = .lltarget..draft('replacement','fixture:replacement',0)
+    at = replacement.synthetic('replace the frozen candidate'); body = replacement.procedure('main',0,at)
+    empty = .object[]; ignored = body.emit('ret',empty,at)
+    output = replacement.finish()
+    failures = failures + check(proof.valid() = 0 & proof.allowed() = 0,'replaced candidate invalidates the paired proof')
+  end
+  else do
+    failures = failures + check(proof.allowed() = 0 & proof.reason() <> '', 'independent delta/observer/departure negative retains source ' || mode || ': ' || proof.reason())
+    lastgood = proof.result()
+    failures = failures + check(lastgood.identity() = source.identity(),'negative never publishes a partial candidate ' || mode)
+    if mode = 1 then failures = failures + check(proof.reason() = 'target.retained.caller.record.delta.unproved','changed caller return is not an identity tail')
+    if mode = 2 then failures = failures + check(proof.reason() = 'target.retained.caller.extra.cells.unproved','extra dirty/recycled backing requires its own resource proof')
+    if mode = 4 | mode = 5 then failures = failures + check(proof.reason() = 'target.retained.caller.observations.unproved','physical or missing tail inventory cannot be projected away')
+    if mode = 6 | mode = 7 then failures = failures + check(proof.reason() = 'target.retained.call.departure.correspondence.unproved','unpaired typed CALL cause/phase cannot disappear')
+    if mode = 8 then failures = failures + check(proof.reason() = 'target.retained.caller.callback.observer.unproved','explicit physical callback observer remains a separate gate')
+    if mode = 9 then failures = failures + check(proof.reason() = 'target.retained.caller.control.boundary.mismatch','post-CALL bypass label cannot move before a read-only infinite clone')
+    if mode = 10 then failures = failures + check(proof.reason() = 'target.retained.caller.control.boundary.mismatch','whole clone cannot cross a caller write observed by the read-only callee: ' || proof.reason())
+    if mode = 11 then failures = failures + check(proof.reason() = 'target.retained.caller.control.boundary.mismatch','runtime TRACE checkpoint cannot cross the clone boundary')
+    if mode = 12 then failures = failures + check(proof.reason() = 'target.retained.caller.record.delta.unproved','numeric-only caller SRCSTEP mutation changes actual source state')
+    if mode = 13 then failures = failures + check(proof.reason() = 'target.retained.caller.instruction.observer.unproved','external intrinsic footprint does not grant a physical observer premise')
+    if mode = 14 then failures = failures + check(proof.reason() = 'target.global.mapping.entry.unproved','missing operational CALL capture cannot assert entry-global identity')
+  end
+  return failures
+
+main: procedure = .int
+  arg arguments = .string[]
+  failures = 0; emitted = .lltarget..module
+  if arguments[0] > 0 then if arguments[1] = '--emit-rxas' | arguments[1] = '--emit-source' then do
+    if arguments[1] = '--emit-source' then do
+      called = .int; mainret = .int; leafret = .int; printed = .int; written = .int
+      emitted = sample(0,called,mainret,leafret,printed,written)
+    end
+    else failures = run(0,emitted)
+    if failures > 0 then return failures
+    rendered = llrxasoutput..render(reference emitted)
+    if rendered.error() <> '' then do; say rendered.error(); return 1; end
+    output = rendered.output(); say output.text(); return 0
+  end
+  do mode = 0 to 14; failures = failures + run(mode,emitted); end
+  say 'TARGET_RETAINED_CALLER|failures=' || failures
+  return failures

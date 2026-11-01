@@ -1,0 +1,15 @@
+/* Handwritten static inline tree; normal execution has no entry machinery. */
+.globals=0
+main() .locals=1
+  .srcstep 42 42 1 "caller.rexx" 7 1 12 "call outer"
+  .inlineframe 7 0 "provider.rxas" "outer" 42
+  .inlinemap outer_begin,inner_begin,7
+outer_begin:
+  load r0,1
+  .srcstep 43 43 9 "provider.rexx" 9 1 12 "call inner"
+  .inlineframe 8 7 "provider.rxas" "inner" 43
+  .inlinemap inner_begin,inline_end,8
+inner_begin:
+  .srcstep 0 0 0 "" 0 0 0 ""
+  ret 0
+inline_end:

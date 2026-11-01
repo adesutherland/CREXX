@@ -19,6 +19,7 @@ check: procedure = .int
 run: procedure = .int
   arg mode = .int
   failures = 0; ignored = .int; i = .int; host = .int
+  scope = .lltargetsummary..scopefreefact
   draft = .lltarget..draft('activation.abi.' || mode,'fixture:activation.abi',0)
   at = draft.synthetic('generic versus invocation-qualified ABI proof')
   caller = draft.procedure('main',0,at)
@@ -75,6 +76,10 @@ run: procedure = .int
     failures = failures + check(repeated.allowed() & repeated.context(1).identity() = decision.context(1).identity(),'same callid reuses the exact invocation cache')
     raw = flow.abicallbackat(returned)
     failures = failures + check(raw.possible(),'uncontextualized raw external ingress remains conservative')
+    direct = summaries.directactualmapping(called)
+    failures = failures + check(direct.allowed(),'empty exact invocation has no unresolved argument mapping before scope proof')
+    scope = summaries.scopefree(called)
+    failures = failures + check(scope.valid() & scope.status() <> 'limit' & scope.reason() <> 'scopefree.callback.unproved','scope omission reuses its exact RET ABI dependency despite the conservative external-ingress query: ' || scope.reason())
     outward = summaries.procedure(source.procedureid('leaf'),'direct')
     effects = outward.effect('ownership','release')
     failures = failures + check(effects.unknown(),'contextual permission does not erase generic outward uncertainty')
@@ -85,7 +90,11 @@ run: procedure = .int
     failures = failures + check(summaries.status() = 'ok','replacement summary materializes before stale-owner check')
     failures = failures + check(saved.valid() = 0,'final activation expires with its exact summary owner')
   end
-  else if mode = 1 then failures = failures + check(decision.allowed() = 0 & decision.reason() = 'target.activation.callback.context.unproved','invocation context cannot discharge a generic host observer')
+  else if mode = 1 then do
+    failures = failures + check(decision.allowed() = 0 & decision.reason() = 'target.activation.callback.context.unproved','invocation context cannot discharge a generic host observer')
+    scope = summaries.scopefree(called)
+    failures = failures + check(scope.allowed() = 0 & scope.reason() = decision.reason(),'scope omission cannot borrow its RET ABI proof for an explicit ordinary host callback')
+  end
   else failures = failures + check(decision.allowed() = 0 & decision.reason() <> '','canonical inherited policy/physical cleanup uncertainty remains explicit')
   return failures
 
@@ -489,7 +498,7 @@ voidactualdemand: procedure = .int
     failures = failures + check(coverage.unresolved() & cfg.localcomplete(source.procedureid('leaf')) = 0,'unknown callback policy prevents complete CALL observation projection despite the typed SAY footprint: ' || coverage.reason())
     failures = failures + check(flow.complete(source.procedureid('main'),'entry-normalization') = 0,'complete intrinsic SAY footprint does not grant unconditional callback preservation')
   end
-  else failures = failures + check(coverage.unresolved() & cfg.localcomplete(source.procedureid('leaf')) = 0,'callee callback-policy unknown cannot fabricate complete borrowed-actual extraction ' || mode || ': ' || coverage.reason())
+  else failures = failures + check(coverage.complete() & coverage.demands() = 1 & found & cfg.localcomplete(source.procedureid('leaf')),'closed scalar/metadata callee projects the exact dirty borrowed-actual demand ' || mode || ': ' || coverage.reason())
   return failures
 
 /** Fixed actual pointers are sampled by RXVM_FIXED_CALL_BODY before any
@@ -497,8 +506,9 @@ voidactualdemand: procedure = .int
  * equivalence, and an unrelated external row never gains that delegation. */
 callintrinsiccoverage: procedure = .int
   arg mode = .int
-  failures = 0; ignored = .int; i = .int; integer = .int; observed = .int; childread = .int; found = .int; callback = .int
+  failures = 0; ignored = .int; i = .int; integer = .int; observed = .int; childread = .int; found = .int; callback = .int; followingcallback = .int
   resultref = .int; targetref = .int; sourceref = .int
+  instruction = .lltargettransfer..instruction; action = .lltargettransfer..action
   replacement = .lltarget..module
   draft = .lltarget..draft('entry.call.intrinsic.' || mode,'fixture:entry.call.intrinsic',0)
   at = draft.synthetic('contextual call footprint preserves callbacks and every unresolved path')
@@ -577,11 +587,11 @@ callintrinsiccoverage: procedure = .int
       demand = coverage.demand(i)
       if demand.operation() = called & demand.ownedindex() = 0 then found = 1
     end
-    failures = failures + check(coverage.unresolved() & cfg.localcomplete(source.procedureid('leaf')) = 0,'fixed pointer capture alone cannot close unknown callee callback policy: ' || coverage.reason())
+    failures = failures + check(coverage.complete() & coverage.demands() = 1 & found & cfg.localcomplete(source.procedureid('leaf')),'closed no-hook callee keeps one exact dirty actual demand: ' || coverage.reason())
     incoming = flow.captureargument(called,1); named = flow.captureat(called,'r',0)
     failures = failures + check(incoming.status() = 'ok' & named.status() = 'ok' & incoming.active() = named.active() & incoming.slotidentity() = named.slotidentity(),'fixed invocation transports its early captured actual pointer')
   end
-  else if mode = 1 then failures = failures + check(coverage.demands() = 0 & coverage.unresolved() & cfg.localcomplete(source.procedureid('leaf')) = 0,'zero local demands cannot disguise unknown callee callback control: ' || coverage.reason())
+  else if mode = 1 | mode = 5 then failures = failures + check(coverage.complete() & coverage.demands() = 0 & cfg.localcomplete(source.procedureid('leaf')),'closed read-free callee has complete empty intrinsic demands ' || mode || ': ' || coverage.reason())
   else failures = failures + check(coverage.complete() = 0 & coverage.unresolved(),'unproved target/count/preparation/return/recursion/footprint/phase remains unresolved ' || mode || ': ' || coverage.reason())
   if mode = 0 | mode = 1 | mode = 5 then do
     instruction = profile.instruction(called)
@@ -589,7 +599,8 @@ callintrinsiccoverage: procedure = .int
       action = instruction.action(i)
       if action.kind() = 'callback' then do; if flow.callbackpossibleat(called,i) then callback = 1; end
     end
-    failures = failures + check(callback & flow.complete(source.procedureid('main'),'entry-normalization') = 0,'intrinsic extraction leaves possible CALL callbacks and unconditional veto intact ' || mode)
+    failures = failures + check(callback = 0,'exact private backing and value-only numeric sync discharge this scalar CALL frame hook ' || mode)
+    if mode <> 5 then failures = failures + check(flow.complete(source.procedureid('main'),'entry-normalization'),'no-hook fixed invocation has complete entry-normalization extraction ' || mode)
   end
   if mode = 5 then do
     do i = 1 to profile.domains()
@@ -597,7 +608,14 @@ callintrinsiccoverage: procedure = .int
       if domain.kind() = 'component' & domain.nativebit() = .llrxascatalog..catalog().componentmask('I') then integer = i
     end
     aftercall = flow.componentat(observed,'r',1,integer)
-    failures = failures + check(aftercall.availability() = 'unknown' & aftercall.known() = 0,'possible CALL callback cannot publish the scalar return as a known post-call fact')
+    literal = aftercall.literal()
+    failures = failures + check(aftercall.availability() = 'defined' & aftercall.known() & literal.kind() = 'I' & literal.index() = 17,'no-hook literal RETURN publishes its exact scalar at the following read')
+    instruction = profile.instruction(observed)
+    do i = 1 to instruction.actions()
+      action = instruction.action(i)
+      if action.kind() = 'callback' then followingcallback = followingcallback | flow.callbackpossibleat(observed,i)
+    end
+    failures = failures + check(followingcallback & flow.complete(source.procedureid('main'),'entry-normalization') = 0,'a later root setter keeps its real callback and unconditional observation veto')
   end
   if mode = 2 then do
     unavailable = flow.targetat(called)

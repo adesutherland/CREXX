@@ -182,9 +182,17 @@ static void free_float_tree(struct avl_tree_node **root) {
 struct backpatching_references;
 struct backpatching {
     int defined;
+    int observation_anchor;
     size_t index;
 //    Assembler_Token *def_token;
     struct backpatching_references *refs;
+};
+
+struct rxas_inline_map_patch {
+    size_t offset;
+    Assembler_Token *begin;
+    Assembler_Token *end;
+    struct rxas_inline_map_patch *next;
 };
 
 struct backpatching_references {
@@ -317,6 +325,9 @@ static void free_constant_alias_tree(struct avl_tree_node **root) {
 
 /* Frees Assembler Work Data */
 void freeasbl(Assembler_Context *context) {
+    struct rxas_inline_map_patch *map = context->inline_maps;
+    while (map) { struct rxas_inline_map_patch *next = map->next; free(map); map = next; }
+    context->inline_maps = NULL;
     if (context->string_constants_tree) free_tree(&context->string_constants_tree);
     if (context->decimal_constants_tree) free_tree(&context->decimal_constants_tree);
     if (context->float_constants_tree) free_float_tree(&context->float_constants_tree);
@@ -392,7 +403,7 @@ static void optimise_labels(Assembler_Context *context) {
                                        struct string_wrapper, index_node) {
             patch = (struct backpatching *) (i->value);
 
-            if (patch->defined != 0 &&
+            if (patch->defined != 0 && !patch->observation_anchor &&
                 patch->index + 1 < context->binary.inst_size) {
                 /* Unknown symbols are handled later. End labels do not
                    designate an instruction with a branch operand. */
@@ -453,6 +464,7 @@ static void backpatch_labels(Assembler_Context *context) {
 }
 
 static void backpatch_jump_tables(Assembler_Context *context);
+static void backpatch_inline_maps(Assembler_Context *context);
 
 static void seal_local_inline_recipes(Assembler_Context *context) {
     size_t index = 0u;
@@ -505,13 +517,55 @@ static void seal_local_inline_recipes(Assembler_Context *context) {
     }
 }
 
+static void validate_program_entry_calls(Assembler_Context *context) {
+    size_t entry_procedure = SIZE_MAX, at = 0u;
+    int metadata = context->meta_head;
+    const bin_code *code = (const bin_code *)context->binary.binary;
+    while (metadata != -1) {
+        const meta_entry *entry = (const meta_entry *)(context->binary.const_pool + metadata);
+        if (entry->base.type == META_ENTRY_STATE)
+            entry_procedure = ((const meta_entry_state_constant *)entry)->procedure;
+        metadata = entry->next;
+    }
+    if (entry_procedure == SIZE_MAX) return;
+    metadata = context->meta_head;
+    while (metadata != -1) {
+        const meta_entry *entry = (const meta_entry *)(context->binary.const_pool + metadata);
+        if (entry->base.type == META_INITIALIZER &&
+            ((const meta_initializer_constant *)entry)->function == entry_procedure) {
+            rxaserrf(context,0,0,1,"program-default main cannot also be a module initializer");
+            return;
+        }
+        metadata = entry->next;
+    }
+    while (at < context->binary.inst_size) {
+        int opcode = code[at].instruction.opcode;
+        OpFormat format = rxbin_opcode_format(opcode);
+        size_t width = rxop_format_operand_count(format), operand;
+        if (width >= context->binary.inst_size - at) return; /* Existing structural validation owns malformed code. */
+        /* P is the executable procedure-target role, including signal and
+         * breakpoint handlers and logical activation. Metadata references are
+         * separate typed records; there is no program-root instruction. */
+        for (operand = 0u; operand < width; operand++) {
+            if (rxop_format_operand_type(format,operand) == OP_FUNC &&
+                code[at + operand + 1u].index == entry_procedure) {
+                rxaserrf(context,0,0,1,"program-default main cannot be an ordinary child-call target");
+                return;
+            }
+        }
+        at += width + 1u;
+    }
+}
+
 /* Backpatch, check references and free backpatch information */
 void backptch(Assembler_Context *context) {
     if (context->optimise) optimise_labels(context);
     backpatch_procedures(context);
     backpatch_jump_tables(context);
+    backpatch_inline_maps(context);
     backpatch_labels(context);
     seal_local_inline_recipes(context);
+    validate_program_entry_calls(context);
 }
 
 /* Convert one hex digit to an int (-1 = error)*/
@@ -2084,7 +2138,7 @@ static size_t add_func_to_pool(Assembler_Context *context, Assembler_Token* toke
     else {
         /* No - Create entry in the tree */
         proc_constant *centry;
-        ref_header = malloc(sizeof(struct backpatching));
+        ref_header = calloc(1u, sizeof(struct backpatching));
         if (!ref_header) {
             RXAS_PANIC_OOM(context, "malloc rxas procedure backpatch header",
                            sizeof(struct backpatching), 0);
@@ -2198,7 +2252,7 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
             }
             else {
                 /* No - Create entry in the tree */
-                ref_header = malloc(sizeof(struct backpatching));
+                ref_header = calloc(1u, sizeof(struct backpatching));
                 if (!ref_header) {
                     RXAS_PANIC_OOM(context, "malloc rxas label backpatch header",
                                    sizeof(struct backpatching), 0);
@@ -2634,7 +2688,7 @@ static size_t define_proc(Assembler_Context *context, Assembler_Token *funcToken
     }
     else {
         /* No - Create entry in the tree */
-        ref_header = malloc(sizeof(struct backpatching));
+        ref_header = calloc(1u, sizeof(struct backpatching));
         if (!ref_header) {
             RXAS_PANIC_OOM(context, "malloc rxas defined procedure backpatch header",
                            sizeof(struct backpatching), 0);
@@ -2703,6 +2757,9 @@ void rxasproc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
 
     /* Store the current number of locals */
     context->current_locals = (int)localsToken->token_value.integer;
+    context->current_owned_locals = context->current_locals;
+    context->current_has_private = 0;
+    context->current_proc_has_code = 0;
     context->current_proc_name = (char *)funcToken->token_value.string;
 }
 
@@ -2725,7 +2782,7 @@ void rxaslabl(Assembler_Context *context, Assembler_Token *labelToken) {
     }
     else {
         /* No - Create entry in the tree */
-        ref_header = malloc(sizeof(struct backpatching));
+        ref_header = calloc(1u, sizeof(struct backpatching));
         if (!ref_header) {
             RXAS_PANIC_OOM(context, "malloc rxas defined label backpatch header",
                            sizeof(struct backpatching), 0);
@@ -2781,6 +2838,9 @@ void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
 
     /* Store the current number of locals */
     context->current_locals = (int)localsToken->token_value.integer;
+    context->current_owned_locals = context->current_locals;
+    context->current_has_private = 0;
+    context->current_proc_has_code = 0;
     context->current_proc_name = (char *)funcToken->token_value.string;
 
     /* Duplicate extern index check */
@@ -2889,7 +2949,128 @@ static size_t add_meta_entry(Assembler_Context *context, size_t entry_size, enum
     return entry_index;
 }
 
+/* Program-default entry declaration from a procedure header. */
+void rxasentry(Assembler_Context *context, Assembler_Token *contract) {
+    size_t procedure_ref = 0u, offset;
+    meta_entry_state_constant *entry;
+    struct backpatching *procedure;
+    if (!context->current_proc_name || strcmp(context->current_proc_name,"main") ||
+        strcmp((const char *)contract->token_value.string,"program-default") ||
+        !src_node(context->proc_constants_tree,context->current_proc_name,&procedure_ref)) {
+        rxaserat(context,contract,".entry=program-default requires the local main procedure");
+        return;
+    }
+    procedure = (struct backpatching *)procedure_ref;
+    offset = add_meta_entry(context,sizeof(*entry),META_ENTRY_STATE);
+    entry = (meta_entry_state_constant *)(context->binary.const_pool + offset);
+    entry->procedure = procedure->index;
+    entry->version = RXBIN_ENTRY_STATE_VERSION;
+    entry->kind = RXBIN_ENTRY_PROGRAM_DEFAULT;
+}
+
 /* Source Step */
+static struct backpatching *inline_map_label(Assembler_Context *context, Assembler_Token *token) {
+    size_t value;
+    struct backpatching *patch;
+    if (src_node(context->label_constants_tree,(char *)token->token_value.string,&value)) patch = (struct backpatching *)value;
+    else {
+        patch = calloc(1u,sizeof(*patch));
+        if (!patch) RXAS_PANIC_OOM(context,"malloc inline map label",sizeof(*patch),0);
+        add_node(&context->label_constants_tree,(char *)token->token_value.string,(size_t)patch);
+    }
+    patch->observation_anchor = 1;
+    return patch;
+}
+
+static void backpatch_inline_maps(Assembler_Context *context) {
+    struct rxas_inline_map_patch *map;
+    for (map = context->inline_maps; map; map = map->next) {
+        struct backpatching *begin = inline_map_label(context,map->begin);
+        struct backpatching *end = inline_map_label(context,map->end);
+        meta_inline_map_constant *entry;
+        if (!begin->defined) { rxaserat(context,map->begin,"unknown inline map begin label"); continue; }
+        if (!end->defined) { rxaserat(context,map->end,"unknown inline map end label"); continue; }
+        if (begin->index >= end->index) { rxaserat(context,map->begin,"inline map range must be nonempty"); continue; }
+        entry = (meta_inline_map_constant *)(context->binary.const_pool + map->offset);
+        entry->start = begin->index; entry->end = end->index;
+    }
+}
+
+static int inline_meta_u32(Assembler_Context *context, Assembler_Token *token, int nonzero) {
+    if (token->token_value.integer < nonzero || (uint64_t)token->token_value.integer > UINT32_MAX) {
+        rxaserat(context,token,nonzero ? "inline frame id must be in 1..4294967295" : "inline metadata integer must be in 0..4294967295");
+        return 0;
+    }
+    return 1;
+}
+
+void rxasmeifr(Assembler_Context *context, Assembler_Token *id, Assembler_Token *parent,
+                Assembler_Token *module, Assembler_Token *procedure, Assembler_Token *step) {
+    size_t module_name, procedure_name, offset;
+    meta_inline_frame_constant *entry;
+    if (!inline_meta_u32(context,id,1) || !inline_meta_u32(context,parent,0) || !inline_meta_u32(context,step,0)) return;
+    module_name = add_string_to_pool(context,module,(char *)module->token_value.string);
+    procedure_name = add_string_to_pool(context,procedure,(char *)procedure->token_value.string);
+    offset = add_meta_entry(context,sizeof(*entry),META_INLINE_FRAME);
+    entry = (meta_inline_frame_constant *)(context->binary.const_pool + offset);
+    entry->frame_id = (uint32_t)id->token_value.integer;
+    entry->parent_id = (uint32_t)parent->token_value.integer;
+    entry->callsite_step_id = (uint32_t)step->token_value.integer;
+    entry->module_name = module_name; entry->procedure_name = procedure_name;
+}
+
+void rxasmeimp(Assembler_Context *context, Assembler_Token *begin, Assembler_Token *end, Assembler_Token *id) {
+    struct rxas_inline_map_patch *patch;
+    meta_inline_map_constant *entry;
+    size_t offset;
+    if (!inline_meta_u32(context,id,1)) return;
+    (void)inline_map_label(context,begin); (void)inline_map_label(context,end);
+    offset = add_meta_entry(context,sizeof(*entry),META_INLINE_MAP);
+    entry = (meta_inline_map_constant *)(context->binary.const_pool + offset);
+    entry->frame_id = (uint32_t)id->token_value.integer; entry->start = 0u; entry->end = 0u;
+    patch = malloc(sizeof(*patch));
+    if (!patch) RXAS_PANIC_OOM(context,"malloc inline map fixup",sizeof(*patch),0);
+    patch->offset = offset; patch->begin = begin; patch->end = end;
+    patch->next = context->inline_maps; context->inline_maps = patch;
+}
+
+void rxasmeinp(Assembler_Context *context, Assembler_Token *local,
+                 Assembler_Token *provider, Assembler_Token *global) {
+    struct backpatching *procedure = NULL;
+    unsigned char *bytes = NULL;
+    size_t length = 0u, selector, offset, procedure_ref = 0u;
+    string_constant *constant;
+    meta_inlined_private_constant *entry;
+    int current;
+    if (!context->current_proc_name ||
+        !src_node(context->proc_constants_tree,context->current_proc_name,&procedure_ref) ||
+        local->token_value.integer < 0 || local->token_value.integer >= context->current_locals ||
+        global->token_value.integer < 0 || (uint64_t)global->token_value.integer > UINT32_MAX ||
+        !rxinl_module_ref_from_text((const char *)provider->token_value.string,&bytes,&length)) {
+        free(bytes); rxaserat(context,local,"invalid inlined private binding"); return;
+    }
+    procedure = (struct backpatching *)procedure_ref;
+    selector = reserve_in_const_pool(context,offsetof(string_constant,string) + length,BINARY_CONST);
+    constant = (string_constant *)(context->binary.const_pool + selector);
+    constant->string_len = length; memcpy(constant->string,bytes,length); free(bytes);
+    offset = add_meta_entry(context,sizeof(*entry),META_INLINED_PRIVATE);
+    entry = (meta_inlined_private_constant *)(context->binary.const_pool + offset);
+    entry->procedure = procedure->index; entry->provider = selector;
+    entry->local_index = (uint32_t)local->token_value.integer;
+    entry->global_index = (uint32_t)global->token_value.integer;
+    entry->owned_locals = (uint32_t)context->current_owned_locals;
+    /* The suffix contract is procedure-wide, independent of record order. */
+    current = context->meta_head;
+    while (current != -1) {
+        meta_entry *meta = (meta_entry *)(context->binary.const_pool + current);
+        if (meta->base.type == META_INLINED_PRIVATE) {
+            meta_inlined_private_constant *prior = (meta_inlined_private_constant *)meta;
+            if (prior->procedure == procedure->index) prior->owned_locals = (uint32_t)context->current_owned_locals;
+        }
+        current = meta->next;
+    }
+}
+
 void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
                Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,
                Assembler_Token *source) {

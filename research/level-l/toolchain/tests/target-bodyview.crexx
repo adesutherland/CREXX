@@ -1,0 +1,146 @@
+/* cREXX License (MIT). Exact body owners, local IDs and startup facts. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetbodyview
+import lltargetsummary
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+
+/** Equal construction order deliberately gives unrelated owners equal local
+ * procedure/instruction/source IDs. Those numbers never identify a provider. */
+model: procedure = .lltarget..module
+  arg name = .string, initializer = 0
+  ignored = .int
+  draft = .lltarget..draft(name,'fixture:' || name,0)
+  source = draft.source(name || '.rxas',name as .binary)
+  at = source.origin(0,length(name))
+  fields = .object[]
+  if initializer then do
+    fields[1] = .lltarget..operand.string('fixture.boot' as .binary) as .object
+    fields[2] = .lltarget..operand.string('.initializer' as .binary) as .object
+    fields[3] = .lltarget..operand.string('.void' as .binary) as .object
+    fields[4] = .lltarget..operand.procedure('leaf') as .object
+    fields[5] = .lltarget..operand.string(''x as .binary) as .object
+    ignored = draft.record('.meta',fields,at)
+  end
+  root = draft.procedure('main',0,at)
+  assembler setattrs fields,0
+  fields[1] = .lltarget..operand.procedure('leaf') as .object
+  ignored = root.emit('call',fields,at)
+  assembler setattrs fields,0
+  ignored = root.emit('ret',fields,at)
+  leaf = draft.procedure('leaf',0,at,'fixture.leaf')
+  fields[1] = .lltarget..operand.integer(7) as .object
+  ignored = leaf.emit('ret',fields,at)
+  return draft.finish()
+
+callsite: procedure = .int
+  arg source = .lltarget..module
+  body = source.body(source.procedureid('main'))
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = 'instruction' & item.mnemonic() = 'call' then return item.id()
+  end
+  return 0
+
+run: procedure = .int
+  failures = 0; ignored = .int
+  caller = model('caller'); other = model('other'); startup = model('startup',1)
+  failures = failures + check(caller.valid() & other.valid() & startup.valid(),'constructed owners validate')
+  if caller.valid() = 0 | other.valid() = 0 | startup.valid() = 0 then return failures
+  operation = callsite(caller); otheroperation = callsite(other)
+  failures = failures + check(operation > 0 & operation = otheroperation,'unrelated owners intentionally share operation numbers')
+  failures = failures + check(caller.procedureid('leaf') = other.procedureid('leaf'),'unrelated owners intentionally share procedure numbers')
+  profile = .lltargettransfer..profile(reference caller)
+  otherprofile = .lltargettransfer..profile(reference other)
+  startupprofile = .lltargettransfer..profile(reference startup)
+  failures = failures + check(profile.initializerfree(reference caller),'global-free provider has no initializer user code')
+  failures = failures + check(profile.initializerfree(reference other) = 0,'structural startup fact rejects a different exact owner')
+  failures = failures + check(startupprofile.initializerfree(reference startup) = 0,'initializer declaration is not a no-startup fact')
+  cfg = .lltargetcfg..graph(reference caller,reference profile)
+  points = .lltargetflow..analysis(reference caller,reference profile,reference cfg)
+  othercfg = .lltargetcfg..graph(reference other,reference otherprofile)
+  otherpoints = .lltargetflow..analysis(reference other,reference otherprofile,reference othercfg)
+  failures = failures + check(points.status() = 'ok' & otherpoints.status() = 'ok','separate canonical flow owners build')
+  if points.status() <> 'ok' | otherpoints.status() <> 'ok' then return failures
+  exact = .lltargetbodyview..view(reference points,operation,reference points)
+  failures = failures + check(exact.status() = 'proved','same-owner view follows exact target facts')
+  if exact.valid() then do
+    failures = failures + check(exact.foreign() = 0,'local view does not invent a foreign owner')
+    owner = exact.owner(); caller_ref = reference caller; body = exact.body(); row = body.record(body.records())
+    failures = failures + check((owner <refsame> caller_ref) & body.name() = 'leaf','body records retain original provider owner')
+    failures = failures + check(row.origin().filename() = 'caller.rxas','body source coordinates remain in their own module')
+  end
+  wrongowner = .lltargetbodyview..view(reference points,operation,reference otherpoints)
+  failures = failures + check(wrongowner.status() = 'unknown' & wrongowner.reason() = 'target.bodyview.provider.owner.mismatch','equal IDs do not enroll another provider')
+  alternateprofile = .lltargettransfer..profile(reference caller)
+  alternatecfg = .lltargetcfg..graph(reference caller,reference alternateprofile)
+  alternatepoints = .lltargetflow..analysis(reference caller,reference alternateprofile,reference alternatecfg)
+  wrongprofile = .lltargetbodyview..view(reference points,operation,reference alternatepoints)
+  failures = failures + check(wrongprofile.status() = 'unknown' & wrongprofile.reason() = 'target.bodyview.provider.profile.mismatch','same module with a different profile cannot donate provider facts')
+  summaries = .lltargetsummary..analysis(reference points)
+  selected = summaries.bodyview(operation)
+  failures = failures + check(selected.valid(),'summary exposes the same checked bodyview')
+  failures = failures + check(profile.callinitializerfree(operation),'local call preserves its separate no-user-code ingress fact')
+  limited = .lltargettransfer..profile(reference caller,1)
+  failures = failures + check(limited.initializerfree() = 0 & limited.status() = 'limit','startup scan cannot bypass preparation budget')
+  points = .lltargetflow..analysis(reference caller,reference profile,reference cfg)
+  ignoredstatus = points.status()
+  failures = failures + check(exact.valid() = 0 & selected.valid() = 0,'replacing an analysis owner expires retained bodyviews')
+  return failures
+
+/** Native callee effects are deferred until target composition. An exact
+ * invocation may bind that one canonical row; a constructed lookalike stays
+ * an independent unknown rather than borrowing native catalogue authority. */
+invocationpremises: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int; targetref = .int
+  source = model('invocation.premise.' || mode); operation = callsite(source)
+  profile = .lltargettransfer..profile
+  if mode = 0 then profile = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  else do
+    premise = .lltargettransfer..profiledraft(reference source,'independent.invocation.premise.' || mode)
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.kind() = 'procedure' then iterate
+      ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+      if item.id() = operation then do
+        targetref = premise.ref(operation,1,'procedure','symbolic')
+        ignored = premise.event(operation,'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.call')
+        ignored = premise.event(operation,'call',0,0,'reference',targetref)
+        if mode = 1 then call premise.unknown(operation,'calls','catalog.call.callee.unknown')
+        if mode = 3 then call premise.unknown(operation,'order','fixture.capture.order.unknown')
+      end
+      else ignored = premise.event(item.id(),'return',0,0)
+    end
+    profile = premise.finish()
+  end
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  points = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(points.status() = 'ok','invocation premise flow builds ' || mode || ': ' || points.reason())
+  if points.status() <> 'ok' then return failures
+  instruction = profile.instruction(operation)
+  invocation = points.invocationat(operation)
+  if mode = 0 then do
+    failures = failures + check(instruction.complete('calls') = 0 & instruction.unknownreason('calls') = 'catalog.call.callee.unknown','canonical CALL retains its outward deferred-callee effect')
+    selected = invocation.target(); provider = selected.provider(); expected = reference source
+    failures = failures + check(invocation.status() = 'proved' & (provider <refsame> expected) & selected.procedure() = source.procedureid('leaf') & invocation.actuals() = 0,'deferred canonical CALL derives exact local target and capture without claiming effects pure: ' || invocation.reason())
+  end
+  else if mode = 2 then failures = failures + check(invocation.status() = 'proved','complete independent capture keeps its existing relative invocation proof: ' || invocation.reason())
+  else failures = failures + check(invocation.status() = 'unknown' & invocation.reason() = 'target.abi.invocation.premise.unproved','independent unknown call or capture order cannot borrow canonical deferral ' || mode || ': ' || invocation.reason())
+  return failures
+
+main: procedure = .int
+  failures = run(); mode = .int
+  do mode = 0 to 3; failures = failures + invocationpremises(mode); end
+  say 'TARGET_BODYVIEW|failures=' || failures
+  return failures

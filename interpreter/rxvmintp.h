@@ -56,10 +56,20 @@ typedef enum {
 } rxvm_initializer_state;
 
 typedef struct module module;
+typedef struct rxvm_inlined_private_binding {
+    value *storage;
+    module *provider;
+} rxvm_inlined_private_binding;
+
 typedef struct proc_runtime {
     proc_constant *definition;
     int locals;
+    int owned_locals;
+    size_t inlined_private_count;
+    rxvm_inlined_private_binding *inlined_private;
+    struct proc_runtime *inlined_private_owner;
     uint32_t native_capabilities; /* Uses the 64-bit pointer-alignment slot. */
+    uint32_t entry_state_kind; /* Zero or RXBIN_ENTRY_PROGRAM_DEFAULT. */
     bin_space *binarySpace;
     stack_frame **frame_free_list;
     stack_frame *frame_free_list_head;
@@ -71,6 +81,16 @@ typedef struct proc_runtime {
     /* Load-selected call policy; ordinary native calls do not test flags. */
     rxvm_native_invoker native_invoker;
 } proc_runtime;
+
+/* The alias definition owns storage metadata; imported procedure wrappers
+ * share it exactly as they share the canonical frame recycler. */
+static inline const proc_runtime *rxvm_private_binding_owner(const proc_runtime *procedure) {
+    return procedure && procedure->inlined_private_owner ? procedure->inlined_private_owner : procedure;
+}
+static inline int rxvm_owned_local_count(const proc_runtime *procedure) {
+    const proc_runtime *owner = rxvm_private_binding_owner(procedure);
+    return owner && owner->inlined_private_count ? owner->owned_locals : (procedure ? procedure->locals : 0);
+}
 
 typedef struct rxvm_graph_provider_binding {
     const char *class_name;
@@ -130,6 +150,21 @@ typedef struct proc_runtime_lookup_entry {
     proc_runtime *runtime;
 } proc_runtime_lookup_entry;
 
+/* Immutable diagnostic indexes, prepared once per loaded module. These names
+ * describe logical clones; they never resolve or authorize an executable. */
+typedef struct rxvm_inline_diagnostic_frame {
+    const meta_inline_frame_constant *definition;
+    const struct rxvm_inline_diagnostic_frame *parent;
+    const meta_source_step_constant *callsite;
+    const string_constant *module_name;
+    const string_constant *procedure_name;
+} rxvm_inline_diagnostic_frame;
+
+typedef struct rxvm_inline_diagnostic_map {
+    const meta_inline_map_constant *definition;
+    const rxvm_inline_diagnostic_frame *frame;
+} rxvm_inline_diagnostic_map;
+
 /* Module Structure */
 struct module {
     rxvm_memory_worker *memory_worker; /* Owning heap; immutable after load. */
@@ -157,6 +192,10 @@ struct module {
     uint32_t *dynamic_site_cache_slots; /* Instruction-word index -> cache slot, or UINT32_MAX */
     rxvm_dynamic_site_cache *dynamic_site_caches;
     size_t dynamic_site_cache_count;
+    rxvm_inline_diagnostic_frame *inline_diagnostic_frames;
+    size_t inline_diagnostic_frame_count;
+    rxvm_inline_diagnostic_map *inline_diagnostic_maps;
+    size_t inline_diagnostic_map_count;
 };
 
 static inline proc_runtime *rxvm_bound_graph_callable(
@@ -662,6 +701,14 @@ typedef struct rxvm_context {
     rxpa_session_call_binding *rxpa_session_bindings;
     rxpa_compatibility_context rxpa_compatibility;
     struct rxvm_channel_context *channel_context;
+    /* Exact active initializer run; a context-global module alone cannot
+     * authorize calls while that module is INITIALIZING. */
+    proc_runtime *initializer_entry_procedure;
+    size_t initializer_entry_depth;
+    /* One-shot authorization for a checked program root, consumed before
+     * the marked main body starts. */
+    unsigned char program_entry_pending;
+    size_t program_entry_depth;
 #ifdef CREXX_VM_PROFILING
     /* Keep optional build-local fields last so existing field offsets stay stable. */
     char profile_mode;
@@ -706,6 +753,7 @@ void completely_free_frame(stack_frame *frame);
 
 /* Link a loaded module */
 void rxvm_link_module(rxvm_context *context, size_t module_number_to_link);
+int rxvm_resolve_inlined_privates(rxvm_context *context);
 void rxvm_rebuild_interface_factory_registry(rxvm_context *context);
 void rxvm_rebuild_interface_method_registry(rxvm_context *context);
 void rxvm_rebuild_graph_bindings(rxvm_context *context);

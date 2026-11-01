@@ -272,6 +272,21 @@ static void output_meta_task_target_line(FILE *stream,
             binding_buffer);
 }
 
+static void output_inlined_private_line(FILE *stream, bin_space *pgm,
+                                         const meta_inlined_private_constant *entry) {
+    const string_constant *constant = (const string_constant *)(pgm->const_pool + entry->provider);
+    rxinl_module_ref_view view;
+    char *quoted;
+    size_t size;
+    if (!rxinl_module_ref_decode(constant->string,constant->string_len,&view)) return;
+    size = rxda_quote_text(NULL,0,view.selector,view.selector_length) + 1u;
+    quoted = malloc(size);
+    if (!quoted) return;
+    rxda_quote_text(quoted,size,view.selector,view.selector_length);
+    fprintf(stream,"                .inlinedprivate r%u,%s,g%u\n",entry->local_index,quoted,entry->global_index);
+    free(quoted);
+}
+
 static void output_meta_source_step_line(FILE *stream, bin_space *pgm, meta_source_step_constant *mentry, const char *indent) {
     char file_buffer[MAX_LINE_SIZE];
     char source_buffer[MAX_LINE_SIZE];
@@ -288,6 +303,20 @@ static void output_meta_source_step_line(FILE *stream, bin_space *pgm, meta_sour
             mentry->active_start_column,
             mentry->active_end_column,
             source_buffer);
+}
+
+static void output_inline_diagnostic_line(FILE *stream, bin_space *pgm, const meta_entry *entry) {
+    if (entry->base.type == META_INLINE_FRAME) {
+        const meta_inline_frame_constant *frame = (const meta_inline_frame_constant *)entry;
+        char *module_name = get_const_string_alloc(pgm,frame->module_name);
+        char *procedure_name = get_const_string_alloc(pgm,frame->procedure_name);
+        if (module_name && procedure_name)
+            fprintf(stream,"                .inlineframe %u %u %s %s %u\n",frame->frame_id,frame->parent_id,module_name,procedure_name,frame->callsite_step_id);
+        free(module_name); free(procedure_name);
+    } else {
+        const meta_inline_map_constant *map = (const meta_inline_map_constant *)entry;
+        fprintf(stream,"                .inlinemap lb_%lx,lb_%lx,%u\n",(unsigned long)map->start,(unsigned long)map->end,map->frame_id);
+    }
 }
 
 static void trace_code_string(uint8_t code, char *buffer, size_t buffer_len) {
@@ -464,37 +493,15 @@ static void output_meta_autoload_for_symbol(FILE *stream,
 static size_t get_func_string(bin_space *pgm, char *buffer,
                               size_t buffer_len, size_t index);
 
-static void output_meta_initializer_for_symbol(FILE *stream,
-                                               module_file *module,
-                                               bin_space *pgm,
-                                               const char *symbol,
-                                               const char *indent) {
-    int m;
-
-    if (!symbol) return;
-    m = module->header.meta_head;
-    while (m != -1) {
-        chameleon_constant *entry =
-            (chameleon_constant *)(module->constant + m);
-        if (entry->type == META_INITIALIZER) {
-            meta_initializer_constant *initializer =
-                (meta_initializer_constant *)(module->constant + m);
-            char *initializer_symbol =
-                get_const_raw_string_alloc(pgm, initializer->symbol);
-            if (initializer_symbol && strcmp(initializer_symbol, symbol) == 0) {
-                char symbol_buffer[MAX_LINE_SIZE];
-                char function_buffer[MAX_LINE_SIZE];
-                get_const_string(pgm, symbol_buffer, sizeof(symbol_buffer),
-                                 initializer->symbol);
-                get_func_string(pgm, function_buffer, sizeof(function_buffer),
-                                initializer->function);
-                fprintf(stream,
-                        "%s.meta %s=\".initializer\" \".void\" %s \"\"\n",
-                        indent ? indent : "", symbol_buffer, function_buffer);
-            }
-            free(initializer_symbol);
-        }
-        m = ((meta_entry *)(module->constant + m))->next;
+static void output_meta_initializer_line(FILE *stream, bin_space *pgm,
+                                         const meta_initializer_constant *initializer,
+                                         const char *indent) {
+    char *symbol = get_const_string_alloc(pgm,initializer->symbol);
+    const proc_constant *procedure = (const proc_constant *)(pgm->const_pool + initializer->function);
+    if (symbol) {
+        fprintf(stream,"%s.meta %s=\".initializer\" \".void\" %s() \"\"\n",
+                indent ? indent : "",symbol,procedure->name);
+        free(symbol);
     }
 }
 
@@ -1330,8 +1337,6 @@ static void output_imported_proc_meta(FILE *stream, module_file *module, bin_spa
                     output_meta_provider_for_symbol(stream, module, pgm, raw_symbol, "");
                     output_meta_autoload_for_symbol(stream, module, pgm,
                                                     raw_symbol, "");
-                    output_meta_initializer_for_symbol(stream, module, pgm,
-                                                       raw_symbol, "");
                     if (raw_symbol) free(raw_symbol);
                 }
                 m = mentry->base.next;
@@ -1468,6 +1473,17 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
     m  = get_first_meta_at(module, address);
     while (m != -1) {
         switch ( ((chameleon_constant*)(module->constant + m))->type ) {
+            case META_INITIALIZER:
+                output_meta_initializer_line(stream,pgm,(const meta_initializer_constant *)(module->constant + m),"                ");
+                break;
+            case META_INLINED_PRIVATE:
+                output_inlined_private_line(stream,pgm,(const meta_inlined_private_constant *)(module->constant + m));
+                break;
+            case META_INLINE_FRAME:
+            case META_INLINE_MAP:
+                output_inline_diagnostic_line(stream,pgm,(const meta_entry *)(module->constant + m));
+                break;
+
             case META_SOURCE_STEP: {
                 meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
                 output_meta_source_step_line(stream, pgm, mentry, "                ");
@@ -1590,6 +1606,17 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
     m  = get_first_meta_at(module, address);
     while (m != -1) {
         switch ( ((chameleon_constant*)(module->constant + m))->type ) {
+            case META_INITIALIZER:
+                output_meta_initializer_line(stream,pgm,(const meta_initializer_constant *)(module->constant + m),"                ");
+                break;
+            case META_INLINED_PRIVATE:
+                output_inlined_private_line(stream,pgm,(const meta_inlined_private_constant *)(module->constant + m));
+                break;
+            case META_INLINE_FRAME:
+            case META_INLINE_MAP:
+                output_inline_diagnostic_line(stream,pgm,(const meta_entry *)(module->constant + m));
+                break;
+
             case META_SOURCE_STEP: {
                 meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
                 output_meta_source_step_line(stream, pgm, mentry, "                ");
@@ -1742,6 +1769,7 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
 /* Actual Disassembler */
 void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_all_constant_pool) {
     size_t i, j;
+    size_t program_entry = SIZE_MAX;
     chameleon_constant *entry;
     proc_constant* pentry;
     expose_proc_constant* eentry;
@@ -1754,7 +1782,13 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     i = 0;
 
     /* calloc() so values will be zeroed */
-    code_line *source = calloc(pgm->inst_size, sizeof(code_line));
+    code_line *source = calloc(pgm->inst_size + 1u, sizeof(code_line));
+    unsigned char *inline_labels = calloc(pgm->inst_size + 1u, 1u);
+    if (!source || !inline_labels) {
+        free(source); free(inline_labels);
+        fputs("ERROR: out of memory preparing disassembly\n",stderr);
+        return;
+    }
 
     /* Module Header */
     fprintf(stream, "*******************************************************************************\n"
@@ -1782,6 +1816,23 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
         source[j].op = op;
         source[j].comment = op->description;
         if (source[j].flags == operand) source[j].flags = normal;
+    }
+
+    {
+        int metadata = module->header.meta_head;
+        while (metadata != -1) {
+            const meta_entry *meta = (const meta_entry *)(module->constant + metadata);
+            if (meta->base.type == META_ENTRY_STATE)
+                program_entry = ((const meta_entry_state_constant *)meta)->procedure;
+            if (meta->base.type == META_INLINE_MAP) {
+                const meta_inline_map_constant *map = (const meta_inline_map_constant *)meta;
+                if (map->start <= pgm->inst_size && map->end <= pgm->inst_size) {
+                    inline_labels[map->start] = 1u; inline_labels[map->end] = 1u;
+                    source[map->start].flags = show_label; source[map->end].flags = show_label;
+                }
+            }
+            metadata = meta->next;
+        }
     }
 
     mark_module_procedure_sources(module, pgm, source);
@@ -1923,6 +1974,19 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                             symbol_buffer,
                             resolved_buffer);
                 }
+                    break;
+
+                case META_INLINE_FRAME:
+                    fprintf(stream,"* 0x%.6lx META-INLINE-FRAME\n",(unsigned long)i);
+                    break;
+                case META_INLINE_MAP:
+                    fprintf(stream,"* 0x%.6lx META-INLINE-MAP\n",(unsigned long)i);
+                    break;
+                case META_INLINED_PRIVATE:
+                    fprintf(stream,"* 0x%.6lx META-INLINED-PRIVATE\n",(unsigned long)i);
+                    break;
+                case META_ENTRY_STATE:
+                    fprintf(stream,"* 0x%.6lx META-ENTRY-STATE\n",(unsigned long)i);
                     break;
 
                 case META_FUNC:
@@ -2191,7 +2255,8 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
             if (pentry->exposed == SIZE_MAX) {
                 locals = pentry->locals;
                 snprintf(line_buffer, MAX_LINE_SIZE, "%s()", pentry->name);
-                fprintf(stream, "\n%-15s .locals=%d\n", line_buffer, locals);
+                fprintf(stream, "\n%-15s .locals=%d%s\n", line_buffer, locals,
+                        source[i].proc_index == program_entry ? " .entry=program-default" : "");
                 line_buffer[0] = 0;
             }
             else {
@@ -2199,13 +2264,15 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                                              pentry->exposed);
                 locals = pentry->locals;
                 snprintf(line_buffer, MAX_LINE_SIZE, "%s()", pentry->name);
-                fprintf(stream, "\n%-15s .locals=%d .expose=%s\n",
+                fprintf(stream, "\n%-15s .locals=%d .expose=%s%s\n",
                         line_buffer,
                         locals,
-                        eentry->index);
+                        eentry->index,
+                        source[i].proc_index == program_entry ? " .entry=program-default" : "");
                 line_buffer[0] = 0;
             }
             output_meta_post_proc(stream, module, pgm, i, globals, locals);
+            if (inline_labels[i]) fprintf(stream,"lb_%lx:\n",(unsigned long)i);
             rxda_output_jtable_declarations(stream, jump_tables, i);
         }
         else if (source[i].flags == show_label) {
@@ -2286,6 +2353,8 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
         fprintf(stream, " * 0x%.6lx:%.4x %s\n", j, source[j].op->opcode, source[j].comment);
     }
 
+    if (inline_labels[i]) fprintf(stream,"lb_%lx:\n",(unsigned long)i);
+
     /* Final Meta entries at the code address + 1 */
     output_meta(stream, module, pgm, i, globals, locals);
 
@@ -2294,5 +2363,6 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     /* Free memory */
     rxda_free_binary_aliases(binary_aliases);
     rxda_free_jtables(jump_tables);
+    free(inline_labels);
     free(source);
 }

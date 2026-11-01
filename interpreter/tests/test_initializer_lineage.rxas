@@ -1,0 +1,18 @@
+.globals=1
+
+boot() .locals=0
+    .meta "lineage.boot"="b" ".void" boot() ""
+    .meta "lineage.boot"=".initializer" ".void" boot() ""
+    load g0,0
+    call helper()
+    sayx "probe"
+    call helper()
+    ret
+
+helper() .locals=0 .expose=lineage.helper
+    .meta "lineage.helper"="b" ".void" helper() ""
+    iadd g0,g0,1
+    ret 0
+
+main() .locals=0
+    ret 0

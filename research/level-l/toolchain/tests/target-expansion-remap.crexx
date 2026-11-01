@@ -1,0 +1,292 @@
+/* cREXX License (MIT). Structural clone locators never grant semantic permission. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargetremap
+
+providerowner: class
+  _owner = reference .lltarget..module
+  *: factory
+    arg owner = reference .lltarget..module
+    _owner = owner
+    return
+  owner: method = reference .lltarget..module
+    return _owner
+
+/** A temporary reference-returning accessor is materialized at the caller
+ * boundary; the manifest retains the original module, never this wrapper. */
+heldmanifest: procedure = .lltargetremap..expansioninstance
+  arg holder = .providerowner, called = .int, procedureid = .int
+  ownerref = holder.owner(); empty = .int[]
+  return .lltargetremap..expansioninstance(called,ownerref,procedureid,1,empty,empty,empty,'after')
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, mnemonic = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(mnemonic,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, mnemonic = .string, left = .lltarget..operand, right = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = left as .object; fields[2] = right as .object
+  return body.emit(mnemonic,fields,at)
+label: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+meta: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin, open = 0
+  fields = .object[]; fields[1] = .lltarget..operand.string(name as .binary) as .object
+  if open then do
+    fields[2] = .lltarget..operand.string('local' as .binary) as .object
+    fields[3] = .lltarget..operand.string('integer' as .binary) as .object
+    fields[4] = body.reg('a',1) as .object
+  end
+  return body.record('.meta',fields,at)
+sourcepoint: procedure = .int
+  arg body = .lltarget..bodydraft, line = .int, at = .llir..origin
+  values = .object[]
+  values[1] = .lltarget..operand.integer(1) as .object; values[2] = .lltarget..operand.integer(1) as .object
+  values[3] = .lltarget..operand.integer(1) as .object; values[4] = .lltarget..operand.string('remap.fixture' as .binary) as .object
+  values[5] = .lltarget..operand.integer(line) as .object; values[6] = .lltarget..operand.integer(2) as .object
+  values[7] = .lltarget..operand.integer(5) as .object; values[8] = .lltarget..operand.string('fixture clause' as .binary) as .object
+  return body.record('.srcstep',values,at)
+fields: procedure = .object[]
+  arg item = .lltarget..record, body = .lltarget..bodydraft
+  result = .object[]; value = .lltarget..operand
+  do i = 1 to item.operands()
+    value = item.operand(i)
+    if value.kind() = 'R' then value = body.reg(value.bank(),value.index())
+    result[i] = value as .object
+  end
+  return result
+
+sample: procedure = .lltarget..module
+  arg mode = .int, expose called = .int
+  draft = .lltarget..draft('expansion.remap','fixture:expansion.remap',1)
+  at = draft.synthetic('caller controls remain at their original clone cuts')
+  root = draft.procedure('main',1,at); ignored = .int; values = .object[]
+  if mode = 7 then ignored = sourcepoint(root,7,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  if mode <> 2 then ignored = two(root,'brt',.lltarget..operand.symbol('caller.after'),root.reg('g',0),at)
+  values[1] = root.reg('r',0) as .object; values[2] = .lltarget..operand.procedure('leaf') as .object; values[3] = root.reg('r',0) as .object
+  called = root.emit('call1',values,at)
+  if mode <> 2 then ignored = label(root,'caller.after',at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(8),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  if mode = 16 then do
+    other = draft.procedure('other',1,at)
+    ignored = two(other,'load',other.reg('r',0),.lltarget..operand.integer(7),at)
+    values[1] = other.reg('r',0) as .object; values[2] = .lltarget..operand.procedure('leaf') as .object; values[3] = other.reg('r',0) as .object
+    ignored = other.emit('call1',values,at)
+    ignored = one(other,'ret',.lltarget..operand.integer(0),at)
+  end
+  locals = 1; if mode = 14 then locals = 2
+  leaf = draft.procedure('leaf',locals,at)
+  ignored = label(leaf,'leaf.body',at); ignored = meta(leaf,'value',at,1)
+  if mode = 14 then do
+    ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(7),at)
+    ignored = two(leaf,'load',leaf.reg('r',1),.lltarget..operand.integer(9),at)
+  end
+  if mode = 15 then ignored = two(leaf,'brt',.lltarget..operand.symbol('leaf.exit'),leaf.reg('a',1),at)
+  ignored = two(leaf,'swap',leaf.reg('a',1),leaf.reg('a',1),at)
+  if mode = 15 then ignored = label(leaf,'leaf.exit',at)
+  if mode = 14 then ignored = one(leaf,'ret',leaf.reg('r',0),at)
+  else ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  return draft.finish()
+
+/** This deliberately constructs only a structural claim. Final CALL/RET,
+ * resource, observer and source/static-diagnostic permission is independent. */
+clone: procedure = .lltargetremap..expansioninstance
+  arg owner = reference .lltarget..module, called = .int, target = .lltarget..bodydraft, at = .llir..origin, mode = .int, draftref = reference .lltarget..draft, sourcesref = reference .object[], originsref = reference .object[], frameid = 1
+  source = dereference owner; graphref = source.ir(); provider = source.body(source.procedureid('leaf'))
+  values = .object[]; sourceops = .int[]; candidateops = .int[]; counts = .int[]; empty = .int[]
+  truncatedsource = .int[]; truncatedcandidate = .int[]; truncatedcounts = .int[]
+  ignored = .int; i = .int; field = .lltarget..operand; item = .lltarget..record; retid = .int; row = .int; recordrow = .int; deferredlabel = .int
+  recordsources = .int[]; recordcandidates = .int[]; role = .string; replacement = .lltarget..operand; original = .lltarget..operand
+  suffix = '.clone'; after = 'clone.after'
+  if frameid <> 1 then do; suffix = suffix || '.' || frameid; after = after || '.' || frameid; end
+  values[1] = .lltarget..operand.integer(frameid) as .object; values[2] = .lltarget..operand.integer(0) as .object
+  values[3] = .lltarget..operand.string(source.name() as .binary) as .object; values[4] = .lltarget..operand.string('leaf' as .binary) as .object
+  values[5] = .lltarget..operand.integer(0) as .object; ignored = target.record('.inlineframe',values,at)
+  sourceops[1] = 0; candidateops[1] = one(target,'unlink',target.reg('r',1),at); counts[1] = 5
+  ignored = one(target,'null',target.reg('r',1),at)
+  ignored = two(target,'load',target.reg('r',1),.lltarget..operand.integer(1),at)
+  ignored = two(target,'link',target.reg('r',2),target.reg('r',0),at)
+  ignored = two(target,'link',target.reg('r',3),target.reg('r',0),at)
+  do i = 1 to provider.records()
+    item = provider.record(i)
+    childat = lltargetremap..copyorigin(graphref,item.origin(),draftref,sourcesref,originsref)
+    if item.kind() = 'label' then do
+      recordrow = recordsources[0] + 1; recordsources[recordrow] = item.id(); field = item.operand(1)
+      if mode = 9 then deferredlabel = recordrow
+      else recordcandidates[recordrow] = label(target,field.text() || suffix,childat)
+    end
+    else if item.kind() = '.meta' then do
+      recordrow = recordsources[0] + 1; recordsources[recordrow] = item.id(); call objectarraydrop values
+      values[1] = .lltarget..operand.string(('value' || suffix) as .binary) as .object
+      values[2] = item.operand(2) as .object; values[3] = item.operand(3) as .object; values[4] = target.reg('r',2) as .object
+      recordcandidates[recordrow] = target.record('.meta',values,childat)
+    end
+    else if item.mnemonic() = 'swap' then do
+      field = target.reg('r',2); if mode = 1 then field = target.reg('r',3)
+      row = sourceops[0] + 1; sourceops[row] = item.id(); candidateops[row] = two(target,'swap',target.reg('r',2),field,childat); counts[row] = 1
+      if mode = 9 then recordcandidates[deferredlabel] = label(target,'leaf.body' || suffix,childat)
+      if mode = 8 then ignored = meta(target,'injected',childat)
+    end
+    else if item.mnemonic() = 'load' then do
+      field = item.operand(1); replacement = target.reg('r',4 + field.index()); if mode = 14 then replacement = target.reg('r',4)
+      row = sourceops[0] + 1; sourceops[row] = item.id(); candidateops[row] = two(target,'load',replacement,item.operand(2),childat); counts[row] = 1
+    end
+    else if item.mnemonic() = 'brt' then do
+      field = item.operand(1); name = field.text() || suffix; if mode = 15 then name = 'leaf.body' || suffix
+      row = sourceops[0] + 1; sourceops[row] = item.id(); candidateops[row] = two(target,'brt',.lltarget..operand.symbol(name),target.reg('r',2),childat); counts[row] = 1
+    end
+    else if item.mnemonic() = 'ret' then do
+      retid = item.id(); row = sourceops[0] + 1; sourceops[row] = item.id(); counts[row] = 5
+      if mode = 14 then candidateops[row] = two(target,'copy',target.reg('r',0),target.reg('r',4),childat)
+      else candidateops[row] = two(target,'load',target.reg('r',0),.lltarget..operand.integer(0),childat)
+      ignored = one(target,'unlink',target.reg('r',1),childat); ignored = one(target,'unlink',target.reg('r',2),childat); ignored = one(target,'unlink',target.reg('r',3),childat)
+      ignored = one(target,'br',.lltarget..operand.symbol(after),childat)
+    end
+  end
+  ignored = label(target,after,at); closeid = meta(target,'value' || suffix,at)
+  if mode = 4 then do
+    truncatedsource[1] = sourceops[1]; truncatedsource[2] = retid
+    truncatedcandidate[1] = candidateops[1]; truncatedcandidate[2] = candidateops[3]
+    truncatedcounts[1] = counts[1]; truncatedcounts[2] = counts[3]
+    sourceops = truncatedsource; candidateops = truncatedcandidate; counts = truncatedcounts
+  end
+  instance = .lltargetremap..expansioninstance(called,owner,provider.functionid(),frameid,sourceops,candidateops,counts,after)
+  do i = 0 to provider.locals() - 1
+    original = .lltarget..operand.bound(source.identity(),provider.functionid(),0,'r',i); replacement = target.reg('r',4 + i); role = 'private'
+    if mode = 10 then replacement = target.reg('r',0)
+    if mode = 11 then role = 'count'
+    if mode = 14 then replacement = target.reg('r',4)
+    ignored = instance.bind(original,replacement,role)
+  end
+  original = .lltarget..operand.bound(source.identity(),provider.functionid(),0,'a',0)
+  ignored = instance.bind(original,target.reg('r',1),'count')
+  original = .lltarget..operand.bound(source.identity(),provider.functionid(),0,'a',1)
+  replacement = target.reg('r',2); if mode = 12 then replacement = target.reg('r',3)
+  ignored = instance.bind(original,replacement,'proxy'); ignored = instance.bindbase(original,target.reg('r',3)); ignored = instance.added(target.reg('r',3),'base-proxy')
+  if mode = 13 then ignored = instance.added(target.reg('r',0),'save')
+  ignored = instance.metadata(suffix,empty,empty,empty)
+  do i = 1 to recordsources[0]; ignored = instance.bindrecord(recordsources[i],recordcandidates[i]); end
+  ignored = instance.bindrecord(0,closeid)
+  return instance
+
+run: procedure = .int
+  arg mode = .int
+  failures = 0; called = .int; source = sample(mode,called)
+  failures = failures + check(source.valid(),'source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  draft = .lltarget..draft(source.name(),source.artifact(),source.globals())
+  sources = .object[]; origins = .object[]; operations = .int[]; instances = .object[]; values = .object[]
+  graphref = source.ir(); body = .lltarget..bodydraft; leaf = .lltarget..body; item = .lltarget..record; value = .lltarget..operand
+  ignored = .int; i = .int; relocated = .int; pending = .int; afterid = .int; instance = .lltargetremap..expansioninstance
+  originalslot = .lltarget..operand; absentbase = .lltarget..operand
+  do i = 1 to source.records()
+    item = source.record(i)
+    at = lltargetremap..copyorigin(graphref,item.origin(),reference draft,reference sources,reference origins)
+    if item.kind() = 'procedure' then do
+      original = source.body(item.procedureid()); locals = original.locals()
+      if original.name() = 'main' | (mode = 16 & original.name() = 'other') then do; leaf = source.body(source.procedureid('leaf')); locals = 4 + leaf.locals(); end
+      body = draft.procedure(original.name(),locals,at,original.expose(),original.entrykind()); operations[item.id()] = body.headerid(); iterate
+    end
+    if item.id() = called | (mode = 16 & item.mnemonic() = 'call1') then do
+      if mode = 2 then do; pending = 1; iterate; end
+      if mode = 3 then do; afterid = label(body,'caller.after',at); end
+      instance = clone(reference source,item.id(),body,at,mode,reference draft,reference sources,reference origins,instances[0] + 1)
+      instances[instances[0] + 1] = instance as .object; iterate
+    end
+    values = fields(item,body)
+    if item.kind() = 'label' & mode = 3 & item.procedureid() = source.procedureid('main') then do; operations[item.id()] = afterid; iterate; end
+    if item.kind() = '.srcstep' & mode = 7 then values[5] = .lltarget..operand.integer(99) as .object
+    if item.kind() = 'instruction' then operations[item.id()] = body.emit(item.mnemonic(),values,at)
+    else operations[item.id()] = body.record(item.kind(),values,at)
+    if mode = 2 & pending & item.kind() = 'instruction' & item.mnemonic() = 'load' then do
+      instance = clone(reference source,called,body,at,mode,reference draft,reference sources,reference origins)
+      instances[1] = instance as .object; pending = 0
+    end
+  end
+  candidate = draft.finish()
+  failures = failures + check(candidate.valid(),'candidate model validates ' || mode)
+  if candidate.valid() = 0 then do; say candidate.error(); return failures; end
+  originalslot = .lltarget..operand.bound(source.identity(),source.procedureid('leaf'),0,'r',0)
+  absentbase = instance.base(originalslot)
+  failures = failures + check(absentbase.kind() = '', 'private map before a later proxy base has a constructed absent base ' || mode)
+  originalslot = .lltarget..operand.bound(source.identity(),source.procedureid('leaf'),0,'a',0)
+  absentbase = instance.base(originalslot)
+  failures = failures + check(absentbase.kind() = '', 'count map before a later proxy base has a constructed absent base ' || mode)
+  quota = 1000000; if mode = 6 then quota = 0
+  mapping = .lltargetremap..expansioncorrespondence(reference source,reference candidate,operations,instances,quota)
+  state = mapping.status(); reason = mapping.reason()
+  select
+    when mode = 16 then do
+      failures = failures + check(state = 'proved' & mapping.valid(),'two instance checks retain exact shared provider:' || reason)
+      failures = failures + check(initialized(source),'checking the next instance cannot overwrite its shared provider through a prior alias')
+      if initialized(source) then failures = failures + check(source.valid(),'shared provider remains valid after both instance checks')
+      failures = failures + check(mapping.instances() = 2,'multi-instance control visits the provider twice')
+    end
+    when mode = 0 | mode = 5 then do
+      failures = failures + check(state = 'proved' & mapping.valid(),'exact structural clone is checked ' || mode || ':' || reason)
+      if mode = 0 then do
+        candidateirref = candidate.ir(); candidateir = dereference candidateirref
+        leaf = source.body(source.procedureid('leaf'))
+        bounds = .lltargetremap..expansionlimits(reference source,candidateir.operations(),1,4,leaf.records(),0,1000000,67108864)
+        failures = failures + check(bounds.status() = 'proved' & bounds.work() >= mapping.usedwork() & bounds.bytes() >= mapping.usedbytes(),'separate structural envelope covers the checked remap debit')
+        tinybounds = .lltargetremap..expansionlimits(reference source,candidateir.operations(),1,4,leaf.records(),0,1,1)
+        failures = failures + check(tinybounds.status() = 'limit' & tinybounds.reason() <> '', 'tiny structural envelope refuses without partial authority')
+        stamp = mapping.identity(); copiedmapping = mapping
+        failures = failures + check(stamp > 0 & copiedmapping.valid() & copiedmapping.identity() = stamp,'copying one immutable correspondence preserves its identity')
+        alternate = .lltargetremap..expansioncorrespondence(reference source,reference candidate,operations,instances,quota)
+        failures = failures + check(alternate.status() = 'proved' & alternate.identity() <> stamp,'new same-owner correspondence has a distinct immutable identity')
+        mapping = alternate
+        failures = failures + check(mapping.valid() & mapping.identity() <> stamp,'same-owner reference reassignment cannot retain an old correspondence stamp')
+      end
+      ignored = instance.seal()
+      failures = failures + check(instance.bindrecord(1,1) = 0,'sealed manifest rejects later mutation')
+      if mode = 5 then do
+        replacement = sample(mode,called); candidate = replacement
+        failures = failures + check(mapping.valid() = 0 & mapping.status() = 'invalid','candidate replacement invalidates correspondence')
+      end
+    end
+    when mode = 1 then failures = failures + check(reason = 'expansion.provider.register.mapping','wrong aliased proxy operand is rejected:' || reason)
+    when mode = 2 | mode = 3 then failures = failures + check(reason = 'expansion.caller.continuation.cut.mismatch','clone and bypass label stay at exact CALL cut:' || reason)
+    when mode = 4 then failures = failures + check(reason = 'expansion.provider.coverage.incomplete','omitted provider row cannot grant coverage:' || reason)
+    when mode = 6 then failures = failures + check(state = 'limit','tiny allowance never publishes a partial structural claim')
+    when mode = 7 then failures = failures + check(reason = 'expansion.caller.record.delta','numeric source location mutation is visible:' || reason)
+    when mode = 8 then failures = failures + check(reason = 'expansion.candidate.record.unaccounted','injected runtime metadata is rejected:' || reason)
+    when mode = 9 then failures = failures + check(reason = 'expansion.provider.record.boundary','provider label cannot cross its next instruction:' || reason)
+    when mode = 10 then failures = failures + check(reason = 'expansion.mapping.fresh.local.required','owned private backing cannot overwrite existing caller cell:' || reason)
+    when mode = 11 then failures = failures + check(reason = 'expansion.mapping.role.source','source bank cannot borrow a different mapping role:' || reason)
+    when mode = 12 | mode = 14 then failures = failures + check(reason = 'expansion.mapping.fresh.slot.alias','private/active/base cells stay independent:' || reason)
+    when mode = 13 then failures = failures + check(reason = 'expansion.addition.fresh.local.required','save/temp cannot overwrite existing caller cell:' || reason)
+    when mode = 15 then failures = failures + check(reason = 'expansion.provider.label.mapping','copied branch cannot select a different valid provider label:' || reason)
+    otherwise failures = failures + 1
+  end
+  return failures
+
+ownercontrols: procedure = .int
+  failures = 0; called = .int; source = sample(0,called); empty = .int[]
+  holder = .providerowner(reference source)
+  instance = heldmanifest(holder,called,source.procedureid('leaf'))
+  retained = instance.provider(); original = reference source
+  failures = failures + check(instance.valid() & (retained <refsame> original),'manifest keeps original provider after accessor and producer return')
+  source = .lltarget..module
+  failures = failures + check(instance.valid() = 0 & instance.reason() = 'expansion.instance.owner.or.shape.invalid','live reference to newly uninitialized provider invalidates without module access')
+  invalid = .lltargetremap..expansioninstance(called,reference source,2,1,empty,empty,empty,'after')
+  failures = failures + check(invalid.valid() = 0 & invalid.reason() = 'expansion.instance.provider.uninitialized','manifest factory refuses an uninitialized live provider')
+  return failures
+
+main: procedure = .int
+  failures = 0; mode = .int
+  do mode = 0 to 16; failures = failures + run(mode); end
+  failures = failures + ownercontrols()
+  say 'TARGET_EXPANSION_REMAP|failures=' || failures
+  return failures

@@ -4,12 +4,13 @@ crexx_add_import_root(llrxinline_imports
   DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/imports" OUTPUT_VARIABLE _imports
   FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin"
     "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin"
     "${CMAKE_BINARY_DIR}/bin/rxfnsl-rxas.rxbin"
     "${CMAKE_BINARY_DIR}/bin/rxfnsl-target.rxbin"
     "${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io.rxbin"
     "${CMAKE_BINARY_DIR}/langtools/common/llfileoutput.rxbin"
     "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin"
-  DEPENDS library rxfnsl rxfnsl_rxas rxfnsl_target rxfnsl_target_io llfileoutput fs)
+  DEPENDS library rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_target rxfnsl_target_io llfileoutput fs)
 crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/llrxinlinestage.rxbin"
   COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
     -i "${CMAKE_CURRENT_BINARY_DIR}/imports"

@@ -36,6 +36,11 @@ RXVM_HANDLER(BPON, VM_ADVANCE(0);
 RXVM_HANDLER(BPON_FUNC, VM_ADVANCE(1);
             {
                 proc_runtime *signal_function = PROC_OP(1);
+                if (signal_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                                   "Program entry cannot be installed as a handler")
+                    DISPATCH;
+                }
                 DEBUG("TRACE - BPON %s()\n", signal_function->name);
                 if (!rxsignal_ensure_private_interrupt_table(current_frame))
                     RXVM_HANDLER_INTERRUPT_TABLE_OOM();
@@ -194,6 +199,11 @@ RXVM_HANDLER(SIGBRV_ID_REG_STRING, VM_ADVANCE(3);
 RXVM_HANDLER(SIGCALL_FUNC_STRING, VM_ADVANCE(2);
             {
                 proc_runtime *signal_function = PROC_OP(1);
+                if (signal_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                                   "Program entry cannot be installed as a handler")
+                    DISPATCH;
+                }
                 DEBUG("TRACE - SIGCALL %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
 
                 size_t sig = string_to_interrupt(op2S->string);
@@ -221,6 +231,11 @@ RXVM_HANDLER(SIGCALL_FUNC_STRING, VM_ADVANCE(2);
 RXVM_HANDLER(SIGCALLA_FUNC_STRING, VM_ADVANCE(2);
             {
                 proc_runtime *signal_function = PROC_OP(1);
+                if (signal_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                                   "Program entry cannot be installed as a handler")
+                    DISPATCH;
+                }
                 DEBUG("TRACE - SIGCALLA %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
 
                 size_t sig = string_to_interrupt(op2S->string);
@@ -249,6 +264,11 @@ RXVM_HANDLER(SIGCALLBR_ID_FUNC_STRING, VM_ADVANCE(3);
             DEBUG("TRACE - SIGCALLBR 0x%x,%s(),\"%.*s\"\n", (unsigned int)REG_IDX(1), PROC_OP(2)->name, (int)op3S->string_len, op3S->string);
             {
                 proc_runtime *signal_function = PROC_OP(2);
+                if (signal_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                                   "Program entry cannot be installed as a handler")
+                    DISPATCH;
+                }
                 size_t sig = string_to_interrupt(op3S->string);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
@@ -903,6 +923,19 @@ RXVM_HANDLER(METALOADDATA_REG_REG_REG, VM_ADVANCE(3);
                         case META_TASK_TARGET:
                             /* Compiler/linker relocation metadata is consumed
                              * before execution and has no source reflection. */
+                            break;
+                        case META_INLINED_PRIVATE:
+                            /* Executable borrowed-storage bindings are consumed
+                             * by the loader and have no .meta reflection shape. */
+                            break;
+                        case META_ENTRY_STATE:
+                            /* Checked program entry is executable metadata,
+                             * not a source-level .meta reflection value. */
+                            break;
+                        case META_INLINE_FRAME:
+                        case META_INLINE_MAP:
+                            /* Load-time diagnostic coordinates are consumed by
+                             * the frame walker, not Rexx metadata reflection. */
                             break;
                         case META_PROVIDER:
                             set_null_string(op1R->attributes[j], ".meta_provider");
@@ -2284,10 +2317,15 @@ RXVM_HANDLER(DEXTR_REG_REG_REG,
 
 RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
             {
+                proc_runtime *called_function = PROC_OP(2);
+                if (called_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                                   "Program entry cannot be called as a child")
+                    DISPATCH;
+                }
                 /* Clear target return value register */
                 value_zero(op1R);
 
-                proc_runtime *called_function = PROC_OP(2);
                 DEBUG("TRACE - CALL R%lu,%s()\n", REG_IDX(1), called_function->name);
 
                 if (called_function->start == SIZE_MAX) {
@@ -2359,6 +2397,11 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
 #define RXVM_MAPPED_CALL_BODY(RESULT_, FUNCTION_, ARG_COUNT_, ARG_BASE_)         \
         do {                                                                    \
             proc_runtime *mapped_called__ = (FUNCTION_);                        \
+            if (mapped_called__->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) { \
+                SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,                    \
+                               "Program entry cannot be called as a child")   \
+                DISPATCH;                                                       \
+            }                                                                   \
             value *mapped_result__ = (RESULT_);                                 \
             int mapped_arg_count__ = (int)(ARG_COUNT_);                         \
             size_t mapped_arg_base__ = (size_t)(ARG_BASE_);                     \
@@ -2474,6 +2517,11 @@ RXVM_HANDLER(INLENTER_REG_FUNC_STRING_ID, VM_ADVANCE(4);
                     SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
                     DISPATCH;
                 }
+                if (provider->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                                   "Program entry cannot be called as a child")
+                    DISPATCH;
+                }
                 if (recipe.flags & RXINL_PREP_CLEAR) {
                     if (recipe.clear_register >= current_frame->number_locals) {
                         SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
@@ -2540,6 +2588,11 @@ RXVM_HANDLER(INLENTER_REG_FUNC_STRING_ID, VM_ADVANCE(4);
 RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
             {
                 proc_runtime *called_function = PROC_OP(2);
+                if (called_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                                   "Program entry cannot be called as a child")
+                    DISPATCH;
+                }
                 DEBUG("TRACE - CALL R%lu,%s,R%lu\n", REG_IDX(1), called_function->name, REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
                     RXVM_INSTRUMENTATION_CALL(
@@ -2641,6 +2694,12 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
             {
                 /* Function pointer is in register 2 */
                 proc_runtime *called_function = (proc_runtime *) (uintptr_t)op2R->int_value;
+                if (called_function &&
+                    called_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                                   "Program entry cannot be called as a child")
+                    DISPATCH;
+                }
                 DEBUG("TRACE - DCALL R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
                     RXVM_INSTRUMENTATION_CALL(
@@ -2820,7 +2879,7 @@ RXVM_HANDLER(RET_REG,
                 } else if (!current_frame->return_reg) {
                     RXVM_INSTRUMENTATION_RETURN(
                             RXVM_PROFILE_RETURN_VALUE_IGNORED);
-                } else if (REG_IDX(1) >= current_frame->procedure->locals ||
+                } else if (REG_IDX(1) >= (size_t)rxvm_owned_local_count(current_frame->procedure) ||
                            current_locals[REG_IDX(1)] !=
                                current_frame->baselocals[REG_IDX(1)]) {
                     RXVM_INSTRUMENTATION_RETURN(
@@ -2835,7 +2894,7 @@ RXVM_HANDLER(RET_REG,
                 int return_rc = (int)op1R->int_value;
                 /* Set the result register */
                 if (current_frame->return_reg) {
-                    if (REG_IDX(1) >= current_frame->procedure->locals || /* Not a local */
+                    if (REG_IDX(1) >= (size_t)rxvm_owned_local_count(current_frame->procedure) || /* Not a local */
                         current_locals[REG_IDX(1)] != current_frame->baselocals[REG_IDX(1)]) /* swapped/linked so might not be a local really */
                         copy_value(current_frame->return_reg,
                                    op1R); /* Must do a copy if it could be an argument, object attribute or global because ... */
@@ -3094,7 +3153,7 @@ RXVM_HANDLER(MKREF_REG_REG, VM_ADVANCE(2);
                     rxinteger index;
                     value *root = 0;
 
-                    if (root_register < (size_t)current_frame->procedure->locals &&
+                    if (root_register < (size_t)rxvm_owned_local_count(current_frame->procedure) &&
                         root_register < current_frame->number_locals &&
                         index_register < current_frame->number_locals &&
                         rxinteger_checked_add(current_locals[index_register]->int_value,
@@ -3110,7 +3169,7 @@ RXVM_HANDLER(MKREF_REG_REG, VM_ADVANCE(2);
                             current_frame_owner = 1;
                         }
                     }
-                } else if (REG_IDX(2) < (size_t)current_frame->procedure->locals &&
+                } else if (REG_IDX(2) < (size_t)rxvm_owned_local_count(current_frame->procedure) &&
                            REG_IDX(2) < current_frame->number_locals &&
                            current_locals[REG_IDX(2)] ==
                                    current_frame->baselocals[REG_IDX(2)] &&

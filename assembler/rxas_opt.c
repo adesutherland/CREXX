@@ -849,6 +849,7 @@ static int is_rule_barrier(const instruction_queue *instruction) {
     const OpInfo *op_info;
     size_t i;
 
+    if (instruction->borrowed_private_boundary) return 1;
     if (instruction->instrType == OP_CODE) {
         op_info = find_optimiser_opcode(instruction);
         if (op_info) {
@@ -988,6 +989,8 @@ static int instruction_is_relevant(op_map *map, instruction_queue *instruction) 
     Assembler_Token *register_type_token;
     Assembler_Token *value_ref;
     char register_type;
+
+    if (instruction->instrType == INLINE_FRAME_META || instruction->instrType == INLINE_MAP_META) return 1;
 
     if (instruction->instrType == TRACE_EVENT) {
         value_source = instruction->operand2Token;
@@ -1351,6 +1354,7 @@ static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size
 static int can_map_instruction(op_map *map, instruction_queue *instruction, rule *rule) {
     size_t operand_count;
     size_t operand_index;
+    if (instruction->borrowed_private_boundary) return 0;
 
     switch (rule->in.inst_type) {
         case OP_CODE:
@@ -1393,6 +1397,7 @@ static int can_map_instruction(op_map *map, instruction_queue *instruction, rule
 static int map_instruction(op_map *map, instruction_queue *instruction, rule *rule) {
     size_t operand_count;
     size_t operand_index;
+    if (instruction->borrowed_private_boundary) return 0;
 
     switch (rule->in.inst_type) {
         case OP_CODE:
@@ -1759,6 +1764,15 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
         case ASM_LABEL:
             rxaslabl(context, item->instrToken);
             break;
+        case INLINED_PRIVATE_META:
+            rxasmeinp(context,item->instrToken,item->operand1Token,item->operand2Token);
+            break;
+        case INLINE_FRAME_META:
+            rxasmeifr(context,item->instrToken,item->operand1Token,item->operand2Token,item->operand3Token,item->operand4Token);
+            break;
+        case INLINE_MAP_META:
+            rxasmeimp(context,item->instrToken,item->operand1Token,item->operand2Token);
+            break;
         case OP_CODE:
             rxasgenv(context, item->instrToken, item->operandTokens, item->operandCount);
             break;
@@ -1890,7 +1904,7 @@ static void queue_instruction_ext_full(Assembler_Context *context, enum queue_it
     context->optimiser_queue_items++;
 
     /* Optimise */
-    optimise(context);
+    if (!context->current_has_private) optimise(context);
 }
 
 static void queue_opcode(Assembler_Context *context,
@@ -1908,7 +1922,8 @@ static void queue_opcode(Assembler_Context *context,
     item->instrType = OP_CODE;
     item->instrToken = instrToken;
     rxas_set_queue_operands(context, item, operandTokens, operandCount);
-    optimise(context);
+    item->borrowed_private_boundary = rxas_instruction_borrows_private(context,item);
+    if (!context->current_has_private) optimise(context);
 }
 
 static void queue_instruction_ext(Assembler_Context *context, enum queue_item_type type,
@@ -1939,9 +1954,40 @@ static void queue_instruction(Assembler_Context *context, enum queue_item_type t
                           operand3Token, operand4Token, operand5Token, 0, 0);
 }
 
+/* Borrowed storage is observable even when its active pointer temporarily sits
+ * in an owned encoded slot. The complete-procedure binding census below also
+ * protects those slots; this initial check only needs the operand inventory. */
+int rxas_instruction_borrows_private(Assembler_Context *context, const instruction_queue *item) {
+    const OpInfo *op;
+    size_t i;
+    if (!context || !context->current_has_private || !item || item->instrType != OP_CODE) return 0;
+    for (i = 0u; i < item->operandCount; i++) {
+        Assembler_Token *operand = rxas_queue_operand(item,i);
+        if (operand && operand->token_type == RREG && operand->token_value.integer >= context->current_owned_locals)
+            return 1;
+    }
+    op = find_optimiser_opcode(item);
+    return !op || rxop_recipe_operand(op->opcode) ||
+           rxop_effects(op->opcode).implicit != RXOP_IMPLICIT_NONE;
+}
+
+void rxasqminp(Assembler_Context *context, Assembler_Token *local,
+              Assembler_Token *provider, Assembler_Token *global) {
+    if (context->current_proc_has_code || !context->current_proc_name ||
+        local->token_value.integer < 0 || local->token_value.integer >= context->current_locals) {
+        rxaserat(context,local,"inlined private declarations must precede procedure code and name a local slot"); return;
+    }
+    context->current_has_private = 1;
+    if (local->token_value.integer < context->current_owned_locals)
+        context->current_owned_locals = (int)local->token_value.integer;
+    if (context->optimise) queue_instruction(context,INLINED_PRIVATE_META,local,provider,global,0,0,0);
+    else rxasmeinp(context,local,provider,global);
+}
+
 /* Queue code for the keyhole optimiser */
 void rxasquev(Assembler_Context *context, Assembler_Token *instrToken,
               Assembler_Token *const *operandTokens, size_t operandCount) {
+    context->current_proc_has_code = 1;
     promote_floats_to_decimalsv(instrToken, operandTokens, operandCount);
     if (context->optimise) {
         queue_opcode(context, instrToken, operandTokens, operandCount);
@@ -2022,6 +2068,16 @@ void rxasqmstp(Assembler_Context *context, Assembler_Token *step, Assembler_Toke
         queue_instruction_ext(context, SRC_STEP, step, clause, flags, file, line, start, end, source);
     }
     else rxasmestp(context, step, clause, flags, file, line, start, end, source);
+}
+
+void rxasqmifr(Assembler_Context *context, Assembler_Token *id, Assembler_Token *parent,
+                Assembler_Token *module, Assembler_Token *procedure, Assembler_Token *step) {
+    if (context->optimise) queue_instruction(context,INLINE_FRAME_META,id,parent,module,procedure,step,0);
+    else rxasmeifr(context,id,parent,module,procedure,step);
+}
+void rxasqmimp(Assembler_Context *context, Assembler_Token *begin, Assembler_Token *end, Assembler_Token *id) {
+    if (context->optimise) queue_instruction(context,INLINE_MAP_META,begin,end,id,0,0,0);
+    else rxasmeimp(context,begin,end,id);
 }
 
 /* Queue Trace Event */
@@ -2114,6 +2170,102 @@ void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol) {
     else rxasmecl(context, symbol);
 }
 
+static size_t private_binding_root(size_t *parents, size_t slot) {
+    size_t root = slot;
+    while (parents[root] != root) root = parents[root];
+    while (parents[slot] != slot) {
+        size_t next = parents[slot];
+        parents[slot] = root;
+        slot = next;
+    }
+    return root;
+}
+
+static void private_binding_join(size_t *parents, size_t left, size_t right) {
+    left = private_binding_root(parents,left);
+    right = private_binding_root(parents,right);
+    if (left != right) parents[left] = right;
+}
+
+/* Over-approximate possible pointer transport over the entire procedure,
+ * including backedges. No value, lifetime or private-storage theorem is
+ * inferred here. Indexed/opaque binding actions connect to the external
+ * component; ordinary LINK/SWAP connect their inventoried operands. */
+static void protect_private_bindings(Assembler_Context *context) {
+    size_t locals = (size_t)context->current_locals, i, j, *parents;
+    if (locals + 1u > SIZE_MAX / sizeof(*parents))
+        RX_PANIC_OOM("private binding census extent",SIZE_MAX,context->file_name);
+    parents = malloc((locals + 1u) * sizeof(*parents));
+    if (!parents) RX_PANIC_OOM("private binding census",(locals + 1u) * sizeof(*parents),context->file_name);
+    for (i = 0u; i <= locals; i++) parents[i] = i;
+    for (i = (size_t)context->current_owned_locals; i < locals; i++)
+        private_binding_join(parents,i,locals);
+    for (i = 0u; i < context->procedure_queue_items; i++) {
+        instruction_queue *item = context->procedure_queue + i;
+        const OpInfo *op;
+        RxOpBindingAction binding;
+        RxOpEffects effects;
+        size_t first = SIZE_MAX;
+        int external = 0;
+        if (item->instrType != OP_CODE || !(op = find_optimiser_opcode(item))) continue;
+        if (rxop_recipe_operand(op->opcode)) {
+            for (j = 0u; j < locals; j++) private_binding_join(parents,j,locals);
+        }
+        binding = rxop_binding_action(op->opcode);
+        if (binding == RXOP_BINDING_NONE || binding == RXOP_BINDING_LIFETIME || binding == RXOP_BINDING_UNLINK) continue;
+        effects = rxop_effects(op->opcode);
+        external = binding != RXOP_BINDING_LINK && binding != RXOP_BINDING_SWAP;
+        for (j = 0u; j < item->operandCount; j++) {
+            Assembler_Token *operand = rxas_queue_operand(item,j);
+            if (!operand) continue;
+            if (operand->token_type == GREG || operand->token_type == AREG) external = 1;
+            if (operand->token_type == RREG && operand->token_value.integer >= 0 &&
+                (uint64_t)operand->token_value.integer < locals) {
+                size_t slot = (size_t)operand->token_value.integer;
+                if (first == SIZE_MAX) first = slot;
+                else private_binding_join(parents,first,slot);
+            }
+        }
+        if (first != SIZE_MAX && external) private_binding_join(parents,first,locals);
+        if (effects.implicit == RXOP_IMPLICIT_LOCAL_COPY || effects.implicit == RXOP_IMPLICIT_LOCAL_TARGET) {
+            for (j = 0u; j < locals; j++) private_binding_join(parents,j,locals);
+        }
+    }
+    for (i = 0u; i < context->procedure_queue_items; i++) {
+        instruction_queue *item = context->procedure_queue + i;
+        if (item->instrType != OP_CODE) continue;
+        item->borrowed_private_boundary = rxas_instruction_borrows_private(context,item);
+        for (j = 0u; !item->borrowed_private_boundary && j < item->operandCount; j++) {
+            Assembler_Token *operand = rxas_queue_operand(item,j);
+            if (operand && operand->token_type == RREG && operand->token_value.integer >= 0 &&
+                (uint64_t)operand->token_value.integer < locals &&
+                private_binding_root(parents,(size_t)operand->token_value.integer) == private_binding_root(parents,locals))
+                item->borrowed_private_boundary = 1;
+        }
+    }
+    free(parents);
+}
+
+/* Private declarations defer peepholes until pointer transport is known. Now
+ * replay the existing bounded rule engine on the marked stream, allowing its
+ * normal owned-only rewrites without moving through a borrowed boundary. */
+static void optimise_private_stream(Assembler_Context *context) {
+    instruction_queue *source = context->procedure_queue;
+    size_t count = context->procedure_queue_items, i;
+    protect_private_bindings(context);
+    context->procedure_queue = NULL;
+    context->procedure_queue_items = 0u;
+    context->procedure_queue_capacity = 0u;
+    for (i = 0u; i < count; i++) {
+        while (context->optimiser_queue_items >= OPTIMISER_TARGET_MAX_QUEUE_SIZE)
+            retire_oldest_queue_item(context);
+        context->optimiser_queue[context->optimiser_queue_items++] = source[i];
+        optimise(context);
+    }
+    free(source);
+    while (context->optimiser_queue_items) retire_oldest_queue_item(context);
+}
+
 /* Flush the optimiser queue */
 void flushopt(Assembler_Context *context) {
     size_t i;
@@ -2121,6 +2273,8 @@ void flushopt(Assembler_Context *context) {
         while (context->optimiser_queue_items) {
             retire_oldest_queue_item(context);
         }
+
+        if (context->current_has_private) optimise_private_stream(context);
 
         rxas_flow_optimise(context);
 

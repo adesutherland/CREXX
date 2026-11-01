@@ -1,0 +1,45 @@
+/* cREXX License (MIT). Successful owner debit and bounded finish failure. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+populate: procedure = .void
+  arg owner = reference .lltarget..draft
+  draft = dereference owner
+  at = draft.synthetic('bounded target construction')
+  body = draft.procedure('main',1,at); fields = .object[]
+  fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(7) as .object
+  ignored = body.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  ignored = body.emit('ret',fields,at)
+  return
+main: procedure = .int
+  failures = 0
+  draft = .lltarget..draft('draft.debit','fixture:draft.debit',0,1000000,1000000,1000000)
+  call populate(reference draft)
+  failures = failures + check(draft.usedwork() = 1000000 & draft.usedbytes() = 1000000,'unfinished construction grants no unused credit')
+  result = draft.finish()
+  failures = failures + check(result.valid(),'ordinary bounded target construction validates')
+  if result.valid() = 0 then do; say result.error(); return failures; end
+  graphref = result.ir(); graph = dereference graphref; storeref = graph.storage(); store = dereference storeref
+  failures = failures + check(result.validationwork() > 0 & draft.usedwork() >= result.validationwork() & draft.usedwork() < 1000000,'construction reports positive fuel/freeze and complete target validation debit')
+  failures = failures + check(draft.usedbytes() >= store.capacity() & draft.usedbytes() < 1000000,'construction accounts arena capacity and its validation/index/scratch envelope')
+  beforework = draft.usedwork(); beforebytes = draft.usedbytes(); identity = result.identity()
+  failures = failures + check(draft.usedwork() = beforework & draft.usedbytes() = beforebytes,'completed owner debit is immutable and reusable')
+  worklimited = .lltarget..draft('draft.work','fixture:draft.work',0,1000000,1000000,1)
+  call populate(reference worklimited)
+  refused = worklimited.finish()
+  failures = failures + check(refused.valid() = 0 & worklimited.usedwork() = 1 & worklimited.usedbytes() = 1000000,'work failure returns no successful construction credit')
+  bytelimited = .lltarget..draft('draft.bytes','fixture:draft.bytes',0,1000000,16384,1000000)
+  call populate(reference bytelimited)
+  refused = bytelimited.finish()
+  failures = failures + check(refused.valid() = 0 & pos('target.finish.bytes',bytelimited.error()) > 0 & bytelimited.usedbytes() = 16384,'validation scratch/index cap refuses before unchecked finish')
+  failures = failures + check(result.valid() & result.identity() = identity,'failed construction retains the last good immutable owner')
+  say 'TARGET_DRAFT_BUDGET|failures=' || failures
+  return failures

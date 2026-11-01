@@ -16,8 +16,1082 @@ cleanup. The standalone POC supplies both contexts to one service. Native or
 dynamically loaded bodies without exact link-time selection remain calls.
 Cross-module expansion also needs a checked runtime binding that cannot silently
 resolve to a different provider through the context-wide export table.
-Link-time private globals are in scope through checked module/global mapping
-without exposing them by name or adding inliner proof metadata.
+Link-time private globals remain an in-scope ownership outcome without public
+exposure or inliner proof metadata. The concrete borrowed-slot RXAS/RXBIN
+binding for direct expansion is [approved](#approved-borrowed-register-private-global-binding-inl-ac04);
+implementation and focused qualification remain open.
+The current standalone CLI work default can exhaust before the final theorem
+on a two-arm direct clone. A larger explicit allowance previously reached the
+prior-a0 finalizer refusal without publishing a clone; that incidental-timing
+gate is now removed. The same high-allowance endpoint next retains a possible
+body callback with unproved physical-activation observation; the clone is
+still unpublished. Reassess the default only after this independent semantic
+issue is resolved; budget size grants no proof permission.
+
+**Approved effective-inlining direction (31 October 2026; INL-STEP04/05).**
+The normal inliner emits a direct remapped body with bounded ordinary
+instructions for any required entry, return and context restoration, or
+retains the original CALL with an exact reason. Failure of a scope-free proof
+must not automatically select `INLENTER`: that existing operation allocates a
+scope on every execution, clears owned backing and saves/restores broad state,
+while an ordinary CALL usually reuses a frame. Keep its RXBIN/VM contract and
+handwritten compatibility checks for now; it is not the default effective-
+inlining path. A separately requested correctness experiment may exercise it,
+without an effectiveness claim. Defer the proposed INL2 opcode/recipe/feature;
+no INL2 product change is authorized by this direction.
+
+**Approved static inline diagnostic metadata (INL-STEP04/05).** Direct
+expansion carries a typed static inline-frame tree and physical code-range
+map, with no entry instruction or per-call allocation. RXAS declares
+`.inlineframe id parent "module" "procedure" callsite-step` and
+`.inlinemap begin-label,end-label,id`. Nonzero frame IDs are module-local;
+parent zero denotes the containing physical procedure. Names are diagnostic
+strings only and grant no executable binding or proof authority. A nonzero
+callsite step names an unambiguous source anchor in the output module;
+repeated records with the same ID and identical source payload are allowed. Maps cover
+disjoint half-open instruction-cell ranges and select the deepest frame;
+several disjoint ranges may share one frame. Append `META_INLINE_FRAME` and
+`META_INLINE_MAP` under `RXBIN007_FEATURE_INLINE_DIAGNOSTICS` bit 9. Validate
+names, unique IDs, parent existence/acyclicity, source references, range bounds
+and instruction boundaries. A frame definition sits at the removed call's
+physical clone-entry anchor; definitions/maps/ancestors share one containing
+physical procedure, and maps cannot cross procedure boundaries. Preserve the tree/maps when source or compiler
+inline metadata is stripped; source stripping sets callsite-step to zero.
+Assembler optimization and linking preserve/remap the address and source
+identities. Level L cleanup drops an individual map only when its complete
+instruction range becomes empty; frame definitions, ancestor links and endpoint
+labels remain available, while retained or replacement instructions keep their
+original attribution. Empty-range pruning uses the target model's checked
+sorted boundaries and participates in the same work/byte limits. The existing VM diagnostic walker expands the static chain only
+when capturing/printing diagnostics, using actual fault/resume and retained
+child call-site addresses. Physical register/frame observers and restoration
+remain independent semantic obligations. No new opcode or proof side channel
+is introduced. Focused codec/parser/roundtrip/link/diagnostic controls and
+corrupt/overlap/cycle/feature-negative cases qualify this contract.
+
+Level L owns a per-site semantic certificate and bounded restoration plan over
+canonical database effects, point facts and every normal, signal, cancellation
+and unwind exit. It must distinguish no context change, a proved known-value
+restore, a dynamic save/restore using existing GET/SET operations, an unproved
+exit, and an actual nonrepresentable observation. Numeric fields are tracked
+individually; a callee's write alone does not force a runtime scope. Unknown
+caller DIGITS is not inherently impossible to restore. Signal policy, plugin
+sync, callbacks, finalizer order, reference lifetime and physical-frame/code
+observation remain explicit obligations. The inliner consumes the certificate
+and emits only licensed operations; an incomplete opcode/reference mapping is
+a normalization error, not an opcode admission rule. Availability, semantic
+proof, resource limits and profitability have distinct reasons. The initial
+default profitability policy admits no *introduced per-call heap allocation*;
+allocations already in the copied body are irrelevant to that rule. A missing
+initializer readiness/cycle/failure proof retains CALL until an approved cheap
+equivalent ingress is available.
+
+### Asynchronous signal delivery during inlining (1 November 2026)
+
+An asynchronous signal handler must not depend on delivery occurring before or
+after a call's numeric settings, signal policy, register bindings or other
+program state are set or restored. It may see work in progress at any ordinary
+instruction boundary. Exact CALL/RET pending-signal timing is therefore not an
+inlining equivalence requirement. Synchronous fault behavior, internally valid
+VM state, pending-event preservation and required cleanup on normal and
+nonlocal exits remain requirements. If a short VM-internal transition genuinely
+needs deferral, the taken cold interrupt route may park the event until that
+transition ends; ordinary dispatch must not gain a per-instruction check.
+
+The previously approved `callbr`/`retinline` and typed return-plan design is
+withdrawn from implementation and its partial code was rolled back. It
+recreated much of the call protocol solely to enforce exact asynchronous
+checkpoints, without an established performance benefit. The direct inliner
+must be assessed against ordinary CALL cost using the existing RXAS/VM
+contracts; any new ISA/API proposal requires a separate demonstrated need and
+approval. This rollback does not waive result, ownership, context, signal-flow,
+source/TRACE or cleanup proofs.
+
+The proposed `intdefer`/`intresume` VM opcode pair is outside this POC. Adrian
+stopped that addition when review showed that asynchronous requests and
+synchronous faults share the pending word, so a correct cold-path deferral also
+needs provenance, nested-call/unwind ownership and race handling. The current
+signal-handler timing contract stands without new interrupt-control opcodes.
+
+Retained-call diagnostics preserve every per-site reason and the exact
+`LL_INLINE_KEEP: <reason>` prefix. The CLI appends its display category/proof
+layer, exact frozen input-owner/call ID, caller module/procedure, typed target
+selector and RXAS origin's zero-based half-open byte span. Module-wide
+normalization refusal is explicitly module-scoped. Escape and bound displayed
+context strings without capping the number of rejected sites or shortening
+the authoritative reason. This is diagnostic presentation only: no new
+analysis permission, proof metadata or semantic classification follows from
+the display labels. A focused CLI fixture checks early availability/selection/
+SCC and ordinary proof refusals, complete site reporting and escaped names;
+source review checks the pre-escape display bound and absence of a site cap.
+Source-only changes await the coordinator's narrow CLI qualification.
+
+Process exact selected call-graph SCCs from leaves towards callers, with
+bounded recursive SCC policy. Rebuild affected Level L facts and exact owner
+bindings after each changed body; an outer site must clone the newly selected
+inner result rather than a stale original. Fixed CALL1–CALL4 have explicit
+actual pointers and no contiguous-window placement veto, though nested
+physical-frame observers still need proof. A finite counted child can use a
+fresh contiguous count/argument pointer window with alias-preserving links and
+proved normal/abrupt restoration, subject to frame/code/resource limits. An
+unknown-length scattered tail without a finite bound is not guaranteed a
+static register block. Focused QA must cover direct versus retained output,
+numeric known/unknown restores and exceptional exits, initializer ingress,
+fixed and counted nested calls, bottom-up A→B→C, and cost-policy controls.
+Assembler-local inlining runs first; the linker consumes those already
+transformed modules, so local child calls do not need a second link-stage wave.
+Link-stage bottom-up is needed only for a selected cross-module chain that is
+itself expanded at link time. Current foreign-provider direct permission is
+unproved, and native selection capabilities are bound to frozen owner epochs;
+fresh selected lineage requires an owner-bound one-to-many clone provenance
+and trusted re-enrollment before link-stage waves can safely run. Keep those
+calls while that shared interface remains open; it does not gate local direct
+inlining or authorize a proof side channel in RXBIN metadata.
+The approved architecture review is source-only; implementation and checks
+remain open under INL-STEP04/05 and INL-STEP06.
+
+**CALL cause projection and direct diagnostic certificate (INL-STEP04/05).**
+Project the canonical typed CALL cause rows independently at each exact
+owner-bound invocation. A checked same-module bytecode target discharges only
+target resolution, target kind and initializer ingress; a finite validated
+layout discharges only its own layout/window condition. Keep allocation
+FAILURE as a named producer and retain the aggregate wildcard whenever any
+provider, frame hook or preparation cause is unproved. In particular native
+`frame_f` calls the inherited decimal provider's `syncNumericContext` during
+entry. Resource-clean backing, local target selection and the existing
+default-HALT/static-exact profiles do not prove this callback absent or
+equivalent. Direct removal needs an exact provider contract or an explicitly
+approved ABI/semantic decision; no such permission is inferred here. Genuine
+host/finalizer/reentry/policy and initializer paths remain conservative.
+
+For explicitly selected closed-call profiles, prove structural handler-table
+preservation from the exact local provider body's complete canonical inventory
+and bounded same-owner call closure. This policy-only property does not require
+every caller operation or unrelated later host callback to satisfy whole-program
+call membership. Keep the separately checked root's declared inherited
+default-HALT premise when descendant membership is incomplete; do not confer
+that premise on an unproved descendant. This legacy explicit profile remains
+distinct from the VM's catalogued mixed program-entry defaults. The CFG still
+propagates earlier reachable caller callbacks/policy changes to each site and
+retains every resource-hook, ambient/event and exceptional alternative. A host
+callback, policy/pending write, unknown effect or unbound provider inside the
+provider closure refuses the policy proof. No hook absence, resource cleanliness,
+initializer readiness or inliner permission follows from this property.
+
+**Reviewed normalization and clone admission (INL-STEP04/05; implementation todo).**
+Absolute zero-demand normalization is not a universal caller or provider
+precondition for structural cloning. Keep `cfg.normalizationcomplete(function)`,
+ordinary stamps, `flow.entrycoverageat(callid)` and
+`lltargetnormalize.sitecertificate` with their existing complete, zero-dirty
+meaning; do not relabel unknown availability as defined. A separate exact
+no-clear identity receipt proves that normalization changed no operation,
+without claiming universal entry cleanliness or callback absence. Actual
+inserted clears still require the source dirty witness, safe placement,
+candidate entry coverage, callback preservation and atomic warning/map/result
+transaction. A proved remaining owned entry read is a normalization defect;
+unknown contents alone neither license a clear nor veto an unchanged clone.
+
+Replace the universal admission gates with one final-candidate source-to-clone
+relational theorem at the shared target owner. Canonical typed effects and
+references must be complete. Checked one-to-many operation, storage and logical
+activation correspondence binds the exact provider, captured result/actual
+pointers, aliases, count/presence, preparation/capture phases, globals and every
+departure. Ordinary remapped actions retain their database semantics and may
+operate on corresponding symbolic unknown values. CALL/RET rewrites separately
+account for typed causes, initializer ingress, synchronization, result ownership,
+signals, inherited SIGRET, cancellation and normal/abrupt restoration. No
+mnemonic admission list or second opcode evaluator is introduced.
+
+Each owned provider local starts logically dirty on every inline activation;
+fresh numbering proves neither empty payload nor recycled-resource absence.
+Borrowed arguments retain their captured storage's availability. Preserve the
+source normalizer's licensed clears and warnings, and prove no new owned dirty
+observation. Match callback possibility, order, phase, reachable storage and
+permitted observations under the activation map, retaining value/binding havoc.
+Unknown physical-frame/code observations and changed resource/finalizer effects
+need their own equivalence proof. Verify the provider clone and retained caller
+together, including added private cells, child windows and diagnostics. A
+callback may copy dirty state: merging old state with an arbitrarily defined
+foreign value is not a substitute for this relation.
+
+The current `directplan` remains a draft/restoration plan and the existing
+`directequivalence` theorem remains bounded to its zero-argument, ignored-result,
+zero-local/no-state-delta domain until this replacement is implemented and
+qualified. An identity normalization receipt alone grants no activation, target,
+ABI or observer permission. Do not bypass these gates individually to admit a
+fixture. Bind every receipt/theorem to frozen source/result, profile, CFG,
+catalogue and provider epochs; invalidate it after rewriting or owner replacement.
+
+A complete ingress cone remains necessary when consuming point values for
+specialization, clear placement or restoration: include normal, handler/resumed,
+asynchronous and backward paths. Unknown later destinations are not absent
+edges, and changed-entry taint needs a complete kill or exact preservation
+across a frontier. A parametric clone theorem need not prove unchanged borrowed
+values defined, but must cover every applicable ingress and departure.
+
+Focused controls include `io-branch` direct output with cleanup disabled and
+both branch arms, slot swap/mutation and whole return (output 9, 11, 99);
+symbolically unknown borrowed input; repeated/path-sensitive dirty-local
+warning/clear; matched callback havoc; and hostile callback copying dirty state,
+changed callback phase, physical-parent/code observation, wrong alias/presence,
+initializer failure and abrupt exits. Keep stale/cross-owner correspondence,
+incomplete reference inventory and low-budget atomic-refusal negatives. The
+existing absolute site/ingress controls retain their stronger theorem. CLI
+no-call acceptance, INL-STEP06 and INL-AC01–09 remain open until qualification.
+
+**Relational replacement implementation API (INL-STEP04/05).**
+`lltargetsummary.analysis.expansionplan(callid)` returns a frozen
+owner/profile/CFG-bound `expansionplanfact`: `owner`, `operation`, `valid`,
+`status`, `reason`, `draftallowed`, `layout`, `target`, `invocation`,
+`restoration` and `returnmode`. `allowed`/`semanticallowed` remain false: the
+plan permits unpublished construction after exact target/capture/layout,
+reference and lowering inventory. It requires neither defined actual payloads
+nor absolute zero-demand normalization or absence of ordinary copied callbacks.
+
+The cycle-free remap locator is
+`expansioninstance(callid,providerRef,procedureid,frameid,sourceops,candidateops,counts,continuationLabel)`.
+`bind(original,replacement,role)` records original private, argument, proxy,
+global and count slots; `added(candidate,role)` records save, return-temp,
+base-proxy and window cells. `bindbase(original,replacement)` / `base(original)`
+record the separate original base coordinate for proxy-bound formals/globals.
+Getters are `callid`, `provider`, `procedure`,
+`frame`, `rows`, `source(i)`, `candidate(i)`, `count(i)`, `continuation`,
+`mappings`, `original(i)`, `replacement(i)`, `mappingrole(i)`, `additions`,
+`addition(i)` and `additionrole(i)`. Source operation zero locates generated
+entry/preparation rows. Each lowered RET row includes transfer, cleanup/context
+restoration and its continuation branch. Locators are untrusted claims until
+checked against the original and final models.
+
+`bindrecord(sourceRecord,candidateRecord)` separately locates copied labels and
+runtime metadata; source zero means a generated metadata-scope close.
+`metadata(scope,steps,clauses,frames)` records their existing canonical rename
+maps. The structural checker verifies payload/register renaming, fresh identity
+separation, scope closure and exact next-instruction/continuation boundaries;
+static frame/source diagnostics keep their final dedicated checker as well.
+The structural owner enforces source-bank roles, fresh caller-r suffix bounds
+and injective private/count/proxy/base/temp coordinates across the whole batch.
+Each proxy base has exactly one fresh base-proxy addition. Explicit direct
+argument coordinates alone may share captured caller slots; the final theorem
+must still prove each argument capture and alias relation. Internal copied
+label operands must select their corresponding renamed source label, not merely
+some valid destination in the same procedure.
+
+`lltargetremap.expansioncorrespondence(sourceRef,candidateRef,callerOperations,instances,work,bytes)`
+freezes all batch instances and checks owner/catalogue epochs, exact caller
+record/control/source cuts, provider instruction coverage and typed relocation.
+It exposes `sourceowner`, `candidateowner`, `operation`, `instances`,
+`instance(i)`, `instanceat(callid)`, `status`, `reason`, `valid`, `usedwork` and
+`usedbytes`. This proves structural correspondence, not activation permission.
+`analysis.expansionequivalence(plan,correspondence,work,bytes)` checks every
+batch instance and grants the new final publication permission. The existing
+typed `directequivalence(callid,diagnosticclone)` path remains intact until the
+replacement and maintained controls are coherent.
+Every new expansion-correspondence factory stamps a fresh overflow-checked,
+worker-local `identity()`. Copies of that same immutable correspondence retain
+the stamp. Receipts bind it together with source/candidate epochs and instance
+call/procedure coordinates; reassigning an external map variable to another
+valid same-owner correspondence invalidates the original receipt. Published
+module copies match the live sealed arena identity, not copied wrapper-variable
+addresses; proof owner/profile references remain exact.
+
+Default publication runs the final expansion theorem once for the whole batch;
+that theorem already checks every instance. Optional preflight clients may use
+the separate `expansionlimits(source,candidateBound,instances,slots,rows,identities,work,bytes)`
+structural envelope, not another whole semantic/diagnostic envelope. Its charged source
+scan measures provenance/operand bytes and active source-record size; checked
+linear record/control scans and quadratic slot/identity checks supply bounded
+work/retained-byte allowances with overflow guards. The structural checker
+continues to enforce its actual counters. A limit or final refusal preserves
+the entire original and reports a nonempty shared or site-specific reason for
+every selected call; no partly accepted batch is published.
+Unexpected transformation signals keep that atomic invalid/limit result and
+include the current construction/proof phase plus bounded VM origin data;
+authored filenames are hex-encoded in this error-only diagnostic.
+The CLI's outer unexpected-error handler also identifies its internal phase,
+including the return/publication boundary, without emitting successful-path
+diagnostic traffic or changing the service's proof status.
+Structural budget refusals distinguish work from bytes and report the bounded
+stage, instance and consumed/attempted/cap counters. The adapter adds its
+request, preconstruction remainder and construction debit, so exhaustion can
+be assigned to its owner without increasing a fixture's budget or suppressing
+the structural proof.
+Default relational expansion uses sequential checked stage debits. Construct
+the candidate under the remaining request cap, subtract the owning draft's
+construction/validation debit and newly incurred shared-fact costs, then run
+structural correspondence and one final batch theorem under the exact
+remainder. The gross pre-draft diagnostic estimate and fixed byte split do not
+govern this path; the explicit legacy route retains its previous envelopes.
+Completed stages consume their reported debit; the one remaining request quota
+passes forward once, while no live owner's allowance is lent twice. The final theorem
+charges only correspondence work first performed within that stage; a frozen
+map already debited by the caller is not charged again. Shared owner deltas
+already included in the final aggregate are counted once, never added twice.
+The final fact reports source-query work/bytes already included in its total;
+the summary wrapper excludes those costs from its additional ledger debit.
+Completed dependency/helper costs remain charged on refusal, including a
+dependency that exceeds the remaining final allowance. Such failure revokes
+the same fact to `limit` without replacing its counters with zero; checked
+counter saturation reports a limit rather than wrapping or granting credit.
+
+`lltarget.draft.usedwork()`/`usedbytes()` are available after a successful
+freeze and checked target construction. Work combines consumed adapter fuel,
+an explicitly conservative target-schema IR-verification fee from actual table,
+payload and duplicate-name dimensions charged before freeze, and actual target
+module/inline-index/CFG-check validation work. Internal
+`module.validationwork()` and `cfgcheck.usedwork()` report their own successful
+validation debit. Bytes include arena allocation/capacity and an owner-checked
+validation/index/scratch envelope derived before those allocations; this is
+logical budget accounting, not RSS. Failed or unfinished construction grants
+no unused-credit claim. All formulas check overflow and remaining allowances.
+For the fixed target schema, the conservative pre-freeze work fee is 32 units
+per actual IR table row, four per arena payload/accounted byte, four per named
+row inspected, and `count² * (2 * maximum_name_bytes + 8)` for function/export,
+slot and block duplicate-name dimensions. The checked byte envelope is arena
+capacity plus 4096 fixed bytes, 512 per operation, 256 per block, 128 per
+function and 16 per accounted arena byte for verification/codec/index scratch.
+These are explicit conservative logical fees, not a second validator or
+allocator measurements; the existing IR/target validators still decide validity.
+The shared target owner applies this truthful accounting to all draft writers;
+legacy inlining retains its previous reservation policy but receives the same
+checked construction charges. A representative existing scoped control covers
+that resource-behavior change.
+Provider records are indexed once from their frozen module and reused, rather
+than repeatedly rescanning its graph for each body ordinal. Resource limits
+retain the complete original with nonempty per-site diagnostics and no partial
+warnings/output.
+An emitted manifest receives its provider reference from the live batch owner.
+Manifest construction and validity distinguish a live reference from an
+initialized, valid exact module owner. Replacing that module with an
+uninitialized value invalidates the manifest without invoking module methods.
+Per-instance dereferenced provider/IR views detach before the next loop
+iteration reinitializes their local slots; lexical-scope cleanup at loop exit
+does not license assigning a typed default through an active owner alias.
+The relation charges subsequent source-flow, candidate-flow and summary-ledger
+deltas once, including refused candidates and frozen binding-recipe queries.
+Its final ledger is sealed before outer accounting; summary costs already
+charged while making plans/coverage are subtracted from outer composition,
+never spent twice. Exhaustion retains the exact original source atomically.
+
+The existing validated decoder is exposed as
+`lltargettransfer.profile.bindingprogram(opid,mode='binding',work,bytes) -> bindingprogram` with
+`status/reason/steps/kind/arity/operand/usedwork/usedbytes`. It reads only an exact source operation
+of that live profile and the owning native binding recipe, uses its existing
+checked decoder and a caller-charged work/byte envelope, and grants no callback,
+phase or lowering permission. Frozen profile state is not mutated by decoding.
+Mode `preparation` selects the same native CALL prefix recipe and permits its
+empty sequence; unknown modes fail without granting a lowering.
+No second text parser is introduced. The direct-inline worker owns this narrow
+export/wrapper; final event/phase equivalence belongs to the relational proof.
+
+The shared resource projection is
+`lltargetflow.analysis.resourceat(operation,bank,index,edgeid=0,anchor='active') -> abiresource`.
+It reads the immutable before-operation state when edgeid is zero; otherwise
+the exact frozen edge must have that operation as its source. Anchors are
+active/base/entry. Missing, unreachable, mismatched or unknown state supplies
+no live/absence/capacity facts. Existing `abiresourcepoint` owns interpretation;
+the query charges the owning flow budget, binds its owner/epoch and never
+evaluates a second resource algorithm. The relational-proof worker owns this
+one focused flow addition.
+
+The native bytecode CALL frame-preparation projection distinguishes fresh
+`value_init` backing from recycler cleanup. Its getters are
+`callframeclearrole='a0-original-backing'`,
+`callframeclearextent='active-tree'`, `callframeclearwhen='reused-frame'` and
+`callframelocalmode='relink-original'`: reused entry clears the original owned
+a0 backing, then sets integer arity; ordinary owned locals only relink while
+SAFE recycled-frame clearing is disabled. It grants no borrowed argument/global
+or observer premise. The reused-a0 finalizer is incidental recycler cleanup
+under the timing contract below; a current-body footprint cannot describe its
+prior payload and need not do so for per-call equivalence. Ordinary copied body callbacks remain
+independent paired events. The
+coordinator owns this native catalogue addition.
+
+`flow.privatebackinghistory(functionid,bank,index) -> backinghistoryfact`
+supplies `status`, `reason`, `valid`, `resourcefree`, `nonescape`, `points`,
+`function`, `bank` and `index`. The compatible API names now describe the
+current invocation's published original-owned r resource/escape footprint;
+they simulate no prior dirty scalar/cache contents. NULL/resource-clear masks
+are not resource creation. Unproved imports/creation, pointer export,
+attribute/native/address selectors and unknown hooks retain exact refusals.
+Borrowed/globals and `.inlinedprivate` backings receive no owned seed, and no
+scalar definedness follows. A0's current-invocation resource and escape
+footprint remains subject to the ordinary ownership proof; no prior recycler
+payload fact is inferred from the current body.
+
+Under the public opaque-value-handle contract, a supplied-handle resource
+callback and a separate nested public root cannot write an unescaped original
+backing outside their supplied handles. The checked bytes-snapshot route may
+preserve this footprint. Reentry, physical code/frame observation, host,
+context, pending-signal and endpoint callback effects remain independent;
+removed callbacks still need exact absence or equivalence.
+
+The conservative pre-solver inventory supplies reference-record entry seeds
+only. It establishes no native payload, retained capacity or active-attribute
+absence and suppresses no first-overwrite finalizer. Unresolved footprints may
+refine after solving through the same executor's frozen per-action
+active/base/entry StorageIds, exact CFG prefixes and native resource predicates.
+This introduces no binding interpreter or second resource evaluator. An
+inactive original proxy backing remains distinct from borrowed active payload;
+unknown identity/phase, resourceful revival or pointer export refuses. After a
+possible callback the executor may publish binding-only points where the
+existing native structural contract preserves the pointer tables. Component
+cells/captures remain unknown/unmaterialized; unknown pointers remain zero.
+
+**Retained-child original-backing projection (INL-STEP04/05; in progress).**
+The shared flow owner refines `privatebackinghistory` over its same frozen
+native action paths. Each action uses its own before-action active/base/entry
+StorageIds and component domain; a slot selected at one compound phase does
+not select that slot at another phase. Resource imports add exact original
+owned backing dependencies to the existing least fixed point; foreign or
+unknown imports retain a reason. An external action with a checked complete
+intrinsic value footprint supplies no additional hidden resource write; its
+`none` or `bytes-snapshot` callback value surface still preserves all separate
+host/context/callback/observer obligations. Incomplete footprints and unknown
+surfaces refuse. This changes no scalar availability or observer theorem and
+adds no resource interpreter. A typed `context` action whose checked domain
+is `context` updates ambient state, not a Rexx backing resource. The child
+resource projection retains its unknown context value and all restoration,
+synchronization and observer obligations; it grants no numeric-state precision.
+A missing/non-context domain remains an explicit refusal.
+
+The resource-only projection may replace an aggregate `failure` inventory
+refusal caused solely by unknown native signal names/contract with the exact
+canonical CFG's complete wildcard and typed cause departures. It requires
+complete resource effects/references/components/ownership/bindings/order/control,
+at least one exceptional producer, complete scope/path edges and no unproved
+returning handler reach. Every normal and exceptional action prefix is still
+checked. Retained child allocation/layout/initializer/provider and callback
+failures remain native CALL behavior; none is discarded using the removed-call
+allocation opportunity. Unknown handler destinations or incomplete phase/binding
+points remain refusals. This refines only resource reach/creation, never scalar
+failure state, signal names, delivery, observer equivalence or CALL removal.
+
+An exact retained same-owner bytecode child is projected by substituting its
+formal entry StorageIds with the parent's captured actual StorageIds, and its
+physical result with the captured result StorageId. Child original locals and
+a0 remain separate identities. This is the current invocation's published
+resource/escape footprint, not a simulation of prior dirty private scalar or
+cache state. The projection traverses the
+same native actions and all complete normal/exceptional/asynchronous exits,
+including return-source resource dependencies and pointer export. It uses the
+canonical CALL cause, initializer-ingress and frame-preparation inventory;
+resource-only opaque-handle frame callbacks cannot mutate the checked
+unescaped parent backing, but remain real events with separate observation,
+reentry, phase and lifecycle obligations. Unknown/delegated/native/reflective
+routes, incomplete phase/binding inventories, recursive/deep child graphs and
+unproved selector/presence remain explicit refusals. No fresh-root, private-name
+or empty-exposure premise is used. The reused a0 `value_zero` route can call
+the published native payload finalizer, but its incidental recycler timing is
+not a per-call correspondence obligation. Reference-record retirement alone
+runs no such hook. The same published finalizer may run on the first explicit
+r overwrite; a positive current-body footprint therefore seeds no native or
+capacity/attribute absence and suppresses no endpoint hook. Exact frozen
+captures and actual writes remain the only such resource endpoint proof. The
+finalization timing contract below governs only incidental cleanup. All work, substitutions
+and action-path materialization consume the flow budget and frozen owner epochs.
+
+A declared unreferenced owned r original may use a stable virtual history
+cache key, just as unreferenced a0 does. It receives no solver register or value
+fact; complete inventory must still exclude implicit/reflective access and
+escaping callbacks. The focused `target-backing-child` consumer covers scalar
+child writes/returns, aliasing/rebinding, unrelated compound endpoints, resource
+imports/creation, pointer export, unresolved/dynamic targets, stale owners and
+bounded refusal. Sol 6 owns compilation and focused execution; source review
+alone leaves this implementation and INL-STEP06 unqualified.
+
+Provider frame control remains a separate current-invocation obligation.
+Native `release-frame-plugins` retains its conditional free-callback semantics;
+the published-interface plugin nonownership invariant below proves that
+private `loaded_here` ownership is never installed. No historical simulation
+of dirty private local/cache contents is required. Current invocation, scope,
+handler, private-policy and reference owners still require exact entry/body
+and normal/abrupt/asynchronous exit facts. Value-backing absence/nonescape and
+matching row schemas supply none of that control proof. The final relation
+consumes its owner-bound `framecontrolhistoryfact`; unresolved control effects
+retain their precise correspondence reason. Native retirement and eventual
+execution-finish teardown stay separate. Explicit current-invocation payload
+effects and eventual ownership remain resource/cause obligations. No prior-a0
+recycler timing gate is required.
+
+The native catalogue owns `callframecontrolstate(opcode)` and
+`callframecontrolentry(opcode,field)` under the exact ordinary bytecode child
+guard (nonnull parent, no invocation/interrupt/root/program-entry owner).
+Known entry fields are plugins=`parent-borrowed`, pluginowners=`none`,
+invocation/scope/handlers=`empty`, policy=`parent-borrowed-cow`,
+references=`unmarked`, interrupt=`parent-inherited`, action=`off`;
+callerwindow is `none` for explicit fixed arguments and `mapped-window` for
+counted/fused mapped calls. `framecontrolstate(opcode)`,
+`framecontrolmask(opcode)` and a named bit getter expose the one reviewed
+direct inventory for policy, handler-stack, inline-scope,
+reference-ancestors, child-entry and retire. Callback, delegated and async
+obligations remain separate; an unknown name returning zero proves no absence.
+The existing eight-column ABI gains `frame-retire`, with ordered operations
+`leave-frame-scopes`, `clear-frame-handlers`, `release-frame-policy`,
+`release-frame-references` (original owned prefix then original a0, then reset
+the marker), `abandon-frame-invocation`, `unpin-frame-invocation` (then null the
+owner), and `recycle-frame`. This expands ordinary RETIRE_FRAME, without
+clearing retained values or freeing plugins. Final `clear_frame` and
+execution-finish retain their distinct ordered value/plugin/control cleanup.
+Level L's owner-bound frame-control fact checks typed direct/transitive
+effects, current CFG exits and native control retirement; value-backing
+footprints supply none of that ownership proof. This is an internal catalogue/ABI projection, with
+no new ISA, RXBIN or public API.
+
+`catalog.framepluginownership()` returns
+`none-published-interface.v1` only under the reviewed native invariant that
+decimal/Unicode private-frame `loaded_here` ownership is never installed by
+supported instructions or public RXPA/RXVML callback/reentry routes. Those
+flags are initialized/reset to zero; internal raw-struct mutation is outside
+the published interface. This says nothing about plugin instance/context
+immutability, value finalizers, callback or observer absence. An unknown
+contract supplies no plugin-ownership proof.
+
+Level L records native `framecontrol` atoms in the existing direct/transitive
+summary closure. Its internal checked-phase receipt is created only after the
+same expansion relation has checked entry, body and result/exit correspondence
+for that exact call, with source/candidate owner epochs and the final mapping.
+`analysis.framecontrolhistory(receipt,work,bytes)` returns an owner-bound
+`framecontrolhistoryfact` with status/reason/valid/preserved, operation and
+work/byte accounting. It accepts no caller-supplied callback-pairing boolean.
+The receipt snapshots external summary/mapping owners, frozen call/provider
+and module/catalogue identities, and copied checked no-hook event IDs. It
+retains no reference to a prepared relation returned by value or to its flow
+fields. Snapshot copy bytes/work and each no-hook lookup scan are charged.
+The fact consumes native child-entry/control masks, exact CFG exits and the
+ordered `frame-retire`/execution-finish control rows. Native published-interface
+plugin nonownership is distinct from value backing absence; the current
+invocation's policy/handlers/scopes/reference/invocation effects remain checked
+independently. Private dirty caches require no historical simulation. The
+reused-a0 recycler finalizer is not inferred absent, but its incidental timing
+does not gate inlining. This fact grants no
+final dispatch, observer or publication permission.
+
+Approved finalizer timing contract (1 November 2026; clarified after a0
+review): native reused-a0 `value_zero` may call the documented native-payload
+finalizer, but an incidental dirty-private cleanup has no specified timing
+relative to calls or instructions. It may happen on reuse, frame retirement or
+context teardown. `a0` still contains the new argument count at entry; `a1+`
+are borrowed caller bindings, not callee-owned recycler backings. Explicit
+value operations and ownership transfers retain their documented effects and
+ordering. Every payload actually installed must remain owned and receive
+exactly one eventual finalization. The Level L prior-a0 timing refusal is
+removed from per-call equivalence. Current-execution payload ownership still
+needs proof across normal and nonlocal exits; do not infer
+absence from a single current invocation or merely from no textual `a0`
+write. The per-procedure recycler also permits a stronger inductive absence
+proof if all aliases, attributes, callbacks and escape paths are covered.
+Classify the existing native call-frame recycler-cleanup cause once at the
+shared Level L equivalence boundary. Keep its raw callback possibility and
+effect havoc in VM flow; only its incidental call-relative timing is excluded
+from inliner correspondence. Do not add per-opcode or per-call-shape a0
+exceptions, and do not weaken current-invocation payload operations.
+
+`lltargetflow.analysis.relational(ownerRef,profileRef,cfgRef,work,bytes)` uses
+the same solver and resource predicates, precomputing the current original-owned
+footprint before solving and seeding only checked r reference-record absence.
+It seeds no scalar/native/capacity/attribute absence, borrowed/global or
+`.inlinedprivate` cells, and reinterprets no source execution profile. The
+factory and cache ordering retain the same owners; frozen current-invocation
+exits and published finalizer obligations remain independent.
+
+`catalog.callbackvaluesurface(opcode)` is `none`, `bytes-snapshot` or `unknown`.
+The reviewed SAY/SAYX byte route passes no suspended value handle; only a
+checked nonescaped private backing may use that surface fact. HOST/reentry,
+context, pending signals, physical observers and async effects remain explicit.
+This internal catalogue projection changes no ISA/ABI.
+
+`catalog.observationmask(name)` projects existing native activation-observation
+bits for `frame`, `module`, `code`, `debug` and `unknown`; an unrecognized name
+returns zero without proving absence. This adds neither opcode data nor ISA.
+The final relation may distinguish truthful actual-selected-image CODE from
+physical FRAME/DEBUG/UNKNOWN; module ownership still requires its separate map.
+
+Optimized artifacts need not retain identical instruction bytes. Code readers
+must truthfully expose the actual selected image, retained TRACE events must
+remain safe and ordered, and static inline source/fault diagnostics must remain
+truthful. Known-on TRACE may disable optimization at assembly/link selection;
+runtime TRACE still observes the selected optimized image. Physical parent,
+register and activation observation is a separate equivalence obligation.
+
+The native owner extends the existing `rxop_abi_contract(opcode,mode)` table,
+not a second cleanup algorithm, with `root-return`, `root-sigreturn`,
+`root-unwind` and `execution-finish` modes. Ordered typed rows distinguish
+result transfer when a receiver exists, deactivation, external argument
+copyback/free, root retirement and recycler draining. Normal RET/SIGRET use
+the live original a0 count; abnormal unwind uses saved `frame.number_args`.
+The contract identifies checked `rxvm_run`, `rxvml_run` and descriptor-entry
+variants. These rows grant no raw-root resource/observer absence: the final
+relational theorem pairs original endpoints and proves any added-cell absence.
+The coordinator/native owner implements and validates the rows; focused
+controls cover live-versus-saved counts, receiver/no-receiver, normal/signal/
+abrupt exit, entry variants and malformed/unknown mode refusal.
+
+Empty `.expose` is not a closed provider-ingress proof: METALOADEDPROCS can
+enumerate every procedure, DCALL accepts held handles, and public RXVML
+META_FUNC fallback can discover metadata-described members. All-invocation
+backing history must not rely on a private name. Context-bound closure needs
+checked frozen module, entry, reflection/held-handle and late-load boundaries.
+
+The final relation pairs source virtual CALL/RET micro-events from native
+contracts with emitted preparation, body and exit events. It tracks active,
+base and slot identities separately, aliases/presence, all published components
+and flags, lifelines, globals, numeric/signal context and source/static
+diagnostics. Unknown values remain corresponding unknowns; a matched callback
+retains havoc without a definedness, resource-absence or no-observer theorem.
+Removed hooks, initializer, physical observers, cleanup and signal departures
+need their own absence/equivalent lowering proof; only the approved allocation
+pressure opportunity may be discarded as infrastructure.
+
+Implementation is one coordinated source batch: summary draft/final facts;
+checked remap instance/correspondence; generic preparation/capture, proxy or
+evolving-binding, return/context/signal emission; then adapter publication and
+focused controls. Caller no-clear identity is separate from absolute site
+normalization. Binding-mutated formals use private pointer coordinates rather
+than changing caller slots; base/UNLINK semantics require saved base coordinates.
+Fixed and finite counted/fused shapes use database recipes without INLENTER
+fallback. Unbounded layouts or unmatched observable events retain concrete
+semantic obligations. Direct-inline worker owns remap/inliner/this API section;
+relational-proof worker owns summary facts and theorem controls; coordinator
+owns native contracts and all builds/QA.
+
+Owned normalization uses one deterministic bounded ledger, retaining the
+existing maximum three-quarter outer reservation: one quarter for receipt and
+proof operations and one half for owned preparation. The explicit normalizer
+keeps its conservative bounded envelope while it lacks an actual-cost report;
+sealed transfer/CFG construction returns unused quota through its existing
+used counters. Persistent flow/summary owners retain their whole granted
+envelopes for later queries, so reclaimed construction quota is never lent
+twice. Source flow receives half the then-remaining preparation allowance;
+summary is reserved only for conditional proof, and a distinct candidate flow
+uses the remaining disjoint allowance. An unchanged exact frozen result graph
+reuses its source analysis stack. The outer reported reservation remains
+exactly three quarters, including held future proof/query quotas. Tiny work/byte exhaustion still refuses the
+whole transaction before output/warnings. `policy=never` retains standard RXAS
+normalization; it is a call-selection policy, not an unchecked-input mode.
+
+**Native callback structural-policy preservation (INL-STEP04/05).** The checked
+default-HALT profile supplies an entry policy, not a promise that arbitrary
+callbacks preserve it. Add `rxop_callback_preserves_signal_policy()` and its
+generated `catalog.callbackpreservessignalpolicy` projection for complete,
+reviewed callback routes. Resource-only callbacks and the public SAY/SAYX
+bytes-output route preserve the suspended physical frame's handler table.
+The byte exit receives only a borrowed byte span; supported nested public VM
+entry creates its own root/frame and restores the outer trampoline, and child
+policy writes use frame-local COW. The context output writer forbids reentry.
+Queueing an interrupt changes the pending word, not its receiving handler
+table. Thus inherited default-HALT remains a terminal alternative; authored
+handler/backward edges remain in the CFG and the site's ingress cone.
+
+This fact does not remove HOST callbacks, queued signals, nested execution,
+value/binding havoc, physical-frame observers, output failure or opaque output
+effects. Unknown/incomplete, selector, unreviewed host, invocation and hidden
+ABI/departure routes do not receive it. Explicit instruction policy writes are
+separate effects and remain. Arbitrary mutation through private debugger/VM
+internals is outside the published callback contract. Transfer policy closure
+and callback destination projection consume this native-owned fact; the
+inliner and normalization gates receive no mnemonic exception. Focused
+controls pair canonical output under the checked entry premise with an
+authored POSIX_INT backward handler, unsealed entry and an unenrolled-provider
+callback. The real `io-branch` CLI no-call/output acceptance remains open until
+the coordinator qualifies it, including independent retained-call obligations.
+
+The absolute site collector refuses every possible callback after capture with
+`target.flow.site.call.callback.phase.unproved`. Pointer identity preservation
+alone does not prove payload definedness or exhaustive dirty origins: a hook
+may transport dirty components. Defined and dirty argument controls both retain
+that refusal, as do independently authored lookalike and HOST hooks. The
+relational inliner consumes the separate unchanged normalization identity and
+source-to-candidate event relation; it does not weaken this absolute fact or
+substitute a foreign-defined value. Ordinary transfer keeps unknown callback
+availability explicit across shared globals and escaped aliases as well.
+
+The maintained `target-scopefree-inline` ordinary-CALL cases (including the
+explicit `all-legal` policy) must be rechecked after removing the obsolete
+prior-a0 recycler callback-phase gate; other exact source and callback proofs
+remain independent. The literal SIGNAL control
+refuses earlier with `target.cfg.ingress.local.destination.unproved`: its
+incomplete callback-policy inventory propagates through the child invocation
+and retains an unknown local CFG destination, which default-HALT cannot close.
+Native CALL clears the provider's
+reused a0; INLENTER clears caller-owned recipe slots and cannot substitute that
+event. This dependency predates the sequential ledger change. Independent
+explicit INLENTER/return ABI and runtime positives remain in their owning
+fixtures; none authorizes bypassing the CALL replacement obligation.
+
+**Approved decimal context synchronization contract (INL-STEP04/05).**
+Adrian approved a value-only, non-signalling and non-reentrant decimal
+`syncNumericContext` contract. Synchronization may read the supplied numeric
+settings (or the documented default when the pointer is null) and update only
+the provider instance's private cache of their effective values. It must not
+raise or clear a signal, change diagnostics, call VM/native/host services,
+reenter execution, read or change register/value state, mutate the supplied
+context, retain/observe its pointer identity, or make call count/order visible.
+It is total for valid contexts and performs no allocation/resource operations,
+I/O or abnormal exit.
+Other decimal operations must leave the synchronized effective configuration
+intact between sync calls, restoring temporary internal adjustments before
+return, including failure-result returns.
+The host may omit a redundant synchronization when effective numeric settings
+are unchanged. Other decimal operations, native hooks, frame recycling and
+cleanup retain their separate effects and proofs. This increment establishes
+the contract and gate; it does not add dispatch-time sync suppression.
+
+Decimal plugin registration advances the existing tightly coupled ABI from 2
+to 3 without changing `decplugin` or `value` layout. A rebuilt provider opts in
+with `REGISTER_DECIMAL_PLUGIN`, exposing `_register_rxvm_decimal_plugin_v3`
+for dynamic loading and the corresponding checked static registration API.
+Its descriptor carries exact structure size, ABI version 3, decimal type,
+`value-only-nonreentrant.v1` synchronization contract, factory name and factory.
+Validate the descriptor before publication and before writing any decimal
+extension fields. A factory whose returned type or required sync entry differs
+is rejected. Legacy `_register_rxvm_plugin`/`register_rxvmplugin` remains a
+Unicode path and must reject decimal providers atomically; rebuilding the host
+alone cannot confer this contract on an old binary. Dynamic incompatibility
+has a distinct load result and diagnostic. Existing live instances/catalogue
+remain intact after rejection; descriptor and library cleanup keep the current
+transaction owner. Bundled db/mc decimal factories explicitly use ABI 3.
+A library exposing both registrars may contribute new decimal and legacy
+Unicode factories in one atomic transaction; invalid versioned registration
+never falls back, and a legacy decimal contribution rejects that transaction.
+
+The focused native gate is implemented and checked: constructed old-decimal
+rejection, malformed new descriptor rejection, legacy Unicode acceptance,
+rebuilt bundled decimal load and private instance/lifecycle controls. Independent checks
+compare equal numeric values in distinct context objects, null/default sync,
+changed values and diagnostic preservation for both bundled engines. The native
+canonical catalogue may advertise this enforced contract; shared CALL proof
+must distinguish decimal context synchronization from independent value/frame
+resource hooks. Root owns all build/test execution and broader INL acceptance
+remains open.
+
+**Retained caller ABI composition (INL-STEP04/05; implementation/QA todo).**
+Direct expansion removes the callee activation; it retains the caller's physical
+frame and its eventual normal/terminal cleanup. The current root
+`target.abi.parent.unproved` result is not permission to use the native nested
+`INTERNAL_PARENT` retirement row: root copyback/external-argument destruction
+is not represented by that row. Keep the ordinary raw-root ABI query unknown
+and possible. A separate shared Level L transformation certificate may prove
+that this retained boundary remains equivalent; callback absence and callback
+preservation are distinct outcomes.
+
+Preserve a typed pending boundary ledger even when a conditional ABI row cannot
+be published: exact owner/profile/CFG epochs, physical caller, source edge and
+cause/phase, scope prefix and root-entry kind. Never classify it by diagnostic
+reason text. A provisional direct draft may defer only caller-owned retained
+boundaries after its removed callee ABI, callbacks, initializer ingress and
+other semantic obligations are proved. Public final permission stays false
+until candidate validation closes both this ledger and static diagnostics.
+
+The certificate binds the frozen source flow, exact frozen candidate IR and
+checked expansion correspondence. For the initial zero-delta slice the candidate
+operational view is derived from that correspondence and the proved provider
+plan; a caller-supplied candidate profile cannot assert the required equivalence.
+It compares all observable inputs and order at every paired
+retained cleanup boundary: original storage/argument/result identities and
+resources, context, policy/scope, reference lifetimes and root role. Additional
+clone cells need their own full-capacity hook-absence, nonescape and recycled-
+activation proof; fresh numbering alone proves none of these. Declared physical
+frame/code/metadata observers, including caller continuations and callbacks,
+must be proved unchanged or absent. An incomplete observation inventory cannot
+be projected away. An opaque tail is preserved only by complete observable-input
+identity; otherwise its missing ABI/observation contract remains a named gap.
+Normal later caller returns and abrupt routes both retain these obligations.
+
+The first typed positive uses an ignored-result, zero-local leaf in a physical
+root with no added clone cells, no root argument/result mutation and no physical
+observer. It must retain raw-root uncertainty while independently proving the
+unchanged caller tail. Negative controls alter a caller ABI input, add a
+resource-bearing clone cell, introduce a physical/code observer, mismatch a
+cause/phase or scope prefix, and reuse a stale owner/correspondence. A callee's
+unproved departure cannot borrow the caller certificate. Charge the ledger,
+paired checks and added-cell proofs to existing work/byte budgets, preserve the
+last-good output on refusal, and invalidate/reprove after cleanup or later waves.
+The first executable L-client control uses an independently constructed complete
+operational observation profile. Canonical marked-main and ordinary raw-root
+admission remain CALL while their entry-resource/observer premise is unproved:
+the program-default entry marker alone does not establish clean argv/native
+payloads, complete hook observations or an unobservable physical frame. Native
+entry APIs must supply a checked premise, or the native catalogue must publish
+the complete retained-boundary observation contract, before that control can be
+generalized to ordinary RXAS input. The initial expansion certificate permits no
+new caller cells, arguments, result mutation, policy/context writes or callback
+effects in the provider; these are generic operational restrictions, not an
+opcode allowlist. A source-only direct plan grants draft permission only. The
+diagnostic checker consumes its return/restoration plan, avoiding a dependency
+on final CALL-to-clone permission. The final paired certificate validates every
+unchanged caller record and control target outside the exact certified clone,
+including later physical returns and abrupt cleanup paths. A renamed label or
+rebased diagnostic anchor is checked by its mapped identity, never assumed.
+The initial single-site theorem also requires no pre-existing static frame and
+only normal continuation edges at the removed CALL. An exceptional CALL cause
+cannot be erased merely because the retained cleanup is opaque: its pairing or
+the approved infrastructure-opportunity removal needs a separate typed cause
+correspondence. Until then it reports
+`target.retained.call.departure.correspondence.unproved`. Existing later caller
+RET/terminal cleanup remains present and is preserved by exact state/control
+identity; its raw ABI fact remains unknown/possible.
+
+The shared interface is `profiledraft.boundary(functionid,observation)` for a
+complete independent physical-cleanup observation inventory (omission and all
+canonical profiles remain unknown), `analysis.directactivation(callid)` and
+`analysis.directplan(callid)` for draft-only permission, and
+`analysis.directequivalence(callid,diagnosticclone,work,bytes)` for final checked
+publication. The last fact binds the frozen summary/profile/CFG/source and
+candidate owners, exposes `allowed/preserved` separately from raw ABI absence,
+and returns the original module on refusal. `diagnosticclone` owns provider
+instruction/source correspondence; the final checker additionally verifies all
+unchanged module records/labels and active source projections, allowing only
+the exact certified clone and its typed diagnostic records. The source-only
+plan is the diagnostic checker's return/restoration input, not its conclusion.
+Its cost shares the pre-reserved diagnostic envelope: extra work is bounded by
+`(source_records + candidate_records + source_operands + 1) *
+(max_payload * 12 + 160)` and extra bytes by
+`(source_records + candidate_records + 1) * (max_payload * 4 + 128)`, with the
+same checked arithmetic and outer allowance. The first focused controls are
+`levell_target_retained_caller_rxbvm` and
+`levell_target_retained_caller_native`; their QA remains coordinator-owned.
+The abstract stdout operation in the constructed control has an explicitly
+complete empty activation-relative observation inventory through
+`profiledraft.relocation(printed,'none')`. Its external intrinsic footprint
+describes the output effect and grants no observer/ABI premise. A physical or
+unknown relocation inventory retains CALL; canonical SAY/HOST callbacks keep
+their normal native observation obligations. The correspondence binds original
+instructions, labels and address-bearing TRACE/runtime metadata on their
+original side of the source CALL, with CALL-entry anchors exactly at clone
+entry and continuation anchors after the entire clone. Hostile controls move a
+post-CALL label/TRACE event before a read-only looping clone, move the clone
+across a caller global write, and corrupt only numeric caller SOURCE_STEP
+fields. Source projections use canonical `.srcfile`/`.srcline` records and
+typed integer indices; empty integer byte payloads are never equality proof.
+This requirement keeps INL-AC02/04/05/07/09 and INL-STEP06 open.
+
+When TRACE is known on at assembly/link time, selection may disable inlining and
+other optimizations. This is a compile/link selection policy, not an assertion
+that runtime TRACE remains off. Runtime TRACE may become active after the image
+is produced; admitted clones therefore retain typed inline-frame/source
+diagnostics and the retained-boundary observer proof still covers runtime
+observation. No new runtime opcode or alternate execution path is implied.
+
+Direct diagnostic planning uses activation mode 2, with an explicit pending
+diagnostic obligation. Its semantic permission is separate from final
+`allowed()`: a typed frame/map alone grants no permission. A candidate clone
+certificate binds the source analysis/call/provider, frozen candidate owner,
+root static frame and complete source-instruction-to-candidate-region
+correspondence. Check source anchors, every copied/lowered instruction and
+root/descendant map coverage before publishing diagnostic equivalence. Compare
+the active `SOURCE_STEP` at every copied and lowered instruction, including an
+explicit unavailable step at provider entry; matching origin spans alone are
+insufficient. Each descendant frame definition must sit at the mapped source
+definition's next-instruction/procedure-end coordinate. Every copied label operand use that same checked physical-boundary map:
+renamed targets must reach the first copied/lowered source instruction or its
+mapped procedure end, preserving the entry-capture boundary. Uniform label
+renaming alone cannot certify a target moved earlier or into caller code.
+Numeric entry getters
+and return setters must correspond exactly to the licensed restoration fact:
+saved fields use distinct appended cells captured once in field order, return
+setters follow result transfer in field order with the exact saved cell or
+proved literal, then the shared continuation branch. Check their source steps
+and parent/root map attribution at the same checkpoints. This
+certificate addresses terminal diagnostics only; physical-parent observers,
+callbacks, policy, storage and ABI obligations remain independently binding.
+Implementation and focused positive/negative qualification remain open. The
+decimal entry callback's contract decision is approved and the ABI 3 gate has
+focused native controls; Level L still must prove its separate CALL causes.
+
+The final diagnostic checker uses one reserved, bounded envelope per proposed
+direct site. Before building the draft, derive a conservative candidate IR-op
+bound from the frozen source IR operations, four times its source-record count,
+and, for each selected direct body, five times its provider-record count, eight
+times its body-cell plus return/context-lowering-cell count, twice its register
+reference count, twice its allocated-slot count, and 32 fixed operations. The
+static-frame bound is the source frame count plus each direct body's provider
+frame count and one new root frame. The shared summary owner computes work and
+byte limits from those bounds and the checked payload/operand scan. Reserve
+that per-site allowance for every direct site from the outer request before
+draft construction; the draft receives only the remainder, and each final
+candidate verifier spends its own reserved allowance. Checked arithmetic,
+unknown bounds or exhaustion retain the original CALL and roll back the draft;
+the same allowance must not be counted again as fresh work at publication.
+
+The approved v3 decimal registration contract separates two native CALL
+causes. `FRAME_CALLBACK`/`bytecode-frame-hook` covers only resource clearing
+of a0 and optional recycled private backing, with canonical callback mask
+`OUTPUT|CAPACITY`; it remains a possible hook. A distinct
+`CONTEXT_SYNC`/`bytecode-decimal-sync` cause at frame preparation carries
+`PLUGIN_SYNC`. Each typed CALL cause publishes its canonical callback mask
+through `callcausecallbacks(opcode,row)`; preparation is `OUTPUT|CAPACITY`,
+provider execution is `INVOCATION`, and noncallback ingress failures carry
+zero. Level L does not infer these classes from condition-name strings.
+The catalogue capability `contextsynccontract()` publishes
+`value-only-nonreentrant.v1` only together with the mandatory v3 decimal
+registration gate. Legacy decimal providers cannot inherit that permission;
+Unicode's independent legacy ABI remains unchanged. The accepted contract
+makes sync non-signalling/non-reentrant and value-only, excluding pointer
+identity and observable call counts/order; redundant equal-value sync may be
+omitted. Resource hooks and provider execution retain their independent
+storage, policy and physical-observer obligations.
+
+The canonical invoking CALL family (plain result/no-result, counted direct or
+dynamic, fused pointer/status prefixes and fixed CALL1–4) and all five RET
+forms publish complete callback inventories. Completeness removes only the
+generic UNKNOWN inventory bit: CALL retains INVOCATION, its resource routes
+and every typed cause; RET retains DEPARTURE, with result ABI additionally
+present for register/string returns. RET departure includes checked-invocation
+result validation/failure cleanup, interrupt-action/diagnostic cleanup and
+external-root argument copy/free. These use resource hooks rather than an
+unclassified user completion callback. Their actual absence, ABI checkpoint
+coverage, terminal behavior and permitted execution context remain separate
+facts; complete inventory grants neither purity nor direct activation.
+
+Entry-demand extraction separates body observations from deferred physical
+departure ABI uncertainty. Explicit callback actions still invalidate state
+and observation completeness at their exact checkpoint. A final physical
+RETURN ABI or a terminal edge without an in-procedure continuation still
+invalidates state and publishes every possible typed ABI row, but does not
+retroactively erase earlier body-read coverage. Edges with an in-procedure
+continuation retain observation invalidation; later reads after any havoc
+remain unknown. Direct activation must independently discharge the exact
+caller-instantiated ABI, including caller-result resources and parent-frame
+retirement. The restore-numeric row excludes plugin callback uncertainty only
+under `value-only-nonreentrant.v1`; context effects and other ABI rows remain.
+
+For a canonical resource callback, consume the native
+`callbacknormalpreservesframe` contract only for complete resource-only
+callbacks: retain checked pointer/base/slot identities while invalidating
+pointees, numeric state, lifetimes, capacity and logical-scope ownership.
+This describes a callback that returns to the VM, independently of whether
+the interrupted instruction completes or reaches a handled failure checkpoint.
+Explicit instruction binding actions and their partial/unknown phase still
+invalidate bindings independently. A resumed handler retains value uncertainty;
+it cannot borrow the interrupted instruction's successful receiver postwrite.
+Callback presence, observations and policy/control paths remain explicit.
+An explicit callback invalidates state at its operational event, once; it
+does not schedule another state barrier after the normal CALL return
+projection. Deferred physical-return ABI has its own pending barrier. A
+possible canonical frame hook after fixed-pointer capture invalidates the
+captured actuals' exact pointee values while preserving their pointer identities
+and may-entry origins. Normal callee return projection then accounts for the
+later result transfer. No result is projected onto failure/skip edges, and raw
+callback observation/ABI uncertainty remains explicit. Scalar postwrite replay
+still requires the independently licensed successful-normal setter contract.
+At this exact canonical frame event, the typed frame-callback cause must have
+a known nonempty resource-only callback mask before preserving checked caller
+pointer/base/slot identities across the returning resource hook. The whole CALL also
+has an invocation route; that separate route does not turn this frame-resource
+event into an arbitrary pointer-table mutation. Retain pointee/context/lifetime,
+capacity and logical-scope havoc and the real observation veto. Exceptional or
+independently authored callbacks cannot borrow this typed event contract.
+`callbackpostwriteoperand` licenses one captured receiver and computed scalar
+postwrite: snapshot its ordinary component result before the appended hook
+events, then restore only those component cells and guaranteed native-payload
+absence after successful-normal instruction callback havoc. It grants no reference/attribute/capacity
+absence, and cannot discharge its own incoming hook condition. Exceptional,
+handled and independently authored callback programs retain their value and
+observation barriers. State copies and joins keep scope ownership independent of pointer
+identity; explicit cells above unknown defaults meet by their cell values,
+including equal postwrites on a diamond. Complete demand-only entry coverage
+and the existing exact unchanged-result identity certificate remain separate
+from unconditional callback-observation permission.
+Unknown availability absorbs a join in either operand order. Test the original
+incoming availabilities before constructing a mixed entry/defined result;
+unknown is not a proved may-dirty entry alternative. A focused two-arm control
+swaps known and unknown writes while keeping physical bindings intact and
+requires the same conservative value fact in both orders.
+Flow qualification separates normal point values from whole-function entry
+normalization. Canonical callback-free numeric getters provide defined integer
+actuals and alias-conditional writes without assuming successful resource
+setters; raw LOAD/COPY/LINKREF variants retain their real callback/handler and
+unknown-inventory refusals. A literal return can prove its normal result with
+unknown actual values only while its result binding remains checked. Full
+private-return, skipped-call, dirty-owner and callee-certificate controls use
+an explicit complete no-hook operational CALL program. They do not confer that
+premise on a canonical invocation. A checked fixed-actual no-hook/handler premise
+for full entry normalization and unresolved-actual-vector return projection
+remains shared transfer/flow work under INL-STEP03F; the intended positive
+theorem is not replaced by weakening raw callback or policy gates.
+
+The five numeric context GET operations publish a complete empty intrinsic
+Rexx-value observation footprint: each reads only its documented numeric
+context field and writes the destination integer field directly. Keep their
+context reads, opaque/external optimizer barriers and separate signal/effect
+contracts. Fixed no-prefix/no-window local CALL descriptors capture explicit
+actual pointers at handler entry, before all initializer/frame checkpoints.
+Their may-executed provider reads may therefore use that exact capture on an
+aggregate UNKNOWN exceptional edge when the independent frame-hook condition
+is disproved; this does not license counted/fused capture reconstruction or
+unknown callbacks before capture. Counted local calls snapshot the count after
+initializer ingress and before frame preparation; normal public resource hooks
+preserve pointer-table coordinates, while foreign initializer/host/handler
+intervention retains its unknown capture condition.
+
+INL-STEP03F still needs an independent oracle and repair for the signal-CFG
+fixture's fixed-capture zero-demand assertion when an aggregate UNKNOWN
+exceptional provider path retains a possible raw frame hook. Its diagnostic
+clone controls are also masked by a strict context-restoration check on
+ordinary LOAD/IADD payload hooks before source/map correspondence is checked.
+Resolve the raw coverage expectation and let diagnostic identity validation
+report its own errors without granting semantic callback permission. These
+issues are separate from the incidental recycler-timing classification.
+
+For a canonical function with an unknown-extent window reference, flow
+inventories its declared physical `r` and module-global `g` coordinates plus
+the always-present `a0` before solving point facts. A finite counted window
+may cross those banks even when a coordinate has no explicit operand use.
+Other functions retain the explicit reference inventory, avoiding unused rows
+in every state copy/merge of ordinary fixed-call compiler output.
+Within one solved block or one frozen instruction replay, reuse an instruction
+transfer only for the same exact source operation, normal/exceptional mode and
+checkpoint phase over its unchanged before-state. Retain a typed state snapshot
+and independent ABI cursor; reset the cache before another block/solver round
+or frozen source point. Each signal edge still performs its own ambient-cause,
+scope-exit, unwind, handler-resume and boundary publication processing. Before,
+after, partial and unknown phases never share a checkpoint. Charge cache lookup,
+snapshot/cursor copies and retained bytes to the unchanged allowance, releasing
+temporary bytes when that cache is discarded. Multiple same-phase signal causes
+must not multiply a complete instruction action replay. A focused authored
+multi-edge control checks equal-phase values and distinct-phase uncertainty;
+the two-arm CLI roundtrip remains a resource-limit control under the current
+direct expansion pipeline.
+The solver visits dirty blocks in the checked RPO rather than rebuilding all
+joins during every global round. A changed incoming edge schedules its target;
+an exact same-owner direct CALL also subscribes its block to the selected
+callee's RET-before checkpoints. A new or changed subscribed checkpoint
+schedules that caller even when its incoming state is unchanged. Other stable
+blocks neither rebuild joins nor replay their outgoing paths. Preserve every
+edge/cause and its state/ABI processing when its source block runs, and perform
+the complete frozen observation pass after convergence. Charge dirty vectors,
+reverse dependency rows, state comparisons, scheduling and RPO scans to the
+unchanged work/byte allowance. Caller-before-callee and transitive-return
+controls must retain later refinement; unknown/foreign calls gain no theorem
+from this scheduling dependency.
+Inventory grants pointer/base/slot identity only, never defined
+payload, resource absence, global isolation or an unproved `aN` tail extent.
+The existing work/byte allowance bounds every slot and state. Callback-bearing
+unchanged callers consume the exact source/candidate normalization receipt and
+its identity entry certificate; the ordinary whole-function callback-observation
+veto remains conservative. Scoped fixtures use this same receipt path rather
+than treating an ordinary normalization stamp as callback-preservation proof.
+The native postwrite query also admits binary payloads under its existing
+complete inventory, one explicit shared setter, no binding/implicit effects
+and output-only callback conditions. The admitted literal binary load captures
+its receiver/immutable constant before native cleanup and writes the binary
+bytes after successful buffer preparation. Its intrinsic failure contract
+remains unknown, with no exceptional or resumed-handler postwrite replay.
+
+CALL policy completeness composes a bounded exact-local provider closure over
+canonical callback masks. Resource-only causes keep their wildcard signal
+producers while preserving the suspended structural policy; host, selection,
+unknown, unresolved provider and initializer paths keep explicit policy gaps.
+This is not callback absence. The transfer profile leaves provider execution
+with its existing call action and emits the independent frame resource-hook
+action. Shared flow, rather than CFG, can discharge that action only from its
+owned backing/recycler resource theorem. Extend that theorem compositionally
+for fixed prefix-free same-owner calls with a private result, clean child
+backing and clean returned resource projection; borrowed/unknown resource
+returns, foreign writes, callbacks and cycles retain refusal. RET's separate
+caller-result ABI proof remains mandatory. Monotone child dependencies and
+argument-presence checks use the existing bounded closure and budgets; no
+second value evaluator or fresh-frame assumption is introduced.
 
 The [short architecture](doc/inlining.md) records the shared call/return/signal
 exit model, Level L graph, reusable procedure summaries and component/flag
@@ -29,7 +1103,7 @@ Existing ordinary-clone work is unqualified foundation, not complete call or
 signal coverage. The earlier mirrored `INLINE_ENTER`/`INLINE_LEAVE` family is
 superseded as an unapproved proposal. The small runtime context/ISA, dynamic
 argument-bank and private-global binding contracts need concrete owner review
-before product edits; no new opcode is approved here.
+before product edits; the later approved direct boundary is specified above.
 Adrian has selected completion and focused QA of all shared Level L capabilities
 required by this architecture before integrating them into the inliner. The
 approved native opcode-database read/write extension follows this Level L
@@ -195,19 +1269,20 @@ exercise independent matched-event and alias/phase/physical-observer negatives
 plus the affected handwritten RXAS boundary. Keep callback havoc, unknown
 root backing and host-entry argument count explicit. The full inliner acceptance
 and broader QA remain open.
-The inliner adapter consumes a conditional normalization certificate only with
+For an inserted-clear transaction, the adapter consumes a conditional
+normalization certificate only with
 its exact checked source/result correspondence and still asks the shared
 activation proof for CALL-to-logical-scope equivalence. It never substitutes
 the certificate for callback havoc, a physical-observer guard, or root
 resource/count evidence.
-Before adapter admission, split exhaustive owned-entry read coverage from
+For that transaction, split exhaustive owned-entry read coverage from
 callback observation preservation. The latter may hold even if callback havoc
 leaves a later read's entry provenance unresolved. Publish an owner-bound
 coverage view with explicit unknown demands, and prove every reachable demand
 already defined or dominated by a correct clear on the exact candidate CFG.
 The adapter must retain and revalidate that coverage certificate and its
 source/result proof owners; a preserved-callback boolean alone grants nothing.
-Before adapter integration, the shared normalizer must be able to construct a
+To integrate that transaction, the shared normalizer must construct a
 tentative candidate from complete source entry-demand coverage even when the
 old unconditional callback veto makes `change.complete(fn)` false. It reuses
 the existing clear placement, warning, remap and bounded transaction path;
@@ -409,7 +1484,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 
 | Stable step | Status, dependency and decision gate |
 |---|---|
-| **INL-STEP01 — architecture and contract** | done for the one-sweep POC design; AC01–09. Adrian approved assembler-local and link-selected placement, one shared service, minimal scoped activation, checked dynamic argument views, executable exact-module private-global binding, database-driven ordinary instruction handling and bounded cleanup. The concrete three-operation/RXBIN 007 feature contract is recorded above for implementation review; exact encoding and qualification remain open. This does not close any implementation acceptance criterion. |
+| **INL-STEP01 — architecture and contract** | done for the governing one-sweep POC design; AC01–09. Adrian approved assembler-local and link-selected placement, one shared service, exact module/private-global ownership as an outcome, checked dynamic argument views, database-driven instruction handling and bounded cleanup. The existing scoped operation/RXBIN contract remains separately recorded; it does not authorize a static private-global alias for the default direct path. Adrian approved the concrete `.inlinedprivate` borrowed-slot RXAS/RXBIN binding; its implementation and qualification remain open. Implementation and qualification criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
 | **INL-STEP03F — shared Level L foundation** | in progress; after 03 and before further 04/05 integration; AC02–05/07/09. The checked target transfer/edge, remap, fact, lifetime/normalization and procedure-summary stack has focused one-VM controls. Entry-demand extraction, callback preservation, tentative clear publication, exact result binding, contextual CALL intrinsic reads, per-operand value-writer metadata and whole-op callback inventory have focused controls. Canonical CFGs distinguish intrinsic from callback control and propagate nonresource policy uncertainty along reachable paths; complete resource-only callbacks retain structural handler policy while pending interrupts and delivered handlers stay explicit. Native incoming-resource and captured normal-postwrite facts and an explicit exact-entry HALT/IGNORE policy view are additive; `BPOFF` pending-bit control is separate from structural handler policy in the catalog and consumers. Unknown writers/signal contracts, older disconnected aggregate completeness, raw-root recycled resources and call-to-logical-scope activation remain open. The ordinary native optimizer graph panel and inliner integration remain open. |
@@ -544,8 +1619,9 @@ INL-STEP06 and the complete INL acceptance criteria remain open.
    binding recipes retain their own preparation/capture/write phases.
    Shared work accounting charges a first incoming candidate for its actual
    state copy and reserves the full meet cost for true joins. An unchanged
-   incoming state skips transfer only when the checked action list has no
-   call dependency; call blocks revisit across callee-summary rounds. Strict
+   incoming state skips transfer unless a subscribed callee RET-before point
+   changed; explicit reverse dependencies revisit callers after such changes.
+   Dirty-block scheduling avoids rebuilding stable predecessor joins. Strict
    budgets remain unchanged. Indexed-write and caller-before-callee controls
    must cover both bounded cost and later return-summary improvement.
    The frozen witness pass replays only instructions whose checked typed
@@ -765,8 +1841,8 @@ scalar evaluator, call solver or mnemonic admission table.
   diagnostic semantics. This repairs the existing feature contract without
   changing RXBIN/ISA; older same-feature VMs may render incomplete caller
   context. Exact release compatibility qualification remains open.
-- **Pending public decision: guarded INL2 entry (unapproved).** The
-  [owning architecture](doc/inlining.md#pending-decision-guarded-provider-equivalent-entry-inl2)
+- **Deferred public decision: guarded INL2 entry (unapproved).** The
+  [owning architecture](doc/inlining.md#deferred-proposal-guarded-provider-equivalent-entry-inl2)
   records the bounded alternative to physical-frame virtualization or a
   genuinely checked closed-root execution premise. Corrected INL1 diagnostic
   walking does not virtualize parent/code observers; unknown inherited
@@ -781,8 +1857,9 @@ scalar evaluator, call solver or mnemonic admission table.
   without an opcode whitelist or rejecting ordinary scalar reads. Minimal
   fast/fallback/alias/initializer/recovery/mailbox/host-hook/private-global and
   cleanup controls plus simple output/compatibility checks are required.
-  This is a reviewable decision proposal only, outside the currently approved
-  no-new-ISA sweep; no INL2 product changes precede Adrian's decision.
+  This is a deferred proposal only, outside the approved direct-or-retain
+  effective path. No INL2 product changes precede a demonstrated cost benefit,
+  exact guard/invalidation contract and Adrian's ISA decision.
   For the first guarded proof POC, the recommended semantic baseline reserves
   the real provider frame/backing once before the guard. A guard hit borrows
   that same backing for the clone and retires it through the ordinary call
@@ -1357,8 +2434,16 @@ scalar evaluator, call solver or mnemonic admission table.
   Invocation facts may be proved relative to an exact explicitly supplied
   independent operational profile, as other reusable L facts are. They retain
   the exact transfer profile/premise/owner and checked target/capture/binding
-  identities; no omitted native effects are inferred from that premise. Native
-  inliner admission separately requires the canonical native profile, so a
+  identities; no omitted native effects are inferred from that premise. The
+  canonical CALL inventory deliberately defers `catalog.call.callee.unknown`
+  until exact target facts are composed. Invocation construction accepts only
+  that named canonical deferred row after checked direct-target identity,
+  capture descriptor, references/bindings/order, reached captured actuals and
+  bounded callee recursion checks; other unknown or independent call rows
+  retain their veto. This supplies capture identity, not callee-effect purity
+  or retained-caller unwind equivalence. Focused canonical positive and
+  independent lookalike/unknown negatives qualify this narrow composition.
+  Native inliner admission separately requires the canonical native profile, so a
   relative fact cannot certify RXAS execution or manufacture native binding.
   Pre-call result absence is insufficient when a callee can mutate an alias:
   the ABI owner must supply current pre-RET resource/identity evidence or unknown.
@@ -2014,6 +3099,196 @@ and one VM. This increment does not complete INL-STEP05 or INL-AC02/03/05.
 
 ### Reviewed exact imported-leaf increment
 
+**Current direct-path integration contract (31 October 2026).** The native
+linker supplies one exact frozen caller/provider bundle and selected executable
+binding to the same Level L direct-or-CALL core used during assembly. A checked
+body view borrows the provider's original module, transfer profile, flow and
+summary owners; it does not copy the provider into a synthetic caller owner or
+turn a manifest/name into selection authority. Validate the invocation's target,
+provider/procedure/profile identities and the enrolled provider bundle before
+reading executable records. Keep caller capture/layout/context facts in the
+caller owner, and provider control/storage/normalization/callback/return facts
+in the provider owner. Owner replacement, missing provider facts or stale
+native epochs retain CALL with an exact reason. Unprojected same-owner checks
+remain binding.
+
+The first frozen wave admits global-free foreign bodies only through complete
+shared proof. It introduces no instruction whitelist or second effect evaluator.
+Private-global storage is separately represented by the approved borrowed-slot
+contract; initializer readiness, policy inheritance, abrupt departures and
+numeric restoration must still be proved at the exact invocation. Retained
+procedure operands use the existing sealed selected-provider spelling. Static
+diagnostic validation compares provider source/TRACE/frame records with the
+clone while retaining the caller's original call-site/parent chain. Shared
+proof unknowns retain the original CALL; default policy never substitutes
+INLENTER. Input provider modules remain unchanged and candidate failure keeps
+the last-good caller.
+
+Link-stage leaf-first waves remain part of INL-STEP04/05. After a provider body
+changes, native selection must validate a one-to-many executable correspondence
+from the enrolled frozen source to the candidate, including copied retained
+calls, and re-enroll the candidate owner/profile before another caller may clone
+it. Each wave rebuilds affected facts and exact target bindings under the same
+bounded outer request; no old capability is copied to a fresh owner and no
+metadata proof channel is introduced. Until that native re-enrollment interface
+is available, a frozen-wave result cannot authorize a subsequent wave. The
+remaining interface and qualification stay open in this plan.
+
+Independent controls cover an exact global-free foreign positive, unchanged
+provider and caller import contracts, source-ID/frame collisions, retained
+sealed children, dynamic/native/missing/stale binding negatives, module/policy/
+initializer barriers and tiny-budget atomicity. Coordinator-owned preparation
+and one-VM execution qualify the source increment; bottom-up selected A→B→C
+and recursive-SCC controls qualify the later re-enrolled waves. INL-AC01–09
+and INL-STEP06 remain open.
+
+**Approved typed `main` entry contract; implementation/QA open.** Adrian
+approved the program-entry and uniform initializer-entry contracts. This
+replaces the proposed whole-image closed-host opt-in. The contract defines
+program-visible entry state independently of the launcher. A typed executable
+declaration binds one exact `main` procedure to the versioned default-entry
+contract. RXAS/RXBIN and checked entry APIs implement the approved semantics;
+exact feature assignment/API names remain implementation details. It is a runtime entry
+contract, not inliner proof metadata, a no-callback assertion or a new opcode.
+
+Approved handwritable syntax follows existing procedure-header options:
+
+```rxas
+main() .locals=2 .entry=program-default
+  ret 0
+boot() .locals=0
+  .meta "example.boot"=".initializer" ".void" boot() ""
+  ret
+```
+
+Only program `main` needs a new marker. Use one typed `META_ENTRY_STATE`
+record with owning PROC reference, contract version 1 and program-default kind
+1, under required `RXBIN007_FEATURE_ENTRY_STATE` bit 11. Its native layout is
+`meta_entry base; size_t procedure; uint32_t version; uint32_t kind;`.
+The header option follows `.locals=N` and any existing `.expose=name` option;
+the record's code address is its owning procedure's start. One record is
+permitted per module, naming the local procedure `main`. Unsupported versions,
+kinds, duplicate/misplaced records and nonlocal/non-main owners are malformed.
+The assembler validates the procedure name/unique declaration; the linker
+preserves/remaps the PROC and rejects ambiguous selected program entries.
+The canonical executable procedure-operand inventory rejects known child entry to a
+marked main during assembly and selected-image linking, before and after the
+trusted inline service. Dynamic ingress remains a checked VM/API obligation.
+Load/prepare validates the record and feature before entry; source/inline
+stripping preserves it. Older runtimes reject the required feature. Initializer
+identity already has the exact typed `META_INITIALIZER` owner and needs no
+redundant `.entry=initializer-default` or second entry-state record.
+The checked program root and module initializer are separate entry roles:
+one PROC cannot own both `META_ENTRY_STATE` and `META_INITIALIZER`. Assembly
+rejects that semantic conflict before output opening, and the typed RXBIN
+validator rejects it in either metadata order before loader/linker use.
+Disassembly emits each typed initializer at its canonical metadata-chain
+position, including non-exposed local procedures. It must not reconstruct
+initializers only through imported callable signatures or reorder/duplicate
+them by symbol; reassembly preserves startup behavior and declaration order.
+
+The bounded Level L integration preserves this declaration as an optional
+typed procedure-header entry kind (`0` ordinary, `1` program-default), with
+kind 1 restricted to `main`. The RXAS reader/writer retain the exact approved
+header spelling, including exposed main, and normalization, remapping,
+expansion and cleanup preserve the header kind. Unknown, duplicate, reordered
+or non-main declarations fail before publication. Focused IO controls cover
+roundtrip, malformed headers and bounded output; executable qualification
+remains open. Separately, scope-free proof reuses its mandatory invocation-
+qualified activation/RET ABI certificate instead of repeating a context-free
+ABI callback veto. Explicit ordinary callbacks keep their independent checks;
+neither repair asserts clean root locals or supplies a new execution profile.
+
+- **Observable initial state.** Enter a logical program root with no program
+  parent, handler-save stack or active signal-handler state. The canonical
+  root signal table has no user handler/branch/return bindings, with responses
+  taken from the VM-owned default table. Numeric state is DIGITS 18, FUZZ 0,
+  SCIENTIFIC form, LOWER case and COMMON standard, using one canonical owner
+  shared by runtime and generated analysis. Argument/result ABI and
+  worker-local module storage retain their ordinary contracts; root entry does
+  not declare recycled locals clean.
+- **Checked entry handshake.** VM, loader, rxvml and debugger may establish or
+  emulate exactly that observable state using private machinery. Idle-VM or
+  ordinary-launcher entry is not a semantic prerequisite. Isolated reentrant
+  entry is permitted when the implementation can establish the declared root
+  view, preserve/suspend the outer state and restore it on every exit. An
+  ordinary CALL/DCALL/SIGCALL/task/native invocation cannot silently treat the
+  marked `main` as an inheriting child: it must use the checked entry handshake
+  or reject before argument/result preparation or other side effects. The first
+  implementation may reject entry paths it cannot enforce. Static references
+  and dynamic entry checks belong to the linker/loader and common VM entry
+  owner, including debugger and rxvml paths; a name alone grants no permission.
+  Use a checked `program-entry` operation distinct from ordinary callable
+  invocation. A forbidden static child target rejects assembly/link/prepare;
+  forbidden dynamic child entry raises `INVALID_ARGUMENTS` with an entry-
+  contract diagnostic at the invoking instruction, before preparation/clear/
+  swap/capture or frame commit, and resumes its original continuation if the
+  policy handles it. An API handshake failure returns an entry-contract error
+  without invoking the body; freeze exact API names/codes during implementation.
+- **Pending signals and debugging.** Preserve queued external events and
+  deliver them under the declared initial policy at a defined entry boundary;
+  do not erase pending delivery to create the premise. The debugger handshake
+  distinguishes private implementation state from program-visible overrides.
+  Later debugger-visible policy changes, signal injections and callbacks are
+  explicit effects, with their true observation footprint; entry certification
+  cannot hide them or imply that later policy remains default.
+- **Separate readiness and identity.** Initializer success/readiness,
+  poison/cycle behavior and capture timing remain independent obligations.
+  Entry neither certifies arbitrary initializers nor initializes an untaken
+  clone. Bind selected entry evidence to exact procedure/module/IR, catalogue
+  and native request epochs; validate and remap it through the existing image
+  owners. Unknown/stale evidence, incompatible runtime or unsupported entry
+  rejects explicitly. A changed body still needs checked native re-enrollment
+  before a later link-stage wave uses its selection facts.
+
+Level L uses this contract only to seed the actual root's incoming state, then
+derives per-site policy/context through canonical effects and exact selected
+bindings. It does not assume no other module, dynamic load, callback or helper
+entry; their effects remain explicit, and native/dynamic/unresolved targets
+remain calls. Ordinary unmarked `main` retains its current entry behavior.
+
+A global-free foreign leaf does not inherently require this flag. An exact
+selected provider with no initializer has a checked no-user-code ingress; a
+literal integer return need not depend on the inherited numeric values.
+Shared context-parametric proof may remove its CALL when the exact caller
+facts also discharge every callback and delivered-signal/activation observation.
+Unknown inherited SIGRET or physical-observing handlers remain real barriers,
+including asynchronous delivery at CALL/RET boundaries; global-free syntax
+alone is insufficient. Extend the shared bodyview/site proofs rather than
+requiring a global closed-root premise for every foreign site. Qualify both
+this flag-independent path and the marked-entry path, with wrong/stale entry,
+unsupported reentry, pending delivery, debugger-visible changes, initializer
+and arbitrary inherited-policy negatives. Implementation and focused
+qualification remain open under INL-AC04/07 and INL-STEP04/06.
+
+**Approved initializer observable-entry contract; implementation/QA open.** Strengthen
+the existing typed `META_INITIALIZER` contract uniformly; do not add another
+initializer flag. Apply
+the same launcher-independent canonical signal/numeric root view to each
+module initializer body through a checked VM/loader/debugger handshake, bound
+to that exact initializer/module/instance epoch. This seeds analysis inside
+the initializer; it does not assert successful completion or certify callees
+ready. Declaration order, once-only readiness, failure poison, cycle detection,
+reentrant dependency initialization and outer-state preservation remain with
+the existing initializer owner. A later call can consume a separately proved
+completion/readiness fact; it cannot derive success from the entry marker.
+Pending delivery and subsequent visible debugger/policy effects follow the
+same rules as `main`. Entry API, enforcement and focused qualification remain
+open; approval does not claim implementation.
+
+**Approved initialization-readiness direction.** Each worker/thread module
+instance initializes exactly once successfully before ordinary procedure
+entry. Ordinary calls require READY; FAILED stays poisoned with no retry.
+INITIALIZING admits helper calls only within that instance's checked initializer
+lineage; external/reentrant ingress to the still-initializing instance rejects.
+The VM initializer/entry owner must enforce lineage, not infer it from a
+context-global current-module pointer or `target == caller` alone. This is
+separate from proposed `main`/initializer entry-state flags and from the
+structural fact that a module has no initializer body. The latter proves no
+user-code startup work, not an arbitrary runtime READY state. Implementation,
+lineage/reentry negative controls and worker-isolation qualification remain
+open; the coordinator owns native VM repairs.
+
 The initial focused-qualified INL-STEP04 slice admits an imported, global-free, zero-private-local,
 straight-line scalar leaf called from fresh standalone `main`. An opt-in
 `closed-main-static-exact-default-halt.v1` profile uses the existing service
@@ -2067,6 +3342,45 @@ nested-body refusal and tight-limit atomicity. Conservative and cleaned
 callers are assembled with `rxas -n`, linked with those exact supplied
 providers and run on one VM. This slice does not close broader imported
 body/global/initialization coverage or INL-AC03/04/07.
+
+### Canonical default-entry catalog projection
+
+**Approved internal plumbing; source frozen, focused QA open.** One
+VM-owned `interpreter/rxvmentry.h` X-macro inventory declares all 31 valid
+canonical signal names and their existing root responses, plus the five
+numeric members/context domains/default constants. `frame_f` expands those
+inventories after clearing root handler bindings, preserving its current
+mixed IGNORE/HALT/SILENT_HALT behavior and numeric values. In particular
+`INVALID_SIGNAL_CODE` remains IGNORE, as in the existing initial fill;
+`CANCEL` remains SILENT_HALT. The invalid sentinel `RXSIGNAL_MAX` is not a
+catalogued signal. Existing `rxvalue.h` defaults own numeric values, including
+a named COMMON-standard default. No opcode, RXBIN record, enum value, frame
+layout, startup/readiness rule or pending-signal behavior changes.
+
+The generated `llrxascatalog.catalog` exposes:
+
+- `programdefaultcontract()` returns `program-default.v1`.
+- `programdefaultsignals()` returns every valid exact canonical name in
+  native signal-code order.
+- `programdefaultresponse(name)` returns `IGNORE`, `HALT` or `SILENT_HALT`
+  only for an exact whole canonical name; empty, wildcard, unknown, padded,
+  compound and case-variant inputs return `unknown`.
+- `programdefaultnumeric(contextBit)` returns the native numeric value only
+  for one exact DIGITS/FUZZ/FORM/CASE/STANDARD mask, respectively 18/0/1/1/1;
+  zero, combined, unknown or nonnumeric masks return -1.
+
+The generator consumes the same VM inventories and native signal/numeric
+owners, validates complete unique contiguous signal coverage and supported
+response tokens before publication, and participates in the existing atomic
+generator output lifecycle. Its shared CMake fingerprint/dependency list
+includes those VM inputs, so native selected evidence and generated L queries
+cannot silently retain different default revisions. Independent native/L
+controls cover all names, mixed responses, five numeric values and invalid
+queries; existing program-entry integration exercises actual main/initializer
+numeric setup. Source review checks root wiring to the one owner. Preparation
+and execution remain coordinator-owned. The catalog supplies values only:
+marked entry identity, later policy effects, context-qualified activation,
+readiness and private-resource proofs remain separate open consumers.
 
 ### Reviewed imported private-local follow-on
 
@@ -2936,36 +4250,69 @@ effect, RXBIN feature and G lowering contracts require review before any
 API/ISA/runtime adoption. This would solve policy restoration, not inherited
 physical `SIGRET`, arbitrary callee cleanup or Classic activation relay.
 
-### Reviewed private-global boundary and pending logical-activation decision
+### Approved borrowed-register private-global binding (INL-AC04)
 
-Same-module private globals are representable and already have a bounded
-inlining path. Foreign private globals retain calls with
-`import.global.private.pending`: current `gN` operands address the executing
-module's bank and private type metadata does not bind foreign storage. Public
-`gN .expose=qualified.name` on both modules already maps different physical
-indices to one worker-local value. Merely adding that declaration to a
-compiler-private global changes source import visibility because the compiler
-imports matching exposed `META_REG` names. Complete typed-global metadata
-already exists; adding more type data does not solve this storage/privacy
-boundary. Adrian accepts this retained-call case for the POC, noting that
-globals are expected to be relatively uncommon and unlikely to be hot; this
-is a prioritization judgment, not measured workload frequency.
+**Approved by Adrian; implementation and focused qualification open.** The
+handwritable procedure-level declaration is
+`.inlinedprivate rK,"exact-provider",gN`. This is executable ownership/linkage
+metadata, never an instruction, public exposure or compiler proof payload.
+`.locals` remains the complete `r` extent. The declarations cover every slot
+in one contiguous borrowed suffix; the first declared register is the owned
+prefix length. Each suffix slot has exactly one binding. Repeated targets in
+different slots are permitted and remain distinct slot/permutation identities.
+No declaration changes the module's ordinary `gN` bank or public symbol set.
+Declarations follow their owning procedure header and precede its first
+executable instruction; their code address must equal that procedure's start.
+Labels and nonexecuting metadata do not change that entry coordinate.
 
-A reserved private link key with compiler filtering or a separate typed
-linker-private alias record remains a possible later compatibility design,
-not a selected POC feature. If adopted later, a handwritten producer must be
-able to express a stable symbol without naming the provider's allocated `gN`;
-the linker/loader must preserve exact provider identity, worker-local ownership
-and initialization ingress. No source hash, attestation or inliner-side META
-payload is selected.
+Append `META_INLINED_PRIVATE` under RXBIN007 feature bit 10
+(`RXBIN007_FEATURE_INLINED_PRIVATE`). Each typed record contains the owning
+PROC pool reference, an existing typed `QGR1` provider selector pool reference,
+the local slot, provider global index and owned-prefix length. The assembler
+infers and writes the same prefix length into every declaration of a procedure.
+Validate procedure membership, total/owned/suffix bounds, complete coverage,
+duplicates/conflicts, selector syntax, feature support and reference kinds.
+The native linker resolves an exact selected module spelling, or an already
+sealed image-local ordinal, and checks the provider's global bound. Re-linking
+rebases old image-local bindings through the original image's module identity.
+Unresolved/ambiguous/unsealed runtime bindings fail before execution. Retain
+selected provider dependencies without inventing a public name or visibility.
 
-The approved resource rule permits modest variation in infrastructure-pressure
-error paths, including elimination of `FAILURE` from removed call-frame
-allocation. Full catch-all still needs exact state and unwind semantics for
-`CANCEL`, inherited `SIGRET`, partial setup and atomic
-return; an `INLINE_ENTER`/`INLINE_LEAVE` ISA/VM fallback remains an explicit
-decision if existing instructions cannot express them. Neither follows from
-private-global metadata.
+The loader prepares per-procedure worker-local borrowed pointers once all
+selected globals exist. Resolution allocates/indexes storage but runs no
+initializer. Physical frame activation/reuse installs those pointers into both
+active/base suffix slots and resets their permutation identities. The frame
+allocates value backing only for the owned prefix and `a0`; aliases add no
+per-call instruction or heap allocation. Reuse must not zero provider values,
+even with SAFE_RECYCLED_STACKFRAMES. LINK/SWAP/UNLINK retain their normal active,
+base and permutation semantics; the next activation reinstates each declared
+suffix binding. Native register optimization must preserve suffix ownership
+and binding identities, including declarations that have no remaining uses.
+The bounded native cleanup panel obtains possible borrowed pointer transport
+from the central binding/operand inventory over the complete procedure,
+including backedges. Peepholes wait for that census. A record touching borrowed
+storage, a possible borrowed carrier, or an implicit/opaque register window is
+an observation barrier; unaffected owned-local records still use the existing
+peephole and flow optimizers. The suffix is pinned and temporary-register
+growth across it is disabled. This deliberately leaves provider-aware storage
+reuse and movement across borrowed boundaries for later shared proof work;
+it is not a whole-procedure optimizer bypass or an opcode admission list.
+
+Every normal/abrupt teardown path skips borrowed suffix backing. Reference
+owner lookup identifies it as original provider global storage, and frame exit
+must not expire that lifetime. RET from a borrowed encoded local always COPYs;
+MOVE is restricted to the owned prefix at its own base. An owned active slot
+linked/swapped to borrowed storage also cannot acquire ownership. Explicit
+value mutations still affect provider state; implicit frame cleanup must not
+clear/free/expire it. Provider initialization, poison/cycle ingress and final
+teardown remain with the provider. Alias setup cannot initialize an untaken
+clone early; inlining still needs the separate initializer-readiness theorem.
+
+Focused qualification covers handwritten optimized/unoptimized roundtrip,
+feature/reference/corrupt-suffix negatives, exact selection/relink relocation,
+worker isolation, ordinary and recycled frames, borrowed RET, LINK/SWAP/UNLINK,
+reference expiry, abrupt teardown and initializer non-eagerness. Root owns all
+build/test execution. This local feature does not close INL-AC04/STEP04/STEP06.
 
 ### Reviewed shared CFG prerequisite
 
@@ -5540,12 +6887,11 @@ zero. Keep both changes at their Level L owners, with independent
 branched/loop controls, tight-budget atomicity and the unchanged full nested
 CLI fixture. Do not raise or silently bypass resource limits to qualify this
 case; a bounded refusal remains valid when the actual work exceeds a budget.
-If the full nested CLI caller still exceeds the default one-million work
-allowance after those repairs, expose a validated positive `--work` allowance
-in the standalone adapter and pass it to expansion and both cleanup stages.
-Use the explicit allowance only for this larger integration fixture, retain
-the default and atomic limit tests, and document the option. This makes the
-resource decision visible to clients without changing proof or ISA semantics.
+If a nested CLI caller exceeds its configured work allowance after those
+repairs, expose a validated positive `--work` allowance in the standalone
+adapter and pass it to expansion and both cleanup stages. Retain default and
+atomic limit tests and document the option. This makes the resource decision
+visible to clients without changing proof or ISA semantics.
 
 Focused constructed and handwritten RXAS controls cover a source r/a-crossing
 window, both branch arms, reordered actuals and inverse swaps, count=result,

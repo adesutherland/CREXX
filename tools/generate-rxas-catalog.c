@@ -1,9 +1,11 @@
 /* cREXX License (MIT). Build-time SDK view of the owning native metadata. */
 #include "rxdefs.h"
+#include "rxvmentry.h"
 
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -22,6 +24,57 @@ static void quoted(FILE *out, const char *text) {
         if (*text == '\'') fputc('\'', out);
     }
     fputc('\'', out);
+}
+
+typedef struct { int code; const char *name; const char *response; } EntrySignal;
+typedef struct { unsigned int bit; int value; } EntryNumeric;
+#define ENTRY_SIGNAL(name, response) { RXSIGNAL_##name, #name, #response },
+#define ENTRY_NUMERIC(member, domain, default_value) { RXOP_CONTEXT_##domain, default_value },
+static const EntrySignal entry_signals[] = { RXVM_PROGRAM_DEFAULT_SIGNALS(ENTRY_SIGNAL) };
+static const EntryNumeric entry_numeric[] = { RXVM_PROGRAM_DEFAULT_NUMERIC(ENTRY_NUMERIC) };
+#undef ENTRY_NUMERIC
+#undef ENTRY_SIGNAL
+
+/* A missing/duplicate code or unknown response cannot become a known default
+ * through catalog generation. Validate before opening publication scratch. */
+static int program_defaults_valid(void) {
+    size_t i;
+    unsigned int numeric_bits = 0u;
+    if (sizeof(entry_signals) / sizeof(entry_signals[0]) != RXSIGNAL_MAX - 1u ||
+        sizeof(entry_numeric) / sizeof(entry_numeric[0]) != 5u) return 0;
+    for (i = 0u; i < sizeof(entry_signals) / sizeof(entry_signals[0]); ++i) {
+        const EntrySignal *row = &entry_signals[i];
+        if (row->code != (int)i + 1 || !row->name[0] ||
+            (strcmp(row->response, "IGNORE") && strcmp(row->response, "HALT") &&
+             strcmp(row->response, "SILENT_HALT"))) return 0;
+    }
+    for (i = 0u; i < sizeof(entry_numeric) / sizeof(entry_numeric[0]); ++i) {
+        unsigned int bit = entry_numeric[i].bit;
+        if (!bit || (bit & (bit - 1u)) || (bit & ~(unsigned int)RXOP_CONTEXT_ALL_NUMERIC) ||
+            (bit & numeric_bits) || entry_numeric[i].value < 0) return 0;
+        numeric_bits |= bit;
+    }
+    return numeric_bits == RXOP_CONTEXT_ALL_NUMERIC;
+}
+
+static void program_default_queries(FILE *out) {
+    size_t i;
+    fputs("  /* VM root defaults are data, not an inherited-policy proof. */\n"
+          "  programdefaultcontract: method = .string\n    return ", out);
+    quoted(out, RXVM_PROGRAM_DEFAULT_CONTRACT);
+    fputs("\n  programdefaultsignals: method = .string\n    return '", out);
+    for (i = 0u; i < sizeof(entry_signals) / sizeof(entry_signals[0]); ++i)
+        fprintf(out, "%s%s", i ? " " : "", entry_signals[i].name);
+    fputs("'\n  programdefaultresponse: method = .string\n    arg name = .string\n", out);
+    for (i = 0u; i < sizeof(entry_signals) / sizeof(entry_signals[0]); ++i) {
+        fputs("    if name == ", out); quoted(out, entry_signals[i].name);
+        fputs(" then return ", out); quoted(out, entry_signals[i].response); fputc('\n', out);
+    }
+    fputs("    return 'unknown'\n"
+          "  programdefaultnumeric: method = .int\n    arg contextBit = .int\n", out);
+    for (i = 0u; i < sizeof(entry_numeric) / sizeof(entry_numeric[0]); ++i)
+        fprintf(out, "    if contextBit = %u then return %d\n", entry_numeric[i].bit, entry_numeric[i].value);
+    fputs("    return -1\n", out);
 }
 
 static void signature(FILE *out, const RxOpEffects *effect, size_t count,
@@ -129,7 +182,16 @@ static const Query queries[] = {
     {"opaqueeffects", 89, 1}, {"residualobservable", 90, 1},
     {"selectionwindowcomponents", 92, 1}, {"selectioncallbacks", 93, 1},
     {"hostcallbacks", 94, 1}, {"abicallbacks", 98, 1},
-    {"departurecallbacks", 99, 1}, {"intrinsicfootprint", 101, 1}, {"callbackobligations", 103, 1}
+    {"departurecallbacks", 99, 1}, {"intrinsicfootprint", 101, 1}, {"callbackobligations", 103, 1},
+    {"contextsynccallbacks", 104, 1}, {"callcausestate", 105, 0},
+    {"callbacknormalpreservesframe", 107, 1}, {"callbackpostwriteoperand", 108, 1},
+    {"callbackpreservessignalpolicy", 109, 1},
+    {"callframestate", 110, 0}, {"callframefreshmode", 111, 0},
+    {"callframeclearrole", 112, 0}, {"callframeclearextent", 113, 0},
+    {"callframeclearwhen", 114, 0}, {"callframelocalmode", 115, 0},
+    {"callframecountrole", 116, 0}, {"callbackvaluesurface", 117, 0},
+    {"callframecontrolstate", 118, 0}, {"framecontrolstate", 120, 0},
+    {"framecontrolmask", 121, 1}
 };
 
 static int compare_lookup(const void *a, const void *b) {
@@ -179,6 +241,10 @@ int main(int argc, char **argv) {
         fprintf(stderr, "usage: %s OUTPUT\n", argv[0]);
         return 2;
     }
+    if (!program_defaults_valid()) {
+        fputs("invalid VM default-entry inventory\n", stderr);
+        return 1;
+    }
     path_size = strlen(argv[1]) + sizeof(".rows.tmp");
     temporary = malloc(path_size);
     rows_path = malloc(path_size);
@@ -208,6 +274,11 @@ int main(int argc, char **argv) {
         RxOpEffects effect = rxop_effects(opcode);
         RxOpSignalContract signal = rxop_signal_contract(opcode);
         RxOpCallContract call = rxop_call_contract(opcode);
+        RxOpCallCauseContract call_causes = rxop_call_cause_contract(opcode);
+        RxOpCallFrameContract call_frame = rxop_call_frame_contract(opcode);
+        RxOpFrameControlContract frame_control = rxop_frame_control_contract(opcode);
+        const char *frame_unavailable = call_frame.state == RXOP_CALL_FRAME_KNOWN
+                ? NULL : rxop_call_frame_state_name(call_frame.state);
         RxOpSelectionContract selection = rxop_selection_contract(opcode);
         const char *binding_recipe = rxop_binding_recipe(opcode);
         size_t derivation_source = rxop_derivation_source_operand(opcode);
@@ -310,8 +381,38 @@ int main(int argc, char **argv) {
         }
         fprintf(rows, " %d ", rxop_intrinsic_value_footprint_is_known(opcode));
         target_operands(rows, opcode, count, 12);
-        fprintf(rows, " %u", rxop_callback_obligations(opcode));
-        fputc('\n', rows);
+        fprintf(rows, " %u %d %s ", rxop_callback_obligations(opcode),
+                rxop_context_sync_callbacks(opcode),
+                rxop_call_cause_state_name(call_causes.state));
+        if (!call_causes.count) fputc('-', rows);
+        for (i = 0u; i < call_causes.count; ++i) {
+            const RxOpCallCause *cause = &call_causes.causes[i];
+            if (i) fputc(';', rows);
+            fprintf(rows, "%s,%d,%s,%s,%s,%u",
+                    rxop_call_cause_kind_name(cause->kind), (int)cause->source,
+                    nonempty(cause->static_names),
+                    rxop_call_checkpoint_name(cause->checkpoint),
+                    rxop_call_cause_condition_name(cause->condition), cause->callbacks);
+        }
+        fprintf(rows, " %d %u %d %s %s %s %s %s %s %s %s %s ", rxop_callback_normal_preserves_frame(opcode),
+                rxop_callback_postwrite_operand(opcode),
+                rxop_callback_preserves_signal_policy(opcode),
+                rxop_call_frame_state_name(call_frame.state),
+                frame_unavailable ? frame_unavailable : rxop_call_frame_fresh_mode_name(call_frame.fresh_mode),
+                frame_unavailable ? frame_unavailable : rxop_abi_role_name(call_frame.clear_role),
+                frame_unavailable ? frame_unavailable : rxop_abi_extent_name(call_frame.clear_extent),
+                frame_unavailable ? frame_unavailable : rxop_call_frame_clear_when_name(call_frame.clear_when),
+                frame_unavailable ? frame_unavailable : rxop_call_frame_local_mode_name(call_frame.local_mode),
+                frame_unavailable ? frame_unavailable : rxop_abi_role_name(call_frame.count_role),
+                rxop_callback_value_surface_name(rxop_callback_value_surface(opcode)),
+                rxop_call_frame_state_name(rxop_call_frame_control_state(opcode)));
+        for (i = 0u; i < RXOP_FRAME_ENTRY_FIELD_COUNT; ++i) {
+            if (i) fputc(';', rows);
+            fprintf(rows, "%s,%s", rxop_frame_control_entry_field_name((RxOpFrameControlEntryField)i),
+                    rxop_frame_control_entry_value_name(rxop_call_frame_control_entry(opcode,
+                            (RxOpFrameControlEntryField)i)));
+        }
+        fprintf(rows, " %s %u\n", rxop_frame_control_state_name(frame_control.state), frame_control.mask);
         row_size[opcode] = (uint32_t)ftell(rows) - row_start[opcode];
     }
     /* Store each native immutable contract once. The opcode row holds only
@@ -421,7 +522,12 @@ int main(int argc, char **argv) {
           "   * owned-begin..owned-end repeats one body per slot: clear/restore\n"
           "   * slot0, then clear/restore slot1; never two whole-array phases.\n"
           "   * internal-parent requires an ordinary parent with no invocation or\n"
-          "   * interrupt-action completion. Unproved is unknown, not a skipped row. */\n"
+          "   * interrupt-action completion. Root modes have their own conditional\n"
+          "   * entry/receiver/count roles and never confer internal-parent.\n"
+          "   * root copyback/free use separate live base-a0 snapshots; abrupt\n"
+          "   * saved-root-arguments uses frame.number_args. recycled-begin..end\n"
+          "   * repeats a whole frame block in module/procedure/LIFO order.\n"
+          "   * Unproved is unknown, not a skipped row or observer absence. */\n"
           "  abifield: method = .string\n    arg opcode = .int, mode = .string, row = .int, column = .int\n"
           "    if opcode < 0 | opcode >= count() | row < 0 | column < 1 | column > 8 then return 'unknown'\n"
           "    selected = 0\n", out);
@@ -455,6 +561,34 @@ int main(int argc, char **argv) {
                     "    if row < 1 then return 'unknown'\n    return abifield(opcode,mode,row,%lu)\n",
                     fields[entry], (unsigned long)entry + 1u);
     }
+    fputs("  /* CALL cause rows describe local native checkpoints. They do not\n"
+          "   * remove aggregate wildcard, callback or asynchronous CFG edges. */\n"
+          "  callcauses: method = .int\n    arg opcode = .int\n"
+          "    if callcausestate(opcode) <> 'known' then return 0\n"
+          "    return words(translate(field(opcode,106),' ',';'))\n"
+          "  callcausefield: method = .string\n    arg opcode = .int, row = .int, column = .int\n"
+          "    if callcausestate(opcode) <> 'known' | row < 1 | column < 1 | column > 6 then return 'unknown'\n"
+          "    if row > callcauses(opcode) then return 'unknown'\n"
+          "    value = word(translate(field(opcode,106),' ',';'),row)\n"
+          "    return word(translate(value,' ',','),column)\n"
+          "  callcausesource: method = .int\n    arg opcode = .int, row = .int\n"
+          "    value = callcausefield(opcode,row,2)\n"
+          "    if value = 'unknown' then return -1\n    return value as .int\n"
+          "  callcausecallbacks: method = .int\n    arg opcode = .int, row = .int\n"
+          "    value = callcausefield(opcode,row,6)\n"
+          "    if value = 'unknown' then return -1\n    return value as .int\n"
+          "  contextsynccontract: method = .string\n"
+          "    return 'value-only-nonreentrant.v1'\n", out);
+    {
+        static const char *const fields[] = { "callcausekind", "callcausenames",
+                "callcausecheckpoint", "callcausecondition" };
+        static const int columns[] = { 1, 3, 4, 5 };
+        for (entry = 0u; entry < sizeof(fields) / sizeof(fields[0]); ++entry)
+            fprintf(out, "  %s: method = .string\n    arg opcode = .int, row = .int\n"
+                    "    value = callcausefield(opcode,row,%d)\n"
+                    "    if value = '-' then return ''\n    return value\n",
+                    fields[entry], columns[entry]);
+    }
     fputs("  callbackinputs: method = .int\n    arg opcode = .int, operand = .int\n"
           "    return word(translate(field(opcode,95),' ',','),operand) as .int\n"
           "  callbackoutputs: method = .int\n    arg opcode = .int, operand = .int\n"
@@ -480,10 +614,21 @@ int main(int argc, char **argv) {
                  "    if kind = 'abi' then return %u\n"
                  "    if kind = 'departure' then return %u\n"
                  "    if kind = 'invocation' then return %u\n"
+                 "    if kind = 'plugin-sync' then return %u\n"
                  "    return %u\n", RXOP_CALLBACK_INPUT, RXOP_CALLBACK_OUTPUT,
                  RXOP_CALLBACK_CAPACITY, RXOP_CALLBACK_SELECTION,
                  RXOP_CALLBACK_HOST, RXOP_CALLBACK_ABI, RXOP_CALLBACK_DEPARTURE,
-                 RXOP_CALLBACK_INVOCATION, RXOP_CALLBACK_UNKNOWN);
+                 RXOP_CALLBACK_INVOCATION, RXOP_CALLBACK_PLUGIN_SYNC, RXOP_CALLBACK_UNKNOWN);
+    fprintf(out, "  /* Named native observation bits; zero for an unknown NAME\n"
+                 "   * is not a proved empty observation set. */\n"
+                 "  observationmask: method = .int\n    arg name = .string\n"
+                 "    if name = 'frame' then return %u\n"
+                 "    if name = 'module' then return %u\n"
+                 "    if name = 'code' then return %u\n"
+                 "    if name = 'debug' then return %u\n"
+                 "    if name = 'unknown' then return %u\n"
+                 "    return 0\n", RXOP_ACTIVATION_FRAME, RXOP_ACTIVATION_MODULE,
+                 RXOP_ACTIVATION_CODE, RXOP_ACTIVATION_DEBUG, RXOP_ACTIVATION_UNKNOWN);
     fprintf(out, "  componentmask: method = .int\n    arg type = .string\n"
                  "    if type = 'I' then return %u\n"
                  "    if type = 'F' then return %u\n"
@@ -513,10 +658,47 @@ int main(int argc, char **argv) {
                 query->numeric ? "int" : "string");
         if (!strcmp(query->name, "callbackobligations"))
             fprintf(out, "    if opcode < 0 | opcode >= count() then return %u\n", RXOP_CALLBACK_UNKNOWN);
+        if (!strcmp(query->name, "callcausestate") || !strcmp(query->name, "callframestate") ||
+                !strcmp(query->name, "callbackvaluesurface") ||
+                !strcmp(query->name, "callframecontrolstate") || !strcmp(query->name, "framecontrolstate"))
+            fputs("    if opcode < 0 | opcode >= count() then return 'unknown'\n", out);
+        if (!strcmp(query->name, "framecontrolmask"))
+            fprintf(out, "    if opcode < 0 | opcode >= count() then return %u\n", RXOP_FRAME_CONTROL_UNCLASSIFIED);
+        if (query->field >= 111 && query->field <= 116)
+            fputs("    state = callframestate(opcode)\n"
+                  "    if state <> 'known' then return state\n", out);
         if (query->numeric) fprintf(out, "    return field(opcode,%d) as .int\n", query->field);
         else fprintf(out, "    value = field(opcode,%d)\n    if value = '-' then return ''\n"
                           "    return value\n", query->field);
     }
+    fputs("  /* Entry fields require an exact ordinary-bytecode child premise. */\n"
+          "  callframecontrolentry: method = .string\n    arg opcode = .int, name = .string\n"
+          "    selected = 0\n", out);
+    for (entry = 0u; entry < RXOP_FRAME_ENTRY_FIELD_COUNT; ++entry) {
+        fputs("    if name = ", out);
+        quoted(out, rxop_frame_control_entry_field_name((RxOpFrameControlEntryField)entry));
+        fprintf(out, " then selected = %lu\n", (unsigned long)entry + 1u);
+    }
+    fputs("    if selected = 0 then return 'unknown'\n"
+          "    state = callframecontrolstate(opcode)\n    if state <> 'known' then return state\n"
+          "    value = word(translate(field(opcode,119),' ',';'),selected)\n"
+          "    return word(translate(value,' ',','),2)\n"
+          "  /* Unknown-name zero is not an absence proof. Check state and name. */\n"
+          "  framecontrolmasknamed: method = .int\n    arg name = .string\n", out);
+    {
+        static const char *const names[] = { "plugin-owners", "policy", "handlers", "scope", "references",
+            "ancestor-references", "child", "retire", "foreign", "signal", "unknown" };
+        for (entry = 0u; entry < sizeof(names) / sizeof(names[0]); ++entry) {
+            fputs("    if name = ", out); quoted(out, names[entry]);
+            fprintf(out, " then return %u\n", rxop_frame_control_mask_named(names[entry]));
+        }
+    }
+    fputs("    return 0\n", out);
+    fputs("  /* Private loaded_here ownership only; plugin state and hooks remain. */\n"
+          "  framepluginownership: method = .string\n    return ", out);
+    quoted(out, rxop_frame_plugin_ownership_name(rxop_frame_plugin_ownership()));
+    fputc('\n', out);
+    program_default_queries(out);
     write_failed = write_failed || ferror(out) || ferror(rows) || ferror(keys);
     if (close_catalog_data(rows, rows_path)) write_failed = 1;
     rows = NULL;

@@ -50,7 +50,7 @@
 #include "decNumber.h"
 #include "decNumberLocal.h"
 
-/* Update the plugin internals with the Numeric Context */
+/* ABI 3 sync: cache effective values only; preserve diagnostics, not addresses. */
 static void syncNumericContext(decplugin *plugin) {
     numeric_context default_context = {DEFAULT_NUMERIC_DIGITS, DEFAULT_NUMERIC_FUZZ, DEFAULT_NUMERIC_FORM, DEFAULT_NUMERIC_CASE, NUMERIC_STANDARD_COMMON};
 
@@ -840,4 +840,4 @@ static rxvm_plugin *new_decplugin() {
 }
 
 // Register the rxvmplugin plugin factory
-REGISTER_PLUGIN(new_decplugin)
+REGISTER_DECIMAL_PLUGIN(new_decplugin)

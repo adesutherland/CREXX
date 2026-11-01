@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Point and edge facts over the shared target CFG. */
 options levelb
-namespace lltargetflow expose analysis analyse valuefact storagefact scopefact lifetimefact entryread entrycoveragefact entrydemand targetfact invocationfact abicallbackfact abirow abiresource callbackfact
+namespace lltargetflow expose analysis analyse valuefact storagefact scopefact lifetimefact entryread entrycoveragefact entrydemand targetfact invocationfact abicallbackfact abirow abiresource callbackfact backinghistoryfact
 import rxfnsb
 import llir
 import llirgraph
@@ -327,7 +327,7 @@ cell: class
     end
     availability = _availability
     if availability <> other.availability() then availability = 'mixed'
-    if availability = 'unknown' | other.availability() = 'unknown' then availability = 'unknown'
+    if _availability = 'unknown' | other.availability() = 'unknown' then availability = 'unknown'
     presence = _presence
     if presence <> other.presence() then presence = 'unknown'
     origins = .int[]; a = 1; b = 1; selected = .int
@@ -470,7 +470,7 @@ state: class
       scope = _scopes[i]
       call result.push(scope)
     end
-    if _scopeknown = 0 then call result.forgetscopes()
+    if _scopeknown = 0 then call result.forgetscopeownership()
     do i = 1 to _cells[0]
       value = _cells[i] as .cell
       call result.append(_storage[i],_domain[i],value)
@@ -518,8 +518,13 @@ state: class
     if _depth > 0 then _depth = _depth - 1
     return
   forgetscopes: method = .void
-    _scopeknown = 0; _depth = 0
+    call forgetscopeownership()
     call clobberbindings()
+    return
+  /** Logical ownership can be unknown while the public resource-callback
+   * contract still preserves the suspended physical pointer tables. */
+  forgetscopeownership: method = .void
+    _scopeknown = 0; _depth = 0
     return
   slot: method = .int
     arg reg = .int
@@ -637,14 +642,16 @@ state: class
       scope = _scopes[i]; incomingScope = other.scope(i)
       if scope.same(incomingScope) = 0 then compatible = 0
     end
-    if compatible = 0 then call result.forgetscopes()
+    if compatible = 0 then call result.forgetscopeownership()
     do i = 1 to _map[0]
       if _map[i] <> other.mapping(i) then call result.bind(i,0)
       if _base[i] <> other.base(i) then call result.bindbase(i,0)
       if _slots[i] <> other.slot(i) then call result.bindsidentity(i,0)
       if _lifetime[i] <> other.lifetime(i) | _generation[i] <> other.generation(i) then call result.setlifetime(i,'unknown',0)
     end
-    if _unknown | other.isunknown() then do; call result.clobber(); return result; end
+    /* Unknown defaults do not erase explicit postwrite cells. Each absent
+     * side is read through at(), so only facts present on both paths survive. */
+    call result.initialize(_ready,_unknown | other.isunknown(),_domains)
     do i = 1 to _capacityclean[0]
       call result.setcapacity(i,_capacityclean[i] & other.capacityclean(i))
     end
@@ -809,6 +816,8 @@ valuefact: class
   entrydependent: method = .int
     if valid() = 0 then return 0
     return _value.entry() <> 0
+  originscomplete: method = .int
+    return valid() & _value.entryknown()
   dirty: method = .int
     if valid() = 0 | _value.entryknown() = 0 then return 0
     owner = dereference _owner
@@ -1157,16 +1166,22 @@ entrycoveragefact: class
   _rows = .entrydemand[]
   _demands = .int
   _dependencies = .int[]
+  _operation = .int
+  _cone = .lltargetcfg..ingresscone
+  _hascone = .int
   *: factory
-    arg owner = reference .analysis, functionid = .int, status = .string, reason = .string, rows = .entrydemand[], demands = .int, ?dependencies = .int[]
+    arg owner = reference .analysis, functionid = .int, status = .string, reason = .string, rows = .entrydemand[], demands = .int, ?dependencies = .int[], operation = 0, ?cone = .lltargetcfg..ingresscone
     _owner = owner; parent = dereference owner; _identity = parent.identity()
     _function = functionid; _status = status; _reason = reason; _rows = rows; _demands = demands
     if ?dependencies then _dependencies = dependencies
+    _operation = operation; _hascone = ?cone
+    if ?cone then _cone = cone
     return
   valid: method = .int
     if <refvalid>(_owner) = 0 then return 0
     parent = dereference _owner
     if parent.valid() = 0 | parent.identity() <> _identity then return 0
+    if _hascone then do; if _cone.valid() = 0 then return 0; end
     do i = 1 to _rows[0]; if _rows[i].valid() = 0 then return 0; end
     return 1
   status: method = .string
@@ -1185,6 +1200,9 @@ entrycoveragefact: class
     return _owner
   function: method = .int
     return _function
+  /** Zero denotes exhaustive procedure coverage; nonzero is a site query. */
+  operation: method = .int
+    return _operation
   demands: method = .int
     return _demands
   /** Direct source-owner procedure IDs, never an already discharged closure.
@@ -1209,6 +1227,234 @@ entrycoveragefact: class
     arg ordinal = .int
     if ordinal < 1 | ordinal > _demands then assembler signal "ERROR","LL_TARGET_FLOW: dirty entry demand ordinal"
     return _rows[ordinal].witness()
+
+/** Analysis-private pure extraction from frozen action/capture checkpoints.
+ * Its own bounded collector never changes whole-procedure observation flags.
+ * The public site certificate accepts only a complete zero-demand result. */
+siteentryquery: class
+  _owner = reference .lltargetflow..analysis
+  _operation = .int
+  _function = .int
+  _cone = .lltargetcfg..ingresscone
+  _hascone = .int
+  _rows = .entrydemand[]
+  _keys = .string[]
+  _dependencies = .int[]
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _flowwork = .int
+  _flowbytes = .int
+  _chargedflowwork = .int
+  _chargedflowbytes = .int
+  *: factory
+    arg owner = reference .analysis, operation = .int, work = .int, bytes = .int
+    _owner = owner; _operation = operation; _worklimit = work; _bytelimit = bytes; _status = 'building'; _hascone = 0
+    return
+  fail: method = .int
+    arg state = .string, reason = .string
+    if _status = 'building' then do; _status = state; _reason = reason; end
+    return 0
+  spend: method = .int
+    arg work = 1, bytes = 0
+    if work < 0 | bytes < 0 | work > _worklimit - _work | bytes > _bytelimit - _bytes then return fail('limit','target.flow.site.work.or.bytes')
+    _work = _work + work; _bytes = _bytes + bytes; return 1
+  flowcharge: method = .int
+    owner = dereference _owner
+    work = owner.usedwork(); bytes = owner.usedbytes()
+    morework = max(0,work - _flowwork); morebytes = max(0,bytes - _flowbytes)
+    charged = spend(morework,morebytes); _flowwork = work; _flowbytes = bytes
+    if charged then do; _chargedflowwork = _chargedflowwork + morework; _chargedflowbytes = _chargedflowbytes + morebytes; end
+    if owner.status() <> 'ok' then return fail(owner.status(),owner.reason())
+    return charged
+  value: method = .int
+    arg operation = .int, storage = .int, domainid = .int, value = .cell
+    i = .int; j = .int
+    owner = dereference _owner; profileref = owner.transfers(); profile = dereference profileref
+    if value.availability() = 'unknown' then do
+      if storage > 0 then do; if owner.ownedbase(storage) = 0 then return 1; end
+      return fail('unknown','target.flow.site.observation.availability.unproved')
+    end
+    if value.origincount() = 0 & value.entry() = 0 then return 1
+    if value.entryknown() = 0 then return fail('unknown','target.flow.site.entry.origins.unproved')
+    domain = profile.domain(domainid)
+    do i = 1 to value.origincount()
+      if spend(_dependencies[0] + _keys[0] + 1) = 0 then return 0
+      origin = value.origin(i)
+      if owner.storagebank(origin) <> 'r' then iterate
+      functionid = owner.storagefunction(origin)
+      if functionid <> _function then do
+        found = 0
+        do j = 1 to _dependencies[0]; if _dependencies[j] = functionid then found = 1; end
+        if found = 0 then do
+          if spend(1,8) = 0 then return 0
+          _dependencies[_dependencies[0] + 1] = functionid
+        end
+        iterate
+      end
+      key = operation || '|' || origin || '|' || domainid; found = 0
+      do j = 1 to _keys[0]; if _keys[j] = key then found = 1; end
+      if found then iterate
+      if spend(length(key) + 1,320 + length(key)) = 0 then return 0
+      index = owner.storageindex(origin)
+      witness = .entryread(_owner,operation,_function,origin,index,domainid,domain.key(),'r',index)
+      _keys[_keys[0] + 1] = key; _rows[_rows[0] + 1] = .entrydemand(_owner,_function,'',witness)
+    end
+    return 1
+  observations: method = .int
+    arg instruction = .lltargettransfer..instruction, rootop = .int, frames = .object[], functions = .int[], arguments = .string[], depth = .int, allpaths = .int
+    owner = dereference _owner; profileref = owner.transfers(); profile = dereference profileref; cfgref = owner.cfg(); cfg = dereference cfgref
+    action = .lltargettransfer..action; point = .actionpoint; item = instruction.record(); projected = .cell; edge = .lltargetcfg..edge
+    i = .int; e = .int; edgeid = .int
+    do i = 1 to 7
+      if spend(1) = 0 then return 0
+      family = word('observations references effects components bindings order ownership',i)
+      if instruction.complete(family) = 0 then return fail('unknown','target.flow.site.operation.' || family || '.unproved')
+    end
+    do e = 0 to cfg.outedges(item.id())
+      edgeid = 0
+      if e > 0 then do
+        if spend(e + 1) = 0 then return 0
+        edge = cfg.outedge(item.id(),e); edgeid = edge.id()
+        if allpaths = 0 then do
+          if edge.targetop() = 0 then iterate
+          if _cone.contains(edge.targetop()) = 0 then iterate
+        end
+      end
+      do i = 1 to instruction.actions()
+        if spend(1) = 0 then return 0
+        action = instruction.action(i)
+        if action.kind() = 'unknown' then return fail('unknown','target.flow.site.hidden.observation.unproved')
+        if action.kind() = 'external' & action.intrinsicfootprint() = 0 then do
+          if owner.delegatedcall(instruction,action) = 0 then return fail('unknown','target.flow.site.hidden.observation.unproved')
+        end
+        if action.kind() <> 'observe' then iterate
+        if action.domain() = 0 then return fail('unknown','target.flow.site.observation.domain.unproved')
+        domain = profile.domain(action.domain())
+        if wordpos(domain.kind(),'component flag') = 0 then return fail('unknown','target.flow.site.observation.domain.unproved')
+        if domain.kind() = 'flag' & instruction.complete('values') = 0 then return fail('unknown','target.flow.site.flag.observation.unproved')
+        path = owner.actionplan(item.id(),edgeid)
+        if flowcharge() = 0 then return 0
+        if path.has(i) = 0 then do
+          exceptional = 0; phase = 'unknown'
+          if edgeid > 0 then do
+            exceptional = edge.phase() <> 'none' & edge.role() <> 'normal' & edge.role() <> 'table' & right(edge.exposure(),6) <> '-async'
+            phase = edge.phase()
+          end
+          if owner.applies(action,exceptional,phase) = 0 then iterate
+          return fail('unknown','target.flow.site.observation.checkpoint.unproved')
+        end
+        point = path.point(i); storage = owner.pointstorage(point,action.subject()); projected = point.component(action.subject(),action.domain())
+        if depth > 0 then do
+          projected = owner.projectobservation(projected,action.domain(),frames,functions,arguments,depth)
+          if projected.availability() = 'unknown' | projected.entryknown() = 0 then return fail('unknown','target.flow.site.call.observation.unproved')
+        end
+        if flowcharge() = 0 then return 0
+        if value(rootop,storage,action.domain(),projected) = 0 then return 0
+      end
+    end
+    return 1
+  child: method = .int
+    arg instruction = .lltargettransfer..instruction, rootop = .int, frames = .object[], functions = .int[], arguments = .string[], depth = .int
+    owner = dereference _owner; ownerref = owner.owner(); source = dereference ownerref; profileref = owner.transfers(); profile = dereference profileref
+    i = .int; j = .int; action = .lltargettransfer..action
+    if depth >= 32 then return fail('unknown','target.flow.site.call.depth.unproved')
+    catalog = .llrxascatalog..catalog(); item = instruction.record()
+    incoming = owner.sitecapture(instruction.opid())
+    if incoming.ready() = 0 then return fail('unknown','target.flow.site.capture.unproved')
+    captured = 0
+    do i = 1 to instruction.actions()
+      if spend(1) = 0 then return 0
+      action = instruction.action(i)
+      if profile.premise() <> 'canonical' & action.kind() = 'call' then do
+        if action.sourcekind() <> 'reference' then return fail('unknown','target.flow.site.call.profile.unproved')
+        selected = profile.ref(action.sourceid()); expected = item.operand(catalog.calltarget(item.opcode())); supplied = selected.operand()
+        if selected.kind() <> 'procedure' | selected.anchor() <> 'symbolic' | selected.operandordinal() <> catalog.calltarget(item.opcode()) | supplied.kind() <> 'P' then return fail('unknown','target.flow.site.call.profile.unproved')
+        if (supplied.text() == expected.text()) = 0 then return fail('unknown','target.flow.site.call.profile.unproved')
+      end
+      if action.kind() = 'callcapture' then captured = 1
+      if captured & action.kind() = 'callback' then do
+        if owner.callbackpossibleat(instruction.opid(),i) then return fail('unknown','target.flow.site.call.callback.phase.unproved')
+      end
+    end
+    functionid = owner.callobservationtarget(instruction,incoming,1)
+    actuals = owner.callactuals(instruction,incoming,1)
+    if flowcharge() = 0 then return 0
+    if functionid < 2 | actuals = '?' | left(actuals,1) = '~' then return fail('unknown','target.flow.site.call.footprint.unproved')
+    do i = 1 to depth; if functions[i] = functionid then return fail('unknown','target.flow.site.call.recursion.unproved'); end
+    if spend(depth + words(actuals) + 1,160 + incoming.bytes() + depth * 24 + length(actuals)) = 0 then return 0
+    childframes = frames; childfunctions = functions; childarguments = arguments
+    childframes[depth + 1] = incoming as .object; childfunctions[depth + 1] = functionid; childarguments[depth + 1] = actuals
+    body = source.body(functionid); cfgref = owner.cfg(); cfg = dereference cfgref
+    do i = 1 to source.records()
+      if spend(1) = 0 then return 0
+      item = source.record(i)
+      if item.procedureid() <> functionid | item.kind() = 'procedure' then iterate
+      before = owner.sitebefore(item.id())
+      if before.ready() = 0 then iterate
+      described = profile.instruction(item.id())
+      if item.kind() = 'instruction' then do
+        if catalog.callinvokes(item.opcode()) then do
+          if child(described,rootop,childframes,childfunctions,childarguments,depth + 1) = 0 then return 0
+        end
+      end
+      if observations(described,rootop,childframes,childfunctions,childarguments,depth + 1,1) = 0 then return 0
+    end
+    return 1
+  run: method = .void
+    ignored = .int; i = .int
+    if _status <> 'building' then return
+    if <refvalid>(_owner) = 0 then do; ignored = fail('invalid','target.flow.site.owner.expired'); return; end
+    owner = dereference _owner
+    if owner.status() <> 'ok' then do; ignored = fail(owner.status(),owner.reason()); return; end
+    _flowwork = owner.usedwork(); _flowbytes = owner.usedbytes()
+    ownerref = owner.owner(); source = dereference ownerref; graphref = source.ir(); graph = dereference graphref
+    if _operation < 1 | _operation > graph.operations() then do; ignored = fail('invalid','target.flow.site.operation.invalid'); return; end
+    selected = source.at(_operation); _function = selected.procedureid(); catalog = .llrxascatalog..catalog()
+    if selected.kind() <> 'instruction' then do; ignored = fail('invalid','target.flow.site.not.call'); return; end
+    if catalog.callinvokes(selected.opcode()) = 0 then do; ignored = fail('invalid','target.flow.site.not.call'); return; end
+    captured = owner.sitecapture(_operation)
+    if captured.ready() = 0 then do; ignored = fail('unknown','target.flow.site.capture.unproved'); return; end
+    cfgref = owner.cfg(); cfg = dereference cfgref
+    _cone = cfg.ingressat(_operation,_worklimit - _work,_bytelimit - _bytes)
+    _hascone = 1
+    if _cone.complete() = 0 then do; ignored = fail(_cone.status(),_cone.reason()); return; end
+    if spend(_cone.usedwork(),_cone.usedbytes()) = 0 then return
+    profileref = owner.transfers(); profile = dereference profileref
+    frames = .object[]; functions = .int[]; arguments = .string[]
+    do i = 1 to _cone.operations()
+      if spend(1) = 0 then return
+      operation = _cone.at(i); item = source.at(operation)
+      before = owner.sitebefore(operation)
+      if before.ready() = 0 then do; ignored = fail('unknown','target.flow.site.prefix.unreached'); return; end
+      instruction = profile.instruction(operation)
+      if item.kind() = 'instruction' then do
+        if catalog.callinvokes(item.opcode()) then do
+          if child(instruction,operation,frames,functions,arguments,0) = 0 then return
+        end
+      end
+      if observations(instruction,operation,frames,functions,arguments,0,0) = 0 then return
+    end
+    if flowcharge() = 0 then return
+    _status = 'proved'
+    return
+  result: method = .lltargetflow..entrycoveragefact
+    call run()
+    rows = _rows; count = rows[0]
+    if _status <> 'proved' then rows[count + 1] = .entrydemand(_owner,_function,_reason)
+    /* Missing capture and invalid source can return before a cone exists.
+     * A typed field declaration is not a constructed object receiver. */
+    if _hascone then do
+      if _cone.valid() then return .entrycoveragefact(_owner,_function,_status,_reason,rows,count,_dependencies,_operation,_cone)
+    end
+    return .entrycoveragefact(_owner,_function,_status,_reason,rows,count,_dependencies,_operation)
+  ownwork: method = .int
+    return max(0,_work - _chargedflowwork)
+  ownbytes: method = .int
+    return max(0,_bytes - _chargedflowbytes)
 
 /** Checked call-point context. Construction derives its target rather than
  * accepting a caller's provider/result assertions. */
@@ -1278,6 +1524,49 @@ invocationfact: class
 
 /** One sparse resource checkpoint. The capacity witness is deliberately
  * stronger than logical child count zero: no retained or active child tree. */
+/** Current-invocation original-owned resource/escape footprint, independent
+ * of dirty scalar availability and callback observation. Prior private scalar
+ * or cache contents and incidental recycler finalizer timing are infrastructure.
+ * Current-execution payload installation, explicit clears/transfers and
+ * ownership remain checked; this fact grants no callback absence. */
+backinghistoryfact: class
+  _owner = reference .lltargetflow..analysis
+  _identity = .int
+  _function = .int
+  _bank = .string
+  _index = .int
+  _status = .string
+  _reason = .string
+  *: factory
+    arg owner = reference .lltargetflow..analysis, functionid = .int, bank = .string, number = .int, status = .string, reason = ''
+    _owner = owner; parent = dereference owner; _identity = parent.identity()
+    _function = functionid; _bank = bank; _index = number; _status = status; _reason = reason
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    parent = dereference _owner
+    return parent.valid() & parent.identity() = _identity
+  status: method = .string
+    if _status = 'limit' then return 'limit'
+    if valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    if _status = 'limit' then return _reason
+    if valid() = 0 then return 'target.resource.backing.owner.expired.or.replaced'
+    return _reason
+  resourcefree: method = .int
+    return status() = 'proved'
+  nonescape: method = .int
+    return status() = 'proved'
+  points: method = reference .lltargetflow..analysis
+    return _owner
+  function: method = .int
+    return _function
+  bank: method = .string
+    return _bank
+  index: method = .int
+    return _index
+
 abiresource: class
   _owner = reference .lltargetflow..analysis
   _identity = .int
@@ -1548,6 +1837,8 @@ abicursor: class
     return
   exits: method = .int
     return _exits[0]
+  bytes: method = .int
+    return 96 + _rows[0] * 672 + _exits[0] * 8 + length(_reason) + length(_ambientreason) + length(_cause)
   exit: method = .int
     arg ordinal = .int
     return _exits[ordinal]
@@ -1557,6 +1848,49 @@ abicursor: class
     if _cause = 'ambient' then do; call result.ambient(); call result.reject(_ambientreason); end
     do i = 1 to _exits[0]; call result.exited(_exits[i]); end
     return result
+
+/** Analysis-private checkpoints for one immutable block/source replay.
+ * Edges fork the cursor before adding their own ambient and departure rows. */
+replaycache: class
+  _sources = .int[]
+  _exceptional = .int[]
+  _phases = .string[]
+  _states = .state[]
+  _cursors = .abicursor[]
+  _bytes = .int
+  *: factory
+    return
+  rows: method = .int
+    return _sources[0]
+  lookup: method = .int
+    arg sourceop = .int, exceptional = .int, phase = .string
+    do i = 1 to _sources[0]
+      if _sources[i] = sourceop & _exceptional[i] = exceptional & _phases[i] = phase then return i
+    end
+    return 0
+  put: method = .void
+    arg sourceop = .int, exceptional = .int, phase = .string, value = .state, cursor = .abicursor
+    n = _sources[0] + 1
+    _sources[n] = sourceop; _exceptional[n] = exceptional; _phases[n] = phase
+    _states[n] = value.copy(); _cursors[n] = cursor.fork()
+    _bytes = _bytes + 128 + length(phase) + value.bytes() + cursor.bytes()
+    return
+  at: method = .state
+    arg ordinal = .int
+    return _states[ordinal].copy()
+  cursor: method = .abicursor
+    arg ordinal = .int
+    return _cursors[ordinal].fork()
+  copywork: method = .int
+    arg ordinal = .int
+    value = _states[ordinal]; cursor = _cursors[ordinal]; rows = cursor.rows()
+    return value.count() + value.registers() + rows[0] + cursor.exits() + 1
+  copybytes: method = .int
+    arg ordinal = .int
+    value = _states[ordinal]; cursor = _cursors[ordinal]
+    return value.bytes() + cursor.bytes()
+  bytes: method = .int
+    return _bytes
 
 /** Shared point analysis. It interprets only operational transfer events,
  * never RXAS mnemonics. Sparse state rows and iteration are budgeted; an
@@ -1608,7 +1942,6 @@ analysis: class
   _edgenext = .int[]
   _outhead = .int[]
   _outnext = .int[]
-  _callblocks = .int[]
   _witnessops = .int[]
   _callbackops = .int[]
   _instructions = .int[]
@@ -1633,10 +1966,18 @@ analysis: class
   _scopedfunctions = .int[]
   _resourceclean = .int[]
   _resourcereasons = .string[]
+  _resourcereturnclean = .int[]
   _resourcedomains = .int[]
   _resourcearguments = .int[]
   _resourceactuals = .int[]
   _resourceincoming = .int[]
+  _resourcefailureproved = .int[]
+  _backinghistories = .backinghistoryfact[]
+  _backinghistorypresent = .int[]
+  _backinghistoryproved = .int[]
+  _backinghistoryrefined = .int[]
+  _prepareprivatehistory = .int
+  _privateframeclean = .int[]
   _invocations = .invocationfact[]
   _invocationpresent = .int[]
   _abicached = .abicallbackfact[]
@@ -1659,6 +2000,14 @@ analysis: class
     arg owner = reference .lltarget..module, transfers = reference .lltargettransfer..profile, cfg = reference .lltargetcfg..graph, work = 1000000, bytes = 67108864
     _owner = owner; _transfers = transfers; _cfg = cfg; _identity = nextidentity()
     _worklimit = work; _bytelimit = bytes; _status = 'building'; _message = ''
+    return
+  /** Opt-in current-footprint refinement for a frozen final candidate. It
+   * seeds only checked original-owned reference-record absence. Dirty scalar,
+   * native payload and capacity/attribute entry states remain unknown. */
+  relational: factory
+    arg owner = reference .lltarget..module, transfers = reference .lltargettransfer..profile, cfg = reference .lltargetcfg..graph, work = 1000000, bytes = 67108864
+    _owner = owner; _transfers = transfers; _cfg = cfg; _identity = nextidentity()
+    _worklimit = work; _bytelimit = bytes; _status = 'building'; _message = ''; _prepareprivatehistory = 1
     return
   fail: method = .int
     arg status = .string, message = .string
@@ -2213,7 +2562,10 @@ analysis: class
         call abiexecute(instruction,current,scope,'frame-unwind')
       end
     end
-    if _abicurrent.possible() then call callbackbarrier(current,edge.function(),observe)
+    /* Terminal ABI uncertainty cannot alter observations already made in the
+     * body. A resumed scope/handler still has an in-procedure continuation.
+     * Both paths retain full state havoc and the sealed ABI obligation. */
+    if _abicurrent.possible() then call callbackbarrier(current,edge.function(),observe & edge.targetblock() > 0)
     call abipublish(item.id(),edge.id())
     return current
   explicitcall: method = .int
@@ -2225,7 +2577,7 @@ analysis: class
     code = item.opcode()
     return catalog.callkind(code) = 1 & catalog.callcount(code) = 0 & catalog.callwindow(code) = 0 & catalog.callcapture(code) = 1 & catalog.callprefix(code) = '' & instruction.complete('references')
   publishaction: method = .int
-    arg instruction = .lltargettransfer..instruction, ordinal = .int, current = .state, ids = .int[], captures = .object[]
+    arg instruction = .lltargettransfer..instruction, ordinal = .int, current = .state, ids = .int[], captures = .object[], bindingsonly = 0
     view = .lltargettransfer..refview; d = .int
     profile = dereference _transfers; values = .object[]; domains = .int[]; needed = .int[]; point = .actionpoint(_domains)
     action = instruction.action(ordinal)
@@ -2255,6 +2607,7 @@ analysis: class
     all = action.domain() = 0 & wordpos(action.kind(),'link unlink swap callcapture') = 0
     if action.domain() > 0 then do; declared = profile.domain(action.domain()); all = declared.kind() = 'whole'; end
     do d = 1 to _domains
+      if bindingsonly then leave
       domain = profile.domain(d)
       selected = all | action.domain() = d
       if action.kind() = 'status' then selected = domain.kind() = 'flag'
@@ -2360,13 +2713,55 @@ analysis: class
       if callbackpossible(instruction,action,.cell()) then return 1
     end
     return 0
+  /** The caller owns one cache per unchanged before-state set. A cached
+   * instruction checkpoint precedes every edge-specific ABI/handler effect. */
+  replaytransfer: method = .state
+    arg instruction = .lltargettransfer..instruction, incoming = .state, exceptional = .int, observe = .int, phase = .string, expose replays = .replaycache
+    result = .state; cursor = .abicursor
+    if spend(replays.rows() + 1) = 0 then return incoming
+    row = replays.lookup(instruction.opid(),exceptional,phase)
+    if row > 0 then do
+      if spend(replays.copywork(row)) = 0 | scratch(replays.copybytes(row),2) = 0 then return incoming
+      _abicurrent = replays.cursor(row)
+      return replays.at(row)
+    end
+    result = transfer(instruction,incoming,exceptional,observe,phase)
+    if _status <> 'building' & _status <> 'ok' then return result
+    cursor = _abicurrent; rows = cursor.rows()
+    if spend(result.count() + result.registers() + rows[0] + cursor.exits() + 1) = 0 then return result
+    if reserve(128 + length(phase) + result.bytes() + cursor.bytes()) = 0 then return result
+    call replays.put(instruction.opid(),exceptional,phase,result,cursor)
+    return result
+  /** A CALL's provider route is separate from its typed resource-only frame
+   * event. Returning resource hooks preserve the suspended pointer tables. */
+  callframebindings: method = .int
+    arg instruction = .lltargettransfer..instruction, action = .lltargettransfer..action
+    i = .int; mask = .int; resources = .int; bit = .int; overlap = .int; found = 0
+    if _premise <> 'canonical' | action.detail() <> 'catalog.callback.call-frame' then return 0
+    profile = dereference _transfers
+    if profile.callframedeferred(instruction.opid()) = 0 then return 0
+    item = instruction.record(); catalog = .llrxascatalog..catalog()
+    resources = catalog.callbackmask('input'); bit = catalog.callbackmask('output'); assembler ior resources,resources,bit
+    bit = catalog.callbackmask('capacity'); assembler ior resources,resources,bit
+    do i = 1 to catalog.callcauses(item.opcode())
+      if spend(1) = 0 then return 0
+      if catalog.callcausekind(item.opcode(),i) <> 'frame-callback' then iterate
+      mask = catalog.callcausecallbacks(item.opcode(),i)
+      assembler iand overlap,mask,resources
+      if mask = 0 | mask <> overlap then return 0
+      found = 1
+    end
+    return found
   transfer: method = .lltargetflow..state
     arg instruction = .lltargettransfer..instruction, incoming = .state, exceptional = 0, observe = 0, phase = 'unknown'
     s = .int; d = .int; ordinal = .int; selectedordinal = .int; found = .int; prepared = .state; unrepresented = .int
     if scratch(incoming.bytes(),4) = 0 | spend(incoming.count() + incoming.registers() + 1) = 0 then return incoming
     current = incoming.copy(); action = .lltargettransfer..action; domain = .lltargettransfer..domain
     value = .cell; prior = .cell; literal = .lltarget..operand; catalog = .llrxascatalog..catalog
-    capturedids = .int[]; capturedvalues = .object[]; callincoming = incoming.copy(); callprepared = 0; callbackpending = 0; delegatedread = 0
+    postvalues = .object[]; postdomains = .int[]; postvalue = .cell
+    normalcallback = 0; poststorage = 0; postmask = 0; postcaptured = 0; postbytes = 64
+    postordinal = .int; postreg = .int; postoverlap = .int; postbit = .int; framebindings = .int
+    capturedids = .int[]; capturedvalues = .object[]; callincoming = incoming.copy(); callprepared = 0; callbackpending = 0; deferredabi = 0; delegatedread = 0
     _abicurrent = .abicursor(instruction.opid())
     abiitem = instruction.record(); abicatalog = .llrxascatalog..catalog(); abineeded = abiexpected(instruction)
     if exceptional = 0 then do
@@ -2379,6 +2774,21 @@ analysis: class
     if _premise = 'canonical' then do
       record = instruction.record(); catalog = .llrxascatalog..catalog(); cfg = dereference _cfg
       if record.kind() = 'instruction' then do
+        /* Callback return preserves physical tables on a resumed failure as
+         * well. Only successful instruction completion licenses postwrites. */
+        normalcallback = catalog.callbacknormalpreservesframe(record.opcode())
+        if exceptional = 0 then do
+          if normalcallback then do
+            postordinal = catalog.callbackpostwriteoperand(record.opcode())
+            if postordinal > 0 & postordinal <= record.operands() then do
+              literal = record.operand(postordinal)
+              if literal.kind() = 'R' then do
+                postreg = findregister(instruction.function(),literal.bank(),literal.index()); poststorage = incoming.mapping(postreg)
+                postmask = catalog.writecomponents(record.opcode(),postordinal)
+              end
+            end
+          end
+        end
         if catalog.scopecontinuation(record.opcode()) > 0 then do
           unrepresented = scopependingcallbacks(instruction,exceptional,phase)
           if unrepresented then do
@@ -2418,8 +2828,11 @@ analysis: class
       action = instruction.action(ordinal)
       applicable = applies(action,exceptional,phase)
       if applicable = 0 then iterate
-      if _actionbuilding & callbackpending = 0 then do
-        if publishaction(instruction,ordinal,current,capturedids,capturedvalues) = 0 then return current
+      if _actionbuilding then do
+        /* Callback havoc invalidates values/captures independently of the
+         * native structural contract. Publish only the surviving bindings;
+         * unknown pointer tables remain zero, never arbitrary identities. */
+        if publishaction(instruction,ordinal,current,capturedids,capturedvalues,callbackpending) = 0 then return current
       end
       touched = 1
       if action.domain() = 0 then touched = _domains
@@ -2437,11 +2850,32 @@ analysis: class
       kind = action.kind()
       if kind = 'callback' then do
         if wordpos(action.detail(),'catalog.callback.abi catalog.callback.departure') > 0 then iterate
+        if poststorage > 0 & postcaptured = 0 then do
+          if scaledwork(_domains,2) = 0 | scratch(_domains * 192 + 64,1) = 0 then return current
+          do d = 1 to _domains
+            domain = profile.domain(d)
+            if domain.kind() <> 'component' then iterate
+            postbit = domain.nativebit(); assembler iand postoverlap,postmask,postbit
+            if postoverlap = 0 then iterate
+            postvalue = cellat(current,poststorage,d)
+            if postvalue.bytes() + 16 > _bytelimit - postbytes then do; ignored = fail('limit','target.flow.postwrite.snapshot.bytes'); return current; end
+            postbytes = postbytes + postvalue.bytes() + 16
+            if scratch(postbytes,1) = 0 then return current
+            postdomains[postdomains[0] + 1] = d
+            postvalues[postdomains[0]] = postvalue as .object
+          end
+          postcaptured = 1
+        end
         value = .cell()
         if action.sourcekind() = 'captured' then value = capturedcell(capturedids,capturedvalues,action.sourceid())
         if callbackpossible(instruction,action,value) then do
           callbackpending = 1
-          call callbackbarrier(current,instruction.function(),observe)
+          /* Fixed CALL pointers precede frame preparation. A returning
+           * resource hook can change their pointees before the provider,
+           * without replacing the captured pointer identities. */
+          if exceptional = 0 & _premise = 'canonical' & callprepared & action.detail() = 'catalog.callback.call-frame' then callincoming = foreignresume(callincoming,instruction.function())
+          framebindings = normalcallback | callframebindings(instruction,action)
+          call callbackbarrier(current,instruction.function(),observe,framebindings)
           if _actionbuilding then call _actionbuild.unproved('target.flow.action.callback.phase.unproved')
         end
         iterate
@@ -2539,7 +2973,8 @@ analysis: class
         /* Until an instantiated outward summary supplies a narrower transfer,
          * a child can mutate exposed values. Context belongs to the retained
          * caller frame; value uncertainty does not invent its modification. */
-        current = foreignresume(current,instruction.function())
+        if resourcecallknown(instruction) then current = resourcecallstate(instruction,current)
+        else current = foreignresume(current,instruction.function())
         if observe & _premise <> 'canonical' then do
           described = independentcall(instruction)
           if _status <> 'building' & _status <> 'ok' then return current
@@ -2643,7 +3078,7 @@ analysis: class
         call abiexecute(instruction,current,abiscope,'physical-return')
       end
       else call _abicurrent.reject('target.abi.operation.phase.unproved')
-      if _abicurrent.possible() then callbackpending = 1
+      if _abicurrent.possible() then deferredabi = 1
     end
     if observe & delegatedread then do
       if callintrinsic(instruction,callincoming,callprepared,exceptional,phase) = 0 then do
@@ -2653,7 +3088,25 @@ analysis: class
     end
     if exceptional = 0 then current = callreturn(instruction,callincoming,current,observe,callprepared,delegatedread)
     call capacitywrites(instruction,incoming,current,exceptional)
-    if callbackpending then call callbackbarrier(current,instruction.function(),observe)
+    /* Explicit callbacks already invalidated observations at their event.
+     * The remaining deferred physical-return ABI must still invalidate state,
+     * without retroactively obscuring the body's earlier entry demands. */
+    if deferredabi then call callbackbarrier(current,instruction.function(),0,normalcallback)
+    if callbackpending then do
+      if poststorage > 0 & postcaptured then do
+        do postordinal = 1 to postdomains[0]
+          d = postdomains[postordinal]; postvalue = postvalues[postordinal] as .cell
+          if writecell(current,poststorage,d,postvalue,1) = 0 then return current
+        end
+        do d = 1 to _domains
+          if spend(1) = 0 then return current
+          domain = profile.domain(d)
+          if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('native-payload') then do
+            if writecell(current,poststorage,d,.cell('absent',0,0,'defined','absent'),1) = 0 then return current
+          end
+        end
+      end
+    end
     return current
   capacitywrites: method = .void
     arg instruction = .lltargettransfer..instruction, incoming = .state, expose current = .state, exceptional = .int
@@ -2695,23 +3148,19 @@ analysis: class
    * extents/capacity and absent captures always retain the possible hook. */
   callbackpossible: method = .int
     arg instruction = .lltargettransfer..instruction, action = .lltargettransfer..action, captured = .cell
+    i = .int; mask = .int; output = .int
+    endpoint = .lltarget..operand
     profile = dereference _transfers; catalog = .llrxascatalog..catalog()
     domain = .lltargettransfer..domain; view = .lltargettransfer..refview
     functionid = instruction.function()
-    if functionid > 0 & functionid <= _resourceclean[0] then do
-      if _resourceclean[functionid] then do
-        /* This invariant covers every private backing, including inactive
-         * capacity. Caller-result copyback and external ingress are separate. */
-        if action.detail() = 'catalog.callback.capacity-or-checkpoint' then return 0
-        if action.subject() > 0 & action.domain() > 0 & wordpos(action.detail(),'catalog.callback.payload catalog.callback.active-tree') > 0 then do
-          view = profile.ref(action.subject()); domain = profile.domain(action.domain())
-          source = dereference _owner; body = source.body(functionid)
-          if view.bank() = 'r' & view.index() >= 0 & view.index() < body.locals() & domain.kind() = 'component' then do
-            if domain.nativebit() = catalog.componentmask('reference') | domain.nativebit() = catalog.componentmask('native-payload') | domain.nativebit() = catalog.componentmask('attribute-count') then return 0
-          end
-        end
-      end
+    if action.detail() = 'catalog.callback.call-frame' then do
+      /* Reused a0 runs value_zero, including the published native payload
+       * finalizer. Current body/r-local cleanliness proves no stale-a0 fact. */
+      return 1
     end
+    /* A current body footprint cannot erase the real finalizer on its first
+     * overwrite of dirty retained private payload. Only the captured native
+     * endpoint condition below can establish that this particular hook is off. */
     if action.subject() < 1 | action.domain() < 1 | action.sourcekind() <> 'captured' then return 1
     domain = profile.domain(action.domain())
     matched = 0
@@ -2732,9 +3181,11 @@ analysis: class
     end
     return 1
   callbackbarrier: method = .void
-    arg expose current = .state, functionid = .int, observe = .int
+    arg expose current = .state, functionid = .int, observe = .int, preservebindings = 0
     if spend(current.count() + current.registers() + _storefunction[0] + current.depth() + 1) = 0 then return
-    call current.clobber(); call current.clobberbindings(); call current.forgetscopes()
+    call current.clobber()
+    if preservebindings then call current.forgetscopeownership()
+    else do; call current.clobberbindings(); call current.forgetscopes(); end
     if observe then do
       _entrycomplete[functionid] = 0
       _entryreason[functionid] = 'target.flow.callback.observations.unproved'
@@ -2763,31 +3214,129 @@ analysis: class
       if action.sourcekind() = 'reference' & action.sourceid() = referenceid & action.kind() = 'swap' then binding = 1
     end
     return binding
+  /** Compositional bound on current owned writes for a fixed local call.
+   * It proves no dirty payload or caller-result hook absent. Narrow caller
+   * transfer requires its own footprint; returned resources stay unknown. */
+  resourcecallknown: method = .int
+    arg instruction = .lltargettransfer..instruction
+    profile = dereference _transfers; source = dereference _owner; catalog = .llrxascatalog..catalog()
+    item = instruction.record()
+    if item.kind() <> 'instruction' then return 0
+    if profile.callframedeferred(item.id()) = 0 then return 0
+    child = profile.calllocaltarget(item.id())
+    if child < 2 | child > _resourceclean[0] then return 0
+    if _resourceclean[child] = 0 then return 0
+    ordinal = catalog.callresult(item.opcode())
+    if ordinal > 0 then do
+      if _resourcereturnclean[child] = 0 then return 0
+      value = item.operand(ordinal); body = source.body(instruction.function())
+      if value.kind() <> 'R' | value.bank() <> 'r' | value.index() < 0 | value.index() >= body.locals() then return 0
+    end
+    return 1
+  resourcecallstate: method = .lltargetflow..state
+    arg instruction = .lltargettransfer..instruction, incoming = .state
+    current = incoming.copy(); item = instruction.record(); catalog = .llrxascatalog..catalog(); profile = dereference _transfers
+    if instruction.function() > _resourceclean[0] then return foreignresume(incoming,instruction.function())
+    if _resourceclean[instruction.function()] = 0 then return foreignresume(incoming,instruction.function())
+    ordinal = catalog.callresult(item.opcode())
+    if ordinal = 0 then return current
+    value = item.operand(ordinal); reg = findregister(instruction.function(),value.bank(),value.index()); storage = current.mapping(reg)
+    if storage = 0 then return foreignresume(incoming,instruction.function())
+    if spend(_domains * 4 + 1) = 0 | scratch(current.bytes() + _domains * 160,1) = 0 then return current
+    do d = 1 to _domains
+      domain = profile.domain(d)
+      if wordpos(domain.kind(),'component flag') = 0 then iterate
+      presence = 'unknown'
+      call current.put(storage,d,.cell('unknown',0,0,'unknown',presence))
+    end
+    call current.setcapacity(storage,0)
+    return current
+  /** Unknown aggregate signal names/phase do not imply missing resource
+   * effects. The canonical CFG must still retain every typed/wildcard failure
+   * and close its scope/handler reach. This proves no signal/scalar absence. */
+  resourcefailure: method = .string
+    arg instruction = .lltargettransfer..instruction
+    if instruction.complete('failure') then return ''
+    if _premise <> 'canonical' then return 'target.resource.failure.unproved'
+    if wordpos(instruction.unknownreason('failure'),'catalog.signal.names.unknown catalog.signal.contract.unknown') = 0 then return 'target.resource.failure.unproved'
+    operation = instruction.opid()
+    if operation <= _resourcefailureproved[0] then do; if _resourcefailureproved[operation] then return ''; end
+    cfg = dereference _cfg; edge = .lltargetcfg..edge
+    producers = 0; i = .int; growth = .int
+    do i = 1 to cfg.outedges(operation)
+      if spend(i + 1) = 0 then return message()
+      edge = cfg.outedge(operation,i)
+      if edge.complete() = 0 | edge.scopecomplete() = 0 | edge.role() = 'unknown' then return 'target.resource.failure.departure.unproved'
+      if edge.targetblock() > 0 & wordpos(edge.exposure(),'handler-call handler-call-async event-binding event-binding-async') > 0 then return 'target.resource.failure.handler.reach.unproved'
+      if edge.asynchronous() = 0 & edge.phase() <> 'none' & edge.role() <> 'normal' & edge.role() <> 'table' then producers = producers + 1
+    end
+    if producers = 0 then return 'target.resource.failure.producer.unproved'
+    growth = max(0,operation - _resourcefailureproved[0])
+    if spend(growth + 1) = 0 | reserve(growth * 8) = 0 then return message()
+    _resourcefailureproved[operation] = 1
+    return ''
   resourceinstruction: method = .string
-    arg instruction = .lltargettransfer..instruction, locals = .int
+    arg instruction = .lltargettransfer..instruction, locals = .int, ?selected = .int[], frozen = 0, actiononly = 0, targetselected = 0, sourceselected = 0
     profile = dereference _transfers; item = instruction.record(); catalog = .llrxascatalog..catalog()
     action = .lltargettransfer..action; view = .lltargettransfer..refview; value = .lltarget..operand
-    i = .int; j = .int; mask = .int; overlap = .int; found = .int; ordinal = .int
+    domain = .lltargettransfer..domain
+    i = .int; j = .int; mask = .int; overlap = .int; found = .int; ordinal = .int; reg = .int
     resources = catalog.componentmask('reference'); bit = catalog.componentmask('native-payload')
     assembler ior resources,resources,bit
     bit = catalog.componentmask('attribute-count'); assembler ior resources,resources,bit
-    do i = 1 to 8
+    if item.kind() = 'instruction' then do
+      if catalog.callinvokes(item.opcode()) then do
+        if ?selected & actiononly = 0 then return 'target.resource.backing.child.history.unproved'
+        if actiononly > 0 then return resourcecallaction(instruction,actiononly,selected)
+        do i = 1 to instruction.references()
+          if spend(1) = 0 then return 'target.resource.limit'
+          view = instruction.ref(i)
+          if view.bank() = 'a' then _resourcearguments[instruction.function()] = max(_resourcearguments[instruction.function()],view.index())
+        end
+        if resourcecallknown(instruction) = 0 then return 'target.resource.call.outward.unproved'
+        return ''
+      end
+    end
+    do i = 1 to 7
       if spend(1) = 0 then return 'target.resource.limit'
-      family = word('effects references components ownership bindings order control failure',i)
+      family = word('effects references components ownership bindings order control',i)
       if instruction.complete(family) = 0 then return 'target.resource.' || family || '.unproved'
     end
+    failure = resourcefailure(instruction)
+    if failure <> '' then return failure
     do i = 1 to instruction.references()
       if spend(1) = 0 then return 'target.resource.limit'
       view = instruction.ref(i)
       if view.kind() = 'address' | view.kind() = 'window' | view.extentknown() = 0 then return 'target.resource.reference.extent.unproved'
-      if view.bank() = 'a' then _resourcearguments[instruction.function()] = max(_resourcearguments[instruction.function()],view.index())
+      if ?selected = 0 & view.bank() = 'a' then _resourcearguments[instruction.function()] = max(_resourcearguments[instruction.function()],view.index())
     end
     if item.kind() <> 'instruction' then return ''
     do i = 1 to item.operands()
       if spend(1) = 0 then return 'target.resource.limit'
       if catalog.writes(item.opcode(),i) = 0 then iterate
+      if actiononly > 0 then do
+        action = instruction.action(actiononly)
+        if wordpos(action.kind(),'write clear transport derive flagwrite status') = 0 then iterate
+        if action.subject() = 0 then return 'target.resource.implicit.write.unproved'
+        view = profile.ref(action.subject())
+        if view.operandordinal() <> i then iterate
+        if action.domain() > 0 then do
+          domain = profile.domain(action.domain())
+          if domain.kind() <> 'whole' then do
+            if domain.kind() <> 'component' then iterate
+            bit = domain.nativebit(); assembler iand overlap,bit,resources
+            if overlap = 0 then iterate
+          end
+        end
+      end
       value = item.operand(i)
-      if value.kind() <> 'R' | value.bank() <> 'r' | value.index() < 0 | value.index() >= locals then return 'target.resource.external.write.unproved'
+      if ?selected then do
+        reg = findregister(instruction.function(),value.bank(),value.index())
+        if reg = 0 then return 'target.resource.backing.write.selector.unproved'
+        if actiononly > 0 then do; if targetselected = 0 then iterate; end
+        else if selected[reg] = 0 then iterate
+      end
+      else if value.kind() <> 'R' | value.bank() <> 'r' | value.index() < 0 | value.index() >= locals then return 'target.resource.external.write.unproved'
       if catalog.writecomplete(item.opcode(),i) = 0 then do
         /* A checked pointer-only event is exact despite having no value
          * projection. Other missing projections are unknown resource writes. */
@@ -2795,23 +3344,74 @@ analysis: class
         iterate
       end
       mask = catalog.writecomponents(item.opcode(),i)
+      /* Clears are writes in the conservative native inventory. They cannot
+       * introduce a resource into an already resource-free owned backing. */
+      if ?selected & catalog.transportsource(item.opcode()) = 0 then do
+        bit = catalog.clearcomponents(item.opcode(),i)
+        assembler iand overlap,mask,bit; mask = mask - overlap
+      end
+      if ?selected & catalog.transportsource(item.opcode()) > 0 then do
+        bit = catalog.callbackinputs(item.opcode(),catalog.transportsource(item.opcode()))
+        assembler ior mask,mask,bit
+      end
       assembler iand overlap,mask,resources
       if overlap = 0 then iterate
       ordinal = catalog.transportsource(item.opcode())
       if ordinal < 1 then return 'target.resource.creation.unproved'
       value = item.operand(ordinal)
-      if value.kind() <> 'R' | value.bank() <> 'r' | value.index() < 0 | value.index() >= locals then return 'target.resource.transport.source.unproved'
+      if ?selected then do
+        if frozen = 0 & value.bank() <> 'r' & (value.bank() <> 'a' | value.index() <> 0) then return 'target.resource.backing.transport.borrowed.unproved'
+        reg = findregister(instruction.function(),value.bank(),value.index())
+        if reg = 0 then return 'target.resource.backing.transport.selector.unproved'
+        if actiononly > 0 then do; if sourceselected = 0 then return 'target.resource.backing.transport.source.unproved'; end
+        else if selected[reg] = 0 then return 'target.resource.backing.transport.source.unproved'
+      end
+      else if value.kind() <> 'R' | value.bank() <> 'r' | value.index() < 0 | value.index() >= locals then return 'target.resource.transport.source.unproved'
     end
     do i = 1 to instruction.actions()
+      if actiononly > 0 & i <> actiononly then iterate
       if spend(1) = 0 then return 'target.resource.limit'
       action = instruction.action(i); kind = action.kind()
+      if ?selected & kind = 'external' then do
+        /* A complete intrinsic value footprint leaves no hidden resource
+         * write beyond the typed actions already checked. No-value-handle
+         * host routes retain their separate callback/observer obligations. */
+        if action.intrinsicfootprint() then do
+          if wordpos(catalog.callbackvaluesurface(item.opcode()),'none bytes-snapshot') > 0 then iterate
+        end
+      end
       if wordpos(kind,'write clear transport derive flagwrite status') > 0 then do
         if action.subject() = 0 then return 'target.resource.implicit.write.unproved'
         view = profile.ref(action.subject())
-        if view.bank() <> 'r' | view.index() < 0 | view.index() >= locals then return 'target.resource.external.write.unproved'
+        if ?selected then do
+          reg = findregister(instruction.function(),view.bank(),view.index())
+          if reg = 0 then return 'target.resource.backing.write.selector.unproved'
+          if actiononly > 0 then do; if targetselected = 0 then iterate; end
+          else if selected[reg] = 0 then iterate
+        end
+        else if view.bank() <> 'r' | view.index() < 0 | view.index() >= locals then return 'target.resource.external.write.unproved'
       end
       if kind = 'callback' then do
+        if ?selected then do
+          /* This surface describes value reach only. It preserves the
+           * callback, reentry, output effects and physical observers. */
+          if catalog.callbackvaluesurface(item.opcode()) = 'bytes-snapshot' then iterate
+          mask = catalog.callbackobligations(item.opcode())
+          bit = catalog.callbackmask('plugin-sync')
+          if catalog.contextsynccontract() = 'value-only-nonreentrant.v1' then do; assembler iand overlap,mask,bit; mask = mask - overlap; end
+          if wordpos(action.detail(),'catalog.callback.abi catalog.callback.departure') > 0 then iterate
+          bit = catalog.callbackmask('input'); ordinal = catalog.callbackmask('output'); assembler ior bit,bit,ordinal
+          ordinal = catalog.callbackmask('capacity'); assembler ior bit,bit,ordinal
+          assembler iand overlap,mask,bit
+          if mask <> overlap then return 'target.resource.backing.callback.reach.unproved'
+          /* Public payload hooks hold opaque reachable handles. Supported
+           * nested RXVML entry is a separate root: neither provides a handle
+           * to this unescaped original backing. This proves no resource
+           * mutation here, not observer equivalence or callback absence. */
+          iterate
+        end
         if action.detail() = 'catalog.callback.departure' then iterate
+        if action.detail() = 'catalog.callback.abi' & catalog.returnkind(item.opcode()) > 0 then iterate
         if wordpos(action.detail(),'catalog.callback.payload catalog.callback.active-tree') > 0 then do
           if action.subject() = 0 then return 'target.resource.callback.condition.unproved'
           view = profile.ref(action.subject())
@@ -2834,6 +3434,7 @@ analysis: class
         return 'target.resource.callback.' || action.detail() || '.unproved'
       end
       if wordpos(kind,'link unlink swap') > 0 then do
+        if ?selected then iterate /* Exact alias/escape closure checked first. */
         if action.subject() = 0 then return 'target.resource.binding.unproved'
         view = profile.ref(action.subject())
         if view.bank() <> 'r' | view.index() < 0 | view.index() >= locals then return 'target.resource.binding.escape.unproved'
@@ -2844,19 +3445,393 @@ analysis: class
         end
         iterate
       end
-      if wordpos(kind,'read observe capture write clear transport derive flagwrite status return edge raise') = 0 then return 'target.resource.action.' || kind || '.unproved'
+      if wordpos(kind,'read observe capture write clear transport derive flagwrite status return edge raise context') = 0 then return 'target.resource.action.' || kind || '.unproved'
     end
     return ''
+  /** Reuse the same native predicates for an original owned backing in the
+   * current invocation. The closure follows every published pointer carrier;
+   * unmodelled selectors or publication cannot assert nonescape. Incidental
+   * recycled-a0 timing supplies no extra veto or callback-absence fact. */
+  privatebackinghistory: method = .lltargetflow..backinghistoryfact
+    arg functionid = .int, bank = .string, number = .int, preparing = 0
+    i = .int; j = .int; k = .int; left = .int; right = .int; reg = .int; cachekey = .int; growth = .int; changed = .int
+    mask = .int; bit = .int; resourcebits = .int; overlap = .int; transport = .int
+    item = .lltarget..record; instruction = .lltargettransfer..instruction
+    view = .lltargettransfer..refview; destination = .lltargettransfer..refview; origin = .lltargettransfer..refview
+    action = .lltargettransfer..action; edge = .lltargetcfg..edge
+    result = .lltargetflow..backinghistoryfact
+    if preparing = 0 then do
+      call run()
+      if valid() = 0 then return .backinghistoryfact(reference self,functionid,bank,number,'invalid',message())
+    end
+    else if _status <> 'building' then return .backinghistoryfact(reference self,functionid,bank,number,'invalid','target.resource.backing.preparation.closed')
+    source = dereference _owner; profile = dereference _transfers; cfg = dereference _cfg
+    reason = ''; state = 'proved'
+    graphref = source.ir(); graph = dereference graphref
+    if functionid < 2 | functionid > graph.functions() then return .backinghistoryfact(reference self,functionid,bank,number,'unknown','target.resource.backing.function.unavailable')
+    body = source.body(functionid)
+    if (bank <> 'r' | number < 0 | number >= body.locals()) & (bank <> 'a' | number <> 0) then reason = 'target.resource.backing.not.original.owned'
+    if _premise <> 'canonical' then reason = 'target.resource.backing.native.inventory.required'
+    if reason <> '' then return .backinghistoryfact(reference self,functionid,bank,number,'unknown',reason)
+    reg = findregister(functionid,bank,number)
+    /* Unreferenced declared originals need no new solver register. Virtual
+     * cache coordinates follow the frozen full declared r-prefix plus a0. */
+    cachekey = reg
+    if reg = 0 then do
+      cachekey = _regfunction[0] + 1
+      do i = 2 to functionid - 1
+        if spend(1) = 0 then return .backinghistoryfact(reference self,functionid,bank,number,'limit',message())
+        previousbody = source.body(i); cachekey = cachekey + previousbody.locals() + 1
+      end
+      if bank = 'r' then cachekey = cachekey + number + 1
+    end
+    if cachekey <= _backinghistorypresent[0] then do
+      if _backinghistorypresent[cachekey] then do
+        result = _backinghistories[cachekey]
+        if preparing then return result
+        if result.status() = 'proved' then return result
+        if cachekey <= _backinghistoryrefined[0] then do; if _backinghistoryrefined[cachekey] then return result; end
+        return frozenbackinghistory(functionid,bank,number,reg,cachekey)
+      end
+    end
+    growth = max(0,cachekey - _backinghistorypresent[0])
+    if spend(_regfunction[0] + growth + 1) = 0 | reserve(growth * 40 + 192) = 0 | scratch(_regfunction[0],8) = 0 then return .backinghistoryfact(reference self,functionid,bank,number,'limit',message())
+    selected = .int[]
+    do i = 1 to _regfunction[0]; selected[i] = 0; end
+    if reg > 0 then selected[reg] = 1
+    changed = 1
+    /* Least fixed point of native pointer aliases, never a scalar evaluator.
+     * An incoming foreign link into a selected slot is not clean ownership. */
+    do while changed & reason = ''
+      changed = 0
+      do i = 1 to body.records()
+        if spend(1) = 0 then do; state = 'limit'; reason = message(); leave; end
+        item = body.record(i)
+        if item.kind() = 'procedure' then iterate
+        if item.kind() = '.inlinedprivate' then do; reason = 'target.resource.backing.borrowed.suffix.unproved'; leave; end
+        instruction = profile.instruction(item.id())
+        if instruction.complete('references') = 0 | instruction.complete('bindings') = 0 | instruction.complete('order') = 0 then do; reason = 'target.resource.backing.alias.inventory.unproved'; leave; end
+        if instruction.complete('relocation') = 0 then do; reason = 'target.resource.backing.frame.reach.unproved'; leave; end
+        do j = 1 to instruction.references()
+          if spend(1) = 0 then do; state = 'limit'; reason = message(); leave; end
+          view = instruction.ref(j)
+          if view.kind() = 'address' | view.kind() = 'window' | view.extentknown() = 0 then do; reason = 'target.resource.backing.alias.selector.unproved'; leave; end
+        end
+        if reason <> '' then leave
+        if item.kind() = 'instruction' then do
+          catalog = .llrxascatalog..catalog(); transport = catalog.transportsource(item.opcode())
+          if transport > 0 then do k = 1 to item.operands()
+            if spend(lookupcost() * 2 + 1) = 0 then do; state = 'limit'; reason = message(); leave; end
+            if catalog.writes(item.opcode(),k) = 0 then iterate
+            resourcebits = catalog.componentmask('reference'); bit = catalog.componentmask('native-payload'); assembler ior resourcebits,resourcebits,bit
+            bit = catalog.componentmask('attribute-count'); assembler ior resourcebits,resourcebits,bit
+            mask = catalog.writecomponents(item.opcode(),k); bit = catalog.callbackinputs(item.opcode(),transport); assembler ior mask,mask,bit
+            assembler iand overlap,mask,resourcebits
+            if overlap = 0 then iterate
+            destinationvalue = item.operand(k); originvalue = item.operand(transport)
+            left = findregister(functionid,destinationvalue.bank(),destinationvalue.index())
+            if left = 0 then do; reason = 'target.resource.backing.transport.destination.unproved'; leave; end
+            if selected[left] = 0 then iterate
+            if originvalue.bank() <> 'r' & (originvalue.bank() <> 'a' | originvalue.index() <> 0) then do; reason = 'target.resource.backing.transport.borrowed.unproved'; leave; end
+            right = findregister(functionid,originvalue.bank(),originvalue.index())
+            if right = 0 then do; reason = 'target.resource.backing.transport.source.unproved'; leave; end
+            if selected[right] = 0 then do; selected[right] = 1; changed = 1; end
+          end
+        end
+        if reason <> '' then leave
+        do j = 1 to instruction.actions()
+          if spend(lookupcost() * 2 + 1) = 0 then do; state = 'limit'; reason = message(); leave; end
+          action = instruction.action(j)
+          if wordpos(action.kind(),'link swap') = 0 then iterate
+          if action.subject() = 0 | action.sourcekind() <> 'reference' then do; reason = 'target.resource.backing.alias.source.unproved'; leave; end
+          destination = profile.ref(action.subject()); origin = profile.ref(action.sourceid())
+          left = findregister(functionid,destination.bank(),destination.index()); right = findregister(functionid,origin.bank(),origin.index())
+          if left = 0 | right = 0 then do; reason = 'target.resource.backing.alias.selector.unproved'; leave; end
+          if selected[left] = 0 & selected[right] = 0 then iterate
+          if destination.bank() = 'g' | (action.kind() = 'swap' & origin.bank() = 'g') then do; reason = 'target.resource.backing.pointer.exported'; leave; end
+          if selected[left] & selected[right] = 0 then do
+            if origin.bank() = 'r' | (origin.bank() = 'a' & origin.index() = 0) then do; selected[right] = 1; changed = 1; end
+            else do; reason = 'target.resource.backing.foreign.binding.unproved'; leave; end
+          end
+          if selected[right] & selected[left] = 0 then do; selected[left] = 1; changed = 1; end
+          if action.kind() = 'swap' & selected[left] & selected[right] = 0 then do; selected[right] = 1; changed = 1; end
+        end
+        if reason <> '' then leave
+      end
+    end
+    if reason = '' then do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() = 'procedure' then iterate
+      instruction = profile.instruction(item.id())
+      reason = resourceinstruction(instruction,body.locals(),selected)
+      if reason <> '' then leave
+      do j = 1 to cfg.outedges(item.id())
+        if spend(j + 1) = 0 then do; state = 'limit'; reason = message(); leave; end
+        edge = cfg.outedge(item.id(),j)
+        if edge.complete() = 0 | edge.scopecomplete() = 0 | edge.role() = 'unknown' then do; reason = 'target.resource.backing.departure.unproved'; leave; end
+        if edge.targetblock() > 0 & wordpos(edge.exposure(),'handler-call handler-call-async event-binding event-binding-async') > 0 then do; reason = 'target.resource.backing.handler.reach.unproved'; leave; end
+      end
+      if reason <> '' then leave
+    end
+    if _status = 'limit' then do; state = 'limit'; reason = message(); end
+    if reason <> '' & state = 'proved' then state = 'unknown'
+    result = .backinghistoryfact(reference self,functionid,bank,number,state,reason)
+    if state <> 'limit' then do; _backinghistories[cachekey] = result; _backinghistorypresent[cachekey] = 1; _backinghistoryproved[cachekey] = state = 'proved'; end
+    if preparing = 0 & state = 'unknown' then return frozenbackinghistory(functionid,bank,number,reg,cachekey)
+    return result
+  /** The CALL's own canonical resource actions have no implicit provider
+   * authority. The complete child/cause projection is checked separately. */
+  resourcecallaction: method = .string
+    arg instruction = .lltargettransfer..instruction, ordinal = .int, selected = .int[]
+    action = instruction.action(ordinal); item = instruction.record(); catalog = .llrxascatalog..catalog()
+    if action.kind() = 'external' then do
+      if delegatedcall(instruction,action) then return ''
+      return 'target.resource.backing.child.external.unproved'
+    end
+    if action.kind() = 'callback' then do
+      if callframebindings(instruction,action) then return ''
+      return 'target.resource.backing.child.callback.reach.unproved'
+    end
+    if action.kind() = 'context' then do
+      /* Typed ambient cells are separate from Rexx backing components. This
+       * footprint proof leaves the context value/restoration unknown. */
+      profile = dereference _transfers
+      if action.domain() > 0 & action.domain() <= profile.domains() then do
+        domain = profile.domain(action.domain())
+        if domain.kind() = 'context' then return ''
+      end
+      return 'target.resource.backing.child.context.domain.unproved'
+    end
+    if wordpos(action.kind(),'read observe capture callcapture call edge raise') > 0 then return ''
+    return 'target.resource.backing.child.action.' || action.kind() || '.unproved'
+  /** Substitute only frozen StorageIds; zero never means an empty effect. */
+  backingmapped: method = .int
+    arg storage = .int, bindings = .int[]
+    if storage < 1 | storage > bindings[0] then return 0
+    return bindings[storage]
+  /** Add a resource-source obligation to the same original-owned fixed point.
+   * Borrowed/context storage cannot acquire an original-backing invariant. */
+  backingrequire: method = .string
+    arg storage = .int, expose backings = .int[], expose changed = .int
+    if storage < 1 | storage > backings[0] then return 'target.resource.backing.transport.source.unproved'
+    if ownedbase(storage) = 0 | _storebank[storage] = 'context' then return 'target.resource.backing.transport.borrowed.unproved'
+    if backings[storage] = 0 then do; backings[storage] = 1; changed = 1; end
+    return ''
+  /** Exact retained-child composition reuses the same native action resource
+   * predicate and frozen capture points. It evaluates no instruction value. */
+  backingchild: method = .string
+    arg instruction = .lltargettransfer..instruction, bindings = .int[], expose backings = .int[], stack = .string, expose changed = .int
+    i = .int; count = .int; ordinal = .int; mask = .int; overlap = .int; resources = .int; bit = .int
+    profile = dereference _transfers; catalog = .llrxascatalog..catalog(); source = dereference _owner
+    item = instruction.record(); child = profile.calllocaltarget(item.id())
+    do i = 1 to 7
+      if spend(1) = 0 then return message()
+      family = word('effects references components ownership bindings order control',i)
+      if instruction.complete(family) = 0 then return 'target.resource.backing.child.' || family || '.unproved'
+    end
+    failure = resourcefailure(instruction)
+    if failure <> '' then return failure
+    if instruction.complete('calls') = 0 then do
+      if instruction.unknownreason('calls') <> 'catalog.call.callee.unknown' then return 'target.resource.backing.child.calls.unproved'
+    end
+    if child < 2 | profile.callexacttarget(item.id()) = 0 then return 'target.resource.backing.child.target.unproved'
+    if profile.callinitializeringress(item.id()) = 0 then return 'target.resource.backing.child.initializer.unproved'
+    if words(stack) >= 32 | wordpos(child as .string,stack) > 0 then return 'target.resource.backing.child.recursion.or.depth.unproved'
+    if profile.callframedeferred(item.id()) = 0 then return 'target.resource.backing.child.frame.preparation.unproved'
+    if catalog.callframeclearrole(item.opcode()) <> 'a0-original-backing' | catalog.callframeclearextent(item.opcode()) <> 'active-tree' | catalog.callframeclearwhen(item.opcode()) <> 'reused-frame' | catalog.callframelocalmode(item.opcode()) <> 'relink-original' then return 'target.resource.backing.child.frame.preparation.unproved'
+    count = captureargumentcount(item.id())
+    if count < 0 then return 'target.resource.backing.child.capture.unproved'
+    resultstorage = 0
+    if catalog.callresult(item.opcode()) > 0 then do
+      result = abicallresult(item.id())
+      if result.status() <> 'ok' then return 'target.resource.backing.child.result.unproved'
+      resultstorage = backingmapped(result.active(),bindings)
+      if resultstorage = 0 then return 'target.resource.backing.child.result.unproved'
+    end
+    resources = catalog.callbackmask('input'); bit = catalog.callbackmask('output'); assembler ior resources,resources,bit
+    bit = catalog.callbackmask('capacity'); assembler ior resources,resources,bit
+    if catalog.callcausestate(item.opcode()) <> 'known' then return 'target.resource.backing.child.causes.unproved'
+    do i = 1 to catalog.callcauses(item.opcode())
+      if spend(1) = 0 then return message()
+      cause = profile.callcause(item.id(),i)
+      if cause.valid() = 0 then return 'target.resource.backing.child.cause.owner.unproved'
+      if cause.possible() = 0 then iterate
+      condition = cause.condition()
+      /* These retained-call failures remain explicit CFG producers. The
+       * resource proof preserves their prefixes and terminal/handler paths;
+       * it is not the removed-call allocation-pressure permission. */
+      if wordpos(condition,'bytecode-allocation-failed bytecode-window-invalid bytecode-frame-layout-invalid provider-invoked bytecode-provider-invoked') > 0 then iterate
+      if condition = 'bytecode-frame-hook' then do
+        mask = cause.callbacks(); assembler iand overlap,mask,resources
+        if mask > 0 & mask = overlap then iterate
+      end
+      return 'target.resource.backing.child.cause.' || cause.kind() || '.unproved'
+    end
+    if spend(_storefunction[0] + count * (lookupcost() + 1) + 1) = 0 | scratch(_storefunction[0],8) = 0 then return message()
+    childbindings = bindings
+    do i = 1 to _storefunction[0]
+      if _storefunction[i] <> child | _storebank[i] <> 'a' | _storeindex[i] = 0 then iterate
+      ordinal = _storeindex[i]
+      if ordinal > count then childbindings[i] = 0
+      else do
+        actual = captureargument(item.id(),ordinal)
+        if actual.status() <> 'ok' then return 'target.resource.backing.child.actual.unproved'
+        childbindings[i] = backingmapped(actual.active(),bindings)
+        if childbindings[i] = 0 then return 'target.resource.backing.child.actual.unproved'
+      end
+    end
+    return backingbody(child,childbindings,resultstorage,backings,strip(stack || ' ' || child),changed)
+  /** Every resource/escape obligation is selected at its own native action
+   * checkpoint. Different phases of a compound slot never share selection. */
+  backingbody: method = .string
+    arg functionid = .int, bindings = .int[], resultstorage = .int, expose backings = .int[], stack = .string, expose changed = .int
+    i = .int; j = .int; k = .int; p = .int; d = .int; reg = .int; storage = .int; sourceid = .int
+    edgeid = .int; exceptional = .int; selectedsource = .int; selectedtarget = .int; sourcebinding = .int; targetbinding = .int
+    resources = .int; bit = .int; overlap = .int; mask = .int; transport = .int
+    action = .lltargettransfer..action; view = .lltargettransfer..refview; origin = .lltargettransfer..refview
+    instruction = .lltargettransfer..instruction; item = .lltarget..record; edge = .lltargetcfg..edge
+    path = .actionpath; point = .actionpoint; domain = .lltargettransfer..domain
+    source = dereference _owner; profile = dereference _transfers; cfg = dereference _cfg; catalog = .llrxascatalog..catalog()
+    body = source.body(functionid)
+    resources = catalog.componentmask('reference'); bit = catalog.componentmask('native-payload'); assembler ior resources,resources,bit
+    bit = catalog.componentmask('attribute-count'); assembler ior resources,resources,bit
+    do i = 1 to body.records()
+      if spend(1) = 0 then return message()
+      item = body.record(i)
+      if item.kind() = '.inlinedprivate' then return 'target.resource.backing.borrowed.suffix.unproved'
+      if item.kind() <> 'instruction' then iterate
+      instruction = profile.instruction(item.id())
+      if instruction.complete('references') = 0 | instruction.complete('bindings') = 0 | instruction.complete('order') = 0 then return 'target.resource.backing.alias.inventory.unproved'
+      if instruction.complete('relocation') = 0 then return 'target.resource.backing.frame.reach.unproved'
+      if item.id() > _beforepresent[0] then return 'target.resource.backing.point.unavailable'
+      if _beforepresent[item.id()] = 0 then return 'target.resource.backing.point.unavailable'
+      transport = catalog.transportsource(item.opcode()); iscall = catalog.callinvokes(item.opcode())
+      childchecked = 0
+      do p = 0 to cfg.outedges(item.id())
+        exceptional = 0; phase = 'unknown'; edgeid = 0
+        if p > 0 then do
+          edge = cfg.outedge(item.id(),p); edgeid = edge.id()
+          if edge.complete() = 0 | edge.scopecomplete() = 0 | edge.role() = 'unknown' then return 'target.resource.backing.departure.unproved'
+          if edge.targetblock() > 0 & wordpos(edge.exposure(),'handler-call handler-call-async event-binding event-binding-async') > 0 then return 'target.resource.backing.handler.reach.unproved'
+          if edge.phase() <> 'none' & edge.role() <> 'normal' & edge.role() <> 'table' & right(edge.exposure(),6) <> '-async' then do; exceptional = 1; phase = edge.phase(); end
+        end
+        path = actionplan(item.id(),edgeid)
+        if _status <> 'ok' then return message()
+        do j = 1 to instruction.actions()
+          if spend(instruction.references() + _regfunction[0] + 1) = 0 | scratch(_regfunction[0],8) = 0 then return message()
+          action = instruction.action(j)
+          if applies(action,exceptional,phase) = 0 then iterate
+          if path.has(j) = 0 then return 'target.resource.backing.action.phase.unproved'
+          point = path.point(j)
+          selected = .int[]
+          do k = 1 to _regfunction[0]; selected[k] = 0; end
+          selectedtarget = 0; selectedsource = 0; targetbinding = 0; sourcebinding = 0
+          do d = 1 to 2
+            sourceid = action.subject()
+            if d = 2 then do; if action.sourcekind() <> 'reference' then iterate; sourceid = action.sourceid(); end
+            if sourceid = 0 then iterate
+            view = profile.ref(sourceid)
+            if view.bank() = '' & view.kind() <> 'address' then iterate
+            if view.kind() = 'address' | view.kind() = 'window' | view.extentknown() = 0 then return 'target.resource.backing.alias.selector.unproved'
+            storage = backingmapped(pointstorage(point,sourceid),bindings)
+            if storage < 1 | storage > backings[0] then return 'target.resource.backing.action.binding.unproved'
+            if d = 1 then do; targetbinding = storage; selectedtarget = backings[storage]; end
+            else do; sourcebinding = storage; selectedsource = backings[storage]; end
+            if backings[storage] then do
+              reg = findregister(functionid,view.bank(),view.index())
+              if reg = 0 then return 'target.resource.backing.alias.selector.unproved'
+              selected[reg] = 1
+            end
+          end
+          if wordpos(action.kind(),'link swap') > 0 then do
+            if action.subject() = 0 | action.sourcekind() <> 'reference' then return 'target.resource.backing.alias.source.unproved'
+            view = profile.ref(action.subject()); origin = profile.ref(action.sourceid())
+            if (selectedsource & view.bank() = 'g') | (action.kind() = 'swap' & selectedtarget & origin.bank() = 'g') then return 'target.resource.backing.pointer.exported'
+          end
+          if selectedtarget & transport > 0 & wordpos(action.kind(),'write transport derive') > 0 then do
+            mask = resources
+            if action.domain() > 0 then do
+              domain = profile.domain(action.domain())
+              if domain.kind() <> 'whole' then do
+                mask = 0
+                if domain.kind() = 'component' then mask = domain.nativebit()
+              end
+            end
+            assembler iand overlap,mask,resources
+            if overlap > 0 then do
+              if action.sourcekind() <> 'reference' then return 'target.resource.backing.transport.phase.unproved'
+              reason = backingrequire(sourcebinding,backings,changed)
+              if reason <> '' then return reason
+              view = profile.ref(action.sourceid()); reg = findregister(functionid,view.bank(),view.index())
+              if reg = 0 then return 'target.resource.backing.transport.source.unproved'
+              selected[reg] = 1; selectedsource = 1
+            end
+          end
+          if action.kind() = 'return' & resultstorage > 0 then do
+            if backings[resultstorage] & catalog.returnkind(item.opcode()) = 2 then do
+              /* Native physical RET captures its source at handler entry;
+               * the synthetic return marker itself has no source operand. */
+              before = _before[item.id()] as .state
+              returnedref = operandref(instruction,catalog.returnsource(item.opcode()))
+              sourcebinding = backingmapped(refstorage(instruction,returnedref,before),bindings)
+              reason = backingrequire(sourcebinding,backings,changed)
+              if reason <> '' then return reason
+            end
+          end
+          if iscall & childchecked = 0 then do
+            reason = backingchild(instruction,bindings,backings,stack,changed)
+            if reason <> '' then return reason
+            childchecked = 1
+          end
+          reason = resourceinstruction(instruction,body.locals(),selected,1,j,selectedtarget,selectedsource)
+          if reason <> '' then return reason
+        end
+      end
+    end
+    return ''
+  /** Refine the same inductive theorem with frozen action/capture bindings.
+   * All resource imports grow one owned-backing least fixed point. */
+  frozenbackinghistory: method = .lltargetflow..backinghistoryfact
+    arg functionid = .int, bank = .string, number = .int, rootreg = .int, cachekey = .int
+    if spend(_storefunction[0] + 1) = 0 | scratch(_storefunction[0],16) = 0 then return .backinghistoryfact(reference self,functionid,bank,number,'limit',message())
+    backings = .int[]; bindings = .int[]
+    do i = 1 to _storefunction[0]; backings[i] = 0; bindings[i] = i; end
+    if rootreg > 0 then backings[_bases[rootreg]] = 1
+    reason = ''; changed = 1
+    do while changed & reason = ''
+      changed = 0
+      reason = backingbody(functionid,bindings,0,backings,functionid as .string,changed)
+    end
+    state = 'proved'
+    if reason <> '' then state = 'unknown'
+    if _status = 'limit' then do; state = 'limit'; reason = message(); end
+    result = .backinghistoryfact(reference self,functionid,bank,number,state,reason)
+    if state <> 'limit' then do; _backinghistories[cachekey] = result; _backinghistorypresent[cachekey] = 1; _backinghistoryproved[cachekey] = state = 'proved'; _backinghistoryrefined[cachekey] = 1; end
+    return result
+  preparebackinghistories: method = .int
+    if _prepareprivatehistory = 0 then return 1
+    source = dereference _owner; graphref = source.ir(); graph = dereference graphref
+    if spend(graph.functions() + 1) = 0 | reserve((graph.functions() + 1) * 8) = 0 then return 0
+    do f = 1 to graph.functions(); _privateframeclean[f] = f > 1; end
+    do i = 1 to _regfunction[0]
+      if spend(1) = 0 then return 0
+      if _regbank[i] <> 'r' & (_regbank[i] <> 'a' | _regindex[i] <> 0) then iterate
+      ignoredfact = privatebackinghistory(_regfunction[i],_regbank[i],_regindex[i],1)
+      if _status <> 'building' then return 0
+      if i > _backinghistoryproved[0] then _privateframeclean[_regfunction[i]] = 0
+      else if _backinghistoryproved[i] = 0 then _privateframeclean[_regfunction[i]] = 0
+    end
+    return 1
   prepareresources: method = .int
     source = dereference _owner; profile = dereference _transfers; cfg = dereference _cfg; index = dereference _index
     body = .lltarget..body; item = .lltarget..record; instruction = .lltargettransfer..instruction
     edge = .lltargetcfg..edge; domain = .lltargettransfer..domain
     catalog = .llrxascatalog..catalog(); i = .int; f = .int; projected = .int; block = .int; child = .int; count = .int
     value = .lltarget..operand
-    if reserve(index.functions() * 56 + _domains * 8) = 0 | spend(index.functions() + _domains) = 0 then return 0
+    if reserve(index.functions() * 64 + _domains * 8) = 0 | spend(index.functions() + _domains) = 0 then return 0
     do f = 2 to index.functions()
       _resourceclean[f] = 0; _resourcereasons[f] = 'target.resource.entry.context.unproved'
-      _resourcearguments[f] = 0; _resourceactuals[f] = -1; _resourceincoming[f] = 0
+      _resourcearguments[f] = 0; _resourceactuals[f] = -1; _resourceincoming[f] = 0; _resourcereturnclean[f] = 1
       /* The checked closure excludes other ingress. Its non-root members
        * have an ordinary parent; root external-argument cleanup does not. */
       if _premise = 'canonical' & profile.executioncontext() <> '' & f <> profile.executionroot() then do
@@ -2873,6 +3848,14 @@ analysis: class
     end
     /* Fixed actual vectors are canonical ABI facts. Counted windows need the
      * existing call-point count proof and remain unknown in this entry theorem. */
+    do i = 1 to _instructions[0]
+      if spend(1) = 0 then return 0
+      item = source.at(_instructions[i]); f = item.procedureid()
+      if item.kind() <> 'instruction' then iterate
+      if catalog.returnkind(item.opcode()) <> 2 then iterate
+      value = item.operand(catalog.returnsource(item.opcode()))
+      if value.kind() <> 'R' | value.bank() <> 'r' then _resourcereturnclean[f] = 0
+    end
     do i = 1 to _instructions[0]
       if spend(1) = 0 then return 0
       item = source.at(_instructions[i]); f = item.procedureid()
@@ -2922,19 +3905,40 @@ analysis: class
         _resourceclean[f] = 0; _resourcereasons[f] = 'target.resource.returning.handler.unproved'
       end
     end
+    changed = 1
+    do while changed
+      changed = 0
+      do i = 1 to _instructions[0]
+        if spend(1) = 0 then return 0
+        item = source.at(_instructions[i]); f = item.procedureid()
+        if item.kind() <> 'instruction' then iterate
+        if _resourceclean[f] = 0 | catalog.callinvokes(item.opcode()) = 0 then iterate
+        instruction = profile.instruction(item.id())
+        if resourcecallknown(instruction) = 0 then do
+          _resourceclean[f] = 0; _resourcereasons[f] = 'target.resource.call.outward.unproved'; changed = 1
+        end
+      end
+    end
     return 1
   resourceentry: method = .lltargetflow..state
     arg functionid = .int
     current = .state(_bases,_domains); i = .int; j = .int; d = .int
-    if _resourceclean[functionid] = 0 then return current
+    profile = dereference _transfers; domain = .lltargettransfer..domain; catalog = .llrxascatalog..catalog()
+    if _resourceclean[functionid] = 0 & _prepareprivatehistory = 0 then return current
     if spend(_storefunction[0] + _resourcedomains[0]) = 0 then return current
     do i = 1 to _storefunction[0]
-      if _storefunction[i] <> functionid | _storebank[i] <> 'r' then iterate
-      growth = max(0,i - current.capacityextent())
-      if spend(growth + 1) = 0 | scratch(current.bytes() + growth * 8 + 8,1) = 0 then return current
-      call current.setcapacity(i,1)
+      if _storefunction[i] <> functionid then iterate
+      selected = _resourceclean[functionid] & _storebank[i] = 'r'
+      if selected = 0 & _prepareprivatehistory then do
+        reg = findregister(functionid,_storebank[i],_storeindex[i])
+        if reg > 0 & reg <= _backinghistoryproved[0] then selected = _backinghistoryproved[reg]
+      end
+      if selected = 0 then iterate
+      /* Retained capacity/native payload may invoke published finalizers.
+       * The body footprint is not their entry absence theorem. */
       do j = 1 to _resourcedomains[0]
-        d = _resourcedomains[j]
+        d = _resourcedomains[j]; domain = profile.domain(d)
+        if domain.nativebit() <> catalog.componentmask('reference') then iterate
         growth = current.putwork(i,d)
         if spend(growth + 1) = 0 | scratch(current.bytes() + growth * 8 + 160,1) = 0 then return current
         /* Resource absence does not define or reveal dirty scalar values. */
@@ -2972,11 +3976,31 @@ analysis: class
     return .state()
   abicallreason: method = .string
     arg operation = .int, target = .targetfact
-    count = .int; ordinal = .int; binding = .storagefact
+    count = .int; ordinal = .int; binding = .storagefact; selectedowner = reference .lltarget..module
     profile = dereference _transfers; source = dereference _owner; catalog = .llrxascatalog..catalog(); item = source.at(operation)
     if catalog.callinvokes(item.opcode()) = 0 then return 'target.abi.invocation.not.call'
     instruction = profile.instruction(operation)
-    if instruction.complete('references') = 0 | instruction.complete('bindings') = 0 | instruction.complete('order') = 0 | instruction.complete('calls') = 0 then return 'target.abi.invocation.premise.unproved'
+    if instruction.complete('references') = 0 | instruction.complete('bindings') = 0 | instruction.complete('order') = 0 then return 'target.abi.invocation.premise.unproved'
+    if instruction.complete('calls') = 0 then do
+      /* The canonical row defers callee effects to this exact target. As in
+       * callobservationtarget, it is not a missing capture/target contract;
+       * independent unknown rows cannot acquire that native interpretation. */
+      if _premise <> 'canonical' | instruction.unknownreason('calls') <> 'catalog.call.callee.unknown' then return 'target.abi.invocation.premise.unproved'
+      if spend(source.procedures() * 3 + 8) = 0 then return message()
+      code = item.opcode()
+      if catalog.callkind(code) <> 1 | catalog.callcapture(code) <> 1 then return 'target.abi.invocation.premise.unproved'
+      ordinal = catalog.calltarget(code)
+      if ordinal < 1 | ordinal > item.operands() then return 'target.abi.invocation.premise.unproved'
+      value = item.operand(ordinal)
+      if value.kind() <> 'P' then return 'target.abi.invocation.premise.unproved'
+      if source.procedureid(value.text()) <> target.procedure() then return 'target.abi.invocation.target.mismatch'
+      checked = profile.invocationtarget(operation)
+      if checked.procedure() > 0 then do
+        if checked.status() <> 'proved' | checked.procedure() <> target.procedure() then return 'target.abi.invocation.target.mismatch'
+        selectedowner = checked.provider()
+        if (selectedowner <refsame> _owner) = 0 then return 'target.abi.invocation.target.mismatch'
+      end
+    end
     provider = target.provider()
     if (provider <refsame> _owner) = 0 then return 'target.abi.invocation.initializer.ingress.unproved'
     current = abicallstate(operation)
@@ -3034,6 +4058,36 @@ analysis: class
     arg operation = .int, storage = .int
     call run()
     current = abicallstate(operation)
+    return abiresourcepoint(current,storage)
+  /** Borrow the existing immutable resource projection at a frozen point.
+   * A nonzero edge names its committed edge state and must belong to this
+   * exact operation. Missing states/anchors never manufacture cleanliness. */
+  resourceat: method = .lltargetflow..abiresource
+    arg operation = .int, bank = .string, number = .int, edgeid = 0, anchor = 'active'
+    call run()
+    empty = .abiresource(reference self,0,0,0,0,0,0,0)
+    if valid() = 0 | operation < 1 | operation > _beforepresent[0] then return empty
+    if wordpos(bank,'r g a') = 0 | number < 0 | wordpos(anchor,'active base entry') = 0 then return empty
+    target = dereference _owner; item = target.at(operation)
+    if item.valid() = 0 | item.procedureid() < 2 then return empty
+    current = .state()
+    if edgeid = 0 then do
+      if _beforepresent[operation] = 0 then return empty
+      current = _before[operation] as .state
+    end
+    else do
+      cfg = dereference _cfg
+      if edgeid < 1 | edgeid > cfg.edges() | edgeid > _edgepresent[0] then return empty
+      edge = cfg.edge(edgeid)
+      if edge.sourceop() <> operation | edge.complete() = 0 | _edgepresent[edgeid] = 0 then return empty
+      current = _edge[edgeid] as .state
+    end
+    if spend(lookupcost() + 1) = 0 then return empty
+    reg = findregister(item.procedureid(),bank,number)
+    if reg = 0 | current.ready() = 0 then return empty
+    storage = current.mapping(reg)
+    if anchor = 'base' then storage = current.base(reg)
+    else if anchor = 'entry' then storage = _bases[reg]
     return abiresourcepoint(current,storage)
   invocationat: method = .lltargetflow..invocationfact
     arg operation = .int
@@ -3183,7 +4237,10 @@ analysis: class
         if parentknown = 0 then return 'target.abi.parent.unproved'
         if cleanprivate = 0 then return 'target.abi.frame.lifetime.unproved'
       end
-      when 'restore-numeric' then return 'target.abi.numeric.plugin.unproved'
+      when 'restore-numeric' then do
+        catalog = .llrxascatalog..catalog()
+        if catalog.contextsynccontract() <> 'value-only-nonreentrant.v1' then return 'target.abi.numeric.plugin.unproved'
+      end
       when 'capture-pointers' then do; if stageknown = 0 then return 'target.abi.stage.unproved'; end
       when 'publish-scope' then do; if stageknown = 0 then return 'target.abi.stage.unproved'; end
       when 'bind-proxy' then do; if stageknown = 0 then return 'target.abi.stage.unproved'; end
@@ -3230,6 +4287,7 @@ analysis: class
     if operation = 'retire-frame' then do
       provider = dereference _owner; body = provider.body(item.procedureid())
       if item.procedureid() <= _resourceclean[0] then cleanprivate = _resourceclean[item.procedureid()]
+      if item.procedureid() <= _privateframeclean[0] then cleanprivate = cleanprivate | _privateframeclean[item.procedureid()]
       if cleanprivate = 0 & hasinvocation & body.locals() = 0 then cleanprivate = abiinputstable(item.procedureid())
     end
     reason = abicondition(operation,sourcepoint,destination,transfermode,abiinternalparent(item.procedureid(),hasinvocation,invocation),cleanprivate,scope.entry() > 0)
@@ -3471,6 +4529,7 @@ analysis: class
     if (provider <refsame> _owner) = 0 | (profile_ref <refsame> _transfers) = 0 | target.procedure() <> item.procedureid() then return .abicallbackfact(reference self,'unknown','target.abi.invocation.provider.mismatch',rows,invocation)
     body = source.body(item.procedureid()); cleanprivate = 0
     if item.procedureid() <= _resourceclean[0] then cleanprivate = _resourceclean[item.procedureid()]
+    if item.procedureid() <= _privateframeclean[0] then cleanprivate = cleanprivate | _privateframeclean[item.procedureid()]
     if cleanprivate = 0 & body.locals() = 0 then cleanprivate = abiinputstable(item.procedureid())
     do i = 1 to sealed.rawrows()
       if spend(updates[0] + 2) = 0 | scratch((rows[0] + 1) * 672 + 512,1) = 0 then return .abicallbackfact(reference self,'unknown',message(),rows,invocation)
@@ -3734,14 +4793,26 @@ analysis: class
     arg instruction = .lltargettransfer..instruction, incoming = .state, prepared = .int, exceptional = 0, phase = 'none'
     item = instruction.record(); catalog = .llrxascatalog..catalog(); profile = dereference _transfers
     target = dereference _owner; cfg = dereference _cfg
-    i = .int; captured = .int; invoked = .int; captureordinal = .int
+    i = .int; captured = .int; invoked = .int; captureordinal = .int; fixedentry = .int
     action = .lltargettransfer..action; view = .lltargettransfer..refview
     if item.kind() <> 'instruction' | incoming.ready() = 0 then return 0
     code = item.opcode()
     if catalog.callinvokes(code) = 0 | catalog.callkind(code) <> 1 | catalog.callcapture(code) <> 1 then return 0
-    if exceptional & wordpos(phase,'before partial after') = 0 then return 0
-    if _premise <> 'canonical' then do; if independentcall(instruction) = 0 then return 0; end
     if spend(8 + target.procedures() * 3 + instruction.actions() * 2 + instruction.references()) = 0 then return 0
+    fixedentry = _premise = 'canonical' & catalog.callcount(code) = 0 & catalog.callwindow(code) = 0 & catalog.callprefix(code) = '' & profile.callframedeferred(item.id())
+    if exceptional & wordpos(phase,'before partial after') = 0 then do
+      if phase <> 'unknown' | fixedentry = 0 then return 0
+      /* This may-path can include provider execution. Fixed handlers capture
+       * every explicit pointer before all ingress checkpoints. Do not replace
+       * unproved intervening frame-hook effects with the old pointee facts. */
+      do i = 1 to instruction.actions()
+        action = instruction.action(i)
+        if action.kind() = 'callback' & action.detail() = 'catalog.callback.call-frame' then do
+          if callbackpossible(instruction,action,.cell()) then return 0
+        end
+      end
+    end
+    if _premise <> 'canonical' then do; if independentcall(instruction) = 0 then return 0; end
     do i = 1 to 8
       family = word('references bindings order effects components observations ownership control',i)
       if instruction.complete(family) = 0 then return 0
@@ -3781,7 +4852,10 @@ analysis: class
         invoked = 1
       end
       if captured = 0 then do
-        if wordpos(action.kind(),'callback unknown') > 0 then return 0
+        if action.kind() = 'unknown' then return 0
+        if action.kind() = 'callback' then do
+          if _premise <> 'canonical' | callbackpossible(instruction,action,.cell()) then return 0
+        end
         if action.kind() = 'external' then do; if delegatedcall(instruction,action) = 0 then return 0; end
         if exceptional | prepared = 0 then do
           if wordpos(action.kind(),'write clear transport derive flagwrite link unlink swap resize status lifetime scope-enter') > 0 then return 0
@@ -3902,8 +4976,11 @@ analysis: class
           end
         end
         item = target.at(returns[j]); kind = catalog.returnkind(item.opcode())
-        value = cellat(incoming,storage,d)
-        if catalog.callprefix(code) = 'clear:1' then value = .cell('absent',0,0,'defined','absent')
+        /* CALL preparation precedes provider execution. A void RET preserves
+         * the provider's poststate, including writes through a result/global
+         * alias; scalar setters preserve its other components too. The
+         * pre-call value and prefix-clear fact are not post-provider facts. */
+        value = cellat(result,storage,d)
         if returninvalidated(item,domain) then value = .cell()
         if kind = 2 then do
           returninstruction = profile.instruction(item.id()); returnref = operandref(returninstruction,1)
@@ -4212,14 +5289,20 @@ analysis: class
     result = incoming.copy(); profile = dereference _transfers; value = .cell
     if scaledwork(_storefunction[0],max(1,_domains) * 3) = 0 then return result
     do storage = 1 to _storefunction[0]
-      if _storefunction[storage] <> functionid | _storebank[storage] = 'context' then iterate
+      /* Shared globals and escaped aliases can be stored under another
+       * function's first materialization. Unknown public reentry may import
+       * dirty state through them, so owner inequality is not isolation. */
+      if _storebank[storage] = 'context' then iterate
       call result.setlifetime(storage,'unknown',0)
       call result.setcapacity(storage,0)
       do d = 1 to _domains
         domain = profile.domain(d)
         if domain.kind() <> 'component' & domain.kind() <> 'flag' then iterate
         value = cellat(incoming,storage,d)
-        call result.put(storage,d,value.merged(.cell('foreign',0,0,'defined','unknown')))
+        /* A callback can transport a dirty component from another reachable
+         * value. Returning normally does not establish that its writes are
+         * defined, even when this destination was defined before entry. */
+        call result.put(storage,d,value.merged(.cell('foreign',0,0,'unknown','unknown',.lltarget..operand(),0)))
       end
     end
     return result
@@ -4229,11 +5312,14 @@ analysis: class
     action = .lltargettransfer..action
     edge = .lltargetcfg..edge; before = .state; current = .state; previous = .state; joined = .state
     next = .state; ignoredstate = .state; record = .lltarget..record
-    normalcursor = .abicursor; normalstate = .state; replay = .int
+    normalcursor = .abicursor; normalstate = .state; replays = .replaycache; replay = .int; body = .lltarget..body
     recipe = .lltargetrecipe..view; value = .lltarget..operand; selected = .lltarget..operand; catalog = .llrxascatalog..catalog
+    windowfunctions = .int[]
+    pendingblocks = .int[]; pendingreturns = .int[]; callheads = .int[]; callnext = .int[]; callblocks = .int[]
     emptyselectorids = .int[]; emptyselectorcells = .object[]; blank = .state()
     i = .int; j = .int; n = .int; f = .int; op = .int; b = .int; e = .int
     projected = .int; position = .int; targetblock = .int; changed = .int; normal = .int; exceptional = .int; ignored = .int; s = .int
+    hascall = .int; child = .int; caller = .int; revisit = .int; returnchanged = .int; callerblock = .int
     do
       if _worklimit < 1 | _bytelimit < 1 then do; ignored = fail('limit','target.flow.budgets'); return; end
       if <refvalid>(_owner) = 0 | <refvalid>(_transfers) = 0 | <refvalid>(_cfg) = 0 then do; ignored = fail('invalid','target.flow.owner.expired'); return; end
@@ -4247,29 +5333,87 @@ analysis: class
       store = dereference graph.storage(); contract = dereference store.contract(); _schema = contract.identity()
       if graph.operations() > _bytelimit / 88 | index.blocks() > _bytelimit / 40 then do; ignored = fail('limit','target.flow.index.bytes'); return; end
       if reserve(graph.operations() * 88 + index.blocks() * 40 + index.functions() * 8) = 0 then return
+      sourcegraph_ref = target.ir(); sourcegraph = dereference sourcegraph_ref
+      if scaledwork(sourcegraph.operations() + index.blocks() + index.functions(),1) = 0 then return
+      if reserve(sourcegraph.operations() * 16 + index.blocks() * 16 + index.functions() * 8) = 0 then return
       /* Typed primitive vectors require their full indexed extent before a
        * first read; zero is the explicit empty adjacency-list sentinel. */
       do b = 1 to index.blocks()
-        _edgehead[b] = 0; _outhead[b] = 0; _incomingpresent[b] = 0; _callblocks[b] = 0
+        _edgehead[b] = 0; _outhead[b] = 0; _incomingpresent[b] = 0
+        pendingblocks[b] = 1; pendingreturns[b] = 0
       end
       do e = 1 to cfg.edges()
         _edgenext[e] = 0; _outnext[e] = 0; _edgepresent[e] = 0
       end
-      sourcegraph_ref = target.ir(); sourcegraph = dereference sourcegraph_ref
-      do op = 1 to sourcegraph.operations(); _beforepresent[op] = 0; _afterpresent[op] = 0; _capturepresent[op] = 0; _witnessops[op] = 0; _callbackops[op] = 0; end
-      do f = 2 to index.functions(); _entrycomplete[f] = 1; _entrydemandcomplete[f] = 1; _entryreason[f] = ''; _entrydepends[f] = ''; _scopedfunctions[f] = 0; ignored = registerslot(f,'context',0); end
+      do op = 1 to sourcegraph.operations()
+        _beforepresent[op] = 0; _afterpresent[op] = 0; _capturepresent[op] = 0; _witnessops[op] = 0; _callbackops[op] = 0
+        callnext[op] = 0; callblocks[op] = 0
+      end
+      if _premise = 'canonical' then do
+        if scaledwork(index.functions(),1) = 0 | scratch(index.functions(),8) = 0 then return
+        do f = 1 to index.functions(); windowfunctions[f] = 0; end
+        do i = 1 to target.records()
+          if spend(1) = 0 then return
+          record = target.record(i)
+          if record.procedureid() < 2 | record.kind() = 'procedure' then iterate
+          instruction = profile.instruction(record.id())
+          if spend(instruction.references()) = 0 then return
+          do j = 1 to instruction.references()
+            refview = instruction.ref(j)
+            if refview.kind() = 'window' & refview.extentknown() = 0 then windowfunctions[instruction.function()] = 1
+          end
+        end
+      end
+      do f = 2 to index.functions()
+        _entrycomplete[f] = 1; _entrydemandcomplete[f] = 1; _entryreason[f] = ''; _entrydepends[f] = ''; _scopedfunctions[f] = 0
+        callheads[f] = 0
+        ignored = registerslot(f,'context',0)
+        if _status <> 'building' then return
+        if _premise = 'canonical' then do; if windowfunctions[f] then do
+          /* A finite call window can name otherwise unused physical slots.
+           * Declared banks/a0 have pointer coordinates independently of any
+           * value fact; an unknown supplied argument tail is not declared. */
+          body = target.body(f)
+          do n = 0 to body.locals() - 1
+            if spend(1) = 0 then return
+            ignored = registerslot(f,'r',n)
+            if _status <> 'building' then return
+          end
+          do n = 0 to target.globals() - 1
+            if spend(1) = 0 then return
+            ignored = registerslot(f,'g',n)
+            if _status <> 'building' then return
+          end
+          ignored = registerslot(f,'a',0)
+          if _status <> 'building' then return
+        end; end
+      end
       do i = 1 to target.records()
         if spend(1) = 0 then return
         record = target.record(i)
         if record.procedureid() < 2 | record.kind() = 'procedure' then iterate
         op = record.id(); _instructions[_instructions[0] + 1] = op
-        instruction = profile.instruction(op)
+        instruction = profile.instruction(op); hascall = 0
         do j = 1 to instruction.actions()
           if spend(1) = 0 then return
           action = instruction.action(j)
-          if action.kind() = 'call' then _callblocks[cfg.projectedblock(op)] = 1
+          if action.kind() = 'call' then hascall = 1
           if wordpos(action.kind(),'observe call unknown external') > 0 then _witnessops[op] = 1
           if action.kind() = 'callback' then do; _witnessops[op] = 1; _callbackops[op] = 1; end
+        end
+        /* Return projection reads only the selected local body's RET-before
+         * facts. Dependency registration grants no call or callback proof. */
+        if hascall & record.kind() = 'instruction' then do
+          catalog = .llrxascatalog..catalog()
+          if catalog.callinvokes(record.opcode()) & catalog.callkind(record.opcode()) = 1 then do
+            if spend(target.procedures() * 3 + 1) = 0 then return
+            value = record.operand(catalog.calltarget(record.opcode())); child = 0
+            if value.kind() = 'P' then child = target.procedureid(value.text())
+            if child > 1 then do
+              callblocks[op] = cfg.projectedblock(op)
+              callnext[op] = callheads[child]; callheads[child] = op
+            end
+          end
         end
         if _premise = 'canonical' & record.kind() = 'instruction' then do
           catalog = .llrxascatalog..catalog()
@@ -4317,6 +5461,7 @@ analysis: class
         end
       end
       if prepareresources() = 0 then return
+      if preparebackinghistories() = 0 then return
       if _domains > 0 then do
         if _storefunction[0] > 9223372036854775807 / _domains - 1 then do; ignored = fail('limit','target.flow.value.identity'); return; end
       end
@@ -4330,7 +5475,11 @@ analysis: class
       do while changed & _status = 'building'
         changed = 0
         do position = 1 to index.rposize()
-          b = index.rpo(position); f = index.blockfunction(b); joined = .state()
+          if spend(1) = 0 then return
+          b = index.rpo(position)
+          if pendingblocks[b] = 0 then iterate
+          pendingblocks[b] = 0; revisit = pendingreturns[b]; pendingreturns[b] = 0
+          f = index.blockfunction(b); joined = .state()
           if b = index.functionentry(f) then joined = resourceentry(f)
           e = _edgehead[b]
           do while e > 0
@@ -4350,7 +5499,7 @@ analysis: class
             e = _edgenext[e]
           end
           if joined.ready() = 0 then iterate
-          if _incomingpresent[b] & _callblocks[b] = 0 then do
+          if _incomingpresent[b] & revisit = 0 then do
             previous = _incoming[b] as .state
             if spend(joined.count() + previous.count() + joined.registers() + 1) = 0 then return
             if joined.same(previous) then iterate
@@ -4364,6 +5513,26 @@ analysis: class
               record = target.at(op)
               if record.procedureid() > 1 & record.kind() <> 'procedure' then do
                 instruction = profile.instruction(op); before = current.copy()
+                if record.kind() = 'instruction' & callheads[f] > 0 then do
+                  catalog = .llrxascatalog..catalog()
+                  if catalog.returnkind(record.opcode()) > 0 then do
+                    returnchanged = 1
+                    if _beforepresent[op] then do
+                      previous = _before[op] as .state
+                      if spend(before.count() + previous.count() + before.registers() + 1) = 0 then return
+                      returnchanged = before.same(previous) = 0
+                    end
+                    if returnchanged then do
+                      caller = callheads[f]
+                      do while caller > 0
+                        if spend(1) = 0 then return
+                        callerblock = callblocks[caller]
+                        pendingblocks[callerblock] = 1; pendingreturns[callerblock] = 1; changed = 1
+                        caller = callnext[caller]
+                      end
+                    end
+                  end
+                end
                 if save(_before,_beforepresent,op,before) = 0 then return
                 current = transfer(instruction,before)
                 if _status <> 'building' then return
@@ -4373,6 +5542,7 @@ analysis: class
             projected = index.nextop(projected)
           end
           normalcursor = _abicurrent.fork()
+          replays = .replaycache()
           e = _outhead[b]
           do while e > 0
             _abicurrent = normalcursor.fork()
@@ -4380,19 +5550,22 @@ analysis: class
             if op > 0 & edge.phase() <> 'none' & edge.role() <> 'normal' & edge.role() <> 'table' & right(edge.exposure(),6) <> '-async' then do
               if _beforepresent[op] then do
                   before = _before[op] as .state; instruction = profile.instruction(op)
-                  next = transfer(instruction,before,1,0,edge.phase())
+                  next = replaytransfer(instruction,before,1,0,edge.phase(),replays)
               end
             end
             if op > 0 & _premise = 'canonical' then do
               record = target.at(op); catalog = .llrxascatalog..catalog()
               if record.kind() = 'instruction' & catalog.scopecontinuation(record.opcode()) > 0 & edge.phase() <> 'none' then do
                 before = _before[op] as .state; instruction = profile.instruction(op)
-                if edge.phase() = 'after' & right(edge.exposure(),6) = '-async' then next = transfer(instruction,before)
-                else next = transfer(instruction,before,1,0,edge.phase())
+                if edge.phase() = 'after' & right(edge.exposure(),6) = '-async' then next = replaytransfer(instruction,before,0,0,'unknown',replays)
+                else next = replaytransfer(instruction,before,1,0,edge.phase(),replays)
               end
             end
+            if _status <> 'building' then return
             next = scopedepart(next,edge)
+            if _status <> 'building' then return
             if wordpos(edge.exposure(),'inherited inherited-async handler-call handler-call-async event-binding event-binding-async') > 0 & edge.targetblock() > 0 then next = foreignresume(next,edge.function())
+            if _status <> 'building' then return
             if edge.role() = 'async' | edge.role() = 'unknown' | edge.complete() = 0 then call next.clobber()
             if edge.targetblock() = 0 & edge.complete() then do
               if edge.role() = 'terminal' | edge.role() = 'unwind' then do s = 1 to _storefunction[0]
@@ -4403,9 +5576,12 @@ analysis: class
             if _edgepresent[e] then previous = _edge[e] as .state
             if next.same(previous) = 0 then do
               changed = 1; if save(_edge,_edgepresent,e,next) = 0 then return
+              targetblock = edge.targetblock()
+              if targetblock > 0 then pendingblocks[targetblock] = 1
             end
             e = _outnext[e]
           end
+          _bytes = _bytes - replays.bytes(); replays = .replaycache()
         end
       end
       /* Materialize authoritative ABI paths and observations with the SAME
@@ -4428,14 +5604,18 @@ analysis: class
             _abicurrent = .abicursor(op)
           end
           normalcursor = _abicurrent.fork()
+          replays = .replaycache()
           call abipublish(op,0)
           do j = 1 to cfg.outedges(op)
             edge = cfg.outedge(op,j)
             exceptional = edge.phase() <> 'none' & edge.role() <> 'normal' & edge.role() <> 'table' & right(edge.exposure(),6) <> '-async'
-            if exceptional then next = transfer(instruction,before,1,1,edge.phase())
+            if exceptional then next = replaytransfer(instruction,before,1,1,edge.phase(),replays)
             else do; next = normalstate.copy(); _abicurrent = normalcursor.fork(); end
+            if _status <> 'building' then return
             ignoredstate = scopedepartpath(next,edge,1)
+            if _status <> 'building' then return
           end
+          _bytes = _bytes - replays.bytes(); replays = .replaycache()
           if _status <> 'building' then return
         end
       end
@@ -4463,12 +5643,13 @@ analysis: class
     return _message
   reason: method = .string
     return message()
-  /** Proved absence of resources in every original private backing across
-   * admissible activations, independently of dirty scalar definedness. */
+  /** Current invocation's private resource/escape footprint. This proves no
+   * retained native payload, capacity, callback or dirty scalar absent. */
   resourceclean: method = .int
     arg functionid = .int
     call run()
     if valid() = 0 | functionid < 2 | functionid > _resourceclean[0] then return 0
+    if functionid <= _privateframeclean[0] then return _resourceclean[functionid] | _privateframeclean[functionid]
     return _resourceclean[functionid]
   resourcereason: method = .string
     arg functionid = .int
@@ -5034,6 +6215,28 @@ analysis: class
     end
     if state <> 'proved' then rows[count + 1] = .entrydemand(reference self,functionid,reason)
     return .entrycoveragefact(reference self,functionid,state,reason,rows,count,dependencies)
+  /** A strict frozen checkpoint, with no fallback to an earlier phase. */
+  sitecapture: method = .lltargetflow..state
+    arg operation = .int
+    call run()
+    if valid() = 0 | operation < 1 | operation > _capturepresent[0] then return .state()
+    if _capturepresent[operation] = 0 then return .state()
+    return _capture[operation] as .state
+  sitebefore: method = .lltargetflow..state
+    arg operation = .int
+    call run()
+    if valid() = 0 | operation < 1 | operation > _beforepresent[0] then return .state()
+    if _beforepresent[operation] = 0 then return .state()
+    return _before[operation] as .state
+  /** Site coverage is deliberately separate from entrycoverage(function).
+   * Frozen global completeness and callback/ABI facts are never upgraded. */
+  entrycoverageat: method = .lltargetflow..entrycoveragefact
+    arg operation = .int, work = 1000000, bytes = 67108864
+    call run()
+    query = .siteentryquery(reference self,operation,work,bytes)
+    result = query.result()
+    ignored = spend(query.ownwork()) & reserve(query.ownbytes())
+    return result
   accessdomain: method = .int
     arg functionid = .int, storage = .int, domainid = .int
     if storage = 0 then return 0

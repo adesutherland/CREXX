@@ -3449,6 +3449,10 @@ static size_t rx_graph_crexx_meta_size(enum const_pool_type type) {
         case META_PROVIDER: return sizeof(meta_provider_constant);
         case META_INITIALIZER: return sizeof(meta_initializer_constant);
         case META_AUTOLOAD: return sizeof(meta_autoload_constant);
+        case META_INLINE_FRAME: return sizeof(meta_inline_frame_constant);
+        case META_INLINE_MAP: return sizeof(meta_inline_map_constant);
+        case META_INLINED_PRIVATE: return sizeof(meta_inlined_private_constant);
+        case META_ENTRY_STATE: return sizeof(meta_entry_state_constant);
         default: return 0u;
     }
 }

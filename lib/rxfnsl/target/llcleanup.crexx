@@ -146,6 +146,41 @@ cfgpending: procedure = .int
   end
   return 0
 
+/** Static diagnostic ranges have no runtime cost, but their half-open
+ * interval must still contain executable code after cleanup. The model owns
+ * sorted source boundaries; one merge walk marks ranges containing retained
+ * source instructions (including CNOP replacements and generated setup owned
+ * by a retained instruction). Keep definitions, ancestors and endpoint labels
+ * even when an individual empty range record disappears. */
+pruneinlinemaps: procedure = .string
+  arg source = .lltarget..module, procedureId = .int, expose removed = .int[], expose work = .int, expose retained = .int, bytes = .int
+  count = source.inlinemaps()
+  if count = 0 then return ''
+  cost = source.records() * 3 + count * 4
+  if cost > work then return 'LL_RESOURCE_LIMIT: cleanup.inline.maps.work'
+  if count > (bytes - retained) <idiv> 8 then return 'LL_RESOURCE_LIMIT: cleanup.inline.maps.bytes'
+  work = work - cost; retained = retained + count * 8
+  occupied = .int[]; item = .lltarget..record; range = .lltarget..record
+  ordinal = 1; celladdress = .int; i = .int
+  do i = 1 to count; occupied[i] = 0; end
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() <> 'instruction' then iterate
+    celladdress = source.inlineaddress(item.id())
+    do while ordinal <= count
+      if celladdress < source.inlinemapend(ordinal) then leave
+      ordinal = ordinal + 1
+    end
+    if ordinal > count then leave
+    if celladdress >= source.inlinemapstart(ordinal) & removed[item.id()] = 0 then occupied[ordinal] = 1
+  end
+  do i = 1 to count
+    if occupied[i] then iterate
+    range = source.inlinemap(i)
+    if range.procedureid() = procedureId then removed[range.id()] = 1
+  end
+  return ''
+
 transport: procedure = .llinline..change
   arg owner = reference .lltarget..module, procedureId = .int, profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
   i = .int; j = .int; id = .int; ignored = .int; highest = .int; usedcells = .int
@@ -239,6 +274,8 @@ transport: procedure = .llinline..change
     if locals <> caller.locals() then changed = 1
     if changed = 0 then return .llinline..change('keep','transport.no.change',source,empty)
     if locals > frame then return .llinline..change('limit','transport.frame',source,empty)
+    message = pruneinlinemaps(source,procedureId,removed,work,plannedbytes,bytes)
+    if message <> '' then return .llinline..change('limit',message,source,empty)
     result = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work)
     bodies = .object[]; source_graph = source.ir()
     do i = 1 to source.records()
@@ -247,7 +284,7 @@ transport: procedure = .llinline..change
       if input.kind() = 'procedure' then do
         oldbody = source.body(input.procedureid()); extent = oldbody.locals()
         if input.procedureid() = procedureId then extent = locals
-        targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose())
+        targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose(),oldbody.entrykind())
         bodies[input.procedureid()] = targetbody as .object; maps[input.id()] = targetbody.headerid()
         if input.procedureid() = procedureId then callers[1] = targetbody.functionid()
         iterate
@@ -605,6 +642,8 @@ graphtransport: procedure = .llinline..change
     if highest + 1 <> oldlocals then changed = 1
     if changed = 0 then return .llinline..change('keep','transport.no.change',source,empty)
     if highest + 1 > frame then return .llinline..change('limit','transport.frame',source,empty)
+    message = pruneinlinemaps(source,procedureId,removed,work,plannedbytes,bytes)
+    if message <> '' then return .llinline..change('limit',message,source,empty)
     return graphemit(source,procedureId,reference plans,reference removed,reference groups,highest + 1,work,entries,bytes,cells)
   on signal as problem
     status = 'invalid'
@@ -696,7 +735,7 @@ graphemit: procedure = .llinline..change
     if input.kind() = 'procedure' then do
       oldbody = source.body(input.procedureid()); extent = oldbody.locals()
       if input.procedureid() = procedureId then extent = locals
-      targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose())
+      targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose(),oldbody.entrykind())
       if result.error() <> '' then do
         status = 'invalid'; if pos('LL_RESOURCE_LIMIT',result.error()) > 0 then status = 'limit'
         return .llinline..change(status,result.error(),source,empty)
@@ -1063,7 +1102,7 @@ storageemit: procedure = .llinline..change
     if input.kind() = 'procedure' then do
       oldbody = source.body(input.procedureid()); extent = oldbody.locals()
       if input.procedureid() = procedureId then extent = locals
-      targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose())
+      targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose(),oldbody.entrykind())
       if result.error() <> '' then do
         status = 'invalid'; if pos('LL_RESOURCE_LIMIT',result.error()) > 0 then status = 'limit'
         return .llinline..change(status,result.error(),source,empty)

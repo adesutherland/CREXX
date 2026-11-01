@@ -1,6 +1,6 @@
 /* cREXX License (MIT). One checked, split machine CFG over shared L IR. */
 options levelb
-namespace lltargetcfg expose graph edge
+namespace lltargetcfg expose graph edge ingresscone
 import rxfnsb
 import llir
 import llirgraph
@@ -115,6 +115,128 @@ edge: class
     if ordinal < 1 | ordinal > words(_scopeenters) then call bad('LL_TARGET_CFG: scope entry ordinal')
     return word(_scopeenters,ordinal) as .int
 
+/** A backwards source-point cone, including every known local ingress.
+ * Incomplete local destinations are not absent predecessors. Outward unwind
+ * at physical depth zero and terminal departure retain their unknown target
+ * without inventing an edge back into this activation. */
+ingresscone: class
+  _owner = reference .lltargetcfg..graph
+  _identity = .int
+  _operation = .int
+  _function = .int
+  _members = .int[]
+  _operations = .int[]
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  *: factory
+    arg owner = reference .graph, operation = .int, work = 1000000, bytes = 67108864
+    _owner = owner; _operation = operation; _worklimit = work; _bytelimit = bytes; _status = 'building'
+    return
+  fail: method = .int
+    arg state = .string, reason = .string
+    if _status = 'building' then do; _status = state; _reason = reason; end
+    return 0
+  spend: method = .int
+    arg work = 1, bytes = 0
+    if work < 0 | bytes < 0 | work > _worklimit - _work | bytes > _bytelimit - _bytes then return fail('limit','target.cfg.ingress.work.or.bytes')
+    _work = _work + work; _bytes = _bytes + bytes; return 1
+  run: method = .void
+    i = .int; row = .int; head = .int; point = .int; previous = .int; ignored = .int
+    edge = .lltargetcfg..edge
+    heads = .int[]; next = .int[]; sources = .int[]; pending = .int[]
+    if _status <> 'building' then return
+    if <refvalid>(_owner) = 0 then do; ignored = fail('invalid','target.cfg.ingress.owner.expired'); return; end
+    cfg = dereference _owner
+    if cfg.status() <> 'ok' then do; ignored = fail(cfg.status(),cfg.message()); return; end
+    _identity = cfg.identity(); source_ref = cfg.owner(); source = dereference source_ref
+    graph_ref = source.ir(); graph = dereference graph_ref; index_ref = cfg.index(); index = dereference index_ref
+    if _operation < 1 | _operation > graph.operations() then do; ignored = fail('invalid','target.cfg.ingress.operation.invalid'); return; end
+    selected = source.at(_operation); _function = selected.procedureid()
+    if _function < 2 | cfg.projectedop(_operation) = 0 then do; ignored = fail('invalid','target.cfg.ingress.operation.unprojected'); return; end
+    if index.reachable(cfg.projectedblock(_operation)) = 0 then do; ignored = fail('unknown','target.cfg.ingress.operation.unreached'); return; end
+    if graph.operations() > (_bytelimit - _bytes) <idiv> 32 | cfg.edges() > (_bytelimit - _bytes) <idiv> 24 then do; ignored = fail('limit','target.cfg.ingress.work.or.bytes'); return; end
+    if spend(graph.operations() + cfg.edges() + 1,graph.operations() * 32 + cfg.edges() * 24) = 0 then return
+    do i = 1 to graph.operations(); heads[i] = 0; _members[i] = 0; end
+    do i = 1 to cfg.edges()
+      edge = cfg.edge(i); next[i] = 0; sources[i] = 0
+      if edge.function() <> _function | edge.sourceop() = 0 then iterate
+      if index.reachable(edge.sourceblock()) = 0 then iterate
+      if edge.complete() = 0 then do
+        outward = edge.targetblock() = 0 & edge.role() = 'terminal'
+        if edge.targetblock() = 0 & edge.role() = 'unwind' then outward = cfg.scopedepth(edge.sourceop()) = 0
+        if outward = 0 then do; ignored = fail('unknown','target.cfg.ingress.local.destination.unproved'); return; end
+      end
+      if edge.targetblock() = 0 then iterate
+      point = edge.targetop()
+      if point < 1 | point > graph.operations() then do; ignored = fail('unknown','target.cfg.ingress.target.unrepresented'); return; end
+      sources[i] = edge.sourceop(); next[i] = heads[point]; heads[point] = i
+    end
+    pending[1] = _operation; _members[_operation] = 1; head = 1
+    do while head <= pending[0]
+      if spend(1) = 0 then return
+      point = pending[head]; head = head + 1; row = heads[point]
+      do while row > 0
+        if spend(1) = 0 then return
+        previous = sources[row]
+        if _members[previous] = 0 then do
+          _members[previous] = 1; pending[pending[0] + 1] = previous
+        end
+        row = next[row]
+      end
+    end
+    if spend(cfg.edges()) = 0 then return
+    do i = 1 to cfg.edges()
+      edge = cfg.edge(i)
+      if edge.function() <> _function | edge.targetblock() = 0 then iterate
+      if _members[edge.targetop()] & edge.scopecomplete() = 0 then do; ignored = fail('unknown','target.cfg.ingress.scope.unproved'); return; end
+    end
+    if spend(source.records()) = 0 then return
+    do i = 1 to source.records()
+      item = source.record(i)
+      if _members[item.id()] then _operations[_operations[0] + 1] = item.id()
+    end
+    _status = 'proved'
+    return
+  valid: method = .int
+    call run()
+    if <refvalid>(_owner) = 0 | _identity = 0 then return 0
+    cfg = dereference _owner; return cfg.valid() & cfg.identity() = _identity
+  status: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'target.cfg.ingress.owner.expired.or.replaced'
+    return _reason
+  complete: method = .int
+    return status() = 'proved'
+  owner: method = reference .lltargetcfg..graph
+    return _owner
+  operation: method = .int
+    return _operation
+  function: method = .int
+    return _function
+  operations: method = .int
+    if complete() = 0 then call bad('LL_TARGET_CFG: incomplete ingress cone has no exhaustive node list')
+    return _operations[0]
+  at: method = .int
+    arg ordinal = .int
+    if complete() = 0 | ordinal < 1 | ordinal > _operations[0] then call bad('LL_TARGET_CFG: ingress cone operation ordinal')
+    return _operations[ordinal]
+  contains: method = .int
+    arg operation = .int
+    if complete() = 0 | operation < 1 | operation > _members[0] then return 0
+    return _members[operation]
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+
 graph: class
   _owner = reference .lltarget..module
   _profile = reference .lltargettransfer..profile
@@ -138,6 +260,7 @@ graph: class
   _exceptional = .int[]
   _async = .int[]
   _local = .int[]
+  _localreason = .string[]
   _policyexact = .int[]
   _scopeexit = .int[]
   _scopeowner = .int[]
@@ -278,10 +401,10 @@ graph: class
     end
     return 0
   signalpaths: method = .void
-    arg item = .lltarget..record, phase = .string, names = .string, asynchronous = 0, callback = 0, policyunknown = 0
+    arg item = .lltarget..record, phase = .string, names = .string, asynchronous = 0, callback = 0, policyunknown = 0, causeid = ''
     exposure = .string; localexposure = .string
     target = dereference _owner; catalog = .llrxascatalog..catalog()
-    id = item.id(); f = item.procedureid(); cause = ''
+    id = item.id(); f = item.procedureid(); cause = causeid
     if callback then cause = '.callback'
     /* Inherited CALL/action handlers can resume after the signal point. An
      * unknown outward destination does not remove that local successor. */
@@ -302,8 +425,8 @@ graph: class
       call stage(id,0,role,phase,boundary,(id as .string) || cause,names,0,reason,'inherited',asynchronous)
     end
     if policyunknown then do
-      /* An unknown/host/ABI/invocation hook may replace the receiver policy.
-       * A complete public resource-only callback instead preserves the
+      /* An unproved callback route may replace the receiver policy.
+       * A complete public callback structural-policy contract preserves the
        * suspended frame's structural handler table before interrupt dispatch.
        * Both retain their separate signal producers and handler effects. */
       call policygap(item,phase,names,asynchronous,'.callback',0)
@@ -363,6 +486,20 @@ graph: class
       end
     end
     return
+  /** Typed ingress rows supplement aggregate propagation. A known target or
+   * initializer condition is discharged only by this exact profile's owner;
+   * any unproved cause retains the original aggregate wildcard producer. */
+  callcausepaths: method = .void
+    arg item = .lltarget..record
+    profile = dereference _profile; catalog = .llrxascatalog..catalog(); code = item.opcode()
+    if catalog.callcausestate(code) <> 'known' then return
+    do ordinal = 1 to catalog.callcauses(code)
+      if reserve(0,1) = 0 then return
+      cause = profile.callcause(item.id(),ordinal)
+      if cause.possible() = 0 | cause.status() <> 'proved' then iterate
+      call signalpaths(item,cause.phase(),cause.names(),0,0,0,'.call-cause.' || ordinal)
+    end
+    return
   /** Additional alternatives after a reachable non-resource callback may
    * have replaced the suspended policy. Existing HALT/authored alternatives
    * remain possible; their destinations do not close this new policy gap. */
@@ -392,6 +529,11 @@ graph: class
     /* Initial staging also describes unreachable source operations. Only a
      * reachable producer may contribute these callback completeness gaps. */
     _exceptional[f] = 0; _local[f] = 0; _policyexact[f] = 0
+    if _localreason[f] = '' then do
+      profile = dereference _profile
+      if catalog.callinvokes(code) then _localreason[f] = profile.callcausereason(id)
+      if _localreason[f] = '' then _localreason[f] = 'signal.callback.policy.destination.unknown'
+    end
     if catalog.signalstate(code) <> 0 then do
       phase = word('none before after partial unknown',catalog.signalphase(code) + 1)
       call policygap(item,phase,raisednames(item),0,'.reachable-callback.intrinsic')
@@ -544,7 +686,7 @@ graph: class
     if target.valid() = 0 | profile.matches(_owner) = 0 then do; call reject('invalid','LL_TARGET_OWNER: CFG profile mismatch'); return; end
     _revision = target.identity(); _profileid = profile.identity(); source_ref = target.ir(); source = dereference source_ref; store_ref = source.storage(); store = dereference store_ref
     if source.operations() > (_bytelimit - _bytes) <idiv> 512 then do; call reject('limit','LL_RESOURCE_LIMIT: target.cfg projection'); return; end
-    if reserve(source.operations() * 512 + source.blocks() * 16 + source.functions() * 32,source.operations() + source.blocks() + source.functions()) = 0 then return
+    if reserve(source.operations() * 512 + source.blocks() * 16 + source.functions() * 48,source.operations() + source.blocks() + source.functions()) = 0 then return
     if reserve(source.operations() * 8 + 64,source.operations()) = 0 then return
     do i = 1 to source.operations()
       _projected[i] = 0; _block[i] = 0; _next[i] = 0; _scopeexit[i] = 0; _scopeowner[i] = 0; _scopeparent[i] = 0; _scopecontinuation[i] = 0; _stagefirst[i] = 0; _stagelast[i] = 0
@@ -557,7 +699,7 @@ graph: class
     fn = builder.function('$target.catalogue',schema.voidtype()); sentinel = fn.block('catalogue'); call sentinel.returnvoid(origin)
     do n = 1 to target.procedures()
       body = target.procedure(n); f = body.functionid(); fn = builder.function(body.name(),schema.voidtype()); functions[f] = fn
-      _normal[f] = target.normalcfgcomplete(f); _exceptional[f] = 1; _async[f] = 1; _local[f] = _normal[f]; _policyexact[f] = 1; first[f] = 0; last[f] = 0
+      _normal[f] = target.normalcfgcomplete(f); _exceptional[f] = 1; _async[f] = 1; _local[f] = _normal[f]; _localreason[f] = ''; _policyexact[f] = 1; first[f] = 0; last[f] = 0
       do j = 1 to body.records()
         if reserve(0,1) = 0 then return
         item = body.record(j)
@@ -649,7 +791,10 @@ graph: class
       end
       else call stage(id,0,'terminal','none','departure',id as .string)
       if profile.premise() = 'canonical' then do
-        if catalog.signalstate(code) <> 0 then do
+        if catalog.callinvokes(code) then call callcausepaths(item)
+        aggregate = 1
+        if catalog.callinvokes(code) then aggregate = profile.callcausescomplete(id) = 0
+        if catalog.signalstate(code) <> 0 & aggregate then do
           phase = word('none before after partial unknown',catalog.signalphase(code) + 1)
           call signalpaths(item,phase,raisednames(item))
           if profile.defaulthalt(f) = 0 then _exceptional[f] = 0
@@ -658,16 +803,11 @@ graph: class
          * even when its intrinsic contract is NONE. Its names and checkpoint
          * are unknown; an ambient after-operation interrupt is a distinct
          * producer and cannot stand in for these synchronous alternatives. */
-        if catalog.callbackobligations(code) <> 0 then do
+        if profile.callbackobligations(id) <> 0 then do
           /* This exact whole-operation inventory, including UNKNOWN, is the
            * same public resource-route premise used by native flow. It says
            * nothing about pointee values or absence of queued interrupts. */
-          resources = catalog.callbackmask('input'); bit = catalog.callbackmask('output')
-          assembler ior resources,resources,bit
-          bit = catalog.callbackmask('capacity'); assembler ior resources,resources,bit
-          obligations = catalog.callbackobligations(code)
-          assembler iand overlap,obligations,resources
-          policyseeds[id] = obligations <> overlap
+          policyseeds[id] = profile.callbackpolicyunknown(id)
           call signalpaths(item,'unknown','*',0,1,policyseeds[id])
         end
         if catalog.flow(code) <> 3 | _scopeexit[id] > 0 then call signalpaths(item,'after','*',1)
@@ -922,8 +1062,15 @@ graph: class
   normalizationreason: method = .string
     arg functionid = .int
     call require()
-    if localcomplete(functionid) = 0 then return 'signal.local.destinations.unproved'
+    if localcomplete(functionid) = 0 then do
+      if _localreason[functionid] <> '' then return _localreason[functionid]
+      return 'signal.local.destinations.unproved'
+    end
     return ''
+  /** Query completeness at a source point without upgrading function facts. */
+  ingressat: method = .lltargetcfg..ingresscone
+    arg operation = .int, work = 1000000, bytes = 67108864
+    return .ingresscone(reference self,operation,work,bytes)
   usedwork: method = .int
     return _work
   usedbytes: method = .int

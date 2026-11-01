@@ -393,7 +393,9 @@ static size_t flow_remove_unreachable(flow_graph *graph, flow_stats *stats) {
                 stats->unreachable_removed++;
             }
             else if (graph->items[index].instrType == TRACE_EVENT ||
-                     graph->items[index].instrType == SRC_STEP) {
+                     graph->items[index].instrType == SRC_STEP ||
+                     graph->items[index].instrType == INLINE_FRAME_META ||
+                     graph->items[index].instrType == INLINE_MAP_META) {
                 /* Address-bound TRACE and source-step records in a dead block
                  * must not drift to the next surviving code address when the
                  * instruction they describe vanishes. */
@@ -4228,6 +4230,7 @@ static proc_constant *flow_private_local_procedure(flow_graph *graph) {
 static int flow_private_locals_can_commit(flow_graph *graph) {
     proc_constant *procedure;
     if (!graph || !graph->private_locals_planned) return 1;
+    if (graph->context->current_has_private) return 0;
     procedure = flow_private_local_procedure(graph);
     return procedure && graph->context->current_locals >= 0 &&
            procedure->locals == graph->context->current_locals &&

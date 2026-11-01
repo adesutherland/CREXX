@@ -247,8 +247,8 @@ static int inline_target(inline_module *modules, size_t count, size_t caller,
  * graph-operand identities while appending only newly encoded inline leaves.
  * The selected namespace is established before snapshotting or discovering
  * any call binding. Ordinary binaries with equal bytes remain untouched. */
-static int inline_rebase_operand(inline_module *item, size_t operand,
-        const void *bytes, size_t length, size_t *used_bytes, inline_work *work) {
+static int inline_rebase_binary(inline_module *item, const void *bytes,
+        size_t length, size_t *used_bytes, size_t *new_offset, inline_work *work) {
     unsigned char *pool;
     string_constant *entry;
     size_t size, offset, code_bytes;
@@ -288,8 +288,16 @@ static int inline_rebase_operand(inline_module *item, size_t operand,
     entry->string_len = length; memcpy(entry->string, bytes, length);
     item->rebased.header.constant_size += size;
     item->rebased.header.constant_stored_size = item->rebased.header.constant_size;
-    ((bin_code *)item->rebased.instructions)[operand].index = offset;
+    *new_offset = offset;
     *used_bytes += size;
+    return 1;
+}
+
+static int inline_rebase_operand(inline_module *item, size_t operand,
+        const void *bytes, size_t length, size_t *used_bytes, inline_work *work) {
+    size_t offset;
+    if (!inline_rebase_binary(item,bytes,length,used_bytes,&offset,work)) return 0;
+    ((bin_code *)item->rebased.instructions)[operand].index = offset;
     return 1;
 }
 
@@ -299,6 +307,45 @@ static int inline_rebase_inputs(inline_module *modules, size_t count, inline_wor
         const module_file *source = modules[m].source;
         const bin_code *code = (const bin_code *)source->instructions;
         size_t at = 0u;
+        int metadata = source->header.meta_head;
+        while (metadata != -1) {
+            const meta_entry *entry = (const meta_entry *)inline_constant(source,(size_t)metadata);
+            if (!entry || !inline_take(work,1u)) return 0;
+            if (entry->base.type == META_INLINED_PRIVATE) {
+                const meta_inlined_private_constant *binding = (const meta_inlined_private_constant *)entry;
+                const string_constant *binary = inline_binary(source,binding->provider);
+                rxinl_module_ref_view ref;
+                unsigned char *bytes = NULL;
+                size_t length = 0u, provider, offset, k, matches = 0u;
+                char spelling[32];
+                int ok;
+                if (!binary || !rxinl_module_ref_decode(binary->string,binary->string_len,&ref)) goto invalid;
+                if (ref.sealed || ref.self_relative) {
+                    if ((ref.self_relative && ref.sealed && ref.image_module != source->semantic_module_index) ||
+                        !inline_old_member(modules,count,source,ref.self_relative ? source->semantic_module_index : ref.image_module,&provider,work))
+                        goto invalid;
+                } else {
+                    if (ref.selector[0] == '@') goto invalid;
+                    provider = 0u;
+                    for (k = 0u; k < count; k++) {
+                        const char *name = modules[k].source->name;
+                        size_t len = strlen(name);
+                        if (!inline_take(work,len + 1u)) return 0;
+                        if (len == ref.selector_length && !memcmp(name,ref.selector,len)) { provider = k; matches++; }
+                    }
+                    if (matches != 1u) goto invalid;
+                }
+                if (binding->global_index >= (uint32_t)modules[provider].source->header.globals) goto invalid;
+                snprintf(spelling,sizeof(spelling),"@%lu",(unsigned long)provider);
+                ok = rxinl_module_ref_from_text(ref.self_relative ? "self" : spelling,&bytes,&length) &&
+                     rxinl_module_ref_seal(bytes,length,(uint32_t)provider) &&
+                     inline_rebase_binary(&modules[m],bytes,length,&used_bytes,&offset,work);
+                free(bytes);
+                if (!ok) return 0;
+                ((meta_inlined_private_constant *)((unsigned char *)modules[m].rebased.constant + metadata))->provider = offset;
+            }
+            metadata = entry->next;
+        }
         while (at < source->header.instruction_size) {
             int opcode = code[at].instruction.opcode;
             OpFormat format = rxbin_opcode_format(opcode);
@@ -1212,7 +1259,8 @@ static int inline_same_register(const module_file *a, const meta_entry *x, size_
 
 static int inline_observation(enum const_pool_type type) {
     return type == META_REG || type == META_CONST || type == META_CLEAR ||
-           type == META_SOURCE_STEP || type == META_TRACE_EVENT;
+           type == META_SOURCE_STEP || type == META_TRACE_EVENT ||
+           type == META_INLINE_FRAME || type == META_INLINE_MAP;
 }
 
 static int inline_same_metadata(const module_file *a, const meta_entry *left,
@@ -1234,6 +1282,39 @@ static int inline_same_metadata(const module_file *a, const meta_entry *left,
         case META_PROVIDER: { ROW(meta_provider_constant); return REF(symbol) && REF(provider) && x->flags == y->flags; }
         case META_INITIALIZER: { ROW(meta_initializer_constant); return REF(symbol) && REF(function); }
         case META_AUTOLOAD: { ROW(meta_autoload_constant); return REF(symbol) && REF(artifact); }
+        case META_ENTRY_STATE: {
+            ROW(meta_entry_state_constant);
+            return REF(procedure) && x->version == y->version && x->kind == y->kind;
+        }
+        case META_INLINED_PRIVATE: {
+            ROW(meta_inlined_private_constant);
+            const string_constant *xp = inline_binary(a,x->provider), *yp = inline_binary(b,y->provider);
+            rxinl_module_ref_view xr, yr;
+            if (!xp || !yp || !rxinl_module_ref_decode(xp->string,xp->string_len,&xr) ||
+                !rxinl_module_ref_decode(yp->string,yp->string_len,&yr) ||
+                !inline_take(work,xr.selector_length + 1u)) return 0;
+            /* Disassembly/assembly deliberately drops the seal. The exact
+             * selected spelling, physical owner and slot contract survive;
+             * the trusted final pass restores the image-local seal. */
+            return REF(procedure) && x->local_index == y->local_index && x->global_index == y->global_index &&
+                   x->owned_locals == y->owned_locals && xr.self_relative == yr.self_relative &&
+                   xr.selector_length == yr.selector_length && !memcmp(xr.selector,yr.selector,xr.selector_length) &&
+                   (!xr.sealed || !yr.sealed || xr.image_module == yr.image_module);
+        }
+        case META_INLINE_FRAME: {
+            ROW(meta_inline_frame_constant);
+            return x->frame_id == y->frame_id && x->parent_id == y->parent_id &&
+                   x->callsite_step_id == y->callsite_step_id && REF(module_name) && REF(procedure_name);
+        }
+        case META_INLINE_MAP: {
+            ROW(meta_inline_map_constant);
+            const proc_constant *ap = inline_address_owner(a,x->start,work);
+            const proc_constant *bp = inline_address_owner(b,y->start,work);
+            /* Code offsets are remapped by the trusted transform and checked
+             * by the typed codec. Preserve the static instance and physical
+             * owner; diagnostic records grant no executable authority. */
+            return x->frame_id == y->frame_id && ap && bp && inline_equal(ap->name,bp->name,work);
+        }
         case META_TASK_TARGET: {
             ROW(meta_task_target_constant);
             /* The final graph owner regenerates the address-dependent seal.
@@ -1411,7 +1492,39 @@ static int inline_seal(inline_module *modules, size_t count, size_t owner,
         }
         at += width + 1u;
     }
-    return at == module->header.instruction_size;
+    if (at != module->header.instruction_size) return 0;
+    {
+        int metadata = module->header.meta_head;
+        while (metadata != -1) {
+            const meta_entry *entry = (const meta_entry *)inline_constant(module,(size_t)metadata);
+            if (!entry || !inline_take(work,1u)) return 0;
+            if (entry->base.type == META_INLINED_PRIVATE) {
+                const meta_inlined_private_constant *binding = (const meta_inlined_private_constant *)entry;
+                string_constant *binary = (string_constant *)inline_binary(module,binding->provider);
+                rxinl_module_ref_view ref;
+                size_t target = SIZE_MAX, k, matches = 0u;
+                if (!binary || !rxinl_module_ref_decode(binary->string,binary->string_len,&ref)) return 0;
+                if (ref.self_relative) target = owner;
+                else if (ref.selector_length > 1u && ref.selector[0] == '@') {
+                    target = 0u;
+                    for (k = 1u; k < ref.selector_length; k++) target = target * 10u + (size_t)(ref.selector[k] - '0');
+                } else {
+                    for (k = 0u; k < count; k++) {
+                        const char *name = modules[k].original->name;
+                        size_t len = strlen(name);
+                        if (!inline_take(work,len + 1u)) return 0;
+                        if (len == ref.selector_length && !memcmp(name,ref.selector,len)) { target = k; matches++; }
+                    }
+                    if (matches != 1u) return 0;
+                }
+                if (target >= count || binding->global_index >= (uint32_t)modules[target].original->header.globals ||
+                    (ref.sealed && ref.image_module != target) ||
+                    !rxinl_module_ref_seal(binary->string,binary->string_len,(uint32_t)target)) return 0;
+            }
+            metadata = entry->next;
+        }
+    }
+    return 1;
 }
 
 int rxlink_inline_service(module_file *const *selected, size_t count,

@@ -3581,7 +3581,8 @@ static int flow_proof_address_observed_after_copy(
                 service->procedure, expected_epoch, record_id);
         if (!record) return -1;
         if (record->instruction_id != RXAS_FLOW_ID_NONE) return 0;
-        if (record->type == TRACE_EVENT || record->type == SRC_STEP) return 1;
+        if (record->type == TRACE_EVENT || record->type == SRC_STEP ||
+            record->type == INLINE_FRAME_META || record->type == INLINE_MAP_META) return 1;
     }
     return 0;
 }

@@ -117,6 +117,8 @@ function ::= functionDeclaration NEWLINE.
 function ::= FUNC(T) error NEWLINE. {rxaseaft(context, T, "Expecting .locals or .expose");}
 functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I). {rxasproc(context,F,I);}
 functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I) KW_EXPOSE EQUAL ID(D). {rxasexpc(context,F,I,D);}
+functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I) KW_ENTRY EQUAL ID(E). {rxasproc(context,F,I); rxasentry(context,E);}
+functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I) KW_EXPOSE EQUAL ID(D) KW_ENTRY EQUAL ID(E). {rxasexpc(context,F,I,D); rxasentry(context,E);}
 functionDeclaration ::= FUNC(F) KW_EXPOSE EQUAL ID(I). {rxasdecl(context,F,I);}
 
 // Function Declaration error messages
@@ -129,9 +131,11 @@ functionDeclaration ::= FUNC KW_EXPOSE EQUAL ID ANYTHING(T) error NEWLINE.
 functionDefinition ::= FUNC KW_LOCALS(T) error NEWLINE.
                         {rxaseaft(context, T, "Expecting \"={int}\"");}
 functionDefinition ::= FUNC KW_LOCALS EQUAL INT ANYTHING(T) error NEWLINE.
-                        {rxaserat(context, T, "Expecting {newline} or .expose");}
+                        {rxaserat(context, T, "Expecting {newline}, .expose or .entry");}
 functionDefinition ::= FUNC KW_LOCALS EQUAL INT KW_EXPOSE(T) error NEWLINE.
                         {rxaseaft(context, T, "Expecting \"={id}\"");}
+functionDefinition ::= FUNC KW_LOCALS EQUAL INT KW_ENTRY(T) error NEWLINE.
+                        {rxaseaft(context,T,"Expecting =program-default on main");}
 
 // Instructions in a function/procedure
 instructions ::= instruction.
@@ -145,6 +149,12 @@ instruction ::= KW_SRCSTEP INT(ST) INT(CL) INT(FL) STRING(F) INT(L) INT(SC) INT(
                 {rxasqmstp(context, ST, CL, FL, F, L, SC, EC, S);}
 instruction ::= KW_TRACEEVENT STRING(K) INT(M) STRING(VS) STRING(VT) STRING(RT) INT(VR) INT(ST) INT(CL) INT(FL) STRING(SYM) STRING(RN) NEWLINE.
                 {rxasqmte(context, K, M, VS, VT, RT, VR, ST, CL, FL, SYM, RN);}
+instruction ::= KW_INLINEFRAME INT(I) INT(P) STRING(M) STRING(N) INT(S) NEWLINE.
+                {rxasqmifr(context,I,P,M,N,S);}
+instruction ::= KW_INLINEMAP ID(B) COMMA ID(E) COMMA INT(I) NEWLINE.
+                {rxasqmimp(context,B,E,I);}
+instruction ::= KW_INLINEDPRIVATE RREG(R) COMMA STRING(M) COMMA GREG(G) NEWLINE.
+                {rxasqminp(context,R,M,G);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) reg(R) NEWLINE. {rxasqmre(context,V,OP,T,R);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
@@ -165,6 +175,9 @@ instruction ::= KW_JTABLE(T) error NEWLINE. {rxaseaft(context, T, "Expecting {id
 instruction ::= KW_JCASE(T) error NEWLINE. {rxaserat(context, T, ".jcase must decorate a same-line label");}
 instruction ::= KW_SRCSTEP(T) error NEWLINE. {rxaserat(context, T, "Expecting .srcstep {step} {clause} {flags} \"{file}\" {line} {start-col} {end-col} \"{source line}\"");}
 instruction ::= KW_TRACEEVENT(T) error NEWLINE. {rxaserat(context, T, "Expecting .traceevent \"{kind}\" {mode-mask} \"{value-source}\" \"{value-type}\" \"{register-type}\" {value-ref} {source-step} {clause} {flags} \"{symbol}\" \"{resolved-name}\"");}
+instruction ::= KW_INLINEDPRIVATE(T) error NEWLINE. {rxaserat(context,T,"Expecting .inlinedprivate rK,\"exact-provider\",gN before procedure code");}
+instruction ::= KW_INLINEFRAME(T) error NEWLINE. {rxaserat(context,T,"Expecting .inlineframe {id} {parent} \"{module}\" \"{procedure}\" {source-step}");}
+instruction ::= KW_INLINEMAP(T) error NEWLINE. {rxaserat(context,T,"Expecting .inlinemap {begin-label},{end-label},{frame-id}");}
 
 // Instructions in a function declaration
 decl_instructions ::= decl_instruction.

@@ -28,6 +28,18 @@ static int prepare(module_file *module) {
     return 1;
 }
 
+static void add_static(module_file *module) {
+    meta_entry *tail = (meta_entry *)(module->constant + 640u);
+    meta_inline_frame_constant *frame = (meta_inline_frame_constant *)(module->constant + 768u);
+    meta_inline_map_constant *map = (meta_inline_map_constant *)(module->constant + 896u);
+    module->header.constant_size = 1024u; tail->next = 768;
+    frame->base.base.type = META_INLINE_FRAME; frame->base.base.size_in_pool = 128u;
+    frame->base.prev = 640; frame->base.next = 896; frame->frame_id = 7u;
+    frame->module_name = 256u; frame->procedure_name = 384u;
+    map->base.base.type = META_INLINE_MAP; map->base.base.size_in_pool = 128u;
+    map->base.prev = 768; map->base.next = -1; map->start = 0u; map->end = 1u; map->frame_id = 7u;
+}
+
 int main(void) {
     module_file original, candidate;
     meta_initializer_constant *first, *second;
@@ -44,6 +56,16 @@ int main(void) {
     first->function = 0u;
     candidate.header.meta_head = 640; second->base.next = 512; first->base.next = -1;
     if (rxlink_inline_metadata_equal(&original, &candidate)) ++failures;
+    candidate.header.meta_head = 512; first->base.next = 640; second->base.next = -1;
+    add_static(&candidate);
+    if (!rxlink_inline_metadata_equal(&original,&candidate)) ++failures;
+    add_static(&original);
+    if (!rxlink_inline_metadata_equal(&original,&candidate)) ++failures;
+    ((meta_inline_frame_constant *)(candidate.constant + 768u))->procedure_name = 256u;
+    if (rxlink_inline_metadata_equal(&original,&candidate)) ++failures;
+    ((meta_inline_frame_constant *)(candidate.constant + 768u))->procedure_name = 384u;
+    ((meta_inline_map_constant *)(candidate.constant + 896u))->start = 1u;
+    if (rxlink_inline_metadata_equal(&original,&candidate)) ++failures;
     free(original.constant); free(candidate.constant);
     printf("RXLINK_INLINE_METADATA|failures=%d\n", failures);
     return failures != 0;

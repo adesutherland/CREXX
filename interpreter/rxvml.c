@@ -640,6 +640,13 @@ static int rxvml_invoke_external_proc(
 
     if (run_status_out) *run_status_out = 0;
     if (!ctx || !proc) return -1;
+    if (proc->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT &&
+        (!ctx->vm.program_entry_pending ||
+         ctx->vm.program_entry_depth != ctx->vm.worker.execution_depth + 1u)) {
+        ctx->last_error = "Marked main requires checked program entry";
+        if (response_out) *response_out = NULL;
+        return -1;
+    }
     /* External entry creates a bytecode frame. Native provider members have
      * no bytecode space; ordinary VM CALL dispatch owns their invocation. */
     if (!proc->binarySpace || !proc->binarySpace->module) {
@@ -695,10 +702,8 @@ static int rxvml_invoke_external_proc(
     ctx->vm.active.rxvml_context = ctx;
     {
         int initialization_rc = ctx->vm.initializer_depth != 0u
-                ? rxvm_ensure_callee_initialized(
-                        &ctx->vm, ctx->vm.current_initializer_module, proc)
-                : rxvm_initialize(&ctx->vm);
-        if (initialization_rc != 0 &&
+                ? 0 : rxvm_initialize(&ctx->vm);
+        if ((ctx->vm.initializer_depth != 0u || initialization_rc != 0) &&
             rxvm_ensure_callee_initialized(&ctx->vm, 0, proc) != 0) {
             ctx->vm.active.rxvml_context = previous_active_context;
             rxvml_value_free((rxvml_value*)call_ret);
@@ -975,6 +980,7 @@ int rxvml_inline_call_owned(rxvml_context *ctx,
         pin->module->file != pin->file ||
         !pin->procedure->binarySpace || pin->procedure->binarySpace->module != pin->module ||
         pin->procedure->start != pin->start ||
+        pin->procedure->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT ||
         pin->procedure != rxvm_get_module_runtime_procedure(pin->module, pin->constant) ||
         argc != pin->arguments || (pin->method ? !receiver : receiver != NULL) ||
         argc > (size_t)INT_MAX - (size_t)pin->method || (argc && !arguments)) goto done;
@@ -2664,6 +2670,7 @@ int rxvml_call_procedure_descriptor(
 
 static proc_runtime* rxvml_find_last_module_procedure(rxvm_context* vm, const char* name) {
     size_t mod_index;
+    proc_runtime *fallback = NULL;
 
     if (!vm || !name) return NULL;
     for (mod_index = vm->num_modules; mod_index > 0; mod_index--) {
@@ -2672,12 +2679,17 @@ static proc_runtime* rxvml_find_last_module_procedure(rxvm_context* vm, const ch
         while (i != -1) {
             proc_constant* definition = (proc_constant*)(mod->segment.const_pool + i);
             if (definition->base.type == PROC_CONST && strcmp(definition->name, name) == 0) {
-                return rxvm_get_module_runtime_procedure(mod, (size_t)i);
+                proc_runtime *candidate = rxvm_get_module_runtime_procedure(
+                        mod, (size_t)i);
+                if (candidate && candidate->entry_state_kind ==
+                                 RXBIN_ENTRY_PROGRAM_DEFAULT) return candidate;
+                if (!fallback) fallback = candidate;
+                break;
             }
             i = definition->next;
         }
     }
-    return NULL;
+    return fallback;
 }
 
 static int rxvml_run_internal(
@@ -2695,11 +2707,26 @@ static int rxvml_run_internal(
     int i;
     int rc = -1;
     int run_status = 0;
+    unsigned char saved_entry_pending;
+    size_t saved_entry_depth;
 
     if (program_rc) *program_rc = 0;
     if (!ctx || argc < 0) return -1;
     if (argc > 0 && !argv) {
         ctx->last_error = "Missing rxvml run argument vector";
+        return -1;
+    }
+    if (ctx->vm.worker.execution_depth != 0u) {
+        ctx->last_error = "Reentrant program entry requires an isolated entry API";
+        return -1;
+    }
+    if (ctx->vm.num_modules > 0 && rxvm_link(&ctx->vm) != 0) {
+        ctx->last_error = "Cannot link program entry";
+        return -1;
+    }
+    main_proc = rxvml_find_last_module_procedure(&ctx->vm, "main");
+    if (!main_proc) {
+        ctx->last_error = "Program main procedure not found";
         return -1;
     }
 
@@ -2734,17 +2761,16 @@ static int rxvml_run_internal(
         rxvml_value_free(arg_value);
     }
 
-    if (ctx->vm.num_modules > 0) {
-        rxvm_link(&ctx->vm);
-    }
-    main_proc = rxvml_find_last_module_procedure(&ctx->vm, "main");
-    if (!main_proc) {
-        ctx->last_error = "Program main procedure not found";
-        goto cleanup;
-    }
-
     arg_values[0] = arg_array;
-    if (rxvml_invoke_external_proc(ctx, main_proc, NULL, 1, arg_values, "rxvml_run", &result, &run_status) != 0) {
+    saved_entry_pending = ctx->vm.program_entry_pending;
+    saved_entry_depth = ctx->vm.program_entry_depth;
+    ctx->vm.program_entry_pending = 1;
+    ctx->vm.program_entry_depth = ctx->vm.worker.execution_depth + 1u;
+    rc = rxvml_invoke_external_proc(ctx, main_proc, NULL, 1, arg_values,
+                                   "rxvml_run", &result, &run_status);
+    ctx->vm.program_entry_pending = saved_entry_pending;
+    ctx->vm.program_entry_depth = saved_entry_depth;
+    if (rc != 0) {
         goto cleanup;
     }
 
@@ -2820,6 +2846,11 @@ int rxvml_call_method_descriptor(
 
     if (!rxvml_proc_matches_signature(ctx, p, &expected)) {
         ctx->last_error = "Method signature mismatch";
+        rx_sig_free(&expected);
+        return -1;
+    }
+    if (p->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+        ctx->last_error = "Marked main requires checked program entry";
         rx_sig_free(&expected);
         return -1;
     }

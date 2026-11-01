@@ -1468,11 +1468,40 @@ static int sealed_module(const module_list *modules, const module_file *source,
     return view.sealed && sealed_member(modules, source, view.image_module, provider);
 }
 
+/* Static private binding names an exact selected module, never an export or
+ * basename. Already sealed inputs retain original-image identity on relink. */
+static int inlined_private_provider(const module_list *modules, const module_file *source,
+                                    const string_constant *binary, size_t *provider) {
+    rxinl_module_ref_view view;
+    size_t i, found = 0u;
+    if (!binary || !rxinl_module_ref_decode(binary->string,binary->string_len,&view)) return 0;
+    if (view.sealed || view.self_relative) return sealed_module(modules,source,binary,provider);
+    if (view.selector[0] == '@') return 0;
+    for (i = 0u; i < modules->count; i++) {
+        const char *name = modules->items[i].original_module->name;
+        if (!modules->items[i].omitted && name && strlen(name) == view.selector_length &&
+            !memcmp(name,view.selector,view.selector_length)) { *provider = i; ++found; }
+    }
+    return found == 1u;
+}
+
 static int select_sealed_dependencies(module_list *modules, link_module_info *info,
         size_t **queue, size_t *count, size_t *capacity) {
     const module_file *source = info->original_module;
     const bin_code *code = (const bin_code *)source->instructions;
     size_t at = 0u;
+    int meta = source->header.meta_head;
+    while (meta != -1) {
+        const meta_entry *entry = (const meta_entry *)((const unsigned char *)source->constant + meta);
+        if (entry->base.type == META_INLINED_PRIVATE) {
+            const meta_inlined_private_constant *binding = (const meta_inlined_private_constant *)entry;
+            size_t provider;
+            if (!inlined_private_provider(modules,source,sealed_binary(source,binding->provider),&provider) ||
+                binding->global_index >= (uint32_t)modules->items[provider].original_module->header.globals ||
+                !select_module_by_index(modules,queue,count,capacity,provider)) goto invalid;
+        }
+        meta = entry->next;
+    }
     while (at < source->header.instruction_size) {
         int opcode = code[at].instruction.opcode;
         OpFormat format = rxbin_opcode_format(opcode);
@@ -1508,6 +1537,108 @@ invalid:
     fprintf(stderr, "ERROR: unsealed or mismatched inline operand in module %s\n",
             source->name ? source->name : "(unnamed)");
     return 0;
+}
+
+static const meta_entry_state_constant *program_entry_state(const module_file *module) {
+    int at = module->header.meta_head;
+    while (at != -1) {
+        const meta_entry *entry = (const meta_entry *)((const unsigned char *)module->constant + at);
+        if (entry->base.type == META_ENTRY_STATE) return (const meta_entry_state_constant *)entry;
+        at = entry->next;
+    }
+    return NULL;
+}
+
+static const expose_proc_constant *program_entry_exposure(const module_file *module,
+                                                          const proc_constant *procedure) {
+    const chameleon_constant *entry;
+    if (procedure->exposed == SIZE_MAX) return NULL;
+    entry = sealed_constant(module,procedure->exposed);
+    return entry && entry->type == EXPOSE_PROC_CONST && entry->size_in_pool >= sizeof(expose_proc_constant)
+            ? (const expose_proc_constant *)entry : NULL;
+}
+
+/* Final service seals use the ordered selected set before output ordinals are
+ * assigned. Ordinary input seals remain tied to their original image graph. */
+static size_t program_entry_final_member(const module_list *modules, uint32_t ordinal) {
+    size_t i, rank = 0u;
+    for (i = 0u; i < modules->count; i++) {
+        if (!rxlink_module_is_active(&modules->items[i])) continue;
+        if (rank++ == ordinal) return i;
+    }
+    return SIZE_MAX;
+}
+
+static int validate_program_entries(const module_list *modules) {
+    size_t owner = SIZE_MAX, i;
+    const meta_entry_state_constant *state = NULL;
+    const expose_proc_constant *entry_export = NULL;
+    for (i = 0u; i < modules->count; i++) {
+        const meta_entry_state_constant *candidate;
+        const proc_constant *procedure;
+        if (!rxlink_module_is_active(&modules->items[i])) continue;
+        candidate = program_entry_state(modules->items[i].module);
+        if (!candidate) continue;
+        if (owner != SIZE_MAX) {
+            fprintf(stderr,"ERROR: ambiguous program-default entries in %s and %s\n",
+                    modules->items[owner].module->name,modules->items[i].module->name);
+            return 0;
+        }
+        owner = i; state = candidate;
+        procedure = (const proc_constant *)sealed_constant(modules->items[i].module,state->procedure);
+        if (!procedure || procedure->base.type != PROC_CONST) return 0;
+        entry_export = program_entry_exposure(modules->items[i].module,procedure);
+    }
+    if (!state) return 1;
+    for (i = 0u; i < modules->count; i++) {
+        const module_file *module = modules->items[i].module;
+        const bin_code *code = (const bin_code *)module->instructions;
+        size_t at = 0u;
+        if (!rxlink_module_is_active(&modules->items[i])) continue;
+        while (at < module->header.instruction_size) {
+            OpFormat format = rxbin_opcode_format(code[at].instruction.opcode);
+            size_t width = rxop_format_operand_count(format), operand;
+            if (width >= module->header.instruction_size - at) return 0;
+            for (operand = 0u; operand < width; operand++) {
+                const chameleon_constant *target;
+                int forbidden = 0;
+                if (rxop_format_operand_type(format,operand) != OP_FUNC) continue;
+                target = sealed_constant(module,code[at + operand + 1u].index);
+                if (!target) return 0;
+                if (target->type == PROC_CONST) {
+                    const proc_constant *procedure = (const proc_constant *)target;
+                    if (procedure->start != SIZE_MAX)
+                        forbidden = i == owner && code[at + operand + 1u].index == state->procedure;
+                    else if (entry_export) {
+                        const expose_proc_constant *import = program_entry_exposure(module,procedure);
+                        forbidden = import && import->imported && !strcmp(import->index,entry_export->index);
+                    }
+                } else if (target->type == BINARY_CONST) {
+                    const string_constant *binary = sealed_binary(module,code[at + operand + 1u].index);
+                    rxinl_qualified_proc_view ref;
+                    size_t provider = SIZE_MAX;
+                    uint32_t ordinal;
+                    const proc_constant *procedure;
+                    if (!binary || !rxinl_qualified_proc_decode(binary->string,binary->string_len,&ref) || !ref.sealed) continue;
+                    if (modules->items[i].final_inline_seals) {
+                        provider = program_entry_final_member(modules,ref.image_module);
+                        procedure = provider == SIZE_MAX ? NULL : sealed_procedure(modules->items[provider].module,ref.provider_procedure,NULL);
+                    } else {
+                        if (!sealed_qprocedure(modules,module,binary,&provider,&ordinal)) continue;
+                        procedure = sealed_procedure(modules->items[provider].original_module,ordinal,NULL);
+                    }
+                    forbidden = provider == owner && procedure && !strcmp(procedure->name,"main");
+                }
+                if (forbidden) {
+                    fprintf(stderr,"ERROR: program-default main cannot be an ordinary child-call target in %s at cell %lu\n",
+                            module->name,(unsigned long)at);
+                    return 0;
+                }
+            }
+            at += width + 1u;
+        }
+    }
+    return 1;
 }
 
 static int selected_export_conflicts(const module_list *modules, const char *export_name, size_t *first_index,
@@ -2211,6 +2342,10 @@ static int is_meta_constant_type(enum const_pool_type type) {
     switch (type) {
         case META_SOURCE_STEP:
         case META_TRACE_EVENT:
+        case META_INLINE_FRAME:
+        case META_INLINE_MAP:
+        case META_INLINED_PRIVATE:
+        case META_ENTRY_STATE:
         case META_FUNC:
         case META_REG:
         case META_CONST:
@@ -2242,6 +2377,70 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
                                  module_file *input_module, chameleon_constant *entry,
                                  size_t new_offset, int prev_offset, int next_offset, int *ok) {
     switch (entry->type) {
+        case META_ENTRY_STATE: {
+            const meta_entry_state_constant *source = (const meta_entry_state_constant *)entry;
+            size_t procedure = link_constant_offset(context,output_module,input_module,source->procedure,ok);
+            meta_entry_state_constant *result = (meta_entry_state_constant *)(context->shared_pool.data + new_offset);
+            result->base.prev = prev_offset; result->base.next = next_offset;
+            result->procedure = procedure;
+            return *ok;
+        }
+        case META_INLINED_PRIVATE: {
+            const meta_inlined_private_constant *source = (const meta_inlined_private_constant *)entry;
+            const string_constant *selector = sealed_binary(input_module,source->provider);
+            rxinl_module_ref_view view;
+            string_constant *copy;
+            size_t provider = SIZE_MAX, procedure, binding;
+            uint32_t image_module;
+            if (!selector || !rxinl_module_ref_decode(selector->string,selector->string_len,&view)) { *ok = 0; return 0; }
+            if (output_module->final_inline_seals) {
+                size_t i;
+                if (!view.sealed || view.image_module >= output_module->image_module_count) { *ok = 0; return 0; }
+                for (i = 0u; i < context->modules->count; i++)
+                    if (context->modules->items[i].selected && context->modules->items[i].output_ordinal == view.image_module) {
+                        if (provider != SIZE_MAX) { *ok = 0; return 0; }
+                        provider = i;
+                    }
+            } else if (!inlined_private_provider(context->modules,input_module,selector,&provider)) { *ok = 0; return 0; }
+            if (provider == SIZE_MAX || !context->modules->items[provider].selected ||
+                source->global_index >= (uint32_t)context->modules->items[provider].module->header.globals) { *ok = 0; return 0; }
+            image_module = context->modules->items[provider].output_ordinal;
+            copy = relocated_binary(selector->string,selector->string_len);
+            if (!copy) { *ok = 0; return 0; }
+            if (view.selector[0] == '@') {
+                unsigned char *bytes = NULL;
+                size_t length = 0u;
+                char name[32];
+                snprintf(name,sizeof(name),"@%u",(unsigned)image_module);
+                if (!rxinl_module_ref_from_text(name,&bytes,&length)) { free(copy); *ok = 0; return 0; }
+                free(copy); copy = relocated_binary(bytes,length); free(bytes);
+            }
+            if (!copy || !rxinl_module_ref_seal(copy->string,copy->string_len,image_module)) { free(copy); *ok = 0; return 0; }
+            binding = dedupe_leaf_constant(context,&copy->base,ok); free(copy);
+            procedure = link_constant_offset(context,output_module,input_module,source->procedure,ok);
+            if (*ok) {
+                meta_inlined_private_constant *result = (meta_inlined_private_constant *)(context->shared_pool.data + new_offset);
+                result->base.prev = prev_offset; result->base.next = next_offset;
+                result->procedure = procedure; result->provider = binding;
+            }
+            return *ok;
+        }
+        case META_INLINE_FRAME: {
+            meta_inline_frame_constant *source = (meta_inline_frame_constant *)entry;
+            size_t module_name = link_constant_offset(context,output_module,input_module,source->module_name,ok);
+            size_t procedure_name = link_constant_offset(context,output_module,input_module,source->procedure_name,ok);
+            meta_inline_frame_constant *meta = (meta_inline_frame_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset; meta->base.next = next_offset;
+            meta->module_name = module_name; meta->procedure_name = procedure_name;
+            if (context->strip_source_metadata) meta->callsite_step_id = 0u;
+            return *ok;
+        }
+        case META_INLINE_MAP: {
+            meta_inline_map_constant *meta = (meta_inline_map_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset; meta->base.next = next_offset;
+            /* Native shared-pool linking preserves module-local code offsets. */
+            return 1;
+        }
         case META_SOURCE_STEP: {
             meta_source_step_constant *source = (meta_source_step_constant *)entry;
             size_t file_offset = link_constant_offset(context, output_module, input_module, source->file, ok);
@@ -2616,6 +2815,10 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
         }
         case META_SOURCE_STEP:
         case META_TRACE_EVENT:
+        case META_INLINE_FRAME:
+        case META_INLINE_MAP:
+        case META_INLINED_PRIVATE:
+        case META_ENTRY_STATE:
         case META_FUNC:
         case META_REG:
         case META_CONST:
@@ -3218,7 +3421,9 @@ int main(int argc, char *argv[]) {
     if (!load_input_modules(&modules, &config)) goto fail;
     if (!select_modules(&modules, &config)) goto fail;
     if (!rxlink_validate_contracts(&modules)) goto fail;
+    if (!validate_program_entries(&modules)) goto fail;
     if (!apply_inline_service(&modules, &config)) goto fail;
+    if (!validate_program_entries(&modules)) goto fail;
     if (!collect_provider_requirements(&modules, &provider_requirements)) goto fail;
     if (!build_linked_modules(&build_context, &modules, &outputs)) goto fail;
     if (!outputs.count) {

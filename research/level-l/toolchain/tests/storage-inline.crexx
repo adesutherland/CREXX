@@ -944,16 +944,82 @@ scopedtransport: procedure = .int
   end
   return failures
 
+/** Deleting every instruction of one static diagnostic interval removes that
+ * map alone. Definitions and endpoint labels remain, and a disjoint interval
+ * for the same child keeps its ancestor chain and instruction attribution. */
+inlinecleanup: procedure = .int
+  arg variant = .int
+  failures = 0; ignored = .int; fields = .object[]
+  draft = .lltarget..draft('cleanup.inline.maps','fixture:cleanup.inline.maps',0)
+  at = draft.synthetic('empty static diagnostic range cleanup')
+  root = draft.procedure('main',3,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(11),at)
+  fields[1] = .lltarget..operand.integer(10) as .object; fields[2] = .lltarget..operand.integer(0) as .object
+  fields[3] = .lltarget..operand.string('helper.rxas' as .binary) as .object
+  fields[4] = .lltarget..operand.string('outer' as .binary) as .object; fields[5] = .lltarget..operand.integer(0) as .object
+  parentframe = root.record('.inlineframe',fields,at)
+  fields[1] = .lltarget..operand.integer(20) as .object; fields[2] = .lltarget..operand.integer(10) as .object
+  fields[4] = .lltarget..operand.string('inner' as .binary) as .object
+  childframe = root.record('.inlineframe',fields,at)
+  if variant = 1 then ignored = one(root,'br',.lltarget..operand.symbol('live_begin'),at)
+  deadbegin = namedlabel(root,'dead_begin',at)
+  deadone = two(root,'swap',root.reg('r',0),root.reg('r',1),at)
+  deadtwo = two(root,'swap',root.reg('r',0),root.reg('r',1),at)
+  deadend = namedlabel(root,'dead_end',at)
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.symbol('dead_begin') as .object; fields[2] = .lltarget..operand.symbol('dead_end') as .object
+  fields[3] = .lltarget..operand.integer(20) as .object
+  deadmap = root.record('.inlinemap',fields,at)
+  ignored = namedlabel(root,'live_begin',at)
+  liveid = three(root,'iadd',root.reg('r',2),root.reg('r',0),.lltarget..operand.integer(1),at)
+  ignored = namedlabel(root,'live_end',at)
+  if variant <> 2 then do
+    fields[1] = .lltarget..operand.symbol('live_begin') as .object; fields[2] = .lltarget..operand.symbol('live_end') as .object
+    ignored = root.record('.inlinemap',fields,at)
+  end
+  ignored = one(root,'ret',root.reg('r',2),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'static cleanup source validates ' || variant)
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','static cleanup makes its independent transport change ' || variant)
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); expectedmaps = 1; expectedframe = 20
+  if variant = 2 then do; expectedmaps = 0; expectedframe = 0; end
+  failures = failures + check(result.valid(),'empty inline range cleanup publishes a valid module ' || variant)
+  if result.valid() = 0 then do; say result.error(); return failures; end
+  failures = failures + check(changed.operation(deadone) = 0 & changed.operation(deadtwo) = 0,'dead interval really loses every instruction ' || variant)
+  failures = failures + check(changed.operation(deadmap) = 0 & result.inlinemaps() = expectedmaps,'only genuinely empty map records disappear ' || variant)
+  failures = failures + check(changed.operation(deadbegin) > 0 & changed.operation(deadend) > 0,'empty map endpoint labels remain available ' || variant)
+  failures = failures + check(changed.operation(parentframe) > 0 & changed.operation(childframe) > 0 & result.inlineframes() = 2,'frame definitions and their ancestor chain survive ' || variant)
+  frame = result.inlineframe(result.inlineframeindex(20)); parent = frame.operand(2)
+  failures = failures + check(parent.index() = 10,'child still names its original ancestor ' || variant)
+  mappedlive = changed.operation(liveid)
+  failures = failures + check(mappedlive > 0 & result.inlineframeat(mappedlive) = expectedframe,'retained instruction keeps exact static attribution ' || variant)
+  placed = llcleanup..storage(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(placed.status() = 'changed' | placed.status() = 'keep','storage placement preserves diagnostic mapping contract ' || variant)
+  if placed.status() = 'changed' then do
+    final = placed.result(); finalid = placed.operation(mappedlive)
+    failures = failures + check(final.valid() & final.inlinemaps() = expectedmaps & final.inlineframes() = 2 & finalid > 0 & final.inlineframeat(finalid) = expectedframe,'moved register instruction retains map and ancestors ' || variant)
+  end
+  return failures
+
 main: procedure = .int
   arg argv = .string[]
   failures = .int
   if argv[0] = 1 then do
+    if argv[1] = 'inline-map-cleanup' then do
+      failures = inlinecleanup(0) + inlinecleanup(1) + inlinecleanup(2)
+      say 'INLINE_MAP_CLEANUP|failures=' || failures
+      return failures
+    end
     if argv[1] = 'scoped-cleanup' then do
       failures = scopedtransport() + scopedtransport(1) + scopedtransport(2) + scopedtransport(3) + scopedtransport(4) + scopedtransport(5) + scopedtransport(6)
       say 'SCOPED_CLEANUP|failures=' || failures
       return failures
     end
   end
-  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + binarylifetime() + binarylifetime(1) + predicates() + predicateunknown() + predicateundefined() + loosepredicates() + concatenations() + stringtraceproof() + scopedtransport() + scopedtransport(1) + scopedtransport(2) + scopedtransport(3) + scopedtransport(4) + scopedtransport(5) + scopedtransport(6)
+  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + binarylifetime() + binarylifetime(1) + predicates() + predicateunknown() + predicateundefined() + loosepredicates() + concatenations() + stringtraceproof() + scopedtransport() + scopedtransport(1) + scopedtransport(2) + scopedtransport(3) + scopedtransport(4) + scopedtransport(5) + scopedtransport(6) + inlinecleanup(0) + inlinecleanup(1) + inlinecleanup(2)
   say 'STORAGE_INLINE|failures=' || failures
   return failures

@@ -49,6 +49,10 @@ void rxas_set_queue_operands(Assembler_Context *context,
                              Assembler_Token *const *operandTokens,
                              size_t operandCount);
 void rxasqlbl(Assembler_Context *context, Assembler_Token *labelToken);
+void rxasqmifr(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
+void rxasqmimp(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
+void rxasmeifr(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
+void rxasmeimp(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
 /* Source Step */
 void rxasqmstp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
                Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,
@@ -159,5 +163,9 @@ void backptch(Assembler_Context *context);
 
 /* Free Resources */
 void freeasbl(Assembler_Context *context);
+
+void rxasqminp(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
+void rxasmeinp(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
+void rxasentry(Assembler_Context *, Assembler_Token *);
 
 #endif //CREXX_RXASASSM_H

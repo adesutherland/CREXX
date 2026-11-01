@@ -6,7 +6,8 @@ add_executable(llrxascataloggen EXCLUDE_FROM_ALL
   "${CMAKE_SOURCE_DIR}/tools/generate-rxas-catalog.c"
   "${CMAKE_SOURCE_DIR}/binutils/include/opdata.c"
   "${CMAKE_SOURCE_DIR}/binutils/rxopmeta.c")
-target_include_directories(llrxascataloggen PRIVATE "${CMAKE_SOURCE_DIR}/binutils/include")
+target_include_directories(llrxascataloggen PRIVATE
+  "${CMAKE_SOURCE_DIR}/binutils/include" "${CMAKE_SOURCE_DIR}/interpreter")
 include("${CMAKE_SOURCE_DIR}/cmake/CrexxRxasCatalog.cmake")
 get_property(_catalog_inputs GLOBAL PROPERTY CREXX_RXAS_CATALOG_INPUTS)
 get_property(_fingerprint GLOBAL PROPERTY CREXX_RXAS_CATALOG_FINGERPRINT)
@@ -18,7 +19,7 @@ if(BUILD_TESTING)
     "${CMAKE_SOURCE_DIR}/binutils/include/opdata.c"
     "${CMAKE_SOURCE_DIR}/binutils/rxopmeta.c")
   target_include_directories(test_llrxascataloggen_no_tmpfile PRIVATE
-    "${CMAKE_SOURCE_DIR}/binutils/include")
+    "${CMAKE_SOURCE_DIR}/binutils/include" "${CMAKE_SOURCE_DIR}/interpreter")
   target_compile_definitions(test_llrxascataloggen_no_tmpfile PRIVATE
     LL_RXAS_CATALOG_FINGERPRINT="${_fingerprint}")
   add_test(NAME llrxascataloggen_scratch

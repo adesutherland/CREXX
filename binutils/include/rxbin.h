@@ -74,6 +74,9 @@ enum rxbin007_feature_flags {
     RXBIN007_FEATURE_AUTOLOAD_HINTS = 1u << 6,
     RXBIN007_FEATURE_CHANNEL_RELEASE = 1u << 7,
     RXBIN007_FEATURE_INLINE_SCOPES = 1u << 8,
+    RXBIN007_FEATURE_INLINE_DIAGNOSTICS = 1u << 9,
+    RXBIN007_FEATURE_INLINED_PRIVATE = 1u << 10,
+    RXBIN007_FEATURE_ENTRY_STATE = 1u << 11,
     RXBIN007_SUPPORTED_FEATURES = RXBIN007_FEATURE_FIXED_CALLS |
                                    RXBIN007_FEATURE_FROZEN_PARSE |
                                    RXBIN007_FEATURE_NATIVE_STEM |
@@ -82,7 +85,10 @@ enum rxbin007_feature_flags {
                                    RXBIN007_FEATURE_NATIVE_PROVIDERS |
                                    RXBIN007_FEATURE_INITIALIZERS |
                                    RXBIN007_FEATURE_AUTOLOAD_HINTS |
-                                   RXBIN007_FEATURE_INLINE_SCOPES
+                                   RXBIN007_FEATURE_INLINE_SCOPES |
+                                   RXBIN007_FEATURE_INLINE_DIAGNOSTICS |
+                                   RXBIN007_FEATURE_INLINED_PRIVATE |
+                                   RXBIN007_FEATURE_ENTRY_STATE
 };
 
 typedef struct bin_space bin_space;
@@ -128,7 +134,8 @@ enum const_pool_type {
     META_FUNC, META_REG, META_CONST, META_CLEAR,
     META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP,
     META_TRACE_EVENT, META_TASK_TARGET, META_PROVIDER, META_INITIALIZER,
-    META_AUTOLOAD
+    META_AUTOLOAD, META_INLINE_FRAME, META_INLINE_MAP, META_INLINED_PRIVATE,
+    META_ENTRY_STATE
 };
 
 enum rxbin_provider_flags {
@@ -219,6 +226,51 @@ typedef struct meta_source_step_constant {
     uint32_t active_end_column;
     uint32_t flags;
 } meta_source_step_constant;
+
+/* Static logical frames for direct inline code. Names are diagnostic labels,
+ * not executable provider references. base.address is the physical clone-entry
+ * callsite anchor; source-step zero means its source anchor is unavailable. */
+typedef struct meta_inline_frame_constant {
+    meta_entry base;
+    uint32_t frame_id;
+    uint32_t parent_id;
+    uint32_t callsite_step_id;
+    size_t module_name;
+    size_t procedure_name;
+} meta_inline_frame_constant;
+
+/* Disjoint half-open physical instruction-cell range -> deepest inline frame.
+ * Multiple ranges may name one static frame instance after optimization. */
+typedef struct meta_inline_map_constant {
+    meta_entry base;
+    size_t start;
+    size_t end;
+    uint32_t frame_id;
+} meta_inline_map_constant;
+
+/* Procedure-local borrowed suffix: executable linkage/ownership, not proof.
+ * provider is a typed QGR1 selector, sealed to an exact image module at link. */
+typedef struct meta_inlined_private_constant {
+    meta_entry base;
+    size_t procedure;
+    size_t provider;
+    uint32_t local_index;
+    uint32_t global_index;
+    uint32_t owned_locals;
+} meta_inlined_private_constant;
+
+enum rxbin_entry_state_contract {
+    RXBIN_ENTRY_STATE_VERSION = 1,
+    RXBIN_ENTRY_PROGRAM_DEFAULT = 1
+};
+
+/* Executable root-entry contract, never a compiler proof assertion. */
+typedef struct meta_entry_state_constant {
+    meta_entry base;
+    size_t procedure;
+    uint32_t version;
+    uint32_t kind;
+} meta_entry_state_constant;
 
 #define RXBIN_TRACE_REF_NONE ((size_t)-1)
 

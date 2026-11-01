@@ -56,8 +56,8 @@ scan: lexer input utf8
 
 parse: parser semantics contextfree input tokens start module backend lr1
 module: rule = (record as item)* then tree Module(items = item*)
-record: rule = declaration | exposure | global.exposure | header | metadata | instruction | label.record | constant | source.step | trace.event | blank
-declaration: rule = plain.declaration | exposed.declaration
+record: rule = declaration | exposure | global.exposure | header | metadata | instruction | label.record | constant | source.step | trace.event | inline.frame | inline.map | blank
+declaration: rule = plain.declaration | exposed.declaration | exposed.entry.declaration
 /* Share the same capture reduction before '='; the following integer/name
  * distinguishes .locals declarations from .expose imports. Directive spelling
  * remains checked by the reader, and each mapped AST keeps its public fields. */
@@ -65,6 +65,10 @@ plain.declaration: rule = function as name directive as option equals integer as
   then tree Procedure(name = text(name), locals = text(option), count = text(count))
 exposed.declaration: rule = function as name directive as option equals integer as count directive as expose equals identifier as symbol newline
   then tree ExposedProcedure(name = text(name), locals = text(option), count = text(count), expose = text(expose), symbol = text(symbol))
+/* A single named option may be .expose or .entry. The two-option spelling
+ * shares the same prefix reductions and is checked in canonical header order. */
+exposed.entry.declaration: rule = function as name directive as option equals integer as count directive as expose equals identifier as symbol directive as entry equals identifier as contract newline
+  then tree ExposedEntryProcedure(name = text(name), locals = text(option), count = text(count), expose = text(expose), symbol = text(symbol), entry = text(entry), contract = text(contract))
 exposure: rule = function as name directive as option equals identifier as symbol newline
   then tree Import(name = text(name), expose = text(option), symbol = text(symbol))
 header: rule = directive as directive equals integer as count newline
@@ -82,6 +86,13 @@ source.step: rule = directive as directive integer as step integer as clause int
   then tree SourceStep(directive = text(directive), step = text(step), clause = text(clause), flags = text(flags), file = text(file), line = text(line), first = text(first), last = text(last), source = text(source))
 trace.event: rule = directive as directive string as kind integer as modes string as source string as type string as bank integer as value integer as step integer as clause integer as flags string as symbol string as resolved newline
   then tree TraceEvent(directive = text(directive), kind = text(kind), modes = text(modes), source = text(source), type = text(type), bank = text(bank), value = text(value), step = text(step), clause = text(clause), flags = text(flags), symbol = text(symbol), resolved = text(resolved))
+/* SRCSTEP and INLINEFRAME share directive/integer/integer. Reuse the same
+ * capture reductions for that prefix; the next integer/string token chooses
+ * the record before their remaining public AST fields are constructed. */
+inline.frame: rule = directive as directive integer as step integer as clause string as provider string as member integer as callsite newline
+  then tree InlineFrame(directive = text(directive), id = text(step), parent = text(clause), provider = text(provider), member = text(member), step = text(callsite))
+inline.map: rule = directive as directive identifier as first comma identifier as last comma integer as frame newline
+  then tree InlineMap(directive = text(directive), first = text(first), last = text(last), frame = text(frame))
 blank: rule = newline then tree Blank()
 operand: rule = register.operand | integer.operand | float.operand | decimal.operand | string.operand | char.operand | binary.operand | function.operand | symbol.operand
 meta.operand: rule = operand | directive.operand

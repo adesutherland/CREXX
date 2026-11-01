@@ -166,6 +166,10 @@ ordinary: procedure = .int
   if failures then return failures
   published = live.result(); result = published.result(); context = .llinline..context('assembler','all-legal')
   failures = failures + check(context.certifyreceipt(reference result,published,reference live) & context.normalized(reference result,result.procedureid('main')),'canonical receipt binds normalization without changing activation gates')
+  failures = failures + check(live.reservedwork() = 3000000 & live.reservedbytes() = 50331648,'owned preparation retains its original three-quarter work/byte envelope')
+  failures = failures + check(live.status() = 'ok' & live.reservedwork() = 3000000,'repeated receipt queries neither rebuild nor reserve another analysis envelope')
+  limited = .llinline..normalizationreceipt.owned(reference source,1)
+  failures = failures + check(limited.status() = 'limit' & limited.reason() = 'normalization.receipt.allowance','tiny owned envelope refuses deterministically before candidate publication')
   return failures
 
 expiredsummary: procedure = reference .lltargetsummary..analysis
@@ -303,18 +307,19 @@ identityreceipt: procedure = .int
 
 canonicalidentity: procedure = .int
   arg departure = 0
+  returned = .int
   draft = .lltarget..draft('receipt.canonical.identity.' || departure,'fixture:receipt.canonical.identity',0)
   at = draft.synthetic('possible overwrite callback with no dirty owned read')
   body = draft.procedure('main',1,at); fields = .object[]
   fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(7) as .object; ignored = body.emit('load',fields,at)
   assembler setattrs fields,0
   if departure then do
-    fields[1] = .lltarget..operand.integer(0) as .object; ignored = body.emit('ret',fields,at)
+    fields[1] = .lltarget..operand.integer(0) as .object; returned = body.emit('ret',fields,at)
   end
   else do
     /* This is a bounded analysis fixture, never a VM execution. A reviewed
-     * callback-free branch closes the source CFG without inventing a no-hook
-     * premise for physical RET's still unknown departure inventory. */
+     * callback-free branch closes the source CFG independently of the
+     * separate physical RET/root-cleanup obligation. */
     fields[1] = .lltarget..operand.symbol('repeat') as .object; ignored = body.record('label',fields,at)
     ignored = body.emit('br',fields,at)
   end
@@ -324,7 +329,15 @@ canonicalidentity: procedure = .int
   published = live.result(); result = published.result(); fn = result.procedureid('main'); context = .llinline..context('assembler','all-legal')
   failures = failures + check(published.complete(fn) = 0 & published.warnings() = 0,'canonical identity leaves old callback-incomplete theorem unchanged')
   accepted = context.certifyreceipt(reference result,published,reference live)
-  if departure then return failures + check(accepted & live.complete(reference result,fn) = 0 & context.normalized(reference result,fn) = 0,'unknown physical departure cannot borrow the resource-only identity coverage premise')
+  if departure then do
+    profile = .lltargettransfer..profile(reference result)
+    cfg = .lltargetcfg..graph(reference result,reference profile)
+    flow = .lltargetflow..analysis(reference result,reference profile,reference cfg)
+    failures = failures + check(flow.status() = 'ok','known native RET source/flow owners build: ' || flow.reason())
+    if flow.status() <> 'ok' then return failures
+    raw = flow.abicallbackat(returned)
+    return failures + check(accepted & live.complete(reference result,fn) & context.normalized(reference result,fn) & cfg.physicaldeparture(returned) & raw.status() = 'unknown' & raw.possible(),'unchanged entry normalization accepts known RET structure while retaining raw root cleanup uncertainty: ' || raw.reason())
+  end
   failures = failures + check(accepted & context.normalized(reference result,fn),'canonical resource-only identity receipt certifies only dirty-entry normalization')
   result = identitymodel()
   failures = failures + check(context.normalized(reference result,fn) = 0,'normalization stamp cannot transfer identity evidence to another result')

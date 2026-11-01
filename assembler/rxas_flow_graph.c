@@ -229,6 +229,12 @@ static int flow_graph_collect_records(RxasFlowProcedure *procedure,
                 instruction->intrinsic_signal = rxop_signal_contract(op->opcode);
                 instruction->callback_obligations = rxop_callback_obligations(op->opcode);
                 instruction->signal = rxop_execution_signal_contract(op->opcode);
+                if (item->borrowed_private_boundary) {
+                    instruction->effects = rxop_effects(-1);
+                    instruction->effects.flow = op->flow;
+                    instruction->effects.optimizer_barrier = 1;
+                    instruction->callback_obligations |= RXOP_CALLBACK_UNKNOWN;
+                }
             }
             else {
                 instruction->effects = rxop_effects(-1);
@@ -294,6 +300,11 @@ static int flow_graph_mark_leaders(RxasFlowProcedure *procedure,
         record = &procedure->records[index];
         item = &procedure->items[index];
         if (record->type == ASM_LABEL) leaders[index] = 1;
+        if (record->type == INLINE_FRAME_META || record->type == INLINE_MAP_META) leaders[index] = 1;
+        if (record->type == INLINE_MAP_META) {
+            flow_graph_mark_target_leader(procedure,leaders,item->instrToken);
+            flow_graph_mark_target_leader(procedure,leaders,item->operand1Token);
+        }
         if (record->instruction_id == RXAS_FLOW_ID_NONE) continue;
         instruction = &procedure->instructions[record->instruction_id];
         if (!instruction->op) {
@@ -1073,6 +1084,9 @@ static const char *flow_graph_record_kind_name(enum queue_item_type type) {
         case MEMBER_META: return "member-meta";
         case INLINE_META: return "inline-meta";
         case TRACE_EVENT: return "trace-event";
+        case INLINE_FRAME_META: return "inline-frame";
+        case INLINE_MAP_META: return "inline-map";
+        case INLINED_PRIVATE_META: return "inlined-private";
     }
     return "invalid";
 }

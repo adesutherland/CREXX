@@ -337,6 +337,151 @@ static void check_checked_integer_family(void) {
         check_checked_integer_opcode(opcode);
 }
 
+static size_t abi_operation_index(RxOpAbiContract contract, RxOpAbiOperation operation,
+                                   size_t begin) {
+    size_t row;
+    for (row = begin; row < contract.count; ++row)
+        if (contract.steps[row].operation == operation) return row;
+    return contract.count;
+}
+
+static void check_root_abi_contracts(void) {
+    static const int returns[] = { OP_RET, OP_RET_REG, OP_RET_INT, OP_RET_FLOAT, OP_RET_STRING };
+    static const size_t counts[] = { 8u, 10u, 9u, 9u, 8u };
+    RxOpAbiContract sigret = rxop_abi_contract(OP_IADD_REG_REG_REG, RXOP_ABI_ROOT_SIGRETURN);
+    RxOpAbiContract unwind = rxop_abi_contract(OP_EXIT_INT, RXOP_ABI_ROOT_UNWIND);
+    RxOpAbiContract finish = rxop_abi_contract(OP_EXIT, RXOP_ABI_EXECUTION_FINISH);
+    size_t form, row, copy_count, copy, free_count, release, retire;
+    int value;
+    for (form = 0u; form < sizeof(returns) / sizeof(*returns); ++form) {
+        int opcode = returns[form];
+        RxOpAbiContract contract = rxop_abi_contract(opcode, RXOP_ABI_ROOT_RETURN);
+        check(contract.state == RXOP_ABI_KNOWN && contract.count == counts[form],
+              "root RET has its own complete result/status/deactivation/argument program", &op_table[opcode]);
+        if (contract.state != RXOP_ABI_KNOWN || contract.count != counts[form]) continue;
+        copy_count = abi_operation_index(contract, RXOP_ABI_CAPTURE_ROOT_COUNT, 0u);
+        copy = abi_operation_index(contract, RXOP_ABI_COPY_ROOT_ARGUMENT, 0u);
+        free_count = abi_operation_index(contract, RXOP_ABI_CAPTURE_ROOT_COUNT, copy_count + 1u);
+        release = abi_operation_index(contract, RXOP_ABI_FREE_ROOT_ARGUMENT, 0u);
+        retire = abi_operation_index(contract, RXOP_ABI_RETIRE_FRAME, 0u);
+        check(abi_operation_index(contract, RXOP_ABI_DEACTIVATE_ROOT, 0u) < copy_count &&
+                  copy_count < copy && copy < free_count && free_count < release && release < retire,
+              "root copyback hooks precede the independent later free-count snapshot", &op_table[opcode]);
+        if (copy_count < contract.count && free_count < contract.count && copy < contract.count && release < contract.count) {
+            check(contract.steps[copy_count].source == RXOP_ABI_ROOT_ORIGINAL_A0 &&
+                      contract.steps[copy_count].destination == RXOP_ABI_ROOT_COPYBACK_COUNT_VALUE &&
+                      contract.steps[copy_count].rule == RXOP_ABI_ROOT_EXTERNAL_COPYBACK &&
+                      contract.steps[copy].source == RXOP_ABI_ROOT_ACTIVE_ARGUMENT &&
+                      contract.steps[copy].destination == RXOP_ABI_EXTERNAL_ARGUMENT &&
+                      contract.steps[copy].source_extent == RXOP_ABI_ACTIVE_TREE &&
+                      contract.steps[copy].destination_extent == RXOP_ABI_FULL_CAPACITY &&
+                      contract.steps[copy].repeat == RXOP_ABI_COPYBACK_ARGUMENTS &&
+                      contract.steps[free_count].source == RXOP_ABI_ROOT_ORIGINAL_A0 &&
+                      contract.steps[free_count].destination == RXOP_ABI_ROOT_FREE_COUNT_VALUE &&
+                      contract.steps[release].source == RXOP_ABI_ROOT_ORIGINAL_ARGUMENT &&
+                      contract.steps[release].source_extent == RXOP_ABI_FULL_CAPACITY &&
+                      contract.steps[release].repeat == RXOP_ABI_ROOT_FREE_ARGUMENTS,
+                  "root roles distinguish active copyback, original free and both live-a0 counts", &op_table[opcode]);
+        }
+        for (row = 0u; row < contract.count; ++row)
+            check(contract.steps[row].rule != RXOP_ABI_INTERNAL_PARENT &&
+                      contract.steps[row].operation != RXOP_ABI_RESTORE_NUMERIC,
+                  "root cleanup never borrows the parent restore/retirement premise", &op_table[opcode]);
+        if (opcode == OP_RET_REG) {
+            check(contract.steps[0].operation == RXOP_ABI_CAPTURE_ROOT_STATUS &&
+                      contract.steps[0].destination == RXOP_ABI_ROOT_SAVED_RETURN_STATUS &&
+                      contract.steps[1].operation == RXOP_ABI_RETURN_REGISTER &&
+                      contract.steps[1].destination == RXOP_ABI_ROOT_RETURN_RECEIVER &&
+                      contract.steps[1].rule == RXOP_ABI_ROOT_OWNED_BASE_MOVE_ELSE_COPY &&
+                      contract.steps[2].operation == RXOP_ABI_DEACTIVATE_ROOT &&
+                      contract.steps[3].operation == RXOP_ABI_PUBLISH_ROOT_STATUS &&
+                      contract.steps[3].source == RXOP_ABI_ROOT_SELECTED_RETURN_STATUS &&
+                      contract.steps[3].rule == RXOP_ABI_ROOT_STATUS_RECEIVER_OR_SAVED,
+                  "root register status is captured before MOVE and published before copyback", &op_table[opcode]);
+        }
+        if (opcode == OP_RET_INT || opcode == OP_RET_FLOAT || opcode == OP_RET_STRING)
+            check(contract.steps[0].destination == RXOP_ABI_ROOT_RETURN_RECEIVER &&
+                      contract.steps[0].rule == RXOP_ABI_ROOT_RESULT_PRESENT,
+                  "CLI absent receiver and external copied receiver remain conditional", &op_table[opcode]);
+        if (opcode == OP_RET_STRING)
+            check(abi_operation_index(contract, RXOP_ABI_PUBLISH_ROOT_STATUS, 0u) == contract.count,
+                  "root string RET preserves the existing status field rather than inventing a setter", &op_table[opcode]);
+    }
+    check(sigret.state == RXOP_ABI_KNOWN && sigret.count == 7u &&
+              sigret.steps[0].operation == RXOP_ABI_RESET_STORAGE &&
+              sigret.steps[0].destination == RXOP_ABI_ROOT_SIGNAL_DIAGNOSTIC &&
+              sigret.steps[1].operation == RXOP_ABI_DEACTIVATE_ROOT &&
+              sigret.steps[2].source == RXOP_ABI_ROOT_ORIGINAL_A0 &&
+              sigret.steps[2].destination == RXOP_ABI_ROOT_FREE_COUNT_VALUE &&
+              sigret.steps[3].repeat == RXOP_ABI_ROOT_FREE_ARGUMENTS &&
+              abi_operation_index(sigret, RXOP_ABI_COPY_ROOT_ARGUMENT, 0u) == sigret.count &&
+              abi_operation_index(sigret, RXOP_ABI_RETURN_REGISTER, 0u) == sigret.count,
+          "root SIGRET clears diagnostics, uses live-a0 free and has no copyback/result", NULL);
+    check(unwind.state == RXOP_ABI_KNOWN && unwind.count == 3u &&
+              unwind.steps[0].operation == RXOP_ABI_FREE_ROOT_ARGUMENT_UNBIND &&
+              unwind.steps[0].rule == RXOP_ABI_ROOT_EXTERNAL_COPIED &&
+              unwind.steps[0].repeat == RXOP_ABI_SAVED_ROOT_ARGUMENTS &&
+              unwind.steps[1].operation == RXOP_ABI_RETIRE_FRAME &&
+              unwind.steps[1].rule == RXOP_ABI_ROOT_FRAME &&
+              unwind.steps[2].operation == RXOP_ABI_DEACTIVATE_ROOT,
+          "EXIT/HALT external cleanup uses saved arity before retirement, never live-a0 copyback", NULL);
+    check(finish.state == RXOP_ABI_KNOWN && finish.count == 10u &&
+              finish.steps[0].operation == RXOP_ABI_CLEANUP_EXECUTION_SIGNALS &&
+              finish.steps[1].repeat == RXOP_ABI_RECYCLED_BEGIN &&
+              finish.steps[2].operation == RXOP_ABI_CLEAR_FRAME_CONTROL &&
+              finish.steps[3].destination == RXOP_ABI_RECYCLED_OWNED_BACKING &&
+              finish.steps[3].destination_extent == RXOP_ABI_FULL_CAPACITY &&
+              finish.steps[3].repeat == RXOP_ABI_EACH_RECYCLED_OWNED &&
+              finish.steps[4].destination == RXOP_ABI_RECYCLED_A0_BACKING &&
+              finish.steps[4].destination_extent == RXOP_ABI_FULL_CAPACITY &&
+              finish.steps[5].operation == RXOP_ABI_RELEASE_FRAME_PLUGINS &&
+              finish.steps[6].repeat == RXOP_ABI_RECYCLED_END &&
+              finish.steps[7].operation == RXOP_ABI_FINISH_RUNTIME_STORAGE &&
+              finish.steps[8].destination == RXOP_ABI_CLI_ARGV_OWNER &&
+              finish.steps[8].rule == RXOP_ABI_ROOT_CLI_ARGV &&
+              finish.steps[9].operation == RXOP_ABI_FINISH_RUNTIME_CONTROL,
+          "execution finish drains each whole frame's owned prefix and a0 before runtime/CLI tails", NULL);
+    for (value = 0; value <= RXOP_ABI_RESET_STORAGE; ++value)
+        check(strcmp(rxop_abi_operation_name((RxOpAbiOperation)value), "unknown") != 0,
+              "every native ABI operation has a generated name", NULL);
+    for (value = 0; value <= RXOP_ABI_ROOT_SIGNAL_DIAGNOSTIC; ++value)
+        check(strcmp(rxop_abi_role_name((RxOpAbiRole)value), "unknown") != 0,
+              "every native ABI role has a generated name", NULL);
+    for (value = 0; value < RXOP_ABI_MODE_COUNT; ++value)
+        check(strcmp(rxop_abi_mode_name((RxOpAbiMode)value), "unknown") != 0,
+              "every native ABI mode has a generated name", NULL);
+    for (value = 0; value <= RXOP_ABI_ROOT_SIGNAL_CLEAR; ++value)
+        check(strcmp(rxop_abi_checkpoint_name((RxOpAbiCheckpoint)value), "unknown") != 0,
+              "every native ABI checkpoint has a generated name", NULL);
+    for (value = 0; value <= RXOP_ABI_RECYCLED_FRAME_PRESENT; ++value)
+        check(strcmp(rxop_abi_rule_name((RxOpAbiRule)value), "unknown") != 0,
+              "every native ABI rule has a generated name", NULL);
+    for (value = 0; value <= RXOP_ABI_RECYCLED_END; ++value)
+        check(strcmp(rxop_abi_repeat_name((RxOpAbiRepeat)value), "unknown") != 0,
+              "every native ABI repeat has a generated name", NULL);
+    check(rxop_abi_contract(OP_ICOPY_REG_REG, RXOP_ABI_ROOT_RETURN).state == RXOP_ABI_NONE &&
+              rxop_abi_contract(OP_RESERVED_088, RXOP_ABI_ROOT_UNWIND).state == RXOP_ABI_UNKNOWN &&
+              rxop_abi_contract(OP_INLENTER_REG_FUNC_STRING_ID, RXOP_ABI_EXECUTION_FINISH).state == RXOP_ABI_UNKNOWN &&
+              rxop_abi_contract(-1, RXOP_ABI_ROOT_SIGRETURN).state == RXOP_ABI_UNKNOWN &&
+              rxop_abi_contract(OP_RET, RXOP_ABI_MODE_COUNT).state == RXOP_ABI_UNKNOWN,
+          "root table modes refuse malformed/unclassified inputs and nonreturn has no root RET", NULL);
+}
+
+static void check_observation_masks(void) {
+    check(rxop_observation_mask(OP_METALINKPREG_REG_REG) == RXOP_ACTIVATION_FRAME &&
+              rxop_observation_mask(OP_METALOADMODULE_REG_REG) == RXOP_ACTIVATION_MODULE &&
+              rxop_observation_mask(OP_METALOADINST_REG_REG_REG) == RXOP_ACTIVATION_CODE &&
+              rxop_observation_mask(OP_BPON) == RXOP_ACTIVATION_DEBUG &&
+              rxop_observation_mask(OP_RESERVED_088) == RXOP_ACTIVATION_UNKNOWN,
+          "named observation bits distinguish frame/module/code/debug/unknown", NULL);
+    check(rxop_observation_mask(OP_SAY_REG) == RXOP_ACTIVATION_NONE &&
+              rxop_callback_obligations(OP_SAY_REG) == RXOP_CALLBACK_HOST,
+          "empty intrinsic activation observation does not remove SAY's host route", NULL);
+    check(!(RXOP_ACTIVATION_CODE & (RXOP_ACTIVATION_FRAME | RXOP_ACTIVATION_MODULE |
+              RXOP_ACTIVATION_DEBUG | RXOP_ACTIVATION_UNKNOWN)),
+          "a CODE projection cannot accidentally clear a physical/unknown observation", NULL);
+}
+
 static void check_abi_contracts(void) {
     RxOpAbiContract entry = rxop_abi_contract(OP_INLENTER_REG_FUNC_STRING_ID, RXOP_ABI_ENTRY);
     RxOpAbiContract leave = rxop_abi_contract(OP_IADD_REG_REG_REG, RXOP_ABI_SCOPE_LEAVE);
@@ -515,6 +660,14 @@ static void check_output_intrinsic_footprints(void) {
         OP_SAY_REG, OP_SAYX_REG, OP_SAYX_STRING, OP_SAY_INT,
         OP_SAY_FLOAT, OP_SAY_STRING, OP_SAY_CHAR
     };
+    static const int getters[] = {
+        OP_GETNUMDGTS_REG, OP_GETNUMFUZ_REG, OP_GETNUMFRM_REG,
+        OP_GETNUMCAS_REG, OP_GETNUMSTD_REG
+    };
+    static const unsigned int contexts[] = {
+        RXOP_CONTEXT_DIGITS, RXOP_CONTEXT_FUZZ, RXOP_CONTEXT_FORM,
+        RXOP_CONTEXT_CASE, RXOP_CONTEXT_STANDARD
+    };
     size_t i;
     for (i = 0; i < sizeof(outputs) / sizeof(outputs[0]); ++i) {
         int opcode = outputs[i];
@@ -541,6 +694,23 @@ static void check_output_intrinsic_footprints(void) {
               "known intrinsic output footprint retains opaque host, signal and observable residuals",
               &op_table[opcode]);
     }
+    for (i = 0; i < sizeof(getters) / sizeof(getters[0]); ++i) {
+        int opcode = getters[i];
+        RxOpEffects effects = rxop_effects(opcode);
+        check(rxop_intrinsic_value_footprint_is_known(opcode) &&
+                  !rxop_effect_reads_operand(&effects, 0) &&
+                  rxop_effect_writes_operand(&effects, 0) &&
+                  rxop_component_writes(opcode, 0) == RXOP_COMPONENT_INTEGER &&
+                  rxop_value_writer(opcode, 0) == RXOP_VALUE_WRITER_FIELD &&
+                  rxop_context_read_mask(opcode) == contexts[i] &&
+                  rxop_context_write_mask(opcode) == RXOP_CONTEXT_NONE &&
+                  (effects.semantics & RXOP_SEM_OPAQUE) &&
+                  !rxop_host_callbacks(opcode) &&
+                  !rxop_callback_obligations(opcode) &&
+                  rxop_signal_contract(opcode).state == RXOP_SIGNAL_STATE_NONE,
+              "numeric getter has an empty value footprint and retains its context/effect contract",
+              &op_table[opcode]);
+    }
     check(!rxop_intrinsic_value_footprint_is_known(-1) &&
               !rxop_intrinsic_value_footprint_is_known(OP_MAX_INSTRUCTIONS) &&
               !rxop_intrinsic_value_footprint_is_known(OP_RESERVED_088) &&
@@ -553,6 +723,18 @@ static void check_callback_execution_contracts(void) {
     int opcode;
     RxOpSignalContract intrinsic, execution;
     unsigned int obligations;
+    static const int calls[] = {
+        OP_CALL_FUNC, OP_CALL_REG_FUNC, OP_CALL_REG_FUNC_REG,
+        OP_DCALL_REG_REG_REG, OP_SWAPCALL_REG_FUNC_REG_REG_REG,
+        OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG,
+        OP_SETTPCALL_REG_FUNC_REG_REG_INT, OP_CALL1_REG_FUNC_REG,
+        OP_CALL2_REG_FUNC_REG_REG, OP_CALL3_REG_FUNC_REG_REG_REG,
+        OP_CALL4_REG_FUNC_REG_REG_REG_REG
+    };
+    static const int returns[] = {
+        OP_RET, OP_RET_REG, OP_RET_INT, OP_RET_FLOAT, OP_RET_STRING
+    };
+    size_t member;
     for (opcode = 0; opcode < OP_MAX_INSTRUCTIONS; opcode++) {
         size_t operand;
         size_t count = rxop_format_operand_count(op_table[opcode].format);
@@ -587,6 +769,24 @@ static void check_callback_execution_contracts(void) {
                       execution.source == intrinsic.source &&
                       execution.continuations == intrinsic.continuations,
                   "complete no-hook inventory preserves intrinsic execution control", &op_table[opcode]);
+    }
+    for (member = 0; member < sizeof(calls) / sizeof(calls[0]); ++member) {
+        opcode = calls[member];
+        obligations = rxop_callback_obligations(opcode);
+        check(rxop_effects(opcode).callback_inventory_complete &&
+                  !(obligations & RXOP_CALLBACK_UNKNOWN) &&
+                  (obligations & RXOP_CALLBACK_INVOCATION),
+              "complete CALL inventory retains provider invocation", &op_table[opcode]);
+    }
+    for (member = 0; member < sizeof(returns) / sizeof(returns[0]); ++member) {
+        opcode = returns[member];
+        obligations = rxop_callback_obligations(opcode);
+        check(rxop_effects(opcode).callback_inventory_complete &&
+                  !(obligations & RXOP_CALLBACK_UNKNOWN) &&
+                  (obligations & RXOP_CALLBACK_DEPARTURE) &&
+                  !!(obligations & RXOP_CALLBACK_ABI) ==
+                      (opcode == OP_RET_REG || opcode == OP_RET_STRING),
+              "complete RET inventory retains departure and conditional result hooks", &op_table[opcode]);
     }
     {
         static const int pure[] = {
@@ -627,10 +827,15 @@ static void check_callback_execution_contracts(void) {
           "intrinsic-NONE scalar setter still permits operation-caused callback control", NULL);
     check(!rxop_callback_obligations(OP_ITOS_REG) &&
               !rxop_callback_obligations(OP_FTOS_REG) &&
+              !rxop_callback_obligations(OP_FTOI_REG) &&
+              !rxop_callback_obligations(OP_SETOBJTYPE_REG_STRING) &&
               !rxop_callback_obligations(OP_GETNUMDGTS_REG) &&
               !rxop_callback_obligations(OP_ICOPY_REG_REG) &&
               !rxop_callback_obligations(OP_SWAP_REG_REG),
           "reviewed field/formatting/context/pointer operations preserve no-hook positives", NULL);
+    check(rxop_signal_contract(OP_FTOI_REG).state == RXOP_SIGNAL_STATE_KNOWN &&
+              rxop_execution_signal_contract(OP_FTOI_REG).state == RXOP_SIGNAL_STATE_KNOWN,
+          "float-to-integer conversion retains its intrinsic error after callback audit", NULL);
     check((rxop_callback_obligations(OP_COPY_REG_REG) & RXOP_CALLBACK_INPUT) &&
               (rxop_callback_obligations(OP_COPY_REG_REG) & RXOP_CALLBACK_CAPACITY) &&
               (rxop_callback_obligations(OP_SAYX_STRING) & RXOP_CALLBACK_HOST) &&
@@ -643,13 +848,20 @@ static void check_callback_execution_contracts(void) {
     check(rxop_callback_postwrite_operand(OP_LOAD_REG_INT) == 1u &&
               rxop_callback_postwrite_operand(OP_LOAD_REG_FLOAT) == 1u &&
               rxop_callback_postwrite_operand(OP_LOAD_REG_STRING) == 1u &&
+              rxop_callback_postwrite_operand(OP_LOAD_REG_BINARY) == 1u &&
               rxop_callback_postwrite_operand(OP_IAND_REG_REG_INT) == 1u &&
               !rxop_callback_postwrite_operand(OP_COPY_REG_REG) &&
               !rxop_callback_postwrite_operand(OP_NULL_REG) &&
               !rxop_callback_postwrite_operand(OP_CONCAT_REG_STRING_REG) &&
+              !rxop_callback_postwrite_operand(OP_BSLICE_REG_REG_REG_REG) &&
+              !rxop_callback_postwrite_operand(OP_STOBIN_REG) &&
               !rxop_callback_postwrite_operand(OP_SWAPCALL_REG_FUNC_REG_REG_REG) &&
               !rxop_callback_postwrite_operand(OP_INLENTER_REG_FUNC_STRING_ID),
           "ordered captured postwrite profile requires one complete explicit setter", NULL);
+    check(rxop_callback_obligations(OP_LOAD_REG_BINARY) == RXOP_CALLBACK_OUTPUT &&
+              rxop_callback_normal_preserves_frame(OP_LOAD_REG_BINARY) &&
+              rxop_signal_contract(OP_LOAD_REG_BINARY).state == RXOP_SIGNAL_STATE_UNKNOWN,
+          "binary literal postwrite keeps its incoming resource hook and unknown exceptional failure", NULL);
     check(rxop_callback_normal_preserves_frame(OP_LOAD_REG_INT) &&
               rxop_callback_normal_preserves_frame(OP_COPY_REG_REG) &&
               !rxop_callback_normal_preserves_frame(OP_SAYX_STRING) &&
@@ -657,10 +869,355 @@ static void check_callback_execution_contracts(void) {
               !rxop_callback_normal_preserves_frame(OP_INLENTER_REG_FUNC_STRING_ID) &&
               !rxop_callback_normal_preserves_frame(-1),
           "normal callback frame-table premise is limited to complete public resource routes", NULL);
+    check(rxop_callback_preserves_signal_policy(OP_LOAD_REG_INT) &&
+              rxop_callback_preserves_signal_policy(OP_COPY_REG_REG) &&
+              rxop_callback_preserves_signal_policy(OP_SAY_REG) &&
+              rxop_callback_preserves_signal_policy(OP_SAYX_REG) &&
+              rxop_callback_preserves_signal_policy(OP_SAYX_STRING) &&
+              rxop_callback_preserves_signal_policy(OP_SAY_INT) &&
+              rxop_callback_preserves_signal_policy(OP_SAY_FLOAT) &&
+              rxop_callback_preserves_signal_policy(OP_SAY_STRING) &&
+              rxop_callback_preserves_signal_policy(OP_SAY_CHAR),
+          "reviewed resource and public bytes-output routes preserve structural signal policy", NULL);
+    check(!rxop_callback_preserves_signal_policy(-1) &&
+              !rxop_callback_preserves_signal_policy(OP_MAX_INSTRUCTIONS) &&
+              !rxop_callback_preserves_signal_policy(OP_RESERVED_088) &&
+              !rxop_callback_preserves_signal_policy(OP_SRCFPROCSEL_REG_STRING_REG) &&
+              !rxop_callback_preserves_signal_policy(OP_CALL_FUNC) &&
+              !rxop_callback_preserves_signal_policy(OP_SWAPCALL_REG_FUNC_REG_REG_REG) &&
+              !rxop_callback_preserves_signal_policy(OP_INLENTER_REG_FUNC_STRING_ID) &&
+              !rxop_callback_preserves_signal_policy(OP_SETNUMDGTS_INT) &&
+              !rxop_callback_normal_preserves_frame(OP_SAYX_STRING) &&
+              rxop_callback_obligations(OP_SAYX_STRING) == RXOP_CALLBACK_HOST &&
+              rxop_execution_signal_contract(OP_SAYX_STRING).state == RXOP_SIGNAL_STATE_UNKNOWN,
+          "policy-only premise leaves unknown routes, ABI, host observations and queued signals independent", NULL);
     check(rxop_callback_obligations(-1) == RXOP_CALLBACK_UNKNOWN &&
               rxop_callback_obligations(OP_MAX_INSTRUCTIONS) == RXOP_CALLBACK_UNKNOWN &&
               (rxop_callback_obligations(OP_RESERVED_088) & RXOP_CALLBACK_UNKNOWN),
           "invalid and reserved callback inventories fail closed", NULL);
+    {
+        static const int setters[] = {
+            OP_SETNUMDGTS_REG, OP_SETNUMDGTS_INT, OP_SETNUMFUZ_REG, OP_SETNUMFUZ_INT,
+            OP_SETNUMFRM_REG, OP_SETNUMFRM_INT, OP_SETNUMCAS_REG, OP_SETNUMCAS_INT,
+            OP_SETNUMSTD_REG, OP_SETNUMSTD_INT, OP_NUMSCI_INT_INT_INT, OP_NUMENG_INT_INT_INT
+        };
+        size_t index;
+        for (index = 0u; index < sizeof(setters) / sizeof(*setters); ++index) {
+            int code = setters[index];
+            RxOpEffects effects = rxop_effects(code);
+            intrinsic = rxop_signal_contract(code);
+            check(effects.callback_inventory_complete &&
+                      rxop_context_sync_callbacks(code) &&
+                      rxop_callback_obligations(code) == RXOP_CALLBACK_PLUGIN_SYNC &&
+                      !rxop_callback_normal_preserves_frame(code),
+                  "numeric setter has complete conditional plugin-sync route without a harmless-hook premise",
+                  &op_table[code]);
+            check(intrinsic.source == RXOP_SIGNAL_SOURCE_STATIC_NAMES &&
+                      intrinsic.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+                      intrinsic.static_names && !strcmp(intrinsic.static_names, "INVALID_ARGUMENTS") &&
+                      rxop_execution_signal_contract(code).state == RXOP_SIGNAL_STATE_UNKNOWN,
+                  "numeric setter validation stays separate from possible plugin reentry", &op_table[code]);
+        }
+        check(!rxop_context_sync_callbacks(OP_GETNUMDGTS_REG) &&
+                  !rxop_context_sync_callbacks(OP_CALL_FUNC) &&
+                  !rxop_context_sync_callbacks(-1),
+              "numeric getter and unrelated/invalid rows do not acquire a numeric sync route", NULL);
+    }
+}
+
+static void check_callback_value_surfaces(void) {
+    static const int bytes[] = {
+        OP_SAY_REG, OP_SAYX_REG, OP_SAY_STRING, OP_SAYX_STRING,
+        OP_SAY_INT, OP_SAY_FLOAT, OP_SAY_CHAR
+    };
+    static const int unknown[] = {
+        OP_LOAD_REG_INT, OP_NULL_REG, OP_COPY_REG_REG, OP_BCOPY_REG_REG,
+        OP_CALL3_REG_FUNC_REG_REG_REG, OP_DCALL_REG_REG_REG,
+        OP_INLENTER_REG_FUNC_STRING_ID, OP_SRCFPROCSEL_REG_STRING_REG,
+        OP_SETNUMDGTS_INT, OP_RESERVED_088
+    };
+    size_t index, byte_routes = 0u;
+    int opcode;
+    for (index = 0u; index < sizeof(bytes) / sizeof(*bytes); ++index) {
+        opcode = bytes[index];
+        check(rxop_callback_value_surface(opcode) == RXOP_CALLBACK_VALUES_BYTES_SNAPSHOT &&
+                  !strcmp(rxop_callback_value_surface_name(rxop_callback_value_surface(opcode)),
+                          "bytes-snapshot"),
+              "SAY/SAYX public callback surface is copied bytes without a value handle", &op_table[opcode]);
+        check(rxop_callback_obligations(opcode) == RXOP_CALLBACK_HOST &&
+                  rxop_execution_signal_contract(opcode).state == RXOP_SIGNAL_STATE_UNKNOWN &&
+                  !rxop_callback_normal_preserves_frame(opcode) &&
+                  rxop_callback_preserves_signal_policy(opcode),
+              "bytes surface retains HOST control and does not promise frame/value preservation", &op_table[opcode]);
+    }
+    for (index = 0u; index < sizeof(unknown) / sizeof(*unknown); ++index) {
+        opcode = unknown[index];
+        check(rxop_callback_value_surface(opcode) == RXOP_CALLBACK_VALUES_UNKNOWN,
+              "resource, provider, ABI and unclassified routes have unknown value reach", &op_table[opcode]);
+    }
+    for (opcode = 0; opcode < OP_MAX_INSTRUCTIONS; ++opcode) {
+        unsigned int mask = rxop_callback_obligations(opcode);
+        RxOpCallbackValueSurface surface = rxop_callback_value_surface(opcode);
+        check((surface == RXOP_CALLBACK_VALUES_NONE) == (mask == RXOP_CALLBACK_NONE),
+              "empty callback surface requires the complete no-callback route", &op_table[opcode]);
+        if (surface == RXOP_CALLBACK_VALUES_BYTES_SNAPSHOT) {
+            ++byte_routes;
+            check(mask == RXOP_CALLBACK_HOST,
+                  "combined callback routes cannot borrow the bytes-only surface", &op_table[opcode]);
+        } else if (mask != RXOP_CALLBACK_NONE) {
+            check(surface == RXOP_CALLBACK_VALUES_UNKNOWN,
+                  "unreviewed nonempty callback routes retain unknown reach", &op_table[opcode]);
+        }
+    }
+    check(byte_routes == sizeof(bytes) / sizeof(*bytes),
+          "only the reviewed output family receives the byte-snapshot surface", NULL);
+    check(rxop_callback_value_surface(-1) == RXOP_CALLBACK_VALUES_UNKNOWN &&
+              rxop_callback_value_surface(OP_MAX_INSTRUCTIONS) == RXOP_CALLBACK_VALUES_UNKNOWN &&
+              !strcmp(rxop_callback_value_surface_name((RxOpCallbackValueSurface)-1), "unknown"),
+          "invalid callback surface queries retain unknown reach", NULL);
+}
+
+static void check_call_frame_contracts(void) {
+    int opcode;
+    check(RXOP_CALL_FRAME_REUSED_LOCALS_CLEAR == 0,
+          "frame preparation follows the VM's disabled SAFE recycled-local mode", NULL);
+    for (opcode = 0; opcode < OP_MAX_INSTRUCTIONS; ++opcode) {
+        RxOpCallFrameContract frame = rxop_call_frame_contract(opcode);
+        RxOpCallCauseContract causes = rxop_call_cause_contract(opcode);
+        if (!rxop_call_invokes(opcode)) {
+            check(frame.state == (causes.state == RXOP_CALL_CAUSES_NONE
+                      ? RXOP_CALL_FRAME_NONE : RXOP_CALL_FRAME_UNKNOWN) &&
+                      frame.clear_role == RXOP_ABI_ROLE_NONE &&
+                      frame.clear_extent == RXOP_ABI_EXTENT_NONE &&
+                      frame.count_role == RXOP_ABI_ROLE_NONE,
+                  "non-call/unclassified rows acquire no frame preparation sequence", &op_table[opcode]);
+            continue;
+        }
+        check(frame.state == RXOP_CALL_FRAME_KNOWN &&
+                  causes.state == RXOP_CALL_CAUSES_KNOWN &&
+                  frame.fresh_mode == RXOP_CALL_FRAME_VALUE_INIT &&
+                  frame.clear_role == RXOP_ABI_A0_ORIGINAL_BACKING &&
+                  frame.clear_extent == RXOP_ABI_ACTIVE_TREE &&
+                  frame.clear_when == RXOP_CALL_FRAME_REUSED_FRAME &&
+                  frame.local_mode == RXOP_CALL_FRAME_RELINK_ORIGINAL &&
+                  frame.count_role == frame.clear_role,
+              "every invoking CALL has the bytecode fresh/reused a0-before-count sequence", &op_table[opcode]);
+        check(!strcmp(rxop_call_frame_state_name(frame.state), "known") &&
+                  !strcmp(rxop_call_frame_fresh_mode_name(frame.fresh_mode), "value-init") &&
+                  !strcmp(rxop_abi_role_name(frame.clear_role), "a0-original-backing") &&
+                  !strcmp(rxop_abi_extent_name(frame.clear_extent), "active-tree") &&
+                  !strcmp(rxop_call_frame_clear_when_name(frame.clear_when), "reused-frame") &&
+                  !strcmp(rxop_call_frame_local_mode_name(frame.local_mode), "relink-original") &&
+                  !strcmp(rxop_abi_role_name(frame.count_role), "a0-original-backing"),
+              "generated frame preparation names retain native roles, extent and reuse condition", &op_table[opcode]);
+        check((rxop_callback_obligations(opcode) & RXOP_CALLBACK_INVOCATION) &&
+                  rxop_execution_signal_contract(opcode).state == RXOP_SIGNAL_STATE_UNKNOWN,
+              "known frame preparation does not suppress hooks or provider control", &op_table[opcode]);
+    }
+    check(rxop_call_frame_contract(-1).state == RXOP_CALL_FRAME_UNKNOWN &&
+              rxop_call_frame_contract(OP_MAX_INSTRUCTIONS).state == RXOP_CALL_FRAME_UNKNOWN &&
+              rxop_call_frame_contract(OP_RESERVED_088).state == RXOP_CALL_FRAME_UNKNOWN,
+          "invalid and unclassified frame preparation queries remain unknown", NULL);
+    check(rxop_call_frame_contract(OP_INLENTER_REG_FUNC_STRING_ID).state == RXOP_CALL_FRAME_UNKNOWN &&
+              rxop_call_frame_contract(OP_RET_REG).state == RXOP_CALL_FRAME_NONE,
+          "unclassified scope entry and ordinary return do not borrow CALL preparation", NULL);
+    check(!strcmp(rxop_call_frame_state_name((RxOpCallFrameState)-1), "unknown") &&
+              !strcmp(rxop_call_frame_fresh_mode_name((RxOpCallFrameFreshMode)-1), "unknown") &&
+              !strcmp(rxop_call_frame_clear_when_name((RxOpCallFrameClearWhen)-1), "unknown") &&
+              !strcmp(rxop_call_frame_local_mode_name((RxOpCallFrameLocalMode)-1), "unknown"),
+          "invalid typed frame modes have no invented canonical name", NULL);
+}
+
+static void check_frame_control_contracts(void) {
+    static const RxOpFrameControlEntryValue expected[] = {
+        RXOP_FRAME_ENTRY_PARENT_BORROWED, RXOP_FRAME_ENTRY_NONE, RXOP_FRAME_ENTRY_EMPTY,
+        RXOP_FRAME_ENTRY_EMPTY, RXOP_FRAME_ENTRY_EMPTY, RXOP_FRAME_ENTRY_PARENT_BORROWED_COW,
+        RXOP_FRAME_ENTRY_UNMARKED, RXOP_FRAME_ENTRY_PARENT_INHERITED, RXOP_FRAME_ENTRY_OFF
+    };
+    static const RxOpAbiOperation retire_ops[] = {
+        RXOP_ABI_LEAVE_FRAME_SCOPES, RXOP_ABI_CLEAR_FRAME_HANDLERS,
+        RXOP_ABI_RELEASE_FRAME_POLICY, RXOP_ABI_RELEASE_FRAME_REFERENCES,
+        RXOP_ABI_ABANDON_FRAME_INVOCATION, RXOP_ABI_UNPIN_FRAME_INVOCATION,
+        RXOP_ABI_RECYCLE_FRAME
+    };
+    static const char *const mask_names[] = { "plugin-owners", "policy", "handlers", "scope",
+        "references", "ancestor-references", "child", "retire", "foreign", "signal", "unknown" };
+    unsigned int seen = 0u;
+    int opcode;
+    size_t i;
+    RxOpAbiContract retire = rxop_abi_contract(OP_RET_INT, RXOP_ABI_FRAME_RETIRE);
+    check(rxop_frame_plugin_ownership() == RXOP_FRAME_PLUGIN_OWNERSHIP_NONE_PUBLISHED_INTERFACE_V1 &&
+              !strcmp(rxop_frame_plugin_ownership_name(rxop_frame_plugin_ownership()), "none-published-interface.v1") &&
+              !strcmp(rxop_frame_plugin_ownership_name(RXOP_FRAME_PLUGIN_OWNERSHIP_UNKNOWN), "unknown") &&
+              !strcmp(rxop_frame_plugin_ownership_name((RxOpFramePluginOwnership)-1), "unknown") &&
+              !strcmp(rxop_frame_plugin_ownership_name((RxOpFramePluginOwnership)2), "unknown"),
+          "published frame plugin nonownership is typed and invalid states remain unknown", NULL);
+    check(rxop_callback_obligations(OP_LOAD_REG_INT) && rxop_host_callbacks(OP_SAY_REG) &&
+              rxop_context_sync_callbacks(OP_SETNUMDGTS_INT) &&
+              (rxop_observation_mask(OP_METALINKPREG_REG_REG) & RXOP_ACTIVATION_FRAME),
+          "frame plugin nonownership suppresses no payload, sync, host or physical observation route", NULL);
+    for (opcode = 0; opcode < OP_MAX_INSTRUCTIONS; ++opcode) {
+        RxOpCallFrameState state = rxop_call_frame_control_state(opcode);
+        RxOpFrameControlContract control = rxop_frame_control_contract(opcode);
+        check(state == rxop_call_frame_contract(opcode).state,
+              "child control entry has the exact bytecode frame-preparation guard", &op_table[opcode]);
+        for (i = 0u; i < RXOP_FRAME_ENTRY_FIELD_COUNT; ++i) {
+            RxOpFrameControlEntryValue value = rxop_call_frame_control_entry(opcode, (RxOpFrameControlEntryField)i);
+            if (state == RXOP_CALL_FRAME_KNOWN) {
+                RxOpFrameControlEntryValue wanted = i < sizeof(expected) / sizeof(expected[0])
+                        ? expected[i] : (rxop_call_contract(opcode).window_operand
+                                ? RXOP_FRAME_ENTRY_MAPPED_WINDOW : RXOP_FRAME_ENTRY_NONE);
+                check(value == wanted,
+                      "ordinary child inherits nonowners and resets control independently of recycled values", &op_table[opcode]);
+            } else check(value == (state == RXOP_CALL_FRAME_NONE ? RXOP_FRAME_ENTRY_NONE : RXOP_FRAME_ENTRY_UNKNOWN),
+                         "unavailable child entry grants no reset or plugin ownership fact", &op_table[opcode]);
+        }
+        if (control.state == RXOP_FRAME_CONTROL_KNOWN) {
+            check(!(control.mask & RXOP_FRAME_CONTROL_UNCLASSIFIED),
+                  "complete intrinsic control has no unknown-inventory bit", &op_table[opcode]);
+            if (rxop_callback_obligations(opcode))
+                check(control.mask & RXOP_FRAME_CONTROL_FOREIGN,
+                      "a known intrinsic control inventory retains every callback route", &op_table[opcode]);
+            if (rxop_call_invokes(opcode))
+                check(control.mask & RXOP_FRAME_CONTROL_CHILD,
+                      "ordinary invocation requires independent transitive control closure", &op_table[opcode]);
+        } else check(control.mask == RXOP_FRAME_CONTROL_UNCLASSIFIED,
+                     "incomplete control inventory is never an empty preservation mask", &op_table[opcode]);
+    }
+    check(rxop_call_frame_control_entry(OP_CALL3_REG_FUNC_REG_REG_REG, RXOP_FRAME_ENTRY_CALLER_WINDOW) == RXOP_FRAME_ENTRY_NONE &&
+              rxop_call_frame_control_entry(OP_CALL_REG_FUNC_REG, RXOP_FRAME_ENTRY_CALLER_WINDOW) == RXOP_FRAME_ENTRY_MAPPED_WINDOW &&
+              rxop_call_frame_control_entry(OP_DCALL_REG_REG_REG, RXOP_FRAME_ENTRY_CALLER_WINDOW) == RXOP_FRAME_ENTRY_MAPPED_WINDOW &&
+              rxop_call_frame_control_entry(OP_SWAPCALL_REG_FUNC_REG_REG_REG, RXOP_FRAME_ENTRY_CALLER_WINDOW) == RXOP_FRAME_ENTRY_MAPPED_WINDOW,
+          "fixed and counted/fused caller window ownership remain distinct", NULL);
+    check(rxop_frame_control_contract(OP_GETNUMDGTS_REG).state == RXOP_FRAME_CONTROL_KNOWN &&
+              rxop_frame_control_contract(OP_GETNUMDGTS_REG).mask == RXOP_FRAME_CONTROL_NONE &&
+              (rxop_frame_control_contract(OP_LOAD_REG_INT).mask & RXOP_FRAME_CONTROL_FOREIGN) &&
+              (rxop_frame_control_contract(OP_SAY_REG).mask & RXOP_FRAME_CONTROL_FOREIGN),
+          "callback-free getter, resource setter and byte host output have distinct control obligations", NULL);
+    check((rxop_frame_control_contract(OP_MKREF_REG_REG).mask &
+              (RXOP_FRAME_CONTROL_REFERENCES | RXOP_FRAME_CONTROL_ANCESTOR_REFERENCES)) ==
+              (RXOP_FRAME_CONTROL_REFERENCES | RXOP_FRAME_CONTROL_ANCESTOR_REFERENCES) &&
+              (rxop_frame_control_contract(OP_SIGPUSH_STRING).mask & RXOP_FRAME_CONTROL_HANDLERS) &&
+              (rxop_frame_control_contract(OP_SIGPOP_STRING).mask &
+                  (RXOP_FRAME_CONTROL_POLICY | RXOP_FRAME_CONTROL_HANDLERS)) ==
+                  (RXOP_FRAME_CONTROL_POLICY | RXOP_FRAME_CONTROL_HANDLERS),
+          "reference ancestors and saved-handler/private-policy mutations are explicit", NULL);
+    check(rxop_frame_control_contract(-1).state == RXOP_FRAME_CONTROL_UNKNOWN &&
+              rxop_frame_control_contract(OP_MAX_INSTRUCTIONS).mask == RXOP_FRAME_CONTROL_UNCLASSIFIED &&
+              rxop_frame_control_contract(OP_RESERVED_088).state == RXOP_FRAME_CONTROL_UNKNOWN &&
+              rxop_frame_control_contract(OP_INLENTER_REG_FUNC_STRING_ID).state == RXOP_FRAME_CONTROL_UNKNOWN &&
+              rxop_call_frame_control_state(-1) == RXOP_CALL_FRAME_UNKNOWN &&
+              rxop_call_frame_control_entry(OP_CALL3_REG_FUNC_REG_REG_REG, RXOP_FRAME_ENTRY_FIELD_COUNT) == RXOP_FRAME_ENTRY_UNKNOWN,
+          "invalid, unclassified, logical and unknown field queries cannot create an ordinary child theorem", NULL);
+    for (i = 0u; i < sizeof(mask_names) / sizeof(mask_names[0]); ++i) {
+        unsigned int bit = rxop_frame_control_mask_named(mask_names[i]);
+        check(bit && !(bit & (bit - 1u)) && !(seen & bit),
+              "named control obligations are independent known bits", NULL);
+        seen |= bit;
+    }
+    check(!rxop_frame_control_mask_named(NULL) && !rxop_frame_control_mask_named("invented") &&
+              !strcmp(rxop_frame_control_entry_field_name(RXOP_FRAME_ENTRY_FIELD_COUNT), "unknown") &&
+              !strcmp(rxop_frame_control_entry_value_name((RxOpFrameControlEntryValue)-1), "unknown") &&
+              !strcmp(rxop_frame_control_state_name((RxOpFrameControlState)-1), "unknown"),
+          "unknown names/fields preserve explicit unavailable state", NULL);
+    check(retire.state == RXOP_ABI_KNOWN && retire.count == sizeof(retire_ops) / sizeof(retire_ops[0]),
+          "free_frame has an ordered control subprogram separate from clear_frame", NULL);
+    if (retire.state == RXOP_ABI_KNOWN && retire.count == sizeof(retire_ops) / sizeof(retire_ops[0])) {
+        for (i = 0u; i < retire.count; ++i)
+            check(retire.steps[i].operation == retire_ops[i] && retire.steps[i].repeat == RXOP_ABI_ONCE,
+                  "retirement preserves scope, handler, policy, reference, invocation and recycler order", NULL);
+        check(retire.steps[3].rule == RXOP_ABI_FRAME_REFERENCES_MARKED &&
+                  retire.steps[4].rule == RXOP_ABI_FRAME_INVOCATION_PRESENT &&
+                  retire.steps[5].rule == RXOP_ABI_FRAME_INVOCATION_PRESENT &&
+                  retire.steps[6].destination == RXOP_ABI_PROCEDURE_RECYCLER &&
+                  abi_operation_index(retire, RXOP_ABI_DESTROY_STORAGE, 0u) == retire.count &&
+                  abi_operation_index(retire, RXOP_ABI_RELEASE_FRAME_PLUGINS, 0u) == retire.count,
+              "retirement guards actual owners and retains payload/plugin destruction for final drain", NULL);
+    }
+    check(!strcmp(rxop_abi_mode_name(RXOP_ABI_FRAME_RETIRE), "frame-retire") &&
+              rxop_abi_contract(OP_LOAD_REG_INT, RXOP_ABI_FRAME_RETIRE).state == RXOP_ABI_KNOWN &&
+              rxop_abi_contract(OP_INLENTER_REG_FUNC_STRING_ID, RXOP_ABI_FRAME_RETIRE).state == RXOP_ABI_UNKNOWN,
+          "retire subprogram is selected by exact lifecycle mode, never an opcode-derived retirement permission", NULL);
+}
+
+static void check_call_cause_contracts(void) {
+    int opcode;
+    for (opcode = 0; opcode < OP_MAX_INSTRUCTIONS; ++opcode) {
+        RxOpCallCauseContract contract = rxop_call_cause_contract(opcode);
+        size_t row;
+        unsigned int kinds[RXOP_CALL_CAUSE_CONTEXT_SYNC + 1] = {0};
+        if (!rxop_call_invokes(opcode)) {
+            check(!contract.count && !contract.causes &&
+                      contract.state == (rxop_effects(opcode).state == RXOP_EFFECT_CLASSIFIED
+                          ? RXOP_CALL_CAUSES_NONE : RXOP_CALL_CAUSES_UNKNOWN),
+                  "non-call/unclassified cause inventory has no invented ingress proof", &op_table[opcode]);
+            continue;
+        }
+        check(contract.state == RXOP_CALL_CAUSES_KNOWN && contract.causes && contract.count,
+              "every invoking call has a typed native cause inventory", &op_table[opcode]);
+        for (row = 0u; row < contract.count; ++row) {
+            const RxOpCallCause *cause = &contract.causes[row];
+            check(cause->kind >= RXOP_CALL_CAUSE_PREPARATION_CALLBACK &&
+                      cause->kind <= RXOP_CALL_CAUSE_CONTEXT_SYNC &&
+                      strcmp(rxop_call_cause_kind_name(cause->kind), "unknown") &&
+                      strcmp(rxop_call_checkpoint_name(cause->checkpoint), "unknown") &&
+                      strcmp(rxop_call_cause_condition_name(cause->condition), "unknown"),
+                  "call cause has a named kind/checkpoint/condition", &op_table[opcode]);
+            if (cause->kind >= RXOP_CALL_CAUSE_PREPARATION_CALLBACK && cause->kind <= RXOP_CALL_CAUSE_CONTEXT_SYNC)
+                ++kinds[cause->kind];
+            if (cause->kind == RXOP_CALL_CAUSE_FRAME_CALLBACK ||
+                    cause->kind == RXOP_CALL_CAUSE_PREPARATION_CALLBACK)
+                check(cause->callbacks == (RXOP_CALLBACK_OUTPUT | RXOP_CALLBACK_CAPACITY),
+                      "preparation/frame clears carry only typed resource callback routes", &op_table[opcode]);
+            else if (cause->kind == RXOP_CALL_CAUSE_CONTEXT_SYNC)
+                check(cause->callbacks == RXOP_CALLBACK_PLUGIN_SYNC &&
+                          cause->source == RXOP_SIGNAL_SOURCE_UNKNOWN &&
+                          cause->condition == RXOP_CALL_CONDITION_BYTECODE_DECIMAL_SYNC,
+                      "decimal sync stays separate from frame resources until its ABI is proved", &op_table[opcode]);
+            else if (cause->kind == RXOP_CALL_CAUSE_PROVIDER)
+                check(cause->callbacks == RXOP_CALLBACK_INVOCATION,
+                      "provider execution is a distinct invocation route", &op_table[opcode]);
+            else
+                check(cause->callbacks == RXOP_CALLBACK_NONE,
+                      "non-callback ingress cause has no invented callback route", &op_table[opcode]);
+            if (cause->kind == RXOP_CALL_CAUSE_FRAME_ALLOCATION)
+                check(cause->source == RXOP_SIGNAL_SOURCE_STATIC_NAMES &&
+                          cause->static_names && !strcmp(cause->static_names, "FAILURE") &&
+                          cause->checkpoint == RXOP_CALL_POINT_FRAME_ALLOCATION &&
+                          cause->condition == RXOP_CALL_CONDITION_BYTECODE_ALLOCATION_FAILED,
+                      "only allocation cause identifies removable frame pressure", &op_table[opcode]);
+            if (cause->kind == RXOP_CALL_CAUSE_INITIALIZER)
+                check(cause->source == RXOP_SIGNAL_SOURCE_PROPAGATED_CALL &&
+                          cause->static_names && !strcmp(cause->static_names, "FAILURE") &&
+                          cause->condition == RXOP_CALL_CONDITION_BYTECODE_INITIALIZER_NEEDED,
+                      "initializer propagation and wrapper failure remain an independent obligation", &op_table[opcode]);
+            if (cause->kind == RXOP_CALL_CAUSE_PROVIDER)
+                check(cause->source == RXOP_SIGNAL_SOURCE_PROPAGATED_CALL && !cause->static_names,
+                      "provider signals stay unbounded by ingress allocation names", &op_table[opcode]);
+            if (cause->kind == RXOP_CALL_CAUSE_FRAME_CALLBACK)
+                check(cause->source == RXOP_SIGNAL_SOURCE_UNKNOWN &&
+                          cause->checkpoint == RXOP_CALL_POINT_FRAME_PREPARATION,
+                      "recycled-a0 resources retain independent unknown control", &op_table[opcode]);
+        }
+        check(kinds[RXOP_CALL_CAUSE_TARGET] == 1u && kinds[RXOP_CALL_CAUSE_INITIALIZER] == 1u &&
+                  kinds[RXOP_CALL_CAUSE_FRAME_LAYOUT] == 1u && kinds[RXOP_CALL_CAUSE_FRAME_ALLOCATION] == 1u &&
+                  kinds[RXOP_CALL_CAUSE_FRAME_CALLBACK] == 1u && kinds[RXOP_CALL_CAUSE_CONTEXT_SYNC] == 1u &&
+                  kinds[RXOP_CALL_CAUSE_PROVIDER] == 1u,
+              "call validation, allocation, resources, decimal sync and body propagation have distinct causes", &op_table[opcode]);
+        check(kinds[RXOP_CALL_CAUSE_WINDOW] ==
+                  (unsigned int)(opcode == OP_CALL_REG_FUNC_REG || opcode == OP_DCALL_REG_REG_REG),
+              "only handlers with an actual count/window check publish that cause", &op_table[opcode]);
+        check(kinds[RXOP_CALL_CAUSE_TARGET_KIND] ==
+                  (unsigned int)!!rxop_call_contract(opcode).actual_operands[0] &&
+                  kinds[RXOP_CALL_CAUSE_PREPARATION_CALLBACK] == (unsigned int)(opcode == OP_CALL_REG_FUNC),
+              "fixed native-target and zero-call clear routes match their native phases", &op_table[opcode]);
+        check(rxop_signal_contract(opcode).source == RXOP_SIGNAL_SOURCE_PROPAGATED_CALL &&
+                  rxop_execution_signal_contract(opcode).state == RXOP_SIGNAL_STATE_UNKNOWN,
+              "additive cause inventory does not weaken aggregate call execution control", &op_table[opcode]);
+    }
+    check(rxop_call_cause_contract(-1).state == RXOP_CALL_CAUSES_UNKNOWN &&
+              rxop_call_cause_contract(OP_MAX_INSTRUCTIONS).state == RXOP_CALL_CAUSES_UNKNOWN,
+          "invalid call cause query remains unknown", NULL);
 }
 
 int main(void) {
@@ -684,7 +1241,13 @@ int main(void) {
     check_value_writer_inventory();
     check_output_intrinsic_footprints();
     check_callback_execution_contracts();
+    check_callback_value_surfaces();
+    check_call_cause_contracts();
+    check_call_frame_contracts();
+    check_frame_control_contracts();
     check_abi_contracts();
+    check_root_abi_contracts();
+    check_observation_masks();
     check_checked_integer_family();
     check(rxop_compare_branch_fusion(
                   OP_IEQ_REG_REG_REG, OP_BRT_ID_REG, &fusion) &&
@@ -1366,6 +1929,11 @@ int main(void) {
               (rxop_callback_outputs(OP_LOAD_REG_INT, 0) & RXOP_COMPONENT_NATIVE_PAYLOAD) &&
               !rxop_callback_outputs(OP_ICOPY_REG_REG, 0),
           "copy-source and overwritten-destination payload hooks are independent conditional resources", NULL);
+    check(rxop_callback_obligations(OP_BCOPY_REG_REG) ==
+              (RXOP_CALLBACK_INPUT | RXOP_CALLBACK_OUTPUT | RXOP_CALLBACK_CAPACITY) &&
+              (rxop_callback_inputs(OP_BCOPY_REG_REG, 1) & RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              (rxop_callback_outputs(OP_BCOPY_REG_REG, 0) & RXOP_COMPONENT_NATIVE_PAYLOAD),
+          "binary copy has only classified conditional resource callbacks", NULL);
     check(!rxop_callback_inputs(OP_LOAD_REG_REG, 1) &&
               !rxop_callback_outputs(OP_LOAD_REG_REG, 0) &&
               !rxop_callback_inputs(OP_LINK_REG_REG, 1) &&

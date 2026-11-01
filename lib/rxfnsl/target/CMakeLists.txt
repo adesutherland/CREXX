@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 # Explicit optional target tools; core/bootstrap packages have no reverse edge.
 set(_modules lltargetrecipe lltarget lltargettransfer lltargetcfg lltargetremap
-  lltargetflow lltargetsummary lltargetnormalize lltargetfacts llinline llcleanup)
+  lltargetflow lltargetbodyview lltargetsummary lltargetnormalize lltargetfacts llinline llcleanup)
 set_property(GLOBAL PROPERTY RXFNSL_TARGET_SELECTORS "${_modules}")
 set(_imports "${CMAKE_CURRENT_BINARY_DIR}/imports")
 crexx_add_import_root(rxfnsl_target_imports DIRECTORY "${_imports}"
@@ -25,10 +25,10 @@ crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/_rxlinkinline.rxbi
 # than the host's native procedure (the ADDRESS bridge uses the same boundary).
 set(_bins)
 set(_previous_module "")
+set(_native_imports)
 foreach(_module IN LISTS _modules)
   set(_deps)
-  # rxc scans the shared local import directory. Finish each image before
-  # starting the next reader so parallel builds never inspect a partial RXBIN.
+  # Finish each predecessor image before staging a consumer's exact closure.
   if(_previous_module)
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/${_previous_module}.rxbin")
   endif()
@@ -37,6 +37,7 @@ foreach(_module IN LISTS _modules)
   endif()
   if(_module STREQUAL "lltargettransfer")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/_rxlinkinline.rxbin")
+    set(_native_imports "${CMAKE_CURRENT_BINARY_DIR}/_rxlinkinline.rxbin")
   endif()
   if(_module STREQUAL "lltarget")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetrecipe.rxbin")
@@ -48,8 +49,11 @@ foreach(_module IN LISTS _modules)
   if(_module STREQUAL "lltargetflow")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetcfg.rxbin")
   endif()
-  if(_module STREQUAL "lltargetsummary" OR _module STREQUAL "lltargetnormalize")
+  if(_module STREQUAL "lltargetbodyview" OR _module STREQUAL "lltargetsummary" OR _module STREQUAL "lltargetnormalize")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetflow.rxbin")
+  endif()
+  if(_module STREQUAL "lltargetsummary")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetbodyview.rxbin")
   endif()
   if(_module STREQUAL "lltargetnormalize")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetremap.rxbin")
@@ -68,13 +72,21 @@ foreach(_module IN LISTS _modules)
   if(_module STREQUAL "llcleanup")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/llinline.rxbin")
   endif()
+  # The output directory also holds linked test consumers with embedded old
+  # contracts. Import only current owning images, never that directory.
+  set(_module_import_root "${CMAKE_CURRENT_BINARY_DIR}/module-imports/${_module}")
+  crexx_add_import_root(rxfnsl_target_${_module}_imports
+    DIRECTORY "${_module_import_root}"
+    OUTPUT_VARIABLE _module_import_files
+    FILES ${_import_files} ${_bins} ${_native_imports}
+    DEPENDS rxfnsl_target_imports ${_deps})
   crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin"
     BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxas"
     COMMAND $<TARGET_FILE:rxc> ${_flags} -x --no-exe-import
-      -i "${_imports};${CMAKE_CURRENT_BINARY_DIR}"
+      -i "${_module_import_root}"
       -o "${_module}" "${CMAKE_CURRENT_SOURCE_DIR}/${_module}.crexx"
     COMMAND $<TARGET_FILE:rxas> ${_flags} "${_module}"
-    DEPENDS rxc rxas rxfnsl_target_imports ${_import_files} ${_deps}
+    DEPENDS rxc rxas rxfnsl_target_${_module}_imports ${_module_import_files} ${_deps}
       "${CMAKE_CURRENT_SOURCE_DIR}/${_module}.crexx"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
   list(APPEND _bins "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
@@ -282,8 +294,8 @@ if(BUILD_TESTING)
 
   # One bounded owner panel for the shared Level L target foundation.
   foreach(_foundation_case IN ITEMS
-      target-transfer-cfg target-binding-recipe target-selection target-activation-abi target-scopefree-inline target-site-facets target-normalization-preservation target-normalization-receipt target-child-window target-execution-context target-signal-cfg target-signal-normalize target-canonical-flow target-scope-flow target-recipe target-recipe-banks target-module-remap target-flow target-summary foundation-normalize)
-    if((_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-recipe-banks") AND NOT CREXX_BUILD_TARGET_IO)
+      target-transfer-cfg target-binding-recipe target-selection target-bodyview target-program-defaults target-activation-abi target-scopefree-inline target-context-restoration target-retained-caller target-site-facets target-normalization-preservation target-normalization-receipt target-normalization-site target-expansion-remap target-expansion-relational target-backing-child target-draft-budget target-child-window target-execution-context target-signal-cfg target-signal-normalize target-canonical-flow target-scope-flow target-recipe target-recipe-banks target-module-remap target-flow target-summary foundation-normalize)
+    if((_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-recipe-banks" OR _foundation_case STREQUAL "target-retained-caller") AND NOT CREXX_BUILD_TARGET_IO)
       continue()
     endif()
     string(REPLACE "-" "_" _foundation_name "${_foundation_case}")
@@ -291,7 +303,7 @@ if(BUILD_TESTING)
     set(_foundation_images ${_images})
     set(_foundation_imports "${_test_imports}")
     set(_foundation_deps levell_target_test_imports ${_test_files})
-    if(_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-recipe-banks")
+    if(_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-recipe-banks" OR _foundation_case STREQUAL "target-retained-caller")
       list(APPEND _foundation_images "${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io.rxbin")
       list(APPEND _foundation_images "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin")
       set(_foundation_imports "${CMAKE_CURRENT_BINARY_DIR}/${_foundation_case}-imports")
@@ -339,6 +351,21 @@ if(BUILD_TESTING)
           TIMEOUT 120 LABELS "level-l;research;target-foundation")
         crexx_register_test_prep_targets(TESTS levell_foundation_normalize_native
           TARGETS levell_foundation_normalize rxbvm rxas rxlink)
+      endif()
+      if(_foundation_case STREQUAL "target-retained-caller")
+        add_test(NAME levell_target_retained_caller_native
+          COMMAND ${CMAKE_COMMAND}
+            -DVM=$<TARGET_FILE:rxbvm>
+            -DASSEMBLER=$<TARGET_FILE:rxas>
+            -DLINKER=$<TARGET_FILE:rxlink>
+            -DCLIENT=${_foundation_output}
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/retained-caller-native-work
+            -P ${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/run-retained-caller-native.cmake)
+        set_tests_properties(levell_target_retained_caller_native PROPERTIES
+          PASS_REGULAR_EXPRESSION "RETAINED_CALLER_NATIVE[|]failures=0"
+          TIMEOUT 120 LABELS "level-l;research;target-foundation")
+        crexx_register_test_prep_targets(TESTS levell_target_retained_caller_native
+          TARGETS levell_target_retained_caller rxbvm rxas rxlink)
       endif()
     endif()
   endforeach()

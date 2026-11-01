@@ -40,6 +40,7 @@
 #define RXPA_CATALOGUE_UNLOCK() ((void)pthread_mutex_unlock(&rxpa_catalogue_lock))
 #endif
 #include "rxvmintp.h"
+#include "rxinline_recipe.h"
 #include "rxvmlinkindex.h"
 #include "rxvmchannel.h"
 #include "rxastree.h"
@@ -228,6 +229,7 @@ static void free_rxpa_context(rxpa_context *context);
 static void free_interface_factory_registry(rxvm_context *context);
 static void free_interface_method_registry(rxvm_context *context);
 static void build_module_runtime_procedures(module *mod);
+static void build_module_inline_diagnostics(module *mod);
 static void build_module_dynamic_site_caches(module *mod);
 static void apply_rxpa_proc_policies(rxpa_context *context,
                                      size_t module_number);
@@ -590,6 +592,11 @@ void rxfremod(rxvm_context *context) {
                 }
                 *p_entry->frame_free_list = 0;
             }
+            if (p_entry->inlined_private_owner == p_entry && p_entry->inlined_private) {
+                (void)rxvm_memory_release(p_entry->inlined_private);
+                p_entry->inlined_private = NULL;
+                p_entry->inlined_private_count = 0u;
+            }
         }
 
         if (!rxvm_program_generation_owns_module(context, (size_t)j)) {
@@ -613,6 +620,8 @@ void rxfremod(rxvm_context *context) {
             (void)rxvm_memory_release(context->modules[j]->execution_image);
         (void)rxvm_memory_release(context->modules[j]->dynamic_site_cache_slots);
         (void)rxvm_memory_release(context->modules[j]->dynamic_site_caches);
+        (void)rxvm_memory_release(context->modules[j]->inline_diagnostic_maps);
+        (void)rxvm_memory_release(context->modules[j]->inline_diagnostic_frames);
         if (context->modules[j]->proc_runtime_lookup)
             (void)rxvm_memory_release(context->modules[j]->proc_runtime_lookup);
         if (context->modules[j]->procedures)
@@ -789,7 +798,12 @@ static void init_module_runtime_procedure(module *mod, proc_runtime *runtime, si
 
     runtime->definition = definition;
     runtime->locals = definition->locals;
+    runtime->owned_locals = definition->locals;
+    runtime->inlined_private_count = 0u;
+    runtime->inlined_private = NULL;
+    runtime->inlined_private_owner = runtime;
     runtime->native_capabilities = 0u;
+    runtime->entry_state_kind = 0u;
     runtime->binarySpace = (!mod->native && definition->start != SIZE_MAX) ? &mod->segment : 0;
     runtime->frame_free_list_head = 0;
     runtime->frame_free_list = &runtime->frame_free_list_head;
@@ -799,6 +813,115 @@ static void init_module_runtime_procedure(module *mod, proc_runtime *runtime, si
     runtime->profile_id = SIZE_MAX;
 #endif
     runtime->native_invoker = NULL;
+}
+
+static int compare_inline_diagnostic_frames(const void *left, const void *right) {
+    uint32_t a = ((const rxvm_inline_diagnostic_frame *)left)->definition->frame_id;
+    uint32_t b = ((const rxvm_inline_diagnostic_frame *)right)->definition->frame_id;
+    return (a > b) - (a < b);
+}
+
+static int compare_inline_diagnostic_maps(const void *left, const void *right) {
+    size_t a = ((const rxvm_inline_diagnostic_map *)left)->definition->start;
+    size_t b = ((const rxvm_inline_diagnostic_map *)right)->definition->start;
+    return (a > b) - (a < b);
+}
+
+static int compare_inline_diagnostic_steps(const void *left, const void *right) {
+    uint32_t a = (*(const meta_source_step_constant *const *)left)->step_id;
+    uint32_t b = (*(const meta_source_step_constant *const *)right)->step_id;
+    return (a > b) - (a < b);
+}
+
+static const rxvm_inline_diagnostic_frame *inline_diagnostic_frame_by_id(
+        const module *mod, uint32_t id) {
+    size_t low = 0u, high = mod->inline_diagnostic_frame_count;
+    while (low < high) {
+        size_t middle = low + (high - low) / 2u;
+        const rxvm_inline_diagnostic_frame *frame = &mod->inline_diagnostic_frames[middle];
+        uint32_t found = frame->definition->frame_id;
+        if (found == id) return frame;
+        if (found < id) low = middle + 1u;
+        else high = middle;
+    }
+    return NULL;
+}
+
+static void *inline_diagnostic_index(module *mod, size_t count, size_t size) {
+    void *index;
+    if (!count) return NULL;
+    if (count > SIZE_MAX / size)
+        RX_PANIC_OOM("size rxvm inline diagnostic index", SIZE_MAX, mod->name);
+    index = rxvm_memory_calloc_bytes(mod->memory_worker, count, size);
+    if (!index)
+        RX_PANIC_OOM("calloc rxvm inline diagnostic index", count * size, mod->name);
+    return index;
+}
+
+static void build_module_inline_diagnostics(module *mod) {
+    const meta_source_step_constant **steps;
+    size_t step_count = 0u, frame_index = 0u, map_index = 0u, step_index = 0u;
+    size_t index;
+    int offset;
+    mod->inline_diagnostic_frames = NULL;
+    mod->inline_diagnostic_maps = NULL;
+    mod->inline_diagnostic_frame_count = 0u;
+    mod->inline_diagnostic_map_count = 0u;
+    for (offset = mod->meta_head; offset != -1;) {
+        const meta_entry *meta = (const meta_entry *)(mod->segment.const_pool + (size_t)offset);
+        if (meta->base.type == META_INLINE_FRAME) ++mod->inline_diagnostic_frame_count;
+        else if (meta->base.type == META_INLINE_MAP) ++mod->inline_diagnostic_map_count;
+        else if (meta->base.type == META_SOURCE_STEP) ++step_count;
+        offset = meta->next;
+    }
+    if (!mod->inline_diagnostic_frame_count) return;
+    mod->inline_diagnostic_frames = inline_diagnostic_index(mod,
+            mod->inline_diagnostic_frame_count, sizeof(*mod->inline_diagnostic_frames));
+    mod->inline_diagnostic_maps = inline_diagnostic_index(mod,
+            mod->inline_diagnostic_map_count, sizeof(*mod->inline_diagnostic_maps));
+    steps = inline_diagnostic_index(mod, step_count, sizeof(*steps));
+    for (offset = mod->meta_head; offset != -1;) {
+        const meta_entry *meta = (const meta_entry *)(mod->segment.const_pool + (size_t)offset);
+        if (meta->base.type == META_INLINE_FRAME) {
+            rxvm_inline_diagnostic_frame *frame = &mod->inline_diagnostic_frames[frame_index++];
+            const meta_inline_frame_constant *definition = (const meta_inline_frame_constant *)meta;
+            frame->definition = definition;
+            frame->module_name = (const string_constant *)(mod->segment.const_pool + definition->module_name);
+            frame->procedure_name = (const string_constant *)(mod->segment.const_pool + definition->procedure_name);
+        } else if (meta->base.type == META_INLINE_MAP) {
+            mod->inline_diagnostic_maps[map_index++].definition = (const meta_inline_map_constant *)meta;
+        } else if (meta->base.type == META_SOURCE_STEP) {
+            steps[step_index++] = (const meta_source_step_constant *)meta;
+        }
+        offset = meta->next;
+    }
+    qsort(mod->inline_diagnostic_frames, mod->inline_diagnostic_frame_count,
+            sizeof(*mod->inline_diagnostic_frames), compare_inline_diagnostic_frames);
+    if (mod->inline_diagnostic_map_count)
+        qsort(mod->inline_diagnostic_maps, mod->inline_diagnostic_map_count,
+                sizeof(*mod->inline_diagnostic_maps), compare_inline_diagnostic_maps);
+    if (step_count) qsort(steps, step_count, sizeof(*steps), compare_inline_diagnostic_steps);
+    for (index = 0u; index < mod->inline_diagnostic_frame_count; ++index) {
+        rxvm_inline_diagnostic_frame *frame = &mod->inline_diagnostic_frames[index];
+        uint32_t step_id = frame->definition->callsite_step_id;
+        size_t low = 0u, high = step_count;
+        if (frame->definition->parent_id)
+            frame->parent = inline_diagnostic_frame_by_id(mod, frame->definition->parent_id);
+        while (step_id && low < high) {
+            size_t middle = low + (high - low) / 2u;
+            if (steps[middle]->step_id == step_id) {
+                frame->callsite = steps[middle];
+                break;
+            }
+            if (steps[middle]->step_id < step_id) low = middle + 1u;
+            else high = middle;
+        }
+    }
+    for (index = 0u; index < mod->inline_diagnostic_map_count; ++index) {
+        rxvm_inline_diagnostic_map *map = &mod->inline_diagnostic_maps[index];
+        map->frame = inline_diagnostic_frame_by_id(mod, map->definition->frame_id);
+    }
+    (void)rxvm_memory_release(steps);
 }
 
 static void build_module_runtime_procedures(module *mod) {
@@ -867,6 +990,26 @@ static void build_module_runtime_procedures(module *mod) {
     if (mod->proc_runtime_lookup_size > 1) {
         qsort(mod->proc_runtime_lookup, mod->proc_runtime_lookup_size,
               sizeof(proc_runtime_lookup_entry), compare_proc_runtime_lookup_entries);
+    }
+    {
+        int metadata = mod->meta_head;
+        while (metadata != -1) {
+            const meta_entry *entry = (const meta_entry *)(mod->segment.const_pool + metadata);
+            if (entry->base.type == META_ENTRY_STATE) {
+                const meta_entry_state_constant *state = (const meta_entry_state_constant *)entry;
+                proc_runtime *runtime = rxvm_get_module_runtime_procedure(mod,state->procedure);
+                /* The codec guarantees a local main owner. Keep constructed
+                 * native module overlays subject to the same invariant. */
+                if (!runtime || runtime->binarySpace != &mod->segment ||
+                    state->version != RXBIN_ENTRY_STATE_VERSION || state->kind != RXBIN_ENTRY_PROGRAM_DEFAULT ||
+                    strcmp(runtime->name,"main")) {
+                    fprintf(stderr,"PANIC: Invalid program entry contract in module %s\n",mod->name);
+                    exit(-1);
+                }
+                runtime->entry_state_kind = state->kind;
+            }
+            metadata = entry->next;
+        }
     }
 }
 
@@ -1015,6 +1158,8 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
                                     ((expose_proc_constant *) c_entry)->procedure);
                             if (p_entry->start == SIZE_MAX ) { /* If not already linked up */
                                 p_entry->locals = p_entry_linked->locals;
+                                p_entry->inlined_private_owner = p_entry_linked->inlined_private_owner;
+                                p_entry->entry_state_kind = p_entry_linked->entry_state_kind;
                                 p_entry->start = p_entry_linked->start;
                                 p_entry->binarySpace =
                                         p_entry_linked->binarySpace;
@@ -1060,6 +1205,64 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
         }
     }
 
+}
+
+/* Resolve sealed storage only after every module overlay has linked globals.
+ * This is pointer preparation, never an initializer or a public-name lookup. */
+int rxvm_resolve_inlined_privates(rxvm_context *context) {
+    size_t m, i;
+    for (m = 0u; m < context->num_modules; m++) {
+        module *owner = context->modules[m];
+        int at = owner->file ? owner->file->header.meta_head : -1;
+        while (at != -1) {
+            const meta_entry *entry = (const meta_entry *)(owner->segment.const_pool + at);
+            if (entry->base.type == META_INLINED_PRIVATE) {
+                const meta_inlined_private_constant *binding = (const meta_inlined_private_constant *)entry;
+                const string_constant *constant = (const string_constant *)(owner->segment.const_pool + binding->provider);
+                rxinl_module_ref_view selector;
+                proc_runtime *procedure = rxvm_get_module_runtime_procedure(owner,binding->procedure);
+                module *provider = NULL;
+                size_t count;
+                if (!procedure || procedure->binarySpace != &owner->segment ||
+                    !rxinl_module_ref_decode(constant->string,constant->string_len,&selector) || !selector.sealed)
+                    return -1;
+                for (i = 0u; i < context->num_modules; i++) {
+                    module *candidate = context->modules[i];
+                    if (candidate->file && owner->file &&
+                        candidate->file->semantic_graph == owner->file->semantic_graph &&
+                        candidate->file->semantic_module_index == selector.image_module) {
+                        if (provider) return -1;
+                        provider = candidate;
+                    }
+                }
+                if (!provider || (selector.self_relative && provider != owner) ||
+                    binding->global_index >= (uint32_t)provider->segment.globals ||
+                    !provider->globals[binding->global_index]) return -1;
+                if (procedure->locals < 0 || binding->owned_locals >= (uint32_t)procedure->locals) return -1;
+                count = (size_t)procedure->locals - binding->owned_locals;
+                if (!procedure->inlined_private) {
+                    procedure->inlined_private = rxvm_memory_calloc_bytes(owner->memory_worker,count,sizeof(*procedure->inlined_private));
+                    if (!procedure->inlined_private) return -1;
+                    procedure->owned_locals = (int)binding->owned_locals;
+                    procedure->inlined_private_count = count;
+                }
+                if (procedure->owned_locals != (int)binding->owned_locals ||
+                    procedure->inlined_private_count != count || binding->local_index < binding->owned_locals ||
+                    binding->local_index >= (uint32_t)procedure->locals) return -1;
+                procedure->inlined_private[binding->local_index - binding->owned_locals].storage = provider->globals[binding->global_index];
+                procedure->inlined_private[binding->local_index - binding->owned_locals].provider = provider;
+            }
+            at = entry->next;
+        }
+        for (i = 0u; i < owner->procedure_count; i++) {
+            proc_runtime *procedure = &owner->procedures[i];
+            size_t slot;
+            if (procedure->inlined_private_owner != procedure) continue;
+            for (slot = 0u; slot < procedure->inlined_private_count; slot++)
+                if (!procedure->inlined_private[slot].storage) return -1;
+        }
+    }
+    return 0;
 }
 
 /* Common Functionality to prep and link a module */
@@ -1138,6 +1341,7 @@ size_t rxvm_materialize_module_overlay(
     context->modules[n]->dynamic_site_caches = 0;
     context->modules[n]->dynamic_site_cache_count = 0u;
     build_module_runtime_procedures(context->modules[n]);
+    build_module_inline_diagnostics(context->modules[n]);
     build_module_dynamic_site_caches(context->modules[n]);
     context->link_dirty = 1;
     context->interface_method_registry_dirty = 1;

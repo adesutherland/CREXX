@@ -93,6 +93,17 @@ Fixed `CALL1` through `CALL4` require a bytecode target. The generated Level L
 catalogue projects these native contracts rather than maintaining another
 instruction admission table.
 
+The same generated catalog projects the VM-owned `rxvmentry.h` default-entry
+inventories through `programdefaultcontract()`, `programdefaultsignals()`,
+`programdefaultresponse(name)` and `programdefaultnumeric(contextBit)`.
+Responses use exact whole canonical names and return `unknown` for invalid,
+wildcard, compound, padded or case-variant names. Numeric queries require one
+exact canonical numeric-context mask and return -1 otherwise. These values
+describe `program-default.v1`; they are not proof that a particular instruction
+still has entry policy or that an initializer succeeded. VM inventory,
+signal-code and numeric-default owners are part of the shared catalog
+fingerprint and generation dependencies.
+
 The explicit `rxas --inline-service <llrxinline.rxbin> --inline-module <name>`
 option runs the shared Level B/Level L inliner on a private UTF8 source
 snapshot before the normal assembler pass. `--inline-vm <rxvm>` selects the VM
@@ -136,6 +147,45 @@ resolution. An existing `P` call operand accepts typed `QPR1`
 The VM rejects unsealed qualified targets. RXBIN 007 feature bit 8
 (`RXBIN007_FEATURE_INLINE_SCOPES`) gates these executable forms and validates
 typed lengths, flags, ordinals, counts and duplicate proxy/owned bindings.
+
+`.inlinedprivate rK,"exact-provider",gN` is a procedure declaration for
+linker-selected private global storage. Write it after the procedure header
+and before executable code. `.locals` is still the total R-register extent;
+the declarations must cover exactly one complete suffix, without holes or
+duplicate slots. The first borrowed slot determines the owned prefix. Each
+typed `META_INLINED_PRIVATE` record holds the owning procedure, QGR1 provider,
+local/global index and owned-prefix length under RXBIN007 feature bit 10.
+The linker resolves the exact module name and global bound, retains that
+provider and seals the image-local identity. Neither ordinary `gN` registers
+nor public exposures change. Existing sealed bindings retain their original
+image owner when relinked. Unsealed runtime bindings are rejected.
+
+Frame entry reinstates borrowed active/base pointers without a binding opcode
+or per-call allocation. Borrowed storage is excluded from frame teardown and
+reference expiry; RET from the suffix copies, while MOVE remains restricted
+to owned local base storage. LINK/SWAP/UNLINK keep normal pointer semantics.
+The current cleanup panel pins the suffix, delays peepholes for a complete
+binding census and treats borrowed/possible-carrier and implicit-window
+accesses as observation barriers. Owned-only regions still optimize;
+temporary growth across the suffix requires later provider-aware proof.
+
+`main() .locals=N .entry=program-default` declares a versioned executable
+program-root entry contract. With exposure, write `.locals=N .expose=name
+.entry=program-default` in that order on the same header. Only local `main`
+can carry one marker; an unknown value, duplicate or misplaced owner is an
+error. Marked main and module initializer are separate entry roles: the same
+procedure cannot also be named by `META_INITIALIZER`, in either record order.
+Typed `META_ENTRY_STATE` records contain the owning PROC, version 1 and
+program-default kind 1 at the procedure start, under required RXBIN007 feature
+bit 11. Linking remaps/preserves this record, including through source/inline
+stripping. Known executable P operands cannot name a marked main as an ordinary
+child, signal/breakpoint handler or logical inline activation.
+
+The existing `rxvm_run` is the checked program-entry API. Ordinary `rxvm_call`
+and dynamic child invocation cannot inherit into marked main. Entry establishes
+the canonical logical root policy and numeric defaults; it does not prove clean
+local backing, initializer success, or later effect absence. Initializers use
+their existing typed owner uniformly and need no second header marker.
 
 Conservative component/flag may-effects describe possible access and never
 prove a definition or kill. Successful-normal definitions, transport source
@@ -276,6 +326,32 @@ The RXAS spellings are:
 .srcstep <step-id> <clause-id> <flags> "<file>" <line> <start-col> <end-col> "<whole-source-line>"
 .traceevent "<kind>" <mode-mask> "<value-source>" "<value-type>" "<register-type>" <value-ref> <source-step-id> <clause-id> <flags> "<symbol>" "<resolved-name>"
 ```
+
+Direct inlining can additionally describe its static diagnostic call chain:
+
+```rxas
+.inlineframe 7 0 "provider.rxas" "helper" 42
+.inlinemap clone_begin,clone_end,7
+```
+
+`.inlineframe` fields are a nonzero module-local frame ID, parent frame ID
+(`0` means the containing physical procedure), diagnostic module and procedure
+names, and caller source-step ID (`0` means unavailable). Names are ordinary
+strings; they confer no executable binding or optimizer proof. `.inlinemap`
+maps a half-open physical instruction-cell range between labels to its deepest
+inline frame. Maps are disjoint; multiple ranges may name the same frame, and
+parent IDs describe nested copies. Emit each `.inlineframe` at the removed
+call's physical clone-entry anchor: its metadata address is the truthful
+fallback callsite coordinate when source text is stripped. Definitions, maps
+and all ancestor frames belong to one containing physical procedure; a map
+cannot cross a procedure boundary. IDs, parent acyclicity, names, source-step
+references and instruction boundaries are checked. These nonexecuting records
+use typed `META_INLINE_FRAME`/`META_INLINE_MAP` records and require RXBIN 007
+`INLINE_DIAGNOSTICS` bit 9. They survive source and compiler-inline stripping;
+source stripping clears the caller source-step reference. The VM reads this
+tree only for diagnostic reconstruction, with no per-call setup or heap work.
+Repeated `.srcstep` records with one ID may restore the same source anchor;
+their source payloads must agree when an inline frame references that ID.
 
 TRACE event records deliberately store compact codes, not presentation strings.
 Current event kinds include `A` assignment, `V` variable read, `C` resolved
@@ -738,6 +814,15 @@ existing handlers and do not change VM or RXBIN semantics.
   nonzero mask is an obligation, not permission to discard or reorder work.
   Reviewed raw numeric-context getters can have an empty inventory while
   remaining opaque for other optimizer purposes. SAY/SAYX retain host routes.
+  `rxop_callback_preserves_signal_policy()` and generated catalogue
+  `callbackpreservessignalpolicy` separately describe complete public callback
+  routes that preserve the suspended physical frame's structural handler table.
+  Resource-only and SAY/SAYX bytes-output routes qualify; the latter can still
+  reenter through a new public VM entry and queue an interrupt. This fact does
+  not preserve register values/bindings, remove HOST/observer/output effects,
+  suppress pending signals or replace explicit instruction policy writes.
+  Under a checked inherited HALT policy, a queued signal stays terminal;
+  authored local handlers and backward edges remain ordinary CFG alternatives.
   Handler-table COW installation/push/pop and pending-breakpoint updates do not
   invoke their registered procedures during the update. Checked pointer/attribute
   binding and raw scalar/status recipes likewise have no value hook; their

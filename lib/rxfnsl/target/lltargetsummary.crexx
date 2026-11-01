@@ -1,12 +1,14 @@
 /* cREXX License (MIT). Inferred procedure facts over shared target evidence. */
 options levelb
-namespace lltargetsummary expose analysis analyse summary effectfact returnfact discardfact footprintfact rolefact constraintfact layoutfact scopefreefact activationfact directmappingfact preservationfact
+namespace lltargetsummary expose analysis analyse summary effectfact returnfact discardfact footprintfact rolefact constraintfact layoutfact scopefreefact restorationfact activationfact directmappingfact preservationfact diagnosticclone diagnosticlimits directequivalencefact expansionplanfact expansionequivalencefact framecontrolhistoryfact
 import rxfnsb
+import llir
 import llirgraph
 import lltarget
 import lltargettransfer
 import lltargetcfg
 import lltargetflow
+import lltargetbodyview
 import lltargetremap
 import llrxascatalog
 import lltargetrecipe
@@ -18,6 +20,17 @@ nextidentity: procedure = .int expose serial
   if serial = 9223372036854775807 then assembler signal "ERROR","LL_TARGET_SUMMARY: identities exhausted"
   serial = serial + 1
   return serial
+
+/** The enforced decimal ABI makes value-only synchronization nonobserving.
+ * Other callback bits remain obligations of the existing storage/ABI owners. */
+observablecallbacks: procedure = .int
+  arg opcode = .int
+  overlap = .int
+  catalog = .llrxascatalog..catalog(); mask = catalog.callbackobligations(opcode)
+  if catalog.contextsynccontract() = 'value-only-nonreentrant.v1' then do
+    bit = catalog.callbackmask('plugin-sync'); assembler iand overlap,mask,bit; mask = mask - overlap
+  end
+  return mask
 
 /** Sparse conservative effect set. Missing families remain explicit unknowns;
  * an unknown signal set does not erase an independently complete numeric set. */
@@ -164,15 +177,21 @@ siteproof: class
   _identity = .int
   _status = .string
   _reason = .string
+  _bodyview = .lltargetbodyview..view
+  _hasbodyview = .int
   *: factory
-    arg owner = reference .analysis, status = .string, reason = ''
+    arg owner = reference .analysis, status = .string, reason = '', ?bodyview = .lltargetbodyview..view
     _owner = owner; parent = dereference owner; _identity = parent.identity()
     _status = status; _reason = reason
+    _hasbodyview = ?bodyview
+    if ?bodyview then _bodyview = bodyview
     return
   valid: method = .int
     if <refvalid>(_owner) = 0 then return 0
     parent = dereference _owner
-    return parent.valid() & parent.identity() = _identity
+    if parent.valid() = 0 | parent.identity() <> _identity then return 0
+    if _hasbodyview then return _bodyview.valid()
+    return 1
   status: method = .string
     if <refvalid>(_owner) = 0 then return 'invalid'
     parent = dereference _owner
@@ -407,6 +426,9 @@ activationfact: class
   _proof = .siteproof
   _allowed = .int
   _pending = .int
+  _diagnosticpending = .int
+  _retainedpending = .int
+  _diagnostics = .diagnosticclone[]
   _dependencies = .siteproof[]
   _targets = .lltargetflow..targetfact[]
   _invocations = .lltargetflow..invocationfact[]
@@ -425,30 +447,42 @@ activationfact: class
       do j = 1 to dependencies[i].contexts(); _invocations[_invocations[0] + 1] = dependencies[i].context(j); end
       do j = 1 to dependencies[i].abiproofs(); _abi[_abi[0] + 1] = dependencies[i].abiproof(j); end
       _pending = max(_pending,dependencies[i].pending())
+      _diagnosticpending = max(_diagnosticpending,dependencies[i].diagnosticpending())
     end
     return
   deferred: factory
-    arg proof = .siteproof, allowed = .int, dependencies = .activationfact[], targets = .lltargetflow..targetfact[], pending = .int
+    arg proof = .siteproof, allowed = .int, dependencies = .activationfact[], targets = .lltargetflow..targetfact[], pending = .int, diagnosticpending = 0
     i = .int; j = .int
-    _proof = proof; _allowed = allowed; _targets = targets; _pending = pending
+    _proof = proof; _allowed = allowed; _targets = targets; _pending = pending; _diagnosticpending = diagnosticpending
     do i = 1 to dependencies[0]
       do j = 1 to dependencies[i].proofs(); _dependencies[_dependencies[0] + 1] = dependencies[i].proof(j); end
       do j = 1 to dependencies[i].targets(); _targets[_targets[0] + 1] = dependencies[i].target(j); end
       do j = 1 to dependencies[i].contexts(); _invocations[_invocations[0] + 1] = dependencies[i].context(j); end
       do j = 1 to dependencies[i].abiproofs(); _abi[_abi[0] + 1] = dependencies[i].abiproof(j); end
       _pending = max(_pending,dependencies[i].pending())
+      _diagnosticpending = max(_diagnosticpending,dependencies[i].diagnosticpending())
     end
     return
   contextual: factory
-    arg proof = .siteproof, allowed = .int, dependencies = .activationfact[], targets = .lltargetflow..targetfact[], invocations = .lltargetflow..invocationfact[], abi = .lltargetflow..abicallbackfact[]
+    arg proof = .siteproof, allowed = .int, dependencies = .activationfact[], targets = .lltargetflow..targetfact[], invocations = .lltargetflow..invocationfact[], abi = .lltargetflow..abicallbackfact[], diagnosticpending = 0, retainedpending = 0
     i = .int; j = .int
-    _proof = proof; _allowed = allowed; _targets = targets; _invocations = invocations; _abi = abi
+    _proof = proof; _allowed = allowed; _targets = targets; _invocations = invocations; _abi = abi; _diagnosticpending = diagnosticpending; _retainedpending = retainedpending
     do i = 1 to dependencies[0]
       do j = 1 to dependencies[i].proofs(); _dependencies[_dependencies[0] + 1] = dependencies[i].proof(j); end
       do j = 1 to dependencies[i].targets(); _targets[_targets[0] + 1] = dependencies[i].target(j); end
       do j = 1 to dependencies[i].contexts(); _invocations[_invocations[0] + 1] = dependencies[i].context(j); end
       do j = 1 to dependencies[i].abiproofs(); _abi[_abi[0] + 1] = dependencies[i].abiproof(j); end
+      _diagnosticpending = max(_diagnosticpending,dependencies[i].diagnosticpending())
     end
+    return
+  diagnosed: factory
+    arg proof = .siteproof, source = .activationfact, clone = .diagnosticclone
+    i = .int
+    _proof = proof; _allowed = source.semanticallowed(); _diagnostics[1] = clone
+    do i = 1 to source.proofs(); _dependencies[_dependencies[0] + 1] = source.proof(i); end
+    do i = 1 to source.targets(); _targets[_targets[0] + 1] = source.target(i); end
+    do i = 1 to source.contexts(); _invocations[_invocations[0] + 1] = source.context(i); end
+    do i = 1 to source.abiproofs(); _abi[_abi[0] + 1] = source.abiproof(i); end
     return
   valid: method = .int
     i = .int
@@ -457,19 +491,34 @@ activationfact: class
     do i = 1 to _dependencies[0]; if _dependencies[i].valid() = 0 then return 0; end
     do i = 1 to _invocations[0]; if _invocations[i].valid() = 0 then return 0; end
     do i = 1 to _abi[0]; if _abi[i].valid() = 0 then return 0; end
+    do i = 1 to _diagnostics[0]; if _diagnostics[i].valid() = 0 then return 0; end
     return 1
   status: method = .string
     if _proof.status() = 'limit' then return 'limit'
     if valid() = 0 then return 'invalid'
     if _pending > 0 & _proof.status() = 'proved' then return 'unknown'
+    if _retainedpending > 0 & _proof.status() = 'proved' then return 'unknown'
+    if _diagnosticpending > 0 & _proof.status() = 'proved' then return 'unknown'
     return _proof.status()
   reason: method = .string
     if _proof.status() = 'limit' then return _proof.reason()
     if valid() = 0 then return 'target.activation.dependency.expired.or.replaced'
     if _pending > 0 & _proof.status() = 'proved' then return 'target.activation.invocation.required'
+    if _retainedpending > 0 & _proof.status() = 'proved' then return 'target.activation.retained.caller.certificate.required'
+    if _diagnosticpending > 0 & _proof.status() = 'proved' then return 'target.activation.static.diagnostic.certificate.required'
     return _proof.reason()
   allowed: method = .int
+    return semanticallowed() & _diagnosticpending = 0
+  /** Planning permission does not discharge the static map obligation. */
+  semanticallowed: method = .int
+    return draftallowed() & _retainedpending = 0
+  /** Draft permission never publishes a retained opaque caller boundary. */
+  draftallowed: method = .int
     return genericallowed() & _pending = 0
+  retainedpending: method = .int
+    return _retainedpending
+  diagnosticpending: method = .int
+    return _diagnosticpending
   /** Generic remap/control proof is not permission to ignore pending ABI. */
   genericallowed: method = .int
     return valid() & _proof.status() = 'proved' & _allowed
@@ -496,6 +545,656 @@ activationfact: class
   abiproof: method = .lltargetflow..abicallbackfact
     arg ordinal = .int
     return _abi[ordinal]
+
+/** Conservative preconstruction envelope owned by the diagnostic checker.
+ * Counts are upper bounds, never proof assertions. Failure to cover a hostile
+ * or larger candidate remains an ordinary checked resource refusal. */
+diagnosticlimits: class
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _status = .string
+  _prepared = .int
+  _records = .int
+  _candidaterecords = .int
+  _frames = .int
+  _candidateframes = .int
+  _payload = .int
+  _operands = .int
+  *: factory
+    arg records = .int, candidaterecords = .int, frames = .int, candidateframes = .int, payload = .int, operands = .int, worklimit = .int, bytelimit = .int
+    _worklimit = worklimit; _bytelimit = bytelimit; _status = 'pending'
+    _records = records; _candidaterecords = candidaterecords; _frames = frames; _candidateframes = candidateframes
+    _payload = payload; _operands = operands
+    return
+  prepare: method = .void
+    if _prepared then return
+    _prepared = 1; _status = 'proved'
+    records = _records; candidaterecords = _candidaterecords; frames = _frames; candidateframes = _candidateframes
+    payload = _payload; operands = _operands; worklimit = _worklimit; bytelimit = _bytelimit
+    if min(records,candidaterecords,frames,candidateframes,payload,operands,worklimit,bytelimit) < 0 then do; _status = 'limit'; return; end
+    if max(records,candidaterecords,frames,candidateframes,payload,operands) > (9223372036854775807 <idiv> 16) - 160 then do; _status = 'limit'; return; end
+    call addwork(records + candidaterecords + 1,8)
+    call addwork(operands,operands * 2)
+    call addwork(operands + frames + 1,(records + candidaterecords) * 3 + 32)
+    /* Existing static ancestors cause anchor scans. A new root alone does
+     * not scan a source anchor for every copied instruction. */
+    call addwork(product(frames + 1,frames + 1),records * 8 + 8)
+    call addwork(frames + 1,(records + candidaterecords) * 4 + payload * 6 + 64)
+    call addwork(records * 8 + frames + 8,payload * 2 + records + frames * 2 + 128)
+    call addwork(records + 1,records + candidaterecords + payload * 4 + 64)
+    call addwork(candidaterecords,(candidateframes + 1) * 2)
+    call addwork(records,64)
+    /* The retained-caller composition rereads unchanged records and their
+     * source projections. Reserve it in the same final-check envelope. */
+    call addwork(records + candidaterecords + operands + 1,payload * 12 + 160)
+    call addbytes(candidaterecords * 3 + records * 3 + 32,64)
+    call addbytes(operands,payload * 2 + 224)
+    call addbytes(1,512)
+    call addbytes(records + candidaterecords + 1,payload * 4 + 128)
+    return
+  product: method = .int
+    arg left = .int, right = .int
+    if left < 0 | right < 0 then return -1
+    if right > 0 then do; if left > 9223372036854775807 <idiv> right then return -1; end
+    return left * right
+  addbytes: method = .void
+    arg left = .int, right = .int
+    if _status <> 'proved' then return
+    if left < 0 | right < 0 then do; _status = 'limit'; return; end
+    if right > 0 then do
+      if left > (_bytelimit - _bytes) <idiv> right then do; _status = 'limit'; return; end
+    end
+    _bytes = _bytes + left * right
+    return
+  addwork: method = .void
+    arg left = .int, right = .int
+    if _status <> 'proved' then return
+    if left < 0 | right < 0 then do; _status = 'limit'; return; end
+    if right > 0 then do
+      if left > (_worklimit - _work) <idiv> right then do; _status = 'limit'; return; end
+    end
+    _work = _work + left * right
+    return
+  status: method = .string
+    call prepare(); return _status
+  reason: method = .string
+    call prepare()
+    if _status <> 'proved' then return 'target.diagnostic.clone.envelope.limit'
+    return ''
+  work: method = .int
+    call prepare(); return _work
+  bytes: method = .int
+    call prepare(); return _bytes
+
+/** Checked diagnostic correspondence for one direct clone. Caller arrays are
+ * locators only: the checker rereads frozen source/candidate instructions,
+ * source coordinates and both static trees. This grants no effect, provider,
+ * ABI or callback permission. In particular a frame name is never authority. */
+diagnosticclone: class
+  _owner = reference .lltargetsummary..analysis
+  _candidate = reference .lltarget..module
+  _ownerid = .int
+  _candidateid = .int
+  _catalog = .string
+  _call = .int
+  _frame = .int
+  _expanded = .int
+  _instance = .lltargetremap..expansioninstance
+  _sources = .int[]
+  _first = .int[]
+  _counts = .int[]
+  _oldvalues = .lltarget..operand[]
+  _newvalues = .lltarget..operand[]
+  _a0 = .lltarget..operand
+  _saved = .lltarget..operand[]
+  _sourceidentity = .int
+  _providerfunction = .int
+  _candidatefunction = .int
+  _sourceoperations = .int
+  _sourceend = .int
+  _sourcesteps = .int[]
+  _candidatesteps = .int[]
+  _anchorleft = .int[]
+  _anchorright = .int[]
+  _frameleft = .int[]
+  _frameright = .int[]
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  *: factory
+    arg owner = reference .lltargetsummary..analysis, callid = .int, candidate = reference .lltarget..module, frameid = .int, sourceops = .int[], candidateops = .int[], counts = .int[], work = 1000000, bytes = 67108864
+    _owner = owner; _candidate = candidate; _call = callid; _frame = frameid
+    _sources = sourceops; _first = candidateops; _counts = counts
+    _a0 = .lltarget..operand()
+    _status = 'building'; _worklimit = work; _bytelimit = bytes
+    return
+  /** Relational expansion supplies checked register locators separately from
+   * this unchanged source/tree/range checker. Entry and exit micro-event
+   * semantics belong to expansionequivalence, never diagnostic metadata. */
+  expanded: factory
+    arg owner = reference .lltargetsummary..analysis, candidate = reference .lltarget..module, instance = .lltargetremap..expansioninstance, work = 1000000, bytes = 67108864
+    _owner = owner; _candidate = candidate; _instance = instance; _expanded = 1
+    _call = instance.callid(); _frame = instance.frame()
+    do i = 1 to instance.rows()
+      _sources[i] = instance.source(i); _first[i] = instance.candidate(i); _counts[i] = instance.count(i)
+    end
+    _a0 = .lltarget..operand()
+    _status = 'building'; _worklimit = work; _bytelimit = bytes
+    return
+  fail: method = .int
+    arg state = .string, reason = .string
+    if _status = 'building' then do; _status = state; _reason = reason; end
+    return 0
+  spend: method = .int
+    arg work = 1, bytes = 0
+    if work < 0 | bytes < 0 | work > _worklimit - _work | bytes > _bytelimit - _bytes then return fail('limit','target.diagnostic.clone.work.or.bytes')
+    _work = _work + work; _bytes = _bytes + bytes; return 1
+  ownersvalid: method = .int
+    if <refvalid>(_owner) = 0 | <refvalid>(_candidate) = 0 then return 0
+    owner = dereference _owner; candidate = dereference _candidate; catalog = .llrxascatalog..catalog()
+    return owner.valid() & candidate.valid() & owner.identity() = _ownerid & candidate.identity() = _candidateid & catalog.fingerprint() = _catalog
+  samevalue: method = .int
+    arg left = .lltarget..operand, right = .lltarget..operand
+    if left.kind() <> right.kind() then return 0
+    if left.kind() = 'I' then return left.index() = right.index()
+    return (bin2x(left.bytes()) == bin2x(right.bytes()))
+  sameorigin: method = .int
+    arg left = .llir..origin, right = .llir..origin
+    a = left.sourcebytes(); b = right.sourcebytes()
+    if spend(length(left.filename()) + length(right.filename()) + <blen>(a) + <blen>(b) + 1) = 0 then return 0
+    return (left.filename() == right.filename()) & left.first() = right.first() & left.last() = right.last() & (bin2x(a) == bin2x(b))
+  indexsteps: method = .int
+    arg source = .lltarget..module, candidate = .int
+    current = .int[]
+    if spend(source.records(),source.records() * 24) = 0 then return 0
+    do i = 1 to source.records()
+      row = source.record(i); f = row.procedureid()
+      if f < 2 then iterate
+      if row.kind() = 'procedure' then current[f] = 0
+      if row.kind() = '.srcstep' then do; value = row.operand(1); current[f] = value.index(); end
+      if candidate then _candidatesteps[row.id()] = current[f]
+      else _sourcesteps[row.id()] = current[f]
+    end
+    return 1
+  stepat: method = .int
+    arg source = .lltarget..module, operation = .int
+    if source.identity() = _sourceidentity then do
+      if operation < 1 | operation > _sourcesteps[0] then return -1
+      return _sourcesteps[operation]
+    end
+    if source.identity() = _candidateid then do
+      if operation < 1 | operation > _candidatesteps[0] then return -1
+      return _candidatesteps[operation]
+    end
+    return -1
+  sameanchor: method = .int
+    arg source = .lltarget..module, before = .int, candidate = .lltarget..module, after = .int
+    i = .int; pair = .int; row = .lltarget..record; value = .lltarget..operand
+    if before < 0 | after < 0 then return 0
+    if before = 0 | after = 0 then return before = after
+    do pair = 1 to _anchorleft[0]
+      if spend(1) = 0 then return 0
+      if _anchorleft[pair] = before & _anchorright[pair] = after then return 1
+    end
+    left = .lltarget..record; right = .lltarget..record; foundleft = 0; foundright = 0
+    do i = 1 to source.records()
+      if spend(1) = 0 then return 0
+      row = source.record(i)
+      if row.kind() <> '.srcstep' then iterate
+      value = row.operand(1)
+      if value.index() = before then do; left = row; foundleft = 1; leave; end
+    end
+    do i = 1 to candidate.records()
+      if spend(1) = 0 then return 0
+      row = candidate.record(i)
+      if row.kind() <> '.srcstep' then iterate
+      value = row.operand(1)
+      if value.index() = after then do; right = row; foundright = 1; leave; end
+    end
+    if foundleft = 0 | foundright = 0 then return 0
+    do j = 3 to 8
+      a = left.operand(j); b = right.operand(j)
+      if samevalue(a,b) = 0 then return 0
+    end
+    if sameorigin(left.origin(),right.origin()) = 0 then return 0
+    if spend(1,16) = 0 then return 0
+    pair = _anchorleft[0] + 1; _anchorleft[pair] = before; _anchorright[pair] = after
+    return 1
+  /** Uniform private/label renaming is checked from frozen operands. Formal
+   * actuals remain the exact original caller pointers; fresh private slots
+   * cannot overlap those pointers or an existing caller local. */
+  sameoperand: method = .int
+    arg original = .lltarget..operand, copied = .lltarget..operand, callitem = .lltarget..record, source = .lltarget..module, candidate = .lltarget..module, functionid = .int
+    if original.kind() <> copied.kind() then return 0
+    catalog = .llrxascatalog..catalog()
+    if wordpos(original.kind(),'R L') = 0 then return samevalue(original,copied)
+    if original.kind() = 'R' then do
+      if _expanded then do
+        expected = _instance.mapped(original)
+        return expected.kind() = 'R' & copied.procedureid() = functionid & copied.bank() = expected.bank() & copied.index() = expected.index()
+      end
+      if copied.procedureid() <> functionid then return 0
+      caller = source.body(callitem.procedureid()); receiver = candidate.body(functionid)
+      if original.bank() = 'g' then return copied.bank() = 'g' & original.index() = copied.index()
+      if original.bank() = 'a' & original.index() > 0 then do
+        actuals = translate(catalog.callactuals(callitem.opcode()),' ',',')
+        if original.index() > words(actuals) then return 0
+        actual = callitem.operand(word(actuals,original.index()) as .int)
+        return actual.kind() = 'R' & copied.bank() = actual.bank() & copied.index() = actual.index()
+      end
+      if original.bank() = 'a' then return _a0.kind() = 'R' & copied.bank() = _a0.bank() & copied.index() = _a0.index()
+      if original.bank() <> 'r' | copied.bank() <> 'r' | copied.index() < caller.locals() | copied.index() >= receiver.locals() then return 0
+      if _a0.kind() = 'R' then do; if copied.bank() = _a0.bank() & copied.index() = _a0.index() then return 0; end
+      do savedordinal = 1 to _saved[0]
+        reserved = _saved[savedordinal]
+        if copied.bank() = reserved.bank() & copied.index() = reserved.index() then return 0
+      end
+    end
+    do i = 1 to _oldvalues[0]
+      if spend(1) = 0 then return 0
+      previous = _oldvalues[i]; mapped = _newvalues[i]
+      if previous.kind() <> original.kind() then iterate
+      same = (bin2x(previous.bytes()) == bin2x(original.bytes()))
+      if original.kind() = 'R' then same = previous.bank() = original.bank() & previous.index() = original.index()
+      if same then do
+        if original.kind() = 'R' then return mapped.bank() = copied.bank() & mapped.index() = copied.index()
+        return (bin2x(mapped.bytes()) == bin2x(copied.bytes()))
+      end
+      if original.kind() = 'R' then do
+        if mapped.bank() = copied.bank() & mapped.index() = copied.index() then return 0
+      end
+      else if (bin2x(mapped.bytes()) == bin2x(copied.bytes())) then return 0
+    end
+    if original.kind() = 'L' then do
+      if sametarget(source,original,candidate,copied) = 0 then return fail('unknown','target.diagnostic.clone.label.target.mismatch')
+    end
+    if spend(1,160 + original.length() + copied.length()) = 0 then return 0
+    n = _oldvalues[0] + 1; _oldvalues[n] = original; _newvalues[n] = copied
+    return 1
+  /** Map a physical source boundary once through the checked row locators.
+   * Provider entry denotes its first copied row, after new caller-side capture
+   * instructions. Only the actual source end maps to the final lowered end. */
+  mappedaddress: method = .int
+    arg source = .lltarget..module, coordinate = .int, candidate = .lltarget..module
+    i = .int; row = .lltarget..record
+    if coordinate < 0 then return -1
+    do i = 1 to _sources[0]
+      if spend(1) = 0 then return -1
+      if _sources[i] = 0 then iterate
+      if _sources[i] < 1 | _sources[i] > _sourceoperations then return -1
+      row = source.at(_sources[i])
+      if row.valid() = 0 then return -1
+      if row.kind() <> 'instruction' then return -1
+      if source.inlineaddress(row.id()) = coordinate then return candidate.inlineaddress(_first[i])
+    end
+    if coordinate <> _sourceend | _sources[0] = 0 then return -1
+    last = _sources[0]; receiver = candidate.body(_candidatefunction); remaining = 0
+    do i = 1 to receiver.records()
+      if spend(1) = 0 then return -1
+      row = receiver.record(i)
+      if row.kind() <> 'instruction' then iterate
+      if row.id() = _first[last] then remaining = _counts[last]
+      if remaining > 0 then do
+        remaining = remaining - 1
+        if remaining = 0 then return candidate.inlineaddress(row.id()) + row.operands() + 1
+      end
+    end
+    return -1
+  sametarget: method = .int
+    arg source = .lltarget..module, before = .lltarget..operand, candidate = .lltarget..module, after = .lltarget..operand
+    i = .int; row = .lltarget..record; field = .lltarget..operand
+    sourcecoordinate = -1; candidatecoordinate = -1
+    body = source.body(_providerfunction)
+    do i = 1 to body.records()
+      if spend(1) = 0 then return 0
+      row = body.record(i)
+      if row.kind() <> 'label' then iterate
+      field = row.operand(1)
+      if field.text() == before.text() then do; sourcecoordinate = source.inlineaddress(row.id()); leave; end
+    end
+    body = candidate.body(_candidatefunction)
+    do i = 1 to body.records()
+      if spend(1) = 0 then return 0
+      row = body.record(i)
+      if row.kind() <> 'label' then iterate
+      field = row.operand(1)
+      if field.text() == after.text() then do; candidatecoordinate = candidate.inlineaddress(row.id()); leave; end
+    end
+    if sourcecoordinate < 0 | candidatecoordinate < 0 then return 0
+    return candidatecoordinate = mappedaddress(source,sourcecoordinate,candidate)
+  definitionmapped: method = .int
+    arg source = .lltarget..module, before = .lltarget..record, candidate = .lltarget..module, after = .lltarget..record
+    expected = mappedaddress(source,source.inlineaddress(before.id()),candidate)
+    return expected >= 0 & candidate.inlineaddress(after.id()) = expected
+  sameframedef: method = .int
+    arg source = .lltarget..module, before = .int, candidate = .lltarget..module, after = .int
+    pair = .int
+    do pair = 1 to _frameleft[0]
+      if spend(1) = 0 then return 0
+      if _frameleft[pair] = before & _frameright[pair] = after then return 1
+    end
+    li = source.inlineframeindex(before); ri = candidate.inlineframeindex(after)
+    if li = 0 | ri = 0 then return 0
+    a = source.inlineframe(li); b = candidate.inlineframe(ri)
+    av = a.operand(3); bv = b.operand(3)
+    if samevalue(av,bv) = 0 then return 0
+    av = a.operand(4); bv = b.operand(4)
+    if samevalue(av,bv) = 0 | sameorigin(a.origin(),b.origin()) = 0 then return 0
+    av = a.operand(5); bv = b.operand(5)
+    if sameanchor(source,av.index(),candidate,bv.index()) = 0 then return 0
+    if definitionmapped(source,a,candidate,b) = 0 then return fail('unknown','target.diagnostic.clone.frame.definition.anchor.mismatch')
+    if spend(1,16) = 0 then return 0
+    pair = _frameleft[0] + 1; _frameleft[pair] = before; _frameright[pair] = after
+    return 1
+  /** Require the same existing source inline chain, ending at this new root.
+   * Definitions are compared by names and truthful source coordinates, never
+   * by caller-selected IDs, which are deliberately rebased by the emitter. */
+  samechain: method = .int
+    arg source = .lltarget..module, original = .lltarget..record, candidate = .lltarget..module, copied = .lltarget..record
+    left = source.inlineframeat(original.id()); right = candidate.inlineframeat(copied.id())
+    do depth = 1 to source.inlineframes() + 1
+      if spend(1) = 0 then return 0
+      if left = 0 then return right = _frame
+      if left < 0 | right <= 0 | right = _frame then return 0
+      if sameframedef(source,left,candidate,right) = 0 then return 0
+      a = source.inlineframe(source.inlineframeindex(left)); b = candidate.inlineframe(candidate.inlineframeindex(right))
+      av = a.operand(2); bv = b.operand(2); left = av.index(); right = bv.index()
+    end
+    return 0
+  run: method = .void
+    ignored = .int; depth = .int; fieldid = .int; savedordinal = .int; previoussaved = .int
+    expectedname = .string; original = .lltarget..operand; reserved = .lltarget..operand
+    permission = .scopefreefact; draftpermission = .expansionplanfact; restoration = .restorationfact
+    entry = .lltarget..record; setter = .lltarget..record
+    i = .int; j = .int; k = .int; cursor = .int; ordinal = .int; next = .int; f = .int; id = .int
+    sourceitem = .lltarget..record; copied = .lltarget..record; first = .lltarget..record; last = .lltarget..record
+    value = .lltarget..operand; other = .lltarget..operand
+    if _status <> 'building' then return
+    if <refvalid>(_owner) = 0 | <refvalid>(_candidate) = 0 then do; ignored = fail('invalid','target.diagnostic.clone.owner.expired'); return; end
+    owner = dereference _owner; candidate = dereference _candidate
+    if owner.status() <> 'ok' | candidate.valid() = 0 then do; ignored = fail('invalid','target.diagnostic.clone.owner.invalid'); return; end
+    _ownerid = owner.identity(); _candidateid = candidate.identity(); catalog = .llrxascatalog..catalog(); _catalog = catalog.fingerprint()
+    flowref = owner.flow(); flow = dereference flowref; sourceref = flow.owner(); source = dereference sourceref
+    _sourceidentity = source.identity()
+    if indexsteps(source,0) = 0 | indexsteps(candidate,1) = 0 then return
+    sourcegraphref = source.ir(); sourcegraph = dereference sourcegraphref
+    candidategraphref = candidate.ir(); candidategraph = dereference candidategraphref
+    _sourceoperations = sourcegraph.operations()
+    if _call < 1 | _call > sourcegraph.operations() | _frame < 1 then do; ignored = fail('invalid','target.diagnostic.clone.site.invalid'); return; end
+    callitem = source.at(_call); target = flow.targetat(_call)
+    if target.status() <> 'proved' then do; ignored = fail('unknown',target.reason()); return; end
+    providerref = target.provider()
+    if (providerref <refsame> sourceref) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.foreign.provider.unproved'); return; end
+    _providerfunction = target.procedure(); provider = source.body(_providerfunction)
+    if _sources[0] = 0 | _sources[0] <> _first[0] | _sources[0] <> _counts[0] then do; ignored = fail('invalid','target.diagnostic.clone.locators.invalid'); return; end
+    if spend(source.records() + candidate.records() + _sources[0],candidategraph.operations() * 16 + _sources[0] * 24 + 256) = 0 then return
+    frameindex = candidate.inlineframeindex(_frame)
+    if frameindex = 0 then do; ignored = fail('unknown','target.diagnostic.clone.frame.missing'); return; end
+    frame = candidate.inlineframe(frameindex); f = frame.procedureid(); _candidatefunction = f
+    value = frame.operand(3)
+    if (value.text() == source.name()) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.module.name.mismatch'); return; end
+    value = frame.operand(4)
+    if (value.text() == provider.name()) = 0 | sameorigin(callitem.origin(),frame.origin()) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.callsite.mismatch'); return; end
+    value = frame.operand(5)
+    if sameanchor(source,stepat(source,_call),candidate,value.index()) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.source.anchor.mismatch'); return; end
+    caller = source.body(callitem.procedureid()); receiver = candidate.body(f)
+    if (caller.name() == receiver.name()) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.physical.owner.mismatch'); return; end
+    /* The root sits within exactly the source call's pre-existing static
+     * chain; its new frame is not substituted for an unrelated parent. */
+    value = frame.operand(2); parent = value.index(); rootparent = parent; sourceparent = source.inlineframeat(_call)
+    do depth = 1 to source.inlineframes() + 1
+      if spend(1) = 0 then return
+      if sourceparent = 0 then leave
+      if parent <= 0 then do; ignored = fail('unknown','target.diagnostic.clone.parent.missing'); return; end
+      a = source.inlineframe(source.inlineframeindex(sourceparent)); b = candidate.inlineframe(candidate.inlineframeindex(parent))
+      av = a.operand(3); bv = b.operand(3)
+      if (bin2x(av.bytes()) == bin2x(bv.bytes())) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.parent.mismatch'); return; end
+      av = a.operand(4); bv = b.operand(4)
+      if (bin2x(av.bytes()) == bin2x(bv.bytes())) = 0 | sameorigin(a.origin(),b.origin()) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.parent.mismatch'); return; end
+      av = a.operand(5); bv = b.operand(5)
+      if sameanchor(source,av.index(),candidate,bv.index()) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.parent.anchor.mismatch'); return; end
+      av = a.operand(2); bv = b.operand(2); sourceparent = av.index(); parent = bv.index()
+    end
+    if parent <> 0 | sourceparent <> 0 then do; ignored = fail('unknown','target.diagnostic.clone.parent.mismatch'); return; end
+    originalops = .int[]; copiedops = .int[]; covered = .int[]; entrycovered = .int[]
+    do i = 1 to provider.records()
+      sourceitem = provider.record(i)
+      if sourceitem.kind() = 'instruction' then do
+        originalops[originalops[0] + 1] = sourceitem.id()
+        _sourceend = max(_sourceend,source.inlineaddress(sourceitem.id()) + sourceitem.operands() + 1)
+      end
+    end
+    do i = 1 to receiver.records()
+      copied = receiver.record(i)
+      if copied.kind() = 'instruction' then do; copiedops[copiedops[0] + 1] = copied.id(); covered[copied.id()] = 0; entrycovered[copied.id()] = 0; end
+    end
+    entryid = 0; ordinal = 1; cursor = 1; previous = 0; firstaddress = -1; endaddress = -1; previouscontinuation = ''
+    if _expanded then do; draftpermission = owner.expansionplan(_call); restoration = draftpermission.restoration(); end
+    else restoration = owner.contextrestoration(_call)
+    if restoration.allowed() = 0 then do; ignored = fail('unknown','target.diagnostic.clone.context.lowering.unproved'); return; end
+    do i = 1 to _sources[0]
+      if spend(1) = 0 then return
+      id = _sources[i]
+      if id = 0 then do
+        if i <> 1 | _counts[i] < 1 | _first[i] < 1 | _first[i] > candidategraph.operations() then do; ignored = fail('unknown','target.diagnostic.clone.entry.lowering.unproved'); return; end
+        do while cursor <= copiedops[0]
+          if spend(1) = 0 then return
+          if copiedops[cursor] = _first[i] then leave
+          cursor = cursor + 1
+        end
+        if cursor > copiedops[0] then do; ignored = fail('invalid','target.diagnostic.clone.entry.missing'); return; end
+        if _counts[i] > copiedops[0] - cursor + 1 then do; ignored = fail('invalid','target.diagnostic.clone.entry.extent'); return; end
+        entryend = cursor + _counts[i]; entrycursor = cursor
+        firstaddress = candidate.inlineaddress(_first[i])
+        do fieldid = 1 to restoration.fields()
+          if _expanded then leave
+          if restoration.mode(fieldid) <> 'saved' then iterate
+          if entrycursor >= entryend then do; ignored = fail('unknown','target.diagnostic.clone.entry.getter.missing'); return; end
+          entry = candidate.at(copiedops[entrycursor])
+          if entry.mnemonic() <> restoration.getter(fieldid) | entry.operands() <> 1 then do; ignored = fail('unknown','target.diagnostic.clone.entry.getter.mismatch'); return; end
+          value = entry.operand(1)
+          if value.kind() <> 'R' | value.bank() <> 'r' | value.index() < caller.locals() | value.index() >= receiver.locals() then do; ignored = fail('unknown','target.diagnostic.clone.entry.saved.slot.invalid'); return; end
+          do previoussaved = 1 to _saved[0]
+            reserved = _saved[previoussaved]
+            if reserved.bank() = value.bank() & reserved.index() = value.index() then do; ignored = fail('unknown','target.diagnostic.clone.entry.saved.slot.alias'); return; end
+          end
+          _saved[restoration.saveordinal(fieldid)] = value; entrycursor = entrycursor + 1
+        end
+        if _expanded = 0 & entrycursor < entryend then do
+          if entrycursor + 1 <> entryend then do; ignored = fail('unknown','target.diagnostic.clone.entry.extra'); return; end
+          entry = candidate.at(copiedops[entrycursor])
+          if entry.mnemonic() <> 'load' | entry.operands() <> 2 then do; ignored = fail('unknown','target.diagnostic.clone.entry.lowering.unproved'); return; end
+          _a0 = entry.operand(1); value = entry.operand(2); layout = owner.calllayout(_call)
+          if _a0.kind() <> 'R' | _a0.bank() <> 'r' | _a0.index() < caller.locals() | _a0.index() >= receiver.locals() | layout.countknown() = 0 | value.kind() <> 'I' | value.index() <> layout.count() then do; ignored = fail('unknown','target.diagnostic.clone.entry.lowering.unproved'); return; end
+          do previoussaved = 1 to _saved[0]
+            reserved = _saved[previoussaved]
+            if reserved.bank() = _a0.bank() & reserved.index() = _a0.index() then do; ignored = fail('unknown','target.diagnostic.clone.entry.saved.slot.alias'); return; end
+          end
+        end
+        do entrycursor = cursor to entryend - 1
+          entry = candidate.at(copiedops[entrycursor])
+          if spend(1) = 0 then return
+          if sameorigin(callitem.origin(),entry.origin()) = 0 | candidate.inlineframeat(entry.id()) <> rootparent | sameanchor(source,stepat(source,_call),candidate,stepat(candidate,entry.id())) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.entry.source.or.map.mismatch'); return; end
+          entrycovered[entry.id()] = 1
+        end
+        previous = entryend - 1; cursor = entryend; iterate
+      end
+      if _expanded = 0 & _saved[0] <> restoration.saves() then do; ignored = fail('unknown','target.diagnostic.clone.entry.getter.missing'); return; end
+      if ordinal > originalops[0] then do; ignored = fail('invalid','target.diagnostic.clone.source.extra'); return; end
+      if id <> originalops[ordinal] then do; ignored = fail('invalid','target.diagnostic.clone.source.order.or.coverage'); return; end
+      ordinal = ordinal + 1; sourceitem = source.at(id)
+      do while cursor <= copiedops[0]
+        if spend(1) = 0 then return
+        if copiedops[cursor] >= _first[i] then leave
+        cursor = cursor + 1
+      end
+      if cursor > copiedops[0] then do; ignored = fail('invalid','target.diagnostic.clone.candidate.missing'); return; end
+      if copiedops[cursor] <> _first[i] | _counts[i] < 1 | _counts[i] > copiedops[0] - cursor + 1 then do; ignored = fail('invalid','target.diagnostic.clone.region.invalid'); return; end
+      if previous > 0 & cursor <> previous + 1 then do; ignored = fail('invalid','target.diagnostic.clone.region.gap'); return; end
+      first = candidate.at(copiedops[cursor]); last = candidate.at(copiedops[cursor + _counts[i] - 1])
+      if firstaddress < 0 then firstaddress = candidate.inlineaddress(first.id())
+      endaddress = candidate.inlineaddress(last.id()) + last.operands() + 1
+      returnkind = catalog.returnkind(sourceitem.opcode())
+      if returnkind = 0 then do
+        /* Expanded rows retain these diagnostic/coverage checks. Their
+         * semantic recipes belong to the correspondence and final theorem;
+         * a valid base-sensitive binding need not keep the source opcode. */
+        if _expanded = 0 then do
+          if _counts[i] <> 1 | first.opcode() <> sourceitem.opcode() | first.operands() <> sourceitem.operands() then do; ignored = fail('unknown','target.diagnostic.clone.instruction.mismatch'); return; end
+          do j = 1 to sourceitem.operands()
+            if sameoperand(sourceitem.operand(j),first.operand(j),callitem,source,candidate,f) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.operand.mismatch'); return; end
+          end
+        end
+      end
+      else do
+        /* Match the licensed result/restore/branch sequence, preserving
+         * every field's order and exact literal or captured saved cell. */
+        if last.mnemonic() <> 'br' | last.operands() <> 1 then do; ignored = fail('unknown','target.diagnostic.clone.return.branch.missing'); return; end
+        if _expanded then do
+          value = last.operand(1)
+          if previouscontinuation = '' then previouscontinuation = value.text()
+          if value.text() <> previouscontinuation | value.text() <> _instance.continuation() then do; ignored = fail('unknown','target.diagnostic.clone.return.continuation.mismatch'); return; end
+        end
+        else do
+        expected = restoration.fields() + 1; resultops = 0
+        if catalog.callresult(callitem.opcode()) > 0 & returnkind > 1 then do
+          resultops = 1
+          if returnkind = 3 | returnkind = 4 then resultops = 2
+          expected = expected + resultops
+        end
+        if _counts[i] <> expected then do; ignored = fail('unknown','target.diagnostic.clone.return.lowering.unproved'); return; end
+        if resultops > 0 then do
+          result = callitem.operand(catalog.callresult(callitem.opcode()))
+          setter = first
+          if returnkind = 3 | returnkind = 4 then do
+            if first.mnemonic() <> 'load' | first.operands() <> 2 then do; ignored = fail('unknown','target.diagnostic.clone.return.lowering.unproved'); return; end
+            value = first.operand(1); other = first.operand(2); original = sourceitem.operand(catalog.returnsource(sourceitem.opcode()))
+            if value.kind() <> 'R' | value.bank() <> 'r' | value.index() < caller.locals() | samevalue(other,original) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.return.literal.mismatch'); return; end
+            do savedordinal = 1 to _saved[0]
+              reserved = _saved[savedordinal]
+              if reserved.bank() = value.bank() & reserved.index() = value.index() then do; ignored = fail('unknown','target.diagnostic.clone.return.saved.slot.overwrite'); return; end
+            end
+            setter = candidate.at(copiedops[cursor + 1]); expectedname = 'icopy'; if returnkind = 4 then expectedname = 'fcopy'
+            if setter.mnemonic() <> expectedname | setter.operands() <> 2 then do; ignored = fail('unknown','target.diagnostic.clone.return.setter.mismatch'); return; end
+            other = setter.operand(2)
+            if other.kind() <> 'R' | other.bank() <> value.bank() | other.index() <> value.index() then do; ignored = fail('unknown','target.diagnostic.clone.return.literal.mismatch'); return; end
+          end
+          else if returnkind = 2 then do
+            permission = owner.directplan(_call); expectedname = permission.returnmode(sourceitem.id())
+            if wordpos(expectedname,'copy move') = 0 | setter.mnemonic() <> expectedname | setter.operands() <> 2 then do; ignored = fail('unknown','target.diagnostic.clone.return.setter.mismatch'); return; end
+            original = sourceitem.operand(catalog.returnsource(sourceitem.opcode()))
+            if sameoperand(original,setter.operand(2),callitem,source,candidate,f) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.return.value.mismatch'); return; end
+          end
+          else do
+            if setter.mnemonic() <> 'load' | setter.operands() <> 2 then do; ignored = fail('unknown','target.diagnostic.clone.return.setter.mismatch'); return; end
+            original = sourceitem.operand(catalog.returnsource(sourceitem.opcode()))
+            if samevalue(original,setter.operand(2)) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.return.literal.mismatch'); return; end
+          end
+          value = setter.operand(1)
+          if value.kind() <> 'R' | value.bank() <> result.bank() | value.index() <> result.index() then do; ignored = fail('unknown','target.diagnostic.clone.return.result.mismatch'); return; end
+        end
+        if restoration.fields() > 0 then do
+          matchedexit = 0
+          do exitid = 1 to restoration.exits()
+            if restoration.exit(exitid) = sourceitem.id() then do; matchedexit = 1; leave; end
+          end
+          if matchedexit = 0 then do; ignored = fail('unknown','target.diagnostic.clone.return.exit.unlicensed'); return; end
+          do fieldid = 1 to restoration.fields()
+            setter = candidate.at(copiedops[cursor + resultops + fieldid - 1])
+            if setter.mnemonic() <> restoration.setter(fieldid) | setter.operands() <> 1 then do; ignored = fail('unknown','target.diagnostic.clone.return.context.setter.mismatch'); return; end
+            value = setter.operand(1)
+            if restoration.mode(fieldid) = 'literal' then do
+              if samevalue(value,restoration.literal(fieldid)) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.return.context.literal.mismatch'); return; end
+            end
+            else if restoration.mode(fieldid) = 'saved' then do
+              savedordinal = restoration.saveordinal(fieldid)
+              if savedordinal < 1 | savedordinal > _saved[0] then do; ignored = fail('unknown','target.diagnostic.clone.entry.getter.missing'); return; end
+              reserved = _saved[savedordinal]
+              if value.kind() <> 'R' | value.bank() <> reserved.bank() | value.index() <> reserved.index() then do; ignored = fail('unknown','target.diagnostic.clone.return.context.saved.slot.mismatch'); return; end
+            end
+            else do; ignored = fail('unknown','target.diagnostic.clone.return.context.mode.unproved'); return; end
+          end
+        end
+        value = last.operand(1)
+        if previouscontinuation = '' then previouscontinuation = value.text()
+        if value.text() <> previouscontinuation then do; ignored = fail('unknown','target.diagnostic.clone.return.continuation.mismatch'); return; end
+        end
+      end
+      do k = cursor to cursor + _counts[i] - 1
+        if spend(1) = 0 then return
+        copied = candidate.at(copiedops[k])
+        if covered[copied.id()] | sameorigin(sourceitem.origin(),copied.origin()) = 0 | samechain(source,sourceitem,candidate,copied) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.source.or.map.mismatch'); return; end
+        if sameanchor(source,stepat(source,sourceitem.id()),candidate,stepat(candidate,copied.id())) = 0 then do; ignored = fail('unknown','target.diagnostic.clone.active.source.step.mismatch'); return; end
+        covered[copied.id()] = 1
+      end
+      previous = cursor + _counts[i] - 1; cursor = previous + 1
+    end
+    if ordinal <> originalops[0] + 1 | candidate.inlineaddress(frame.id()) <> firstaddress then do; ignored = fail('unknown','target.diagnostic.clone.entry.or.source.coverage'); return; end
+    if previouscontinuation <> '' then do
+      found = 0
+      do i = 1 to receiver.records()
+        if spend(1) = 0 then return
+        row = receiver.record(i)
+        if row.kind() <> 'label' then iterate
+        value = row.operand(1)
+        if value.text() <> previouscontinuation then iterate
+        found = candidate.inlineaddress(row.id()) = endaddress; leave
+      end
+      if found = 0 then do; ignored = fail('unknown','target.diagnostic.clone.return.continuation.mismatch'); return; end
+    end
+    /* Every instruction attributed to this root (including descendants) must
+     * have exactly one source region. Disjoint unrelated sites are ignored. */
+    do i = 1 to copiedops[0]
+      if spend(candidate.inlineframes() + 1) = 0 then return
+      copied = candidate.at(copiedops[i]); mapped = candidate.inlineframeat(copied.id()); belongs = 0
+      if entrycovered[copied.id()] then iterate
+      do depth = 1 to candidate.inlineframes() + 1
+        if mapped = 0 then leave
+        if mapped = _frame then do; belongs = 1; leave; end
+        nested = candidate.inlineframe(candidate.inlineframeindex(mapped)); value = nested.operand(2); mapped = value.index()
+      end
+      if belongs <> covered[copied.id()] then do; ignored = fail('unknown','target.diagnostic.clone.map.coverage'); return; end
+    end
+    _status = 'proved'
+    return
+  valid: method = .int
+    call run(); return _status = 'proved' & ownersvalid()
+  status: method = .string
+    call run()
+    if _status = 'proved' & ownersvalid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    call run()
+    if _status = 'proved' & ownersvalid() = 0 then return 'target.diagnostic.clone.owner.expired.or.replaced'
+    return _reason
+  owner: method = reference .lltargetsummary..analysis
+    return _owner
+  operation: method = .int
+    return _call
+  candidate: method = reference .lltarget..module
+    return _candidate
+  frame: method = .int
+    return _frame
+  rows: method = .int
+    return _sources[0]
+  sourceentry: method = .int
+    arg ordinal = .int
+    return _sources[ordinal]
+  candidateentry: method = .int
+    arg ordinal = .int
+    return _first[ordinal]
+  entrycount: method = .int
+    arg ordinal = .int
+    return _counts[ordinal]
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
 
 /** Borrowed peer owners supply facts, never target-binding authority. */
 providerbundle: class
@@ -598,28 +1297,130 @@ directmappingfact: class
   allowed: method = .int
     return status() = 'proved'
 
+/** A numeric context delta for one exact call. Activation, initializer,
+ * result and storage proofs remain independent obligations. Saved fields use
+ * dedicated appended integer-only cells. Their complete write inventory,
+ * rather than assumed recycled freshness, preserves resource absence.
+ * Restores follow result transfer at every copied return, including dead
+ * returns that a generic emitter preserves. Departure proof considers only
+ * graph-reachable execution. */
+restorationfact: class
+  _bound = .int
+  _proof = .siteproof
+  _operation = .int
+  _procedure = .int
+  _domains = .int[]
+  _modes = .string[]
+  _getters = .string[]
+  _setters = .string[]
+  _literals = .lltarget..operand[]
+  _saveordinals = .int[]
+  _saves = .int
+  _exits = .int[]
+  *: factory
+    return
+  bound: factory
+    arg proof = .siteproof, operation = .int, procedureid = .int, domains = .int[], modes = .string[], getters = .string[], setters = .string[], literals = .lltarget..operand[], saveordinals = .int[], saves = .int, exits = .int[]
+    _bound = 1; _proof = proof; _operation = operation; _procedure = procedureid
+    _domains = domains; _modes = modes; _getters = getters; _setters = setters
+    _literals = literals; _saveordinals = saveordinals; _saves = saves; _exits = exits
+    return
+  valid: method = .int
+    if _bound = 0 then return 0
+    return _proof.valid()
+  status: method = .string
+    if _bound = 0 then return 'invalid'
+    return _proof.status()
+  reason: method = .string
+    if _bound = 0 then return 'target.context.restore.unbound'
+    return _proof.reason()
+  allowed: method = .int
+    return valid() & status() = 'proved'
+  require: method = .void
+    if _bound = 0 then assembler signal "ERROR","LL_TARGET_SITE: unbound restoration plan"
+    call _proof.require()
+    return
+  row: method = .void
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _domains[0] then assembler signal "ERROR","LL_TARGET_SITE: restoration field ordinal"
+    return
+  operation: method = .int
+    if valid() = 0 then return 0
+    return _operation
+  procedure: method = .int
+    if valid() = 0 then return 0
+    return _procedure
+  fields: method = .int
+    call require(); return _domains[0]
+  domain: method = .int
+    arg ordinal = .int
+    call row(ordinal); return _domains[ordinal]
+  mode: method = .string
+    arg ordinal = .int
+    call row(ordinal); return _modes[ordinal]
+  getter: method = .string
+    arg ordinal = .int
+    call row(ordinal); return _getters[ordinal]
+  setter: method = .string
+    arg ordinal = .int
+    call row(ordinal); return _setters[ordinal]
+  literal: method = .lltarget..operand
+    arg ordinal = .int
+    call row(ordinal); return _literals[ordinal]
+  saveordinal: method = .int
+    arg ordinal = .int
+    call row(ordinal); return _saveordinals[ordinal]
+  saves: method = .int
+    call require(); return _saves
+  exits: method = .int
+    call require(); return _exits[0]
+  exit: method = .int
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _exits[0] then assembler signal "ERROR","LL_TARGET_SITE: restoration exit ordinal"
+    return _exits[ordinal]
+
 scopefreefact: class
   _proof = .siteproof
   _allowed = .int
+  _diagnosticpending = .int
+  _retainedpending = .int
   _returnops = .int[]
   _returnmodes = .string[]
+  _restoration = .restorationfact
   *: factory
-    arg proof = .siteproof, allowed = .int, ?returnops = .int[], ?returnmodes = .string[]
-    _proof = proof; _allowed = allowed
+    arg proof = .siteproof, allowed = .int, ?returnops = .int[], ?returnmodes = .string[], ?restoration = .restorationfact, diagnosticpending = 0, retainedpending = 0
+    _proof = proof; _allowed = allowed; _diagnosticpending = diagnosticpending; _retainedpending = retainedpending
     if ?returnops then _returnops = returnops
     if ?returnmodes then _returnmodes = returnmodes
+    if ?restoration then _restoration = restoration
     return
   valid: method = .int
     return _proof.valid()
   status: method = .string
+    if _proof.status() = 'proved' & _retainedpending > 0 then return 'unknown'
+    if _proof.status() = 'proved' & _diagnosticpending > 0 then return 'unknown'
     return _proof.status()
   reason: method = .string
+    if _proof.status() = 'proved' & _retainedpending > 0 then return 'target.activation.retained.caller.certificate.required'
+    if _proof.status() = 'proved' & _diagnosticpending > 0 then return 'target.activation.static.diagnostic.certificate.required'
     return _proof.reason()
   allowed: method = .int
-    return valid() & status() = 'proved' & _allowed
+    return semanticallowed() & _diagnosticpending = 0
+  semanticallowed: method = .int
+    return draftallowed() & _retainedpending = 0
+  draftallowed: method = .int
+    return valid() & _proof.status() = 'proved' & _allowed
+  retainedpending: method = .int
+    return _retainedpending
+  diagnosticpending: method = .int
+    return _diagnosticpending
+  restoration: method = .lltargetsummary..restorationfact
+    return _restoration
   returnmode: method = .string
     arg sourceReturnOp = .int
-    if allowed() = 0 then return 'unproved'
+    if draftallowed() = 0 then return 'unproved'
     low = 1; high = _returnops[0]
     do while low <= high
       middle = (low + high) <idiv> 2
@@ -628,6 +1429,1409 @@ scopefreefact: class
       else high = middle - 1
     end
     return 'unproved'
+
+/** An owner-bound construction recipe, never a semantic admission receipt.
+ * In particular symbolic unknown actual values and dirty owned entry payloads
+ * are not converted into absolute availability facts by this recipe. */
+expansionplanfact: class
+  _proof = .siteproof
+  _owner = reference .lltargetsummary..analysis
+  _operation = .int
+  _target = .lltargetflow..targetfact
+  _layout = .layoutfact
+  _invocation = .lltargetflow..invocationfact
+  _restoration = .restorationfact
+  _returns = .int[]
+  _modes = .string[]
+  *: factory
+    arg owner = reference .analysis, operation = .int, proof = .siteproof, target = .lltargetflow..targetfact, layout = .layoutfact, invocation = .lltargetflow..invocationfact, restoration = .restorationfact, returns = .int[], modes = .string[]
+    _owner = owner; _operation = operation; _proof = proof; _target = target
+    _layout = layout; _invocation = invocation; _restoration = restoration
+    _returns = returns; _modes = modes
+    return
+  valid: method = .int
+    return _proof.valid()
+  status: method = .string
+    return _proof.status()
+  reason: method = .string
+    return _proof.reason()
+  owner: method = reference .lltargetsummary..analysis
+    return _owner
+  operation: method = .int
+    return _operation
+  draftallowed: method = .int
+    return valid() & status() = 'proved'
+  /** A caller cannot publish the draft by mistaking this for scopefree. */
+  allowed: method = .int
+    return 0
+  semanticallowed: method = .int
+    return 0
+  layout: method = .lltargetsummary..layoutfact
+    return _layout
+  target: method = .lltargetflow..targetfact
+    return _target
+  invocation: method = .lltargetflow..invocationfact
+    return _invocation
+  restoration: method = .lltargetsummary..restorationfact
+    return _restoration
+  returnmode: method = .string
+    arg operation = .int
+    if draftallowed() = 0 then return 'unproved'
+    do i = 1 to _returns[0]
+      if _returns[i] = operation then return _modes[i]
+    end
+    return 'unproved'
+
+/** An internal receipt for checked entry/body/result phases. It cannot be
+ * replaced by a caller-supplied boolean or confer final publication. */
+controlreceipt: class
+  _owner = reference .analysis
+  _mapping = reference .lltargetremap..expansioncorrespondence
+  _ownerid = .int
+  _mappingid = .int
+  _sourceid = .int
+  _candidateid = .int
+  _catalog = .string
+  _ordinal = .int
+  _operation = .int
+  _procedure = .int
+  _nohooks = .string
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  *: factory
+    arg relation = reference .expansionequivalencefact, ordinal = .int, work = 1000000, bytes = 67108864
+    _status = 'invalid'; _reason = 'target.expansion.frame.checked.phase.unavailable'
+    if work < 1 | bytes < 256 then do; _status = 'limit'; _reason = 'target.expansion.frame.checked.phase.work.or.bytes'; return; end
+    if <refvalid>(relation) = 0 then return
+    parent = dereference relation
+    if parent.phasevalid(ordinal,parent.phaseidentity()) = 0 then return
+    hookbytes = parent.phasehooklength(ordinal); catalog = .llrxascatalog..catalog(); fingerprint = catalog.fingerprint()
+    if hookbytes > work - length(fingerprint) - 16 | hookbytes > bytes - length(fingerprint) - 256 then do; _status = 'limit'; _reason = 'target.expansion.frame.checked.phase.work.or.bytes'; return; end
+    _work = hookbytes + length(fingerprint) + 16; _bytes = hookbytes + length(fingerprint) + 256
+    if _work > work | _bytes > bytes then do; _work = 0; _bytes = 0; _status = 'limit'; _reason = 'target.expansion.frame.checked.phase.work.or.bytes'; return; end
+    /* Snapshot only external owners and immutable proof data. A prepared
+     * relation is returned by value; its own fields are not stable owners. */
+    _owner = parent.phaseowner(); _mapping = parent.phasemapping(); _ordinal = ordinal; _nohooks = parent.phasehooks(ordinal); _catalog = fingerprint
+    owner = dereference _owner; mapping = dereference _mapping; _ownerid = owner.identity(); _mappingid = mapping.identity()
+    plan = parent.phaseplan(ordinal); target = plan.target(); _operation = plan.operation(); _procedure = target.procedure()
+    sourceref = mapping.sourceowner(); candidateref = mapping.candidateowner(); source = dereference sourceref; candidate = dereference candidateref
+    _sourceid = source.identity(); _candidateid = candidate.identity(); _status = 'proved'; _reason = ''
+    return
+  valid: method = .int
+    if _status <> 'proved' | <refvalid>(_owner) = 0 | <refvalid>(_mapping) = 0 then return 0
+    owner = dereference _owner; mapping = dereference _mapping; catalog = .llrxascatalog..catalog()
+    if owner.valid() = 0 | owner.identity() <> _ownerid | mapping.valid() = 0 | mapping.identity() <> _mappingid | catalog.fingerprint() <> _catalog then return 0
+    if _ordinal < 1 | _ordinal > mapping.instances() then return 0
+    instance = mapping.instance(_ordinal)
+    if instance.callid() <> _operation | instance.procedure() <> _procedure then return 0
+    sourceref = mapping.sourceowner(); candidateref = mapping.candidateowner(); source = dereference sourceref; candidate = dereference candidateref
+    return source.identity() = _sourceid & candidate.identity() = _candidateid
+  status: method = .string
+    if _status = 'proved' & valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    if _status = 'proved' & valid() = 0 then return 'target.expansion.frame.checked.phase.owner.expired.or.replaced'
+    return _reason
+  owner: method = reference .analysis
+    return _owner
+  operation: method = .int
+    return _operation
+  procedure: method = .int
+    return _procedure
+  instance: method = .lltargetremap..expansioninstance
+    mapping = dereference _mapping; return mapping.instance(_ordinal)
+  lookupwork: method = .int
+    mapping = dereference _mapping
+    return length(_nohooks) + (mapping.instances() + 1) * (length(_catalog) + 8) + 8
+  nohook: method = .int
+    arg operation = .int, ordinal = .int
+    if valid() = 0 then return 0
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref; profileref = points.transfers(); profile = dereference profileref
+    instruction = profile.instruction(operation)
+    if ordinal < 1 | ordinal > instruction.actions() then return 0
+    action = instruction.action(ordinal)
+    return wordpos(action.id() as .string,_nohooks) > 0
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+
+/** Published frame-control ownership is separate from dirty value backing,
+ * result transport, diagnostics and the eventual dispatch certificate. */
+framecontrolhistoryfact: class
+  _owner = reference .analysis
+  _ownerid = .int
+  _phase = .controlreceipt
+  _call = .int
+  _catalog = .string
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  *: factory
+    arg owner = reference .analysis, phase = .controlreceipt, work = 1000000, bytes = 67108864
+    _owner = owner; _phase = phase; _worklimit = work; _bytelimit = bytes; _status = 'building'
+    if work < 1 | bytes < 256 then do; _status = 'limit'; _reason = 'target.expansion.frame.control.work.or.bytes'; end
+    else do; _work = 1; _bytes = 256; end
+    return
+  fail: method = .int
+    arg state = .string, reason = .string
+    if _status = 'building' then do; _status = state; _reason = reason; end
+    return 0
+  spend: method = .int
+    arg work = 1, bytes = 0
+    if work < 0 | bytes < 0 | work > _worklimit - _work | bytes > _bytelimit - _bytes then return fail('limit','target.expansion.frame.control.work.or.bytes')
+    _work = _work + work; _bytes = _bytes + bytes
+    return 1
+  retireprogram: method = .int
+    arg catalog = .llrxascatalog..catalog, opcode = .int
+    if catalog.abistate(opcode,'frame-retire') <> 'known' | catalog.abisteps(opcode,'frame-retire') <> 7 then return fail('unknown','target.expansion.frame.control.retire.inventory.unproved')
+    do k = 1 to 7
+      if spend(8) = 0 then return 0
+      expected = word('leave-frame-scopes clear-frame-handlers release-frame-policy release-frame-references abandon-frame-invocation unpin-frame-invocation recycle-frame',k)
+      checkpoint = word('retire-scopes retire-handlers retire-policy retire-references retire-invocation-abandon retire-invocation-unpin retire-recycle',k)
+      source = word('frame-scopes frame-handlers frame-private-policy frame-references frame-invocation frame-invocation physical-frame',k)
+      destination = 'none'; if k = 5 then destination = 'frame-invocation'; if k = 7 then destination = 'procedure-recycler'
+      sourceextent = 'none'; if k = 5 | k = 6 then sourceextent = 'full-capacity'
+      destinationextent = 'none'; if k = 5 then destinationextent = 'full-capacity'
+      rule = 'retiring-frame'; if k = 4 then rule = 'frame-references-marked'; if k = 5 | k = 6 then rule = 'frame-invocation-present'
+      if catalog.abioperation(opcode,'frame-retire',k) <> expected | catalog.abicheckpoint(opcode,'frame-retire',k) <> checkpoint | catalog.abisource(opcode,'frame-retire',k) <> source | catalog.abidestination(opcode,'frame-retire',k) <> destination | catalog.abisourceextent(opcode,'frame-retire',k) <> sourceextent | catalog.abidestinationextent(opcode,'frame-retire',k) <> destinationextent | catalog.abirule(opcode,'frame-retire',k) <> rule | catalog.abirepeat(opcode,'frame-retire',k) <> 'once' then return fail('unknown','target.expansion.frame.control.retire.order.unproved')
+    end
+    return 1
+  run: method = .void
+    ignored = .int; i = .int; j = .int; k = .int; mask = .int; bit = .int; overlap = .int
+    name = .string; expected = .string
+    action = .lltargettransfer..action; item = .lltarget..record; edge = .lltargetcfg..edge
+    if _status <> 'building' then return
+    if <refvalid>(_owner) = 0 | _phase.valid() = 0 then do; ignored = fail('invalid','target.expansion.frame.checked.phase.unavailable'); return; end
+    actualowner = _phase.owner()
+    if (actualowner <refsame> _owner) = 0 then do; ignored = fail('invalid','target.expansion.frame.checked.phase.owner.mismatch'); return; end
+    owner = dereference _owner; _ownerid = owner.identity(); flowref = owner.flow(); points = dereference flowref
+    sourceref = points.owner(); source = dereference sourceref; profileref = points.transfers(); profile = dereference profileref
+    cfgref = points.cfg(); cfg = dereference cfgref
+    instance = _phase.instance(); _call = _phase.operation(); called = source.at(_call); supplied = instance.provider()
+    if (supplied <refsame> sourceref) = 0 | _phase.procedure() <> instance.procedure() then do; ignored = fail('invalid','target.expansion.frame.provider.owner.mismatch'); return; end
+    body = source.body(instance.procedure()); catalog = .llrxascatalog..catalog(); _catalog = catalog.fingerprint()
+    if body.entrykind() = 'program-default' | catalog.callframecontrolstate(called.opcode()) <> 'known' then do; ignored = fail('unknown','target.expansion.frame.control.entry.kind.unproved'); return; end
+    if catalog.framepluginownership() <> 'none-published-interface.v1' then do; ignored = fail('unknown','target.expansion.frame.plugin.ownership.unproved'); return; end
+    do i = 1 to 10
+      if spend(1) = 0 then return
+      name = word('plugins pluginowners invocation scope handlers policy references interrupt action callerwindow',i)
+      expected = word('parent-borrowed none empty empty empty parent-borrowed-cow unmarked parent-inherited off none',i)
+      if name = 'callerwindow' & catalog.callwindow(called.opcode()) > 0 then expected = 'mapped-window'
+      if catalog.callframecontrolentry(called.opcode(),name) <> expected then do; ignored = fail('unknown','target.expansion.frame.control.entry.' || name || '.unproved'); return; end
+    end
+    /* Child-local policy/scopes are separate owners. Their only intrinsic
+     * direct effect on this frame is marked ancestor reference ownership. */
+    closure = owner.framecontrolrow(instance.procedure(),'transitive')
+    if spend(closure.count() + closure.unknowns() + 1) = 0 then return
+    if closure.isunknown('framecontrol') then do; ignored = fail('unknown','target.expansion.frame.control.child.inventory.unproved'); return; end
+    bit = catalog.framecontrolmasknamed('ancestor-references')
+    if bit = 0 then do; ignored = fail('unknown','target.expansion.frame.control.mask.inventory.unproved'); return; end
+    do i = 1 to closure.count()
+      if closure.family(i) <> 'framecontrol' then iterate
+      mask = closure.domain(i) as .int; assembler iand overlap,mask,bit
+      if overlap <> 0 then do; ignored = fail('unknown','target.expansion.frame.control.ancestor.references.unproved'); return; end
+    end
+    do i = 1 to instance.rows()
+      if spend(1) = 0 then return
+      sourceop = instance.source(i)
+      if sourceop = 0 then iterate
+      item = source.at(sourceop); instruction = profile.instruction(sourceop)
+      if catalog.framecontrolstate(item.opcode()) <> 'known' then do; ignored = fail('unknown','target.expansion.frame.control.inventory.unproved'); return; end
+      mask = catalog.framecontrolmask(item.opcode())
+      do j = 1 to 7
+        name = word('plugin-owners policy handlers scope references ancestor-references unknown',j); bit = catalog.framecontrolmasknamed(name)
+        if spend(1) = 0 then return
+        if bit = 0 then do; ignored = fail('unknown','target.expansion.frame.control.mask.inventory.unproved'); return; end
+        assembler iand overlap,mask,bit
+        if overlap = 0 then iterate
+        if name = 'scope' & catalog.returnkind(item.opcode()) > 0 then iterate /* retire of an empty scope owner */
+        ignored = fail('unknown','target.expansion.frame.control.' || name || '.correspondence.unproved'); return
+      end
+      /* The checked receipt couples source/candidate effects and operands.
+       * Any remaining actual hook still needs a native control-preservation
+       * contract; observer equivalence alone cannot install an empty owner. */
+      bit = catalog.framecontrolmasknamed('foreign'); assembler iand overlap,mask,bit
+      if overlap <> 0 then do
+        callbacks = 0
+        do j = 1 to instruction.actions()
+          if spend(1) = 0 then return
+          action = instruction.action(j)
+          if action.kind() <> 'callback' then iterate
+          callbacks = callbacks + 1
+          if owner.abiaction(action) & catalog.returnkind(item.opcode()) > 0 then iterate /* checked result/retire phase */
+          if action.detail() = 'catalog.callback.plugin-sync' & catalog.contextsynccontract() = 'value-only-nonreentrant.v1' then iterate
+          if profile.recyclercleanup(sourceop,j,'callback') then iterate
+          if spend(_phase.lookupwork() + j + 1) = 0 then return
+          if _phase.nohook(sourceop,j) = 0 then do; ignored = fail('unknown','target.expansion.frame.control.foreign.correspondence.unproved'); return; end
+        end
+        if callbacks = 0 then do; ignored = fail('unknown','target.expansion.frame.control.foreign.inventory.unproved'); return; end
+      end
+      do j = 1 to cfg.outedges(sourceop)
+        if spend(j + 1) = 0 then return
+        edge = cfg.outedge(sourceop,j)
+        if edge.complete() = 0 | edge.scopecomplete() = 0 | edge.role() = 'unknown' then do; ignored = fail('unknown','target.expansion.frame.control.departure.unproved'); return; end
+        if edge.targetblock() > 0 & wordpos(edge.exposure(),'inherited inherited-async handler-call handler-call-async event-binding event-binding-async') > 0 then do; ignored = fail('unknown','target.expansion.frame.control.handler.correspondence.unproved'); return; end
+        if edge.targetblock() = 0 & wordpos(edge.boundarykind(),'policy-return inherited-signal-policy asynchronous-policy') > 0 then do; ignored = fail('unknown','target.expansion.frame.control.unwind.correspondence.unproved'); return; end
+      end
+      if catalog.returnkind(item.opcode()) > 0 then do
+        if retireprogram(catalog,item.opcode()) = 0 then return
+      end
+    end
+    /* Native free_frame empties the control owners above; the published
+     * plugin invariant leaves no delayed owned-plugin destructor. Payloads
+     * installed by this execution keep their independent ownership checks. */
+    _status = 'proved'
+    return
+  valid: method = .int
+    call run()
+    if _status <> 'proved' | <refvalid>(_owner) = 0 | _phase.valid() = 0 then return 0
+    owner = dereference _owner; catalog = .llrxascatalog..catalog()
+    return owner.valid() & owner.identity() = _ownerid & catalog.fingerprint() = _catalog
+  status: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'target.expansion.frame.control.owner.expired.or.replaced'
+    return _reason
+  preserved: method = .int
+    return valid()
+  operation: method = .int
+    return _call
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+  budgetrefusal: method = .void
+    arg reason = .string
+    _status = 'limit'; _reason = reason
+    return
+
+/** Parametric source-to-clone relation. Equal ordered native operations act on
+ * corresponding storage even when the values there are unknown. This checker
+ * compares effects; it does not execute a second copy of opcode semantics. */
+expansionequivalencefact: class
+  _owner = reference .lltargetsummary..analysis
+  _ownerid = .int
+  _plan = .expansionplanfact
+  _mapping = reference .lltargetremap..expansioncorrespondence
+  _plans = .expansionplanfact[]
+  _diagnostics = .diagnosticclone[]
+  _profile = .lltargettransfer..profile
+  _cfg = .lltargetcfg..graph
+  _flow = .lltargetflow..analysis
+  _next = .int[]
+  _saved = .lltarget..operand[]
+  _expected = .int
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _dependenciesready = .int
+  _chargesclosed = .int
+  _candidateflowready = .int
+  _sourcework = .int
+  _sourcebytes = .int
+  _sourcequerywork = .int
+  _sourcequerybytes = .int
+  _summarywork = .int
+  _summarybytes = .int
+  _candidatework = .int
+  _candidatebytes = .int
+  _phaseidentity = .int
+  _phasepresent = .int[]
+  _nohooks = .string[]
+  _checking = .int
+  _lifecycles = .framecontrolhistoryfact[]
+  *: factory
+    arg owner = reference .analysis, plan = .expansionplanfact, mapping = reference .lltargetremap..expansioncorrespondence, work = 1000000, bytes = 67108864
+    _owner = owner; _plan = plan; _mapping = mapping
+    _status = 'building'; _worklimit = work; _bytelimit = bytes; _phaseidentity = nextidentity()
+    if work < 1 | bytes < 1 then do; _status = 'limit'; _reason = 'target.expansion.relation.work.or.bytes'; end
+    return
+  fail: method = .int
+    arg state = .string, reason = .string
+    if _status = 'building' then do; _status = state; _reason = reason; end
+    return 0
+  spend: method = .int
+    arg work = 1, bytes = 0
+    if work < 0 | bytes < 0 | work > _worklimit - _work | bytes > _bytelimit - _bytes then return fail('limit','target.expansion.relation.work.or.bytes')
+    _work = _work + work; _bytes = _bytes + bytes
+    return 1
+  /** Record already-performed owner work, even on limit. Prospective work
+   * still uses spend(); incurred counters never discard a finished query. */
+  incurred: method = .int
+    arg work = .int, bytes = .int
+    overflow = 0
+    if work < 0 | bytes < 0 then do; _status = 'invalid'; _reason = 'target.expansion.relation.counter.invalid'; return 0; end
+    if work > 9223372036854775807 - _work then do; _work = 9223372036854775807; overflow = 1; end
+    else _work = _work + work
+    if bytes > 9223372036854775807 - _bytes then do; _bytes = 9223372036854775807; overflow = 1; end
+    else _bytes = _bytes + bytes
+    if overflow | _work > _worklimit | _bytes > _bytelimit then do
+      _status = 'limit'; _reason = 'target.expansion.relation.work.or.bytes'; return 0
+    end
+    return 1
+  /** Queries continue to grow shared immutable-owner ledgers after solving.
+   * Charge each delta once, including work performed before a refusal. */
+  dependencycharge: method = .int
+    if _dependenciesready = 0 | _chargesclosed then return 1
+    if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _reason = 'target.expansion.relation.owner.expired'; _chargesclosed = 1; return 0; end
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref
+    sourcework = points.usedwork(); sourcebytes = points.usedbytes()
+    summarywork = owner.usedwork(); summarybytes = owner.usedbytes()
+    candidatework = 0; candidatebytes = 0
+    if _candidateflowready then do; candidatework = _flow.usedwork(); candidatebytes = _flow.usedbytes(); end
+    sourcequerywork = max(0,sourcework - _sourcework); sourcequerybytes = max(0,sourcebytes - _sourcebytes)
+    _sourcequerywork = _sourcequerywork + sourcequerywork; _sourcequerybytes = _sourcequerybytes + sourcequerybytes
+    charged = incurred(sourcequerywork,sourcequerybytes)
+    charged = incurred(max(0,summarywork - _summarywork),max(0,summarybytes - _summarybytes)) & charged
+    charged = incurred(max(0,candidatework - _candidatework),max(0,candidatebytes - _candidatebytes)) & charged
+    _sourcework = sourcework; _sourcebytes = sourcebytes; _summarywork = summarywork; _summarybytes = summarybytes
+    _candidatework = candidatework; _candidatebytes = candidatebytes
+    if _status <> 'building' then _chargesclosed = 1
+    return charged
+  samevalue: method = .int
+    arg left = .lltarget..operand, right = .lltarget..operand
+    if left.kind() <> right.kind() then return 0
+    if left.kind() = 'R' then return left.bank() = right.bank() & left.index() = right.index()
+    if left.kind() = 'I' then return left.index() = right.index()
+    if spend(left.length() + right.length() + 1) = 0 then return 0
+    return (bin2x(left.bytes()) == bin2x(right.bytes()))
+  expect: method = .int
+    arg candidate = .lltarget..module, operation = .int, name = .string, left = .lltarget..operand, ?right = .lltarget..operand
+    if spend(1) = 0 then return 0
+    if operation < 1 then return fail('unknown','target.expansion.recipe.operation.missing')
+    item = candidate.at(operation); count = 1 + ?right
+    if item.kind() <> 'instruction' | item.mnemonic() <> name | item.operands() <> count then return fail('unknown','target.expansion.recipe.operation.mismatch')
+    if samevalue(item.operand(1),left) = 0 then return fail('unknown','target.expansion.recipe.destination.mismatch')
+    if ?right then do; if samevalue(item.operand(2),right) = 0 then return fail('unknown','target.expansion.recipe.source.mismatch'); end
+    _expected = _expected + 1
+    return _next[operation]
+  actual: method = .lltarget..operand
+    arg plan = .expansionplanfact, ordinal = .int
+    value = .lltarget..operand
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref
+    sourceref = points.owner(); source = dereference sourceref; called = source.at(plan.operation()); catalog = .llrxascatalog..catalog()
+    ordinals = translate(catalog.callactuals(called.opcode()),' ',',')
+    if catalog.callcount(called.opcode()) = 0 then do
+      if ordinal < 1 | ordinal > words(ordinals) then return .lltarget..operand()
+      value = called.operand(word(ordinals,ordinal) as .int)
+    end
+    else do
+      first = called.operand(catalog.callwindow(called.opcode()))
+      value = points.windowvalue(called.procedureid(),first,ordinal)
+    end
+    if value.kind() <> 'R' then return .lltarget..operand()
+    layout = plan.layout(); captured = layout.actual(ordinal); current = points.captureat(called.id(),value.bank(),value.index())
+    if current.active() = 0 & catalog.callprefix(called.opcode()) = '' then current = points.storageat(called.id(),value.bank(),value.index())
+    if captured.active() = 0 | captured.active() <> current.active() | captured.base() <> current.base() | captured.entry() <> current.entry() | captured.slotidentity() <> current.slotidentity() then return .lltarget..operand()
+    return value
+  entryrelation: method = .int
+    arg plan = .expansionplanfact, instance = .lltargetremap..expansioninstance
+    i = .int; j = .int; value = .lltarget..operand; original = .lltarget..operand; captured = .lltarget..operand
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref; sourceref = points.owner(); source = dereference sourceref
+    mapping = dereference _mapping; candidate_ref = mapping.candidateowner(); candidate = dereference candidate_ref
+    called = source.at(plan.operation()); catalog = .llrxascatalog..catalog(); profile_ref = points.transfers(); before = dereference profile_ref
+    /* A structural argument-role manifest is still untrusted capture data.
+     * Compare the existing caller pointer at the actual capture phase; two
+     * different caller spellings may denote the same captured old handle. */
+    bodyentry = 0
+    do i = 1 to instance.rows()
+      if instance.source(i) > 0 then do; bodyentry = instance.candidate(i); leave; end
+    end
+    do i = 1 to instance.mappings()
+      if spend(1) = 0 then return 0
+      if instance.mappingrole(i) <> 'argument' then iterate
+      original = instance.original(i); value = instance.replacement(i); captured = actual(plan,original.index())
+      if captured.kind() <> 'R' | bodyentry = 0 then return fail('unknown','target.expansion.argument.capture.correspondence.unproved')
+      expectedbinding = _flow.storageat(bodyentry,captured.bank(),captured.index())
+      actualbinding = _flow.storageat(bodyentry,value.bank(),value.index())
+      if actualbinding.active() = 0 | actualbinding.active() <> expectedbinding.active() then return fail('unknown','target.expansion.argument.capture.correspondence.unproved')
+    end
+    cursor = instance.candidate(1); entrycount = 0
+    if instance.source(1) = 0 then entrycount = instance.count(1)
+    _expected = 0; program = before.bindingprogram(called.id(),'preparation',_worklimit - _work,_bytelimit - _bytes)
+    if incurred(program.usedwork(),program.usedbytes()) = 0 then return 0
+    if program.status() <> 'ok' then return fail(program.status(),program.reason())
+    if program.steps() > 0 & catalog.callatomic(called.opcode()) then return fail('unknown','target.expansion.preparation.phase.partition.unproved')
+    do i = 1 to program.steps()
+      kind = program.kind(i); left = called.operand(program.operand(i,1))
+      if kind = 'clear' then cursor = expect(candidate,cursor,'null',left)
+      else do
+        right = called.operand(program.operand(i,2)); name = ''
+        if kind = 'flags' then name = 'settp'
+        if kind = 'swap' then name = 'swap'
+        if name = '' then return fail('unknown','target.expansion.preparation.primitive.unproved')
+        cursor = expect(candidate,cursor,name,left,right)
+      end
+      if _status <> 'building' then return 0
+    end
+    restoration = plan.restoration(); saveordinal = 0
+    do i = 1 to restoration.fields()
+      if restoration.mode(i) <> 'saved' then iterate
+      saveordinal = saveordinal + 1; value = .lltarget..operand(); seen = 0
+      do j = 1 to instance.additions()
+        if spend(1) = 0 then return 0
+        if instance.additionrole(j) <> 'save' then iterate
+        seen = seen + 1
+        if seen = saveordinal then do; value = instance.addition(j); leave; end
+      end
+      if value.kind() <> 'R' then return fail('unknown','target.expansion.context.save.mapping.unproved')
+      _saved[restoration.saveordinal(i)] = value
+      cursor = expect(candidate,cursor,restoration.getter(i),value)
+      if _status <> 'building' then return 0
+    end
+    body = source.body(instance.procedure())
+    do i = 0 to body.locals() - 1
+      original = .lltarget..operand.bound(source.identity(),instance.procedure(),0,'r',i); value = instance.mapped(original)
+      if value.kind() <> 'R' then return fail('unknown','target.expansion.private.entry.mapping.unproved')
+      cursor = expect(candidate,cursor,'unlink',value)
+      if _status <> 'building' then return 0
+    end
+    original = .lltarget..operand.bound(source.identity(),instance.procedure(),0,'a',0); value = instance.mapped(original)
+    if value.kind() = 'R' then do
+      layout = plan.layout()
+      cursor = expect(candidate,cursor,'unlink',value)
+      cursor = expect(candidate,cursor,'null',value)
+      cursor = expect(candidate,cursor,'load',value,.lltarget..operand.integer(layout.count()))
+      if _status <> 'building' then return 0
+    end
+    do pass = 1 to 2
+      do i = 1 to instance.mappings()
+        if spend(1) = 0 then return 0
+        original = instance.original(i); value = instance.replacement(i)
+        if original.bank() <> 'g' & (original.bank() <> 'a' | original.index() = 0) then iterate
+        if value.bank() <> 'r' | instance.mappingrole(i) = 'argument' then iterate
+        captured = .lltarget..operand()
+        if original.bank() = 'a' then captured = actual(plan,original.index())
+        else do
+          binding = points.storageat(called.id(),'g',original.index())
+          if binding.active() <> binding.entry() | binding.base() <> binding.entry() | binding.slotidentity() = 0 then return fail('unknown','target.expansion.global.original.binding.unproved')
+          captured = .lltarget..operand.bound(source.identity(),called.procedureid(),0,'g',original.index())
+        end
+        if captured.kind() <> 'R' then return fail('unknown','target.expansion.argument.capture.correspondence.unproved')
+        if pass = 2 then do; value = instance.base(original); if value.kind() <> 'R' then return fail('unknown','target.expansion.argument.base.correspondence.unproved'); end
+        cursor = expect(candidate,cursor,'link',value,captured)
+        if _status <> 'building' then return 0
+      end
+    end
+    if _expected <> entrycount then return fail('unknown','target.expansion.entry.extra.or.missing.event')
+    return 1
+  exitrelation: method = .int
+    arg plan = .expansionplanfact, instance = .lltargetremap..expansioninstance
+    i = .int; j = .int; value = .lltarget..operand
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref; sourceref = points.owner(); source = dereference sourceref
+    mapping = dereference _mapping; candidate_ref = mapping.candidateowner(); candidate = dereference candidate_ref
+    called = source.at(plan.operation()); catalog = .llrxascatalog..catalog(); restoration = plan.restoration(); body = source.body(instance.procedure()); caller = source.body(called.procedureid())
+    cleanprivate = 1
+    do i = 0 to body.locals() - 1
+      history = points.privatebackinghistory(instance.procedure(),'r',i)
+      if history.resourcefree() = 0 | history.nonescape() = 0 then do; cleanprivate = 0; leave; end
+    end
+    do r = 1 to instance.rows()
+      sourceop = instance.source(r)
+      if sourceop = 0 then iterate
+      original = source.at(sourceop); kind = catalog.returnkind(original.opcode())
+      if kind = 0 then iterate
+      cursor = instance.candidate(r); _expected = 0; transfermode = 'ignored'
+      from = .lltarget..operand(); into = .lltarget..operand()
+      sourcepoint = points.resourceat(sourceop,'r',0); destination = sourcepoint.unknown()
+      if catalog.callresult(called.opcode()) > 0 & kind > 1 then do
+        into = called.operand(catalog.callresult(called.opcode()))
+        if kind = 2 then do
+          from = original.operand(catalog.returnsource(original.opcode())); mapped = instance.mapped(from)
+          if mapped.kind() <> 'R' then return fail('unknown','target.expansion.return.source.mapping.unproved')
+          transfermode = 'copy'
+          if from.bank() = 'r' then do
+            binding = _flow.storageat(cursor,mapped.bank(),mapped.index())
+            if binding.active() = 0 | binding.entry() = 0 then return fail('unknown','target.expansion.return.source.binding.unproved')
+            if binding.active() = binding.entry() then transfermode = 'move'
+          end
+          if transfermode <> plan.returnmode(sourceop) then return fail('unknown','target.expansion.return.transfer.mode.mismatch')
+          sourcepoint = _flow.resourceat(cursor,mapped.bank(),mapped.index()); destination = _flow.resourceat(cursor,into.bank(),into.index())
+          cursor = expect(candidate,cursor,transfermode,into,mapped)
+        end
+        else if kind = 3 | kind = 4 then do
+          item = candidate.at(cursor); temporary = item.operand(1); registered = 0
+          do j = 1 to instance.additions()
+            if instance.additionrole(j) = 'return-temp' | instance.additionrole(j) = 'result-temp' then do
+              if samevalue(instance.addition(j),temporary) then registered = 1
+            end
+          end
+          if registered = 0 then return fail('unknown','target.expansion.return.literal.temporary.unproved')
+          value = original.operand(catalog.returnsource(original.opcode()))
+          cursor = expect(candidate,cursor,'load',temporary,value)
+          name = 'icopy'; if kind = 4 then name = 'fcopy'
+          destination = _flow.resourceat(cursor,into.bank(),into.index())
+          cursor = expect(candidate,cursor,name,into,temporary)
+          transfermode = 'field'
+        end
+        else return fail('unknown','target.expansion.return.string.setter.correspondence.unproved')
+        if _status <> 'building' then return 0
+      end
+      /* Native rows remain the sole owner of hidden result/retire semantics.
+       * Candidate endpoint facts discharge predicates under the storage map;
+       * unknown source payloads are never assigned arbitrary defined values. */
+      if catalog.abistate(original.opcode(),'physical-return') <> 'known' then return fail('unknown','target.expansion.return.abi.inventory.unproved')
+      do j = 1 to catalog.abisteps(original.opcode(),'physical-return')
+        operation = catalog.abioperation(original.opcode(),'physical-return',j)
+        if operation = 'restore-numeric' then do
+          if catalog.contextsynccontract() <> 'value-only-nonreentrant.v1' then return fail('unknown','target.expansion.return.numeric.sync.unproved')
+        end
+        else do
+          reason = _flow.abicondition(operation,sourcepoint,destination,transfermode,1,cleanprivate,1)
+          if reason <> '' then return fail('unknown',reason)
+        end
+      end
+      do i = 1 to restoration.fields()
+        value = restoration.literal(i)
+        if restoration.mode(i) = 'saved' then value = _saved[restoration.saveordinal(i)]
+        cursor = expect(candidate,cursor,restoration.setter(i),value)
+        if _status <> 'building' then return 0
+      end
+      /* Source retirement removes the slot view. Surviving caller views must
+       * detach before continuation, including base proxies and owned locals. */
+      do i = 1 to instance.mappings()
+        value = instance.replacement(i)
+        if value.bank() <> 'r' | value.index() < caller.locals() then iterate
+        cursor = expect(candidate,cursor,'unlink',value)
+        if _status <> 'building' then return 0
+      end
+      do i = 1 to instance.mappings()
+        value = instance.base(instance.original(i))
+        if value.kind() <> 'R' then iterate
+        cursor = expect(candidate,cursor,'unlink',value)
+        if _status <> 'building' then return 0
+      end
+      cursor = expect(candidate,cursor,'br',.lltarget..operand.symbol(instance.continuation()))
+      if _status <> 'building' then return 0
+      if _expected <> instance.count(r) then return fail('unknown','target.expansion.return.extra.or.missing.event')
+    end
+    return 1
+  /** Pair the native boundary program under its runtime rules. Root variants
+   * stay conditional: live a0 and saved number_args are different endpoints,
+   * and copyback/free count captures keep their distinct native phases. */
+  boundaryprogram: method = .int
+    arg original = .lltarget..record, copied = .lltarget..record, mode = .string
+    catalog = .llrxascatalog..catalog()
+    if catalog.abistate(original.opcode(),mode) <> 'known' | catalog.abistate(copied.opcode(),mode) <> 'known' then return fail('unknown','target.expansion.retained.' || mode || '.inventory.unproved')
+    if catalog.abisteps(original.opcode(),mode) <> catalog.abisteps(copied.opcode(),mode) then return fail('unknown','target.expansion.retained.boundary.program.mismatch')
+    do i = 1 to catalog.abisteps(original.opcode(),mode)
+      if spend(1) = 0 then return 0
+      operation = catalog.abioperation(original.opcode(),mode,i)
+      if wordpos(operation,'return-register return-integer return-float return-string restore-numeric retire-frame deactivate-root capture-root-count copy-root-argument free-root-argument free-root-argument-unbind forget-root-argv-owner begin-recycled-frame clear-frame-control destroy-storage release-frame-plugins release-recycled-frame finish-runtime-storage finish-runtime-control cleanup-execution-signals reset-storage capture-root-status publish-root-status') = 0 then return fail('unknown','target.expansion.retained.boundary.operation.' || operation || '.unproved')
+      if operation <> catalog.abioperation(copied.opcode(),mode,i) | catalog.abicheckpoint(original.opcode(),mode,i) <> catalog.abicheckpoint(copied.opcode(),mode,i) | catalog.abisource(original.opcode(),mode,i) <> catalog.abisource(copied.opcode(),mode,i) | catalog.abidestination(original.opcode(),mode,i) <> catalog.abidestination(copied.opcode(),mode,i) | catalog.abisourceextent(original.opcode(),mode,i) <> catalog.abisourceextent(copied.opcode(),mode,i) | catalog.abidestinationextent(original.opcode(),mode,i) <> catalog.abidestinationextent(copied.opcode(),mode,i) | catalog.abirule(original.opcode(),mode,i) <> catalog.abirule(copied.opcode(),mode,i) | catalog.abirepeat(original.opcode(),mode,i) <> catalog.abirepeat(copied.opcode(),mode,i) then return fail('unknown','target.expansion.retained.boundary.event.mismatch')
+    end
+    return 1
+  retainedrelation: method = .int
+    i = .int; j = .int
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref; sourceref = points.owner(); source = dereference sourceref
+    mapping = dereference _mapping; candidate_ref = mapping.candidateowner(); candidate = dereference candidate_ref
+    profile_ref = points.transfers(); before = dereference profile_ref; cfgref = points.cfg(); sourcecfg = dereference cfgref
+    graphref = source.ir(); graph = dereference graphref; affected = .int[]
+    if spend(graph.functions() + 1,(graph.functions() + 1) * 8) = 0 then return 0
+    do i = 1 to graph.functions(); affected[i] = 0; end
+    do i = 1 to mapping.instances()
+      instance = mapping.instance(i); called = source.at(instance.callid()); affected[called.procedureid()] = 1
+      caller = source.body(called.procedureid())
+      /* Every newly surviving original backing, including inactive proxy
+       * bases and temporary values, has a complete recycler/lifetime proof.
+       * Merely choosing a fresh register number proves none of these facts. */
+      do j = 1 to instance.mappings() + instance.additions()
+        if spend(1) = 0 then return 0
+        if j <= instance.mappings() then value = instance.replacement(j)
+        else value = instance.addition(j - instance.mappings())
+        if value.bank() <> 'r' | value.index() < caller.locals() then iterate
+        history = _flow.privatebackinghistory(value.procedureid(),'r',value.index())
+        if history.resourcefree() = 0 | history.nonescape() = 0 then return fail(history.status(),history.reason())
+      end
+    end
+    catalog = .llrxascatalog..catalog()
+    do i = 1 to source.records()
+      if spend(1) = 0 then return 0
+      original = source.record(i)
+      if original.kind() <> 'instruction' | affected[original.procedureid()] = 0 then iterate
+      if mapping.instanceat(original.id()) > 0 then iterate
+      operation = mapping.operation(original.id())
+      if operation < 1 then return fail('invalid','target.expansion.retained.operation.missing')
+      copied = candidate.at(operation); left = before.instruction(original.id()); right = _profile.instruction(copied.id())
+      if left.complete('relocation') = 0 | right.complete('relocation') = 0 then return fail('unknown','target.expansion.retained.physical.observation.unproved')
+      if left.references() <> right.references() then return fail('unknown','target.expansion.caller.reference.inventory.mismatch')
+      do j = 1 to left.references()
+        if spend(1) = 0 then return 0
+        a = left.ref(j); b = right.ref(j)
+        if a.kind() <> b.kind() | a.anchor() <> b.anchor() | a.extentknown() <> b.extentknown() | a.extent() <> b.extent() | a.role() <> b.role() | a.roleordinal() <> b.roleordinal() | a.targetbank() <> b.targetbank() | a.targetanchor() <> b.targetanchor() then return fail('unknown','target.expansion.caller.reference.mapping.unproved')
+        if a.kind() = 'address' then return fail('unknown','target.expansion.caller.physical.address.mapping.unproved')
+        if a.kind() = 'window' then do
+          if a.extentknown() = 0 then return fail('unknown','target.expansion.caller.window.extent.unproved')
+          do k = 0 to a.extent() - 1
+            if spend(1) = 0 then return 0
+            oldvalue = points.windowvalue(original.procedureid(),a.operand(),k)
+            newvalue = _flow.windowvalue(copied.procedureid(),b.operand(),k)
+            if samevalue(oldvalue,newvalue) = 0 then return fail('unknown','target.expansion.caller.window.mapping.unproved')
+          end
+        end
+      end
+      do j = 1 to left.actions()
+        if spend(1) = 0 then return 0
+        action = left.action(j)
+        if action.kind() <> 'callback' | owner.abiaction(action) then iterate
+        if catalog.callbackvaluesurface(original.opcode()) = 'bytes-snapshot' then iterate
+        if before.recyclercleanup(original.id(),j,'callback') then iterate
+        if _flow.callbackpossibleat(copied.id(),j) then return fail('unknown','target.expansion.retained.callback.observation.unproved')
+      end
+      if sourcecfg.outedges(original.id()) <> _cfg.outedges(copied.id()) then return fail('unknown','target.expansion.retained.departure.inventory.mismatch')
+      do j = 1 to sourcecfg.outedges(original.id())
+        if spend(j + 1) = 0 then return 0
+        edge = sourcecfg.outedge(original.id(),j); projected = _cfg.outedge(copied.id(),j)
+        if edge.complete() = 0 | projected.complete() = 0 | edge.scopecomplete() = 0 | projected.scopecomplete() = 0 then return fail('unknown','target.expansion.retained.departure.inventory.unproved')
+        if edge.role() <> projected.role() | edge.phase() <> projected.phase() | edge.signalname() <> projected.signalname() | edge.asynchronous() <> projected.asynchronous() | edge.scopeexits() <> projected.scopeexits() | edge.scopeenters() <> projected.scopeenters() then return fail('unknown','target.expansion.retained.departure.mismatch')
+        if edge.targetblock() > 0 then do
+          targetop = mappedcalleroperation(source,mapping,edge.targetop())
+          if targetop = 0 | projected.targetop() = 0 then return fail('unknown','target.expansion.retained.control.target.mismatch')
+          if candidate.inlineaddress(targetop) <> candidate.inlineaddress(projected.targetop()) then return fail('unknown','target.expansion.retained.control.target.mismatch')
+        end
+        else do
+          if edge.boundarykind() <> projected.boundarykind() | edge.exposure() <> projected.exposure() then return fail('unknown','target.expansion.retained.boundary.mismatch')
+          if catalog.returnkind(original.opcode()) > 0 then do
+            if boundaryprogram(original,copied,'physical-return') = 0 | boundaryprogram(original,copied,'root-return') = 0 then return 0
+          end
+          else if boundaryprogram(original,copied,'frame-unwind') = 0 | boundaryprogram(original,copied,'root-unwind') = 0 | boundaryprogram(original,copied,'root-sigreturn') = 0 then return 0
+          if boundaryprogram(original,copied,'execution-finish') = 0 then return 0
+        end
+      end
+    end
+    return 1
+  /** A structural/effect relation does not confer a dispatch-boundary waiver.
+   * Native CALL/RET carry semantic checkpoint transitions; a forward BR does
+   * not reproduce their external-mailbox claims on every concrete VM owner.
+   * Keep this explicit obligation closed pending the reviewed direct boundary
+   * contract, rather than treating static diagnostic metadata as execution. */
+  dispatchrelation: method = .int
+    arg plan = .expansionplanfact, instance = .lltargetremap..expansioninstance
+    if instance.source(1) <> 0 then return fail('unknown','target.expansion.call.entry.checkpoint.unproved')
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref; sourceref = points.owner(); source = dereference sourceref
+    called = source.at(plan.operation()); catalog = .llrxascatalog..catalog(); restoration = plan.restoration()
+    do i = 1 to instance.rows()
+      if instance.source(i) = 0 then iterate
+      item = source.at(instance.source(i)); kind = catalog.returnkind(item.opcode())
+      if kind = 0 then iterate
+      if (catalog.callresult(called.opcode()) > 0 & kind > 1) | restoration.fields() > 0 then return fail('unknown','target.expansion.return.async.commit.correspondence.unproved')
+    end
+    return fail('unknown','target.expansion.dispatch.owner.checkpoint.unproved')
+  /** Control ownership is proved after the same checked relational phases.
+   * Neither a naked boolean nor value-backing history supplies this receipt. */
+  lifecyclerelation: method = .int
+    owner = dereference _owner
+    do i = 1 to _plans[0]
+      receipt = .controlreceipt(reference self,i,_worklimit - _work,_bytelimit - _bytes)
+      if incurred(receipt.usedwork(),receipt.usedbytes()) = 0 then return 0
+      if receipt.status() <> 'proved' then return fail(receipt.status(),receipt.reason())
+      priorownerwork = owner.usedwork(); priorownerbytes = owner.usedbytes()
+      history = owner.framecontrolhistory(receipt,_worklimit - _work,_bytelimit - _bytes)
+      /* A failed summary reservation may not own all of the helper's actual
+       * cost. Retain that remainder before folding the shared owner delta. */
+      if incurred(max(0,history.usedwork() - max(0,owner.usedwork() - priorownerwork)),max(0,history.usedbytes() - max(0,owner.usedbytes() - priorownerbytes))) = 0 then return 0
+      if dependencycharge() = 0 then return 0
+      if history.status() <> 'proved' then return fail(history.status(),history.reason())
+      _lifecycles[i] = history
+    end
+    return 1
+  phaseidentity: method = .int
+    return _phaseidentity
+  phasevalid: method = .int
+    arg ordinal = .int, identity = .int
+    if identity <> _phaseidentity | ordinal < 1 | ordinal > _phasepresent[0] | _candidateflowready = 0 then return 0
+    if _phasepresent[ordinal] = 0 | <refvalid>(_owner) = 0 | <refvalid>(_mapping) = 0 then return 0
+    owner = dereference _owner; mapping = dereference _mapping
+    return owner.valid() & owner.identity() = _ownerid & mapping.valid() & _plans[ordinal].valid() & _flow.valid() & _profile.valid() & _cfg.valid()
+  phaseowner: method = reference .analysis
+    return _owner
+  phasemapping: method = reference .lltargetremap..expansioncorrespondence
+    return _mapping
+  phaseplan: method = .expansionplanfact
+    arg ordinal = .int
+    return _plans[ordinal]
+  phaseinstance: method = .lltargetremap..expansioninstance
+    arg ordinal = .int
+    mapping = dereference _mapping; return mapping.instance(ordinal)
+  phasehooks: method = .string
+    arg index = .int
+    return _nohooks[index]
+  phasehooklength: method = .int
+    arg index = .int
+    return length(_nohooks[index])
+  mappedoperation: method = .int
+    arg source = .lltarget..module, instance = .lltargetremap..expansioninstance, sourceop = .int
+    coordinate = source.inlineaddress(sourceop)
+    do row = 1 to instance.rows()
+      if spend(1) = 0 then return 0
+      if instance.source(row) = 0 then iterate
+      if source.inlineaddress(instance.source(row)) = coordinate then return instance.candidate(row)
+    end
+    return 0
+  mappedcalleroperation: method = .int
+    arg source = .lltarget..module, mapping = .lltargetremap..expansioncorrespondence, sourceop = .int
+    coordinate = source.inlineaddress(sourceop); item = source.at(sourceop); functionid = item.procedureid()
+    do row = 1 to source.records()
+      if spend(1) = 0 then return 0
+      item = source.record(row)
+      if item.procedureid() <> functionid | item.kind() <> 'instruction' then iterate
+      if source.inlineaddress(item.id()) <> coordinate then iterate
+      targetop = mapping.operation(item.id())
+      if targetop > 0 then return targetop
+      instanceid = mapping.instanceat(item.id())
+      if instanceid > 0 then do; instance = mapping.instance(instanceid); return instance.candidate(1); end
+    end
+    return 0
+  samedomain: method = .int
+    arg before = .lltargettransfer..profile, after = .lltargettransfer..profile, left = .int, right = .int
+    if left = 0 | right = 0 then return left = right
+    a = before.domain(left); b = after.domain(right)
+    return a.kind() = b.kind() & a.key() = b.key() & a.nativebit() = b.nativebit()
+  sameref: method = .int
+    arg before = .lltargettransfer..profile, after = .lltargettransfer..profile, left = .int, right = .int, instance = .lltargetremap..expansioninstance
+    if left = 0 | right = 0 then return left = right
+    a = before.ref(left); b = after.ref(right)
+    if a.kind() <> b.kind() | a.anchor() <> b.anchor() | a.extentknown() <> b.extentknown() | a.extent() <> b.extent() then return 0
+    if a.role() <> b.role() | a.roleordinal() <> b.roleordinal() | a.addresskind() <> b.addresskind() | a.selectorkind() <> b.selectorkind() | a.selectoroffset() <> b.selectoroffset() | a.targetanchor() <> b.targetanchor() then return 0
+    original = a.operand(); replacement = b.operand()
+    if original.kind() = 'R' then do
+      mapped = instance.mapped(original)
+      if mapped.kind() <> 'R' | samevalue(mapped,replacement) = 0 then return 0
+      /* A source base is not the original dirty backing of an active proxy.
+       * Base-sensitive bindings require their separately checked lowering. */
+      if a.anchor() = 'base' then do
+        base = instance.base(original)
+        if base.kind() = 'R' & samevalue(base,replacement) = 0 then return 0
+      end
+      return 1
+    end
+    if original.kind() = 'L' then return a.operandordinal() = b.operandordinal()
+    return samevalue(original,replacement)
+  sameaction: method = .int
+    arg before = .lltargettransfer..profile, after = .lltargettransfer..profile, left = .lltargettransfer..action, right = .lltargettransfer..action, instance = .lltargetremap..expansioninstance
+    if left.kind() <> right.kind() | left.sourcekind() <> right.sourcekind() | left.certainty() <> right.certainty() | left.path() <> right.path() | left.phase() <> right.phase() | left.detail() <> right.detail() | left.offset() <> right.offset() | left.observation() <> right.observation() | left.intrinsicfootprint() <> right.intrinsicfootprint() then return 0
+    if samedomain(before,after,left.domain(),right.domain()) = 0 | sameref(before,after,left.subject(),right.subject(),instance) = 0 then return 0
+    if left.sourcekind() = 'reference' then return sameref(before,after,left.sourceid(),right.sourceid(),instance)
+    if left.sourcekind() = 'literal' then return samevalue(left.literal(),right.literal())
+    if left.sourcekind() = 'captured' then do
+      a = before.action(left.sourceid()); b = after.action(right.sourceid())
+      /* Capture identity is its ordered native event, not a process-local ID. */
+      return a.ordinal() = b.ordinal() & a.kind() = 'capture' & b.kind() = 'capture'
+    end
+    return left.sourceid() = right.sourceid()
+  callcauses: method = .int
+    arg plan = .expansionplanfact, instance = .lltargetremap..expansioninstance
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref
+    sourceref = points.owner(); source = dereference sourceref; profile_ref = points.transfers(); before = dereference profile_ref
+    item = source.at(plan.operation()); catalog = .llrxascatalog..catalog()
+    if catalog.callcausestate(item.opcode()) <> 'known' then return fail('unknown','target.expansion.call.causes.unproved')
+    do i = 1 to catalog.callcauses(item.opcode())
+      if spend(1) = 0 then return 0
+      cause = before.callcause(item.id(),i)
+      if cause.valid() = 0 then return fail('invalid',cause.reason())
+      if cause.possible() = 0 then iterate
+      condition = cause.condition()
+      select
+        when condition = 'bytecode-allocation-failed' then do
+          /* The approved exception is exact: infrastructure allocation only.
+           * A callback or initializer failure cannot borrow this exception. */
+          if cause.kind() <> 'frame-allocation' | cause.checkpoint() <> 'frame-allocation' | cause.callbacks() <> 0 | cause.names() <> 'FAILURE' then return fail('unknown','target.expansion.call.allocation.cause.unproved')
+        end
+        when condition = 'bytecode-window-invalid' | condition = 'bytecode-frame-layout-invalid' then do
+          layout = plan.layout()
+          if layout.status() <> 'proved' | layout.countknown() = 0 | layout.count() < 0 then return fail('unknown','target.expansion.call.layout.cause.unproved')
+        end
+        when condition = 'bytecode-frame-hook' then do
+          if before.recyclercleanup(item.id(),i,'cause') = 0 then return fail('unknown','target.expansion.call.frame.preparation.unproved')
+          /* This exact cause is incidental recycled-a0 cleanup. Its timing
+           * is outside per-call equivalence; raw flow keeps its possible
+           * callback and havoc. Current-body explicit resource operations
+           * still pass through the ordinary body/exit ownership relation. */
+        end
+        when condition = 'provider-invoked' | condition = 'bytecode-provider-invoked' then nop /* The checked body relation owns this producer. */
+        otherwise return fail('unknown','target.expansion.call.cause.' || cause.kind() || '.unmatched')
+      end
+    end
+    return 1
+  /** The existing native binding decoder owns primitive identity and operand
+   * roles. A base-sensitive UNLINK is one LINK to the captured original base;
+   * splitting a compound primitive still needs an exact phase partition. */
+  bindingrelation: method = .int
+    arg before = .lltargettransfer..profile, original = .lltarget..record, copied = .lltarget..record, count = .int, instance = .lltargetremap..expansioninstance
+    right = .lltarget..operand
+    sourceprogram = before.bindingprogram(original.id(),'binding',_worklimit - _work,_bytelimit - _bytes)
+    if incurred(sourceprogram.usedwork(),sourceprogram.usedbytes()) = 0 then return 0
+    candidateprogram = _profile.bindingprogram(copied.id(),'binding',_worklimit - _work,_bytelimit - _bytes)
+    if incurred(candidateprogram.usedwork(),candidateprogram.usedbytes()) = 0 then return 0
+    if sourceprogram.status() <> 'ok' then return fail(sourceprogram.status(),sourceprogram.reason())
+    if candidateprogram.status() <> 'ok' then return fail(candidateprogram.status(),candidateprogram.reason())
+    if count <> 1 | sourceprogram.steps() <> 1 | candidateprogram.steps() <> 1 then return fail('unknown','target.expansion.binding.phase.partition.unproved')
+    kind = sourceprogram.kind(1); replacementkind = candidateprogram.kind(1)
+    a = sourceprogram.operand(1,1); b = sourceprogram.operand(1,2)
+    if a < 1 | a > original.operands() then return fail('invalid','target.expansion.binding.source.operand')
+    subject = original.operand(a); expected = instance.mapped(subject)
+    destination = copied.operand(candidateprogram.operand(1,1))
+    if samevalue(expected,destination) = 0 then return fail('unknown','target.expansion.binding.destination.mismatch')
+    if kind = 'unlink' then do
+      base = instance.base(subject)
+      if base.kind() <> 'R' | replacementkind <> 'link' then return fail('unknown','target.expansion.binding.base.mapping.unproved')
+      right = copied.operand(candidateprogram.operand(1,2))
+      if samevalue(base,right) = 0 then return fail('unknown','target.expansion.binding.base.mapping.unproved')
+    end
+    else if kind = 'argument' | kind = 'capturedargument' then do
+      index = original.operand(b)
+      if index.kind() <> 'I' then return fail('unknown','target.expansion.binding.argument.selector.unproved')
+      ordinal = index.index(); offset = sourceprogram.operand(1,3)
+      if offset > 0 then do; index = original.operand(offset); if index.kind() <> 'I' then return fail('unknown','target.expansion.binding.argument.offset.unproved'); ordinal = ordinal + index.index(); end
+      provider_ref = instance.provider(); provider = dereference provider_ref
+      formal = .lltarget..operand.bound(provider.identity(),instance.procedure(),0,'a',ordinal)
+      expected = instance.mapped(formal)
+      if kind = 'capturedargument' then expected = instance.base(formal)
+      if expected.kind() <> 'R' | replacementkind <> 'link' then return fail('unknown','target.expansion.binding.argument.mapping.unproved')
+      right = copied.operand(candidateprogram.operand(1,2))
+      if samevalue(expected,right) = 0 then return fail('unknown','target.expansion.binding.argument.mapping.unproved')
+    end
+    else return fail('unknown','target.expansion.binding.primitive.correspondence.unproved')
+    catalog = .llrxascatalog..catalog()
+    if catalog.callbackobligations(original.opcode()) <> 0 | catalog.callbackobligations(copied.opcode()) <> 0 then return fail('unknown','target.expansion.binding.callback.phase.unproved')
+    return 1
+  bodyrelation: method = .int
+    arg plan = .expansionplanfact, instance = .lltargetremap..expansioninstance
+    mapid = .int; bindingview = .lltargettransfer..refview
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref
+    sourceref = points.owner(); source = dereference sourceref; profile_ref = points.transfers(); before = dereference profile_ref
+    mapping = dereference _mapping; candidate_ref = mapping.candidateowner(); candidate = dereference candidate_ref
+    catalog = .llrxascatalog..catalog(); cfgref = points.cfg(); sourcecfg = dereference cfgref
+    do r = 1 to instance.rows()
+      if spend(1) = 0 then return 0
+      sourceop = instance.source(r)
+      if sourceop = 0 then iterate
+      original = source.at(sourceop); copied = candidate.at(instance.candidate(r))
+      if catalog.returnkind(original.opcode()) > 0 then iterate
+      left = before.instruction(sourceop); right = _profile.instruction(copied.id())
+      do f = 1 to 12
+        family = word('references components flags numeric signals order control values observations ownership effects bindings',f)
+        if left.complete(family) = 0 | right.complete(family) = 0 then return fail('unknown','target.expansion.body.' || family || '.unproved')
+      end
+      do referenceid = 1 to left.references()
+        if spend(1) = 0 then return 0
+        bindingview = left.ref(referenceid); mapid = instance.mappingid(bindingview.operand())
+        if mapid > 0 & bindingview.anchor() = 'base' then do
+          if instance.mappingrole(mapid) = 'argument' then return fail('unknown','target.expansion.argument.base.requires.proxy')
+        end
+      end
+      identical = instance.count(r) = 1 & original.opcode() = copied.opcode() & left.actions() = right.actions()
+      if identical = 0 then do
+        if bindingrelation(before,original,copied,instance.count(r),instance) = 0 then return 0
+      end
+      do a = 1 to left.actions()
+        if spend(1) = 0 then return 0
+        action = left.action(a)
+        /* A child formal has its own pointer view. Rebinding a direct actual
+         * would instead mutate the caller's slot; such views require proxies. */
+        if wordpos(action.kind(),'link unlink swap') > 0 then do
+          do bindingoperand = 1 to 2
+            bindingref = action.subject()
+            if bindingoperand = 2 then do
+              if action.kind() <> 'swap' | action.sourcekind() <> 'reference' then iterate
+              bindingref = action.sourceid()
+            end
+            if bindingref = 0 then return fail('unknown','target.expansion.argument.binding.inventory.unproved')
+            bindingview = before.ref(bindingref); mapid = instance.mappingid(bindingview.operand())
+            if mapid > 0 then do
+              if instance.mappingrole(mapid) = 'argument' then return fail('unknown','target.expansion.argument.binding.requires.proxy')
+            end
+          end
+        end
+        if identical = 0 then iterate
+        projected = right.action(a)
+        if sameaction(before,_profile,action,projected,instance) = 0 then return fail('unknown','target.expansion.body.event.correspondence.unproved')
+        if action.kind() = 'callback' then do
+          if before.recyclercleanup(sourceop,a,'callback') then iterate
+          if _flow.callbackpossibleat(copied.id(),a) then do
+            if wordpos(action.observation(),'physical unknown') > 0 then return fail('unknown','target.expansion.callback.activation.observation.unproved')
+            if wordpos(action.phase(),'none before after') = 0 then return fail('unknown','target.expansion.callback.phase.correspondence.unproved')
+            /* The same native event on coupled inputs preserves callback
+             * choice/order and retains its entire value/binding havoc. */
+          end
+          else do
+            key = action.id() as .string
+            if spend(length(_nohooks[_checking]) + 1,length(key) + 1) = 0 then return 0
+            _nohooks[_checking] = _nohooks[_checking] || ' ' || key
+          end
+        end
+        if action.kind() = 'policy' then return fail('unknown','target.expansion.signal.policy.restoration.unproved')
+        if action.kind() = 'call' then return fail('unknown','target.expansion.child.parent.observation.unproved')
+      end
+      if sourcecfg.outedges(sourceop) <> _cfg.outedges(copied.id()) then return fail('unknown','target.expansion.body.departure.correspondence.unproved')
+      do e = 1 to sourcecfg.outedges(sourceop)
+        if spend(e + 1) = 0 then return 0
+        edge = sourcecfg.outedge(sourceop,e); projectededge = _cfg.outedge(copied.id(),e)
+        if edge.complete() = 0 | projectededge.complete() = 0 | edge.scopecomplete() = 0 | projectededge.scopecomplete() = 0 then return fail('unknown','target.expansion.body.departure.inventory.unproved')
+        if edge.role() <> projectededge.role() | edge.phase() <> projectededge.phase() | edge.signalname() <> projectededge.signalname() | edge.asynchronous() <> projectededge.asynchronous() | edge.scopeexits() <> projectededge.scopeexits() | edge.scopeenters() <> projectededge.scopeenters() then return fail('unknown','target.expansion.body.departure.correspondence.unproved')
+        if edge.targetblock() > 0 then do
+          targetop = mappedoperation(source,instance,edge.targetop())
+          if targetop = 0 | projectededge.targetop() = 0 then return fail('unknown','target.expansion.body.control.target.mismatch')
+          if candidate.inlineaddress(targetop) <> candidate.inlineaddress(projectededge.targetop()) then return fail('unknown','target.expansion.body.control.target.mismatch')
+        end
+        else do
+          if edge.boundarykind() <> projectededge.boundarykind() | edge.exposure() <> projectededge.exposure() then return fail('unknown','target.expansion.body.boundary.correspondence.unproved')
+          if edge.role() = 'unwind' then return fail('unknown','target.expansion.signal.return.restoration.unproved')
+        end
+      end
+    end
+    return 1
+  run: method = .void
+    ignored = .int; instance = .lltargetremap..expansioninstance; plan = .expansionplanfact
+    i = .int
+    if _status <> 'building' then return
+    if <refvalid>(_owner) = 0 | <refvalid>(_mapping) = 0 then do; ignored = fail('invalid','target.expansion.relation.owner.expired'); return; end
+    owner = dereference _owner; expected = _plan.owner()
+    if (expected <refsame> _owner) = 0 | owner.valid() = 0 then do; ignored = fail('invalid','target.expansion.plan.owner.mismatch'); return; end
+    _ownerid = owner.identity()
+    flowref = owner.flow(); points = dereference flowref
+    _sourcework = points.usedwork(); _sourcebytes = points.usedbytes(); _summarywork = owner.usedwork(); _summarybytes = owner.usedbytes(); _dependenciesready = 1
+    if _plan.draftallowed() = 0 then do; ignored = fail(_plan.status(),_plan.reason()); return; end
+    mapping = dereference _mapping
+    /* A supplied frozen structural proof has already paid its construction
+     * cost. Only materialization performed by this stage belongs here,
+     * including work that ends in a structural refusal. */
+    priorwork = mapping.usedwork(); priorbytes = mapping.usedbytes(); mappingstatus = mapping.status()
+    if incurred(max(0,mapping.usedwork() - priorwork),max(0,mapping.usedbytes() - priorbytes)) = 0 then return
+    if mappingstatus <> 'proved' then do; ignored = fail(mappingstatus,mapping.reason()); return; end
+    if mapping.instances() > (_bytelimit - _bytes) <idiv> 24 then do; ignored = fail('limit','target.expansion.relation.work.or.bytes'); return; end
+    if spend(mapping.instances(),mapping.instances() * 24) = 0 then return
+    flowref = owner.flow(); points = dereference flowref; sourceref = points.owner(); supplied = mapping.sourceowner()
+    if (supplied <refsame> sourceref) = 0 | mapping.instanceat(_plan.operation()) = 0 then do; ignored = fail('invalid','target.expansion.correspondence.source.mismatch'); return; end
+    source = dereference sourceref; candidate_ref = mapping.candidateowner(); candidate = dereference candidate_ref
+    graphref = candidate.ir(); graph = dereference graphref
+    if spend(candidate.records() + graph.operations(),graph.operations() * 8) = 0 then return
+    do i = 1 to graph.operations(); _next[i] = 0; end
+    next = 0; functionid = 0
+    do i = candidate.records() to 1 by -1
+      item = candidate.record(i)
+      if item.procedureid() <> functionid then do; next = 0; functionid = item.procedureid(); end
+      if item.kind() <> 'instruction' then iterate
+      _next[item.id()] = next; next = item.id()
+    end
+    profile_ref = points.transfers(); before = dereference profile_ref
+    if before.premise() <> 'canonical' then do; ignored = fail('unknown','target.expansion.native.inventory.required'); return; end
+    if before.executioncontext() <> '' then do
+      root = source.body(before.executionroot()); functionid = candidate.procedureid(root.name())
+      _profile = .lltargettransfer..profile.closedcalls(candidate_ref,functionid,before.executioncontext(),_worklimit - _work,_bytelimit - _bytes)
+    end
+    else _profile = .lltargettransfer..profile(candidate_ref,_worklimit - _work,_bytelimit - _bytes)
+    profilestatus = _profile.status()
+    if incurred(_profile.usedwork(),_profile.usedbytes()) = 0 then return
+    if profilestatus <> 'ok' then do; ignored = fail(profilestatus,_profile.message()); return; end
+    _cfg = .lltargetcfg..graph(candidate_ref,reference _profile,_worklimit - _work,_bytelimit - _bytes)
+    cfgstatus = _cfg.status()
+    if incurred(_cfg.usedwork(),_cfg.usedbytes()) = 0 then return
+    if cfgstatus <> 'ok' then do; ignored = fail(cfgstatus,_cfg.message()); return; end
+    _flow = .lltargetflow..analysis.relational(candidate_ref,reference _profile,reference _cfg,_worklimit - _work,_bytelimit - _bytes)
+    _candidateflowready = 1
+    if _flow.status() <> 'ok' then do; ignored = fail(_flow.status(),_flow.reason()); return; end
+    if dependencycharge() = 0 then return
+    do i = 1 to mapping.instances()
+      instance = mapping.instance(i); plan = owner.expansionplan(instance.callid())
+      _phasepresent[i] = 0; _nohooks[i] = ''; _checking = i
+      if plan.draftallowed() = 0 then do; ignored = fail(plan.status(),plan.reason()); return; end
+      _plans[i] = plan
+      coverage = points.entrycoverage(instance.procedure())
+      if coverage.valid() = 0 then do; ignored = fail(coverage.status(),coverage.reason()); return; end
+      if coverage.complete() = 0 then do; ignored = fail(coverage.status(),coverage.reason()); return; end
+      if coverage.demands() > 0 then do; ignored = fail('unknown','target.expansion.source.owned.entry.read.unresolved'); return; end
+      if coverage.dependencies() > 0 then do; ignored = fail('unknown','target.expansion.source.owned.entry.dependency.unresolved'); return; end
+      if callcauses(plan,instance) = 0 | entryrelation(plan,instance) = 0 | bodyrelation(plan,instance) = 0 | exitrelation(plan,instance) = 0 then return
+      _phasepresent[i] = 1
+      diagnostic = .diagnosticclone.expanded(_owner,candidate_ref,instance,_worklimit - _work,_bytelimit - _bytes)
+      diagnosticstatus = diagnostic.status()
+      if incurred(diagnostic.usedwork(),diagnostic.usedbytes()) = 0 then return
+      if diagnosticstatus <> 'proved' then do; ignored = fail(diagnosticstatus,diagnostic.reason()); return; end
+      _diagnostics[i] = diagnostic
+    end
+    if retainedrelation() = 0 then return
+    if lifecyclerelation() = 0 then return
+    do i = 1 to mapping.instances()
+      if dispatchrelation(_plans[i],mapping.instance(i)) = 0 then return
+    end
+    _status = 'proved'
+    return
+  valid: method = .int
+    call run()
+    if dependencycharge() = 0 then return 0
+    i = .int
+    if _status <> 'proved' | <refvalid>(_owner) = 0 | <refvalid>(_mapping) = 0 then return 0
+    owner = dereference _owner; mapping = dereference _mapping
+    if owner.valid() = 0 | owner.identity() <> _ownerid | mapping.valid() = 0 | _plan.valid() = 0 | _flow.valid() = 0 | _cfg.valid() = 0 | _profile.valid() = 0 then return 0
+    do i = 1 to _plans[0]; if _plans[i].valid() = 0 | _diagnostics[i].valid() = 0 then return 0; end
+    if _lifecycles[0] <> _plans[0] then return 0
+    do i = 1 to _lifecycles[0]; if _lifecycles[i].valid() = 0 then return 0; end
+    return 1
+  status: method = .string
+    call run()
+    if dependencycharge() = 0 then return _status
+    if _status = 'proved' & valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    call run()
+    if dependencycharge() = 0 then return _reason
+    if _status = 'proved' & valid() = 0 then return 'target.expansion.relation.owner.expired.or.replaced'
+    return _reason
+  allowed: method = .int
+    return valid()
+  preserved: method = .int
+    return valid()
+  usedwork: method = .int
+    ignored = dependencycharge()
+    return _work
+  usedbytes: method = .int
+    ignored = dependencycharge()
+    return _bytes
+  sourcequerywork: method = .int
+    return _sourcequerywork
+  sourcequerybytes: method = .int
+    return _sourcequerybytes
+  /** Revoke only; wrapping a completed fact must not replace its actual
+   * candidate/query counters with an empty zero-quota fact. */
+  budgetrefusal: method = .void
+    arg reason = .string
+    ignored = dependencycharge()
+    _status = 'limit'; _reason = reason; _chargesclosed = 1
+    return
+  result: method = .lltarget..module
+    mapping = dereference _mapping
+    if allowed() then do; result_ref = mapping.candidateowner(); output = dereference result_ref; return output; end
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref; source_ref = points.owner(); source = dereference source_ref
+    return source
+
+/** Expansion-aware preservation of the caller's existing physical boundary.
+ * The provider clone and every unchanged caller record are checked together;
+ * an identity correspondence cannot authorize this CALL-to-clone change.
+ * The first theorem admits no new caller cells and no provider state delta.
+ * Unknown entry payload is preserved, never relabelled clean. */
+directequivalencefact: class
+  _owner = reference .lltargetsummary..analysis
+  _ownerid = .int
+  _clone = .diagnosticclone
+  _plan = .scopefreefact
+  _call = .int
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _covered = .int[]
+  _nextinstruction = .int[]
+  _sourcesteps = .string[]
+  _candidatesteps = .string[]
+  _firstaddress = .int
+  _endaddress = .int
+  _function = .int
+  *: factory
+    arg owner = reference .analysis, sourceop = .int, clone = .diagnosticclone, work = 1000000, bytes = 67108864
+    _owner = owner; _call = sourceop; _clone = clone
+    _status = 'building'; _worklimit = work; _bytelimit = bytes
+    return
+  failed: factory
+    arg owner = reference .analysis, sourceop = .int, clone = .diagnosticclone, state = .string, reason = .string
+    _owner = owner; _call = sourceop; _clone = clone; _status = state; _reason = reason
+    return
+  fail: method = .int
+    arg state = .string, reason = .string
+    if _status = 'building' then do; _status = state; _reason = reason; end
+    return 0
+  spend: method = .int
+    arg work = 1, bytes = 0
+    if work < 0 | bytes < 0 | work > _worklimit - _work | bytes > _bytelimit - _bytes then return fail('limit','target.retained.caller.work.or.bytes')
+    _work = _work + work; _bytes = _bytes + bytes
+    return 1
+  samevalue: method = .int
+    arg left = .lltarget..operand, right = .lltarget..operand
+    if left.kind() <> right.kind() then return 0
+    if left.kind() = 'R' then return left.bank() = right.bank() & left.index() = right.index()
+    if left.kind() = 'I' then return left.index() = right.index()
+    if spend(left.length() + right.length() + 1) = 0 then return 0
+    return (bin2x(left.bytes()) == bin2x(right.bytes()))
+  sameorigin: method = .int
+    arg left = .llir..origin, right = .llir..origin
+    a = left.sourcebytes(); b = right.sourcebytes()
+    if spend(length(left.filename()) + length(right.filename()) + <blen>(a) + <blen>(b) + 1) = 0 then return 0
+    return (left.filename() == right.filename()) & left.first() = right.first() & left.last() = right.last() & (bin2x(a) == bin2x(b))
+  diagnostic: method = .int
+    arg item = .lltarget..record
+    return wordpos(item.kind(),'.srcfile .srcline .srcstep .inlineframe .inlinemap') > 0
+  steps: method = .int
+    arg source = .lltarget..module, candidate = .int
+    value = .lltarget..operand
+    graphref = source.ir(); graph = dereference graphref
+    if spend(source.records(),graph.operations() * 24) = 0 then return 0
+    active = '||'; legacyfile = ''; legacyline = ''; step = ''; functionid = 0
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.procedureid() <> functionid then do
+        functionid = item.procedureid(); active = '||'; legacyfile = ''; legacyline = ''; step = ''
+      end
+      if item.kind() = '.srcfile' | item.kind() = '.srcline' | item.kind() = '.srcstep' then do
+        signature = ''; unavailable = 1
+        do j = 1 to item.operands()
+          value = item.operand(j)
+          if spend(value.length() + 1) = 0 then return 0
+          if item.kind() = '.srcstep' & j = 1 then iterate
+          if value.kind() = 'I' then do
+            signature = signature || 'I:' || value.index() || ';'
+            if value.index() <> 0 then unavailable = 0
+          end
+          else do
+            signature = signature || value.kind() || ':' || bin2x(value.bytes()) || ';'
+            if value.length() <> 0 then unavailable = 0
+          end
+        end
+        if item.kind() = '.srcfile' then legacyfile = signature
+        else if item.kind() = '.srcline' then legacyline = signature
+        else do
+          value = item.operand(1); step = signature
+          if value.index() = 0 then do
+            if unavailable = 0 then return fail('unknown','target.retained.source.unavailable.payload.unproved')
+            step = ''
+          end
+        end
+        active = legacyfile || '|' || legacyline || '|' || step
+      end
+      if item.kind() = 'instruction' then do
+        if spend(length(active) + 1,length(active)) = 0 then return 0
+        if candidate then _candidatesteps[item.id()] = active
+        else _sourcesteps[item.id()] = active
+      end
+    end
+    return 1
+  samerecord: method = .int
+    arg left = .lltarget..record, right = .lltarget..record
+    if left.kind() <> right.kind() | left.operands() <> right.operands() then return 0
+    if left.kind() = 'instruction' then do
+      if left.opcode() <> right.opcode() then return 0
+      if (_sourcesteps[left.id()] == _candidatesteps[right.id()]) = 0 then return 0
+    end
+    if sameorigin(left.origin(),right.origin()) = 0 then return 0
+    do i = 1 to left.operands()
+      if spend(1) = 0 then return 0
+      if samevalue(left.operand(i),right.operand(i)) = 0 then return 0
+    end
+    return 1
+  providerunchangedstate: method = .int
+    arg source = .lltarget..module, profile = .lltargettransfer..profile, cfg = .lltargetcfg..graph, provider = .lltarget..body
+    i = .int; j = .int; family = .string
+    do i = 1 to provider.records()
+      item = provider.record(i)
+      if item.kind() <> 'instruction' then iterate
+      instruction = profile.instruction(item.id())
+      do j = 1 to 12
+        if spend(1) = 0 then return 0
+        family = word('references components flags numeric signals order control values observations ownership effects bindings',j)
+        if instruction.complete(family) = 0 then return fail('unknown','target.retained.provider.effects.unproved')
+      end
+      do j = 1 to instruction.actions()
+        if spend(1) = 0 then return 0
+        action = instruction.action(j)
+        /* Source-only directplan has already discharged every provider hook,
+         * including its exact invocation ABI. Reads and normal control leave
+         * caller cells/context/policy untouched. All other effect vocabulary
+         * needs a separate delta theorem; this is not an opcode allowlist. */
+        if wordpos(action.kind(),'read return edge callback') = 0 then return fail('unknown','target.retained.provider.state.delta.unproved')
+      end
+      do j = 1 to cfg.outedges(item.id())
+        if spend(j + 1) = 0 then return 0
+        edge = cfg.outedge(item.id(),j)
+        if edge.complete() = 0 | edge.scopecomplete() = 0 | edge.scopeexits() <> 0 | edge.scopeenters() <> 0 then return fail('unknown','target.retained.provider.departure.delta.unproved')
+        if edge.targetblock() > 0 & wordpos(edge.role(),'normal table skip') > 0 then iterate
+        if cfg.physicaldeparture(item.id()) & edge.boundarykind() = 'departure' & edge.phase() = 'none' then iterate
+        return fail('unknown','target.retained.provider.departure.delta.unproved')
+      end
+    end
+    return 1
+  run: method = .void
+    ignored = .int; i = .int; j = .int; cursor = .int; first = .int; remaining = .int; next = .int; celladdress = .int
+    pastcall = .int; calladdress = .int
+    instruction = .lltargettransfer..instruction; action = .lltargettransfer..action
+    before = .lltarget..record; after = .lltarget..record; field = .lltarget..operand
+    if _status <> 'building' then return
+    if <refvalid>(_owner) = 0 then do; ignored = fail('invalid','target.retained.caller.owner.expired'); return; end
+    owner = dereference _owner
+    if owner.valid() = 0 then do; ignored = fail('invalid','target.retained.caller.owner.invalid'); return; end
+    _ownerid = owner.identity(); actual = _clone.owner()
+    if (actual <refsame> _owner) = 0 | _clone.operation() <> _call then do; ignored = fail('invalid','target.retained.caller.clone.owner.mismatch'); return; end
+    if _clone.status() <> 'proved' then do; ignored = fail(_clone.status(),_clone.reason()); return; end
+    _plan = owner.directplan(_call)
+    if _plan.draftallowed() = 0 then do; ignored = fail(_plan.status(),_plan.reason()); return; end
+    flowref = owner.flow(); flow = dereference flowref; sourceref = flow.owner(); source = dereference sourceref
+    candidateref = _clone.candidate(); candidate = dereference candidateref
+    profileref = flow.transfers(); profile = dereference profileref; cfgref = flow.cfg(); cfg = dereference cfgref
+    catalog = .llrxascatalog..catalog(); called = source.at(_call); _function = called.procedureid()
+    target = flow.targetat(_call); providerref = target.provider()
+    if (providerref <refsame> sourceref) = 0 then do; ignored = fail('unknown','target.retained.foreign.provider.unproved'); return; end
+    provider = source.body(target.procedure()); caller = source.body(_function)
+    receiver = candidate.body(candidate.procedureid(caller.name()))
+    layout = owner.calllayout(_call); restoration = _plan.restoration()
+    if layout.resultkind() <> 'absent' | layout.countknown() = 0 then do; ignored = fail('unknown','target.retained.call.capture.delta.unproved'); return; end
+    if layout.count() <> 0 then do; ignored = fail('unknown','target.retained.call.capture.delta.unproved'); return; end
+    if provider.locals() <> 0 | receiver.locals() <> caller.locals() | restoration.fields() <> 0 then do; ignored = fail('unknown','target.retained.caller.extra.cells.unproved'); return; end
+    if profile.boundaryobservation(_function) <> 'none' then do; ignored = fail('unknown','target.retained.caller.observations.unproved'); return; end
+    if source.inlineframes() <> 0 then do; ignored = fail('unknown','target.retained.caller.existing.static.frames.unproved'); return; end
+    if candidate.inlineframes() <> 1 then do; ignored = fail('unknown','target.retained.caller.extra.static.frames.unproved'); return; end
+    if (source.name() == candidate.name()) = 0 | source.globals() <> candidate.globals() | source.procedures() <> candidate.procedures() then do; ignored = fail('unknown','target.retained.caller.module.shape.mismatch'); return; end
+    scope = flow.scopeat(_call)
+    if scope.known() = 0 then do; ignored = fail('unknown','target.retained.caller.scope.unproved'); return; end
+    if scope.depth() <> 0 | cfg.scopedepth(_call) <> 0 then do; ignored = fail('unknown','target.retained.caller.scope.unproved'); return; end
+    instruction = profile.instruction(_call)
+    do i = 1 to 12
+      if spend(1) = 0 then return
+      family = word('references components flags numeric signals order control values observations ownership effects bindings',i)
+      if instruction.complete(family) = 0 then do; ignored = fail('unknown','target.retained.call.effects.unproved'); return; end
+    end
+    do i = 1 to instruction.actions()
+      if spend(1) = 0 then return
+      action = instruction.action(i)
+      if wordpos(action.kind(),'call callcapture capture read callback') = 0 then do; ignored = fail('unknown','target.retained.call.departure.correspondence.unproved'); return; end
+      if action.kind() = 'callback' then do
+        if owner.equivalencecallback(_call,i,1) then do; ignored = fail('unknown','target.retained.call.callback.unproved'); return; end
+      end
+    end
+    do i = 1 to cfg.outedges(_call)
+      if spend(i + 1) = 0 then return
+      edge = cfg.outedge(_call,i)
+      if edge.complete() & edge.targetblock() > 0 & wordpos(edge.role(),'normal table skip') > 0 then iterate
+      /* Pairing an arbitrary CALL failure with a normal-only clone would
+       * silently erase that event. Typed CALL-cause correspondence, including
+       * the approved removable infrastructure opportunity, is a distinct
+       * extension; no reason text or signal name can assert it here. */
+      ignored = fail('unknown','target.retained.call.departure.correspondence.unproved'); return
+    end
+    if providerunchangedstate(source,profile,cfg,provider) = 0 then return
+    graphref = candidate.ir(); graph = dereference graphref
+    if spend(source.records() + candidate.records() * 2 + graph.operations(),graph.operations() * 16) = 0 then return
+    do i = 1 to graph.operations(); _covered[i] = 0; _nextinstruction[i] = 0; end
+    functionid = 0; next = 0
+    do i = candidate.records() to 1 by -1
+      after = candidate.record(i)
+      if after.procedureid() <> functionid then do; functionid = after.procedureid(); next = 0; end
+      if after.kind() <> 'instruction' then iterate
+      _nextinstruction[after.id()] = next; next = after.id()
+    end
+    _firstaddress = -1; _endaddress = -1
+    do i = 1 to _clone.rows()
+      if _clone.sourceentry(i) = 0 then do; ignored = fail('unknown','target.retained.caller.entry.cells.unproved'); return; end
+      first = _clone.candidateentry(i); remaining = _clone.entrycount(i)
+      do while remaining > 0 & first > 0
+        if spend(1) = 0 then return
+        after = candidate.at(first)
+        _covered[after.id()] = 1; remaining = remaining - 1
+        celladdress = candidate.inlineaddress(after.id())
+        if _firstaddress < 0 then _firstaddress = celladdress
+        _endaddress = celladdress + after.operands() + 1
+        first = _nextinstruction[first]
+      end
+      if remaining <> 0 then do; ignored = fail('invalid','target.retained.caller.clone.locator.extent'); return; end
+    end
+    if steps(source,0) = 0 | steps(candidate,1) = 0 then return
+    cursor = 1; pastcall = 0; calladdress = source.inlineaddress(_call)
+    do i = 1 to source.records()
+      if spend(1) = 0 then return
+      before = source.record(i)
+      if before.id() = _call then do; pastcall = 1; iterate; end
+      if diagnostic(before) then iterate
+      if before.kind() = 'instruction' then do
+        instruction = profile.instruction(before.id())
+        if instruction.complete('relocation') = 0 then do; ignored = fail('unknown','target.retained.caller.instruction.observer.unproved'); return; end
+        do j = 1 to instruction.actions()
+          if spend(1) = 0 then return
+          action = instruction.action(j)
+          if action.kind() = 'callback' & owner.abiaction(action) = 0 & wordpos(action.observation(),'physical unknown') > 0 then do
+            if owner.equivalencecallback(before.id(),j,1) then do; ignored = fail('unknown','target.retained.caller.callback.observer.unproved'); return; end
+          end
+        end
+      end
+      do while cursor <= candidate.records()
+        if spend(1) = 0 then return
+        after = candidate.record(cursor)
+        if diagnostic(after) then do; cursor = cursor + 1; iterate; end
+        if after.kind() = 'instruction' then do
+          if _covered[after.id()] then do; cursor = cursor + 1; iterate; end
+        end
+        if after.kind() = 'label' & after.procedureid() = receiver.functionid() then do
+          if samerecord(before,after) then leave
+          celladdress = candidate.inlineaddress(after.id())
+          if celladdress >= _firstaddress & celladdress <= _endaddress then do; cursor = cursor + 1; iterate; end
+        end
+        leave
+      end
+      if cursor > candidate.records() then do; ignored = fail('unknown','target.retained.caller.record.missing'); return; end
+      after = candidate.record(cursor)
+      if samerecord(before,after) = 0 then do; ignored = fail('unknown','target.retained.caller.record.delta.unproved'); return; end
+      if before.procedureid() = _function & before.kind() <> 'procedure' then do
+        celladdress = candidate.inlineaddress(after.id())
+        if pastcall then do
+          if celladdress < _endaddress then do; ignored = fail('unknown','target.retained.caller.control.boundary.mismatch'); return; end
+        end
+        else do
+          extent = 0
+          if before.kind() = 'instruction' then extent = before.operands() + 1
+          if celladdress + extent > _firstaddress then do; ignored = fail('unknown','target.retained.caller.control.boundary.mismatch'); return; end
+          /* A label naming the removed CALL's entry must still enter its
+           * replacement. In particular a post-CALL bypass label cannot be
+           * moved before covered clone instructions while retaining its text. */
+          if before.kind() <> 'instruction' & source.inlineaddress(before.id()) = calladdress & celladdress <> _firstaddress then do; ignored = fail('unknown','target.retained.caller.control.boundary.mismatch'); return; end
+        end
+      end
+      if before.kind() = 'instruction' & candidate.inlineframeat(after.id()) <> 0 then do; ignored = fail('unknown','target.retained.caller.frame.attribution.mismatch'); return; end
+      cursor = cursor + 1
+    end
+    do while cursor <= candidate.records()
+      if spend(1) = 0 then return
+      after = candidate.record(cursor)
+      if diagnostic(after) = 0 then do; ignored = fail('unknown','target.retained.caller.record.extra'); return; end
+      cursor = cursor + 1
+    end
+    _status = 'proved'
+    return
+  valid: method = .int
+    call run()
+    if _status <> 'proved' | <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner
+    return owner.valid() & owner.identity() = _ownerid & _plan.valid() & _clone.valid()
+  status: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'target.retained.caller.owner.expired.or.replaced'
+    return _reason
+  allowed: method = .int
+    return valid()
+  /** Preserved is distinct from the raw ABI's possible() result. */
+  preserved: method = .int
+    return valid()
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+  result: method = .lltarget..module
+    if allowed() then do; candidateref = _clone.candidate(); output = dereference candidateref; return output; end
+    owner = dereference _owner; flowref = owner.flow(); flow = dereference flowref; sourceref = flow.owner()
+    source = dereference sourceref; return source
 
 /** An immutable procedure/mode view. Direct effects do not include callee
  * bodies; transitive may effects include the exact locally bound closure. */
@@ -718,12 +2922,15 @@ analysis: class
   _layoutpresent = .int[]
   _scopefacts = .scopefreefact[]
   _scopepresent = .int[]
+  _restorefacts = .restorationfact[]
+  _restorepresent = .int[]
   _activationfacts = .activationfact[]
   _activationpresent = .int[]
   _providers = .providerbundle[]
   _activationstarted = .int
   _activationdirectready = .int[]
   _activationdirectreason = .string[]
+  _activationdiagnostic = .int[]
   _activationprocedures = .activationfact[]
   _activationprocedurepresent = .int[]
   _activationpreparing = .int[]
@@ -799,6 +3006,15 @@ analysis: class
       if possible then return 1
     end
     return 0
+  /** Only inliner equivalence uses the incidental-cleanup contract. Shared
+   * effects, discard/liveness and actual callback-state flow stay raw. */
+  equivalencecallback: method = .int
+    arg sourceop = .int, ordinal = .int, site = 0
+    if site then do; if sitespend(max(0,ordinal) + 24) = 0 then return 1; end
+    else if spend(max(0,ordinal) + 24) = 0 then return 1
+    flow = dereference _flow; profileref = flow.transfers(); profile = dereference profileref
+    if profile.recyclercleanup(sourceop,ordinal,'callback') then return 0
+    return callbackmay(sourceop,ordinal,site)
   abiaction: method = .int
     arg action = .lltargettransfer..action
     return action.kind() = 'callback' & wordpos(action.detail(),'catalog.callback.abi catalog.callback.departure') > 0
@@ -1076,13 +3292,14 @@ analysis: class
     direct = .row; result = .row; child = .row
     action = .lltargettransfer..action; instruction = .lltargettransfer..instruction
     f = .int; i = .int; j = .int; n = .int; c = .int; ignored = .int
-    target = .int; changed = .int; familyordinal = .int
+    target = .int; changed = .int; familyordinal = .int; controlmask = .int
     do
       if _worklimit < 1 | _bytelimit < 1 then do; ignored = fail('limit','target.summary.budgets'); return; end
       if <refvalid>(_flow) = 0 then do; ignored = fail('invalid','target.summary.owner.expired'); return; end
       flow = dereference _flow
       if flow.status() <> 'ok' then do; ignored = fail(flow.status(),flow.message()); return; end
       _flowid = flow.identity(); source_ref = flow.owner(); source = dereference source_ref
+      catalog = .llrxascatalog..catalog()
       profile_ref = flow.transfers(); profile = dereference profile_ref
       cfg_ref = flow.cfg(); cfg = dereference cfg_ref; index_ref = cfg.index(); index = dereference index_ref
       if reserve(index.functions() * 64) = 0 then return
@@ -1101,6 +3318,14 @@ analysis: class
         end
         if cfg.projectedop(record.id()) = 0 then do; ignored = direct.unknown('control'); _direct[f] = direct as .object; iterate; end
         if index.reachable(cfg.projectedblock(record.id())) = 0 then do; _direct[f] = direct as .object; iterate; end
+        if record.kind() = 'instruction' then do
+          if spend(direct.count() + 1) = 0 | reserve(96) = 0 then return
+          if catalog.framecontrolstate(record.opcode()) <> 'known' then ignored = direct.unknown('framecontrol')
+          else do
+            controlmask = catalog.framecontrolmask(record.opcode())
+            if controlmask <> 0 then ignored = direct.add('framecontrol','may',controlmask as .string,record.id(),1)
+          end
+        end
         do j = 1 to instruction.actions()
           if spend(direct.count() + instruction.references() + 1) = 0 | reserve(128) = 0 then return
           action = instruction.action(j); call eventrow(direct,instruction,action,profile)
@@ -1538,6 +3763,31 @@ analysis: class
       if (provider <refsame> owner) & (profile_ref <refsame> transfers) then return i
     end
     return 0
+  /** Read executable records in their original provider owner. Peer facts
+   * donate no selection authority: the view rechecks the caller's exact
+   * target and the enrolled provider transfer identity before exposing it. */
+  bodyview: method = .lltargetbodyview..view
+    arg sourceop = .int
+    if sitebegin(sourceop) = 0 then return .lltargetbodyview..view.unavailable(_flow,sourceop,'target.bodyview.caller.unavailable')
+    if sitespend(12) = 0 | sitereserve(448) = 0 then return .lltargetbodyview..view.unavailable(_flow,sourceop,_sitefailure,'limit')
+    flow = dereference _flow; target = flow.targetat(sourceop)
+    if target.status() <> 'proved' then return .lltargetbodyview..view(_flow,sourceop)
+    provider = target.provider(); owner = flow.owner()
+    if provider <refsame> owner then return .lltargetbodyview..view(_flow,sourceop,_flow)
+    transfers = target.transfers()
+    if <refvalid>(transfers) = 0 then return .lltargetbodyview..view(_flow,sourceop)
+    peer = providerindex(provider,transfers)
+    if peer = 0 then return .lltargetbodyview..view(_flow,sourceop)
+    points = _providers[peer].points()
+    return .lltargetbodyview..view(_flow,sourceop,points)
+  bodysummaries: method = reference .lltargetsummary..analysis
+    arg bodyview = .lltargetbodyview..view
+    if bodyview.valid() = 0 then assembler signal "ERROR","LL_TARGET_SUMMARY: provider body view expired"
+    points = bodyview.points()
+    if points <refsame> _flow then return reference self
+    owner = bodyview.owner(); transfers = bodyview.transfers(); peer = providerindex(owner,transfers)
+    if peer = 0 then assembler signal "ERROR","LL_TARGET_SUMMARY: provider body facts expired"
+    return _providers[peer].summaries()
   activationedgeknown: method = .int
     arg edge = .lltargetcfg..edge, transport = .int
     if edge.complete() & edge.role() <> 'unknown' then return 1
@@ -1552,10 +3802,10 @@ analysis: class
     if scoped + 1 <= _activationdirectready[0] then do; if _activationdirectready[scoped + 1] then return 1; end
     flow = dereference _flow; owner = flow.owner(); source = dereference owner
     profile_ref = flow.transfers(); profile = dereference profile_ref; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
-    catalog = .llrxascatalog..catalog(); maximum = _direct[0] * 2 + 1
-    if sitespend(maximum + 1) = 0 | sitereserve(max(0,maximum - _activationdirectreason[0]) * 48 + _direct[0] * 24 + 64) = 0 then return 0
+    catalog = .llrxascatalog..catalog(); maximum = _direct[0] * 3 + 2
+    if sitespend(maximum + 1) = 0 | sitereserve(max(0,maximum - _activationdirectreason[0]) * 56 + _direct[0] * 24 + 64) = 0 then return 0
     do f = 2 to _direct[0]
-      key = f * 2 + scoped; _activationdirectreason[key] = ''; _activationpreparing[key] = 0; _activationprocedurepresent[key] = 0
+      key = f * 3 + scoped; _activationdirectreason[key] = ''; _activationdiagnostic[key] = 0; _activationpreparing[key] = 0; _activationprocedurepresent[key] = 0
       if _activationabiready = 0 then do; _activationabihead[f] = 0; _activationabitail[f] = 0; _activationabicount[f] = 0; end
     end
     if _activationcallsready = 0 then do
@@ -1570,7 +3820,7 @@ analysis: class
       if sitespend(4) = 0 then return 0
       item = source.record(i); f = item.procedureid()
       if f < 2 | item.kind() = 'procedure' then iterate
-      instruction = profile.instruction(item.id()); key = f * 2 + scoped; hiddenabi = 0
+      instruction = profile.instruction(item.id()); key = f * 3 + scoped; hiddenabi = 0
       do j = 1 to 3
         family = word('references order relocation',j)
         if instruction.complete(family) = 0 then _activationdirectreason[key] = 'target.activation.metadata.remap.unproved'
@@ -1580,7 +3830,7 @@ analysis: class
         action = instruction.action(j)
         if action.kind() <> 'callback' then iterate
         if abiaction(action) then do; hiddenabi = 1; iterate; end
-        if callbackmay(item.id(),j,1) then _activationdirectreason[key] = 'target.activation.callback.context.unproved'
+        if equivalencecallback(item.id(),j,1) then _activationdirectreason[key] = 'target.activation.callback.context.unproved'
         if _sitefailure <> '' | _status <> 'ok' then return 0
       end
       if _activationabiready = 0 then do
@@ -1594,14 +3844,17 @@ analysis: class
         end
       end
     end
-    transport = scoped & catalog.scopeddiagnostics() & profile.premise() = 'canonical'
+    transport = (scoped = 1) & catalog.scopeddiagnostics() & profile.premise() = 'canonical'
     do i = 1 to cfg.edges()
       if sitespend(1) = 0 then return 0
       edge = cfg.edge(i); f = edge.function()
       if f < 2 | f > _direct[0] then iterate
-      key = f * 2 + scoped
+      key = f * 3 + scoped
       if activationedgeknown(edge,transport) = 0 then _activationdirectreason[key] = 'target.activation.signal.context.unproved'
-      if transport = 0 & edge.role() = 'terminal' & (edge.phase() <> 'none' | edge.signalname() <> '') then _activationdirectreason[key] = 'target.activation.terminal.diagnostic.unproved'
+      if transport = 0 & edge.role() = 'terminal' & (edge.phase() <> 'none' | edge.signalname() <> '') then do
+        if scoped = 2 then _activationdiagnostic[key] = 1
+        else _activationdirectreason[key] = 'target.activation.terminal.diagnostic.unproved'
+      end
     end
     _activationabiready = 1; _activationdirectready[scoped + 1] = 1
     return 1
@@ -1615,10 +3868,10 @@ analysis: class
     child = .int; c = .int; peer = .int
     call run()
     if valid() = 0 then return .activationfact(.siteproof(reference self,'invalid',message()),0)
-    if functionid < 2 | functionid > _direct[0] | (scoped <> 0 & scoped <> 1) then return .activationfact(.siteproof(reference self,'unknown','target.activation.procedure.unproved'),0)
+    if functionid < 2 | functionid > _direct[0] | (scoped <> 0 & scoped <> 1 & scoped <> 2) then return .activationfact(.siteproof(reference self,'unknown','target.activation.procedure.unproved'),0)
     _activationstarted = 1
     if prepareactivation(scoped) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
-    key = functionid * 2 + scoped
+    key = functionid * 3 + scoped
     if _activationprocedurepresent[key] then return _activationprocedures[key]
     if depth >= 32 | _activationpreparing[key] then return .activationfact(.siteproof(reference self,'unknown','target.activation.recursion.or.depth.unproved'),0)
     _activationpreparing[key] = 1; state = 'proved'; reason = _activationdirectreason[key]; allowed = reason = ''
@@ -1649,7 +3902,7 @@ analysis: class
       c = _activationcallnext[c]
     end
     _activationpreparing[key] = 0
-    result = .activationfact.deferred(.siteproof(reference self,state,reason),allowed,dependencies,targets,_activationabicount[functionid])
+    result = .activationfact.deferred(.siteproof(reference self,state,reason),allowed,dependencies,targets,_activationabicount[functionid],_activationdiagnostic[key])
     _activationprocedures[key] = result; _activationprocedurepresent[key] = 1
     return result
   activationcharge: method = .int
@@ -1696,18 +3949,129 @@ analysis: class
       child = callactivation(_calloperation[c],scoped,depth + 1)
       if activationcharge(child) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
       dependencies[dependencies[0] + 1] = child
-      if child.allowed() = 0 then do; state = child.status(); reason = child.reason(); allowed = 0; end
+      if child.semanticallowed() = 0 then do; state = child.status(); reason = child.reason(); allowed = 0; end
       c = _activationcallnext[c]
     end
     return .activationfact.contextual(.siteproof(reference self,state,reason),allowed,dependencies,targets,invocations,proofs)
   activationequivalence: method = .lltargetsummary..activationfact
     arg sourceop = .int, scoped = 1
     return callactivation(sourceop,scoped,0)
+  /** Source-only planning may defer a retained physical caller tail. The
+   * removed provider's activation is still independently instantiated and
+   * proved. This fact cannot publish a replacement without correspondence. */
+  directactivation: method = .lltargetsummary..activationfact
+    arg sourceop = .int
+    if sitebegin(sourceop) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+    return resolvecallactivation(sourceop,2,0,1)
+  /** Partition an existing sealed native execution plan at its physical
+   * unwind suffix. No new ABI row or callback-absence conclusion is created.
+   * A structural failure or possible prefix hook cannot be deferred. */
+  retainedprefix: method = .int
+    arg sourceop = .int, edge = .lltargetcfg..edge, abi = .lltargetflow..abicallbackfact
+    flow = dereference _flow; cfgref = flow.cfg(); cfg = dereference cfgref
+    if abi.valid() = 0 | edge.sourceop() <> sourceop | edge.targetblock() <> 0 | edge.complete() = 0 then return 0
+    if wordpos(edge.role(),'terminal unwind async') = 0 | edge.scopecomplete() = 0 | edge.scopeexits() <> 0 | edge.scopeenters() <> 0 then return 0
+    scope = flow.scopeat(sourceop)
+    if scope.known() = 0 then return 0
+    if scope.depth() <> 0 | cfg.scopedepth(sourceop) <> 0 then return 0
+    if abi.intrinsicstructuralreason() <> '' | abi.ambientreason() <> '' then return 0
+    tail = 0
+    do i = 1 to abi.rawrows()
+      if sitespend(1) = 0 then return 0
+      row = abi.rawrow(i)
+      if row.mode() = 'frame-unwind' then tail = tail + 1
+      else do
+        if tail > 0 | row.possible() then return 0
+      end
+    end
+    return tail > 0
+  /** Reserve this result before building the candidate. The checker owns
+   * its cost bound; the caller supplies only candidate record/frame bounds. */
+  diagnosticlimits: method = .lltargetsummary..diagnosticlimits
+    arg candidaterecords = .int, candidateframes = .int
+    call run()
+    if valid() = 0 then return .diagnosticlimits(0,0,0,0,0,0,-1,-1)
+    flow = dereference _flow; sourceref = flow.owner(); source = dereference sourceref
+    payload = 0; operands = 0
+    do i = 1 to source.records()
+      item = source.record(i); at = item.origin(); sourcebytes = at.sourcebytes()
+      cost = length(at.filename()) + <blen>(sourcebytes) + 1
+      if sitespend(cost + item.operands() + 1) = 0 then return .diagnosticlimits(0,0,0,0,0,0,-1,-1)
+      payload = max(payload,cost); operands = operands + item.operands()
+      do j = 1 to item.operands()
+        value = item.operand(j); payload = max(payload,value.length() + 1)
+      end
+    end
+    return .diagnosticlimits(source.records(),candidaterecords,source.inlineframes(),candidateframes,payload,operands,_worklimit - _work - _sitework,_bytelimit - _bytes - _sitebytes)
+  /** Complete only the pending terminal-diagnostic obligation for an exact
+   * candidate. Source activation/ABI/callback proof remains independently
+   * necessary; neither the recipe arrays nor frame metadata grants it. */
+  diagnosticactivation: method = .lltargetsummary..activationfact
+    arg sourceop = .int, clone = .diagnosticclone
+    if sitebegin(sourceop) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+    requested = clone.owner(); actual = reference self
+    if (requested <refsame> actual) = 0 | clone.operation() <> sourceop then return .activationfact(.siteproof(reference self,'invalid','target.diagnostic.clone.source.owner.mismatch'),0)
+    state = clone.status(); reason = clone.reason()
+    if sitespend(clone.usedwork() + 1) = 0 | sitereserve(clone.usedbytes()) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+    if state <> 'proved' then return .activationfact(.siteproof(reference self,state,reason),0)
+    semantic = activationequivalence(sourceop,2)
+    if semantic.semanticallowed() = 0 then return semantic
+    return .activationfact.diagnosed(.siteproof(reference self,'proved'),semantic,clone)
+  /** Publish only the combined provider, diagnostic and retained-caller
+   * expansion proof. The pre-reserved envelope covers both final checkers;
+   * the clone's cost is subtracted before composition, never spent twice. */
+  directequivalence: method = .lltargetsummary..directequivalencefact
+    arg sourceop = .int, clone = .diagnosticclone, work = 1000000, bytes = 67108864
+    if sitebegin(sourceop) = 0 then return .directequivalencefact.failed(reference self,sourceop,clone,'limit',_sitefailure)
+    state = clone.status()
+    if state <> 'proved' then return .directequivalencefact.failed(reference self,sourceop,clone,state,clone.reason())
+    if work < clone.usedwork() | bytes < clone.usedbytes() then return .directequivalencefact.failed(reference self,sourceop,clone,'limit','target.retained.caller.work.or.bytes')
+    result = .directequivalencefact(reference self,sourceop,clone,work - clone.usedwork(),bytes - clone.usedbytes())
+    state = result.status()
+    if _sitefailure <> '' then return .directequivalencefact.failed(reference self,sourceop,clone,'limit',_sitefailure)
+    if sitespend(clone.usedwork() + result.usedwork() + 1) = 0 | sitereserve(clone.usedbytes() + result.usedbytes()) = 0 then return .directequivalencefact.failed(reference self,sourceop,clone,'limit',_sitefailure)
+    return result
+  /** The new relation is separately typed from the legacy diagnostic-only
+   * theorem. Both preserve the original frozen input atomically on refusal. */
+  expansionequivalence: method = .lltargetsummary..expansionequivalencefact
+    arg plan = .expansionplanfact, correspondence = reference .lltargetremap..expansioncorrespondence, work = 1000000, bytes = 67108864
+    if sitebegin(plan.operation()) = 0 then return .expansionequivalencefact(reference self,plan,correspondence,0,0)
+    priorwork = usedwork(); priorbytes = usedbytes()
+    result = .expansionequivalencefact(reference self,plan,correspondence,work,bytes)
+    state = result.status()
+    /* Plans/coverage queried inside the fact already charge this summary.
+     * Account only the remainder here; refusals spend their work as well. */
+    morework = max(0,result.usedwork() - max(0,usedwork() - priorwork) - result.sourcequerywork())
+    morebytes = max(0,result.usedbytes() - max(0,usedbytes() - priorbytes) - result.sourcequerybytes())
+    if morework = 9223372036854775807 then do
+      call result.budgetrefusal('target.site.work'); return result
+    end
+    if sitespend(morework + 1) = 0 | sitereserve(morebytes) = 0 then call result.budgetrefusal(_sitefailure)
+    return result
+  /** Borrow the native control atoms from the existing summary fixed point.
+   * This internal view is immutable to its consumers and grants no absence. */
+  framecontrolrow: method = .row
+    arg functionid = .int, mode = .string
+    call run()
+    if valid() = 0 | functionid < 2 | functionid > _direct[0] | wordpos(mode,'direct transitive') = 0 then assembler signal 'ERROR','LL_TARGET_SUMMARY: frame-control owner unavailable'
+    if mode = 'direct' then return _direct[functionid] as .row
+    return _transitive[functionid] as .row
+  /** The receipt is issued by the same final relation after checking all
+   * coupled entry/body/result events. No naked pairing flag is accepted. */
+  framecontrolhistory: method = .framecontrolhistoryfact
+    arg phase = .controlreceipt, work = 1000000, bytes = 67108864
+    result = .framecontrolhistoryfact(reference self,phase,work,bytes)
+    state = result.status()
+    if result.usedwork() = 9223372036854775807 then do
+      call result.budgetrefusal('target.site.work'); return result
+    end
+    if sitespend(result.usedwork() + 1) = 0 | sitereserve(result.usedbytes()) = 0 then call result.budgetrefusal(_sitefailure)
+    return result
   callactivation: method = .lltargetsummary..activationfact
     arg sourceop = .int, scoped = .int, depth = .int
-    if scoped <> 0 & scoped <> 1 then return .activationfact(.siteproof(reference self,'invalid','target.activation.mode.invalid'),0)
+    if scoped <> 0 & scoped <> 1 & scoped <> 2 then return .activationfact(.siteproof(reference self,'invalid','target.activation.mode.invalid'),0)
     if sitebegin(sourceop) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
-    key = sourceop * 2 + scoped
+    key = sourceop * 3 + scoped
     if key <= _activationpresent[0] then do; if _activationpresent[key] then return _activationfacts[key]; end
     if depth >= 32 then return .activationfact(.siteproof(reference self,'unknown','target.activation.recursion.or.depth.unproved'),0)
     if key <= _activationinprogress[0] then do; if _activationinprogress[key] then return .activationfact(.siteproof(reference self,'unknown','target.activation.recursion.or.depth.unproved'),0); end
@@ -1718,7 +4082,7 @@ analysis: class
     _activationfacts[key] = result; _activationpresent[key] = 1
     return result
   resolvecallactivation: method = .lltargetsummary..activationfact
-    arg sourceop = .int, scoped = .int, depth = .int
+    arg sourceop = .int, scoped = .int, depth = .int, retained = 0
     dependencies = .activationfact[]; targets = .lltargetflow..targetfact[]
     invocations = .lltargetflow..invocationfact[]; proofs = .lltargetflow..abicallbackfact[]
     childproof = .activationfact; peer = .int; i = .int; abi = .lltargetflow..abicallbackfact
@@ -1727,19 +4091,31 @@ analysis: class
     catalog = .llrxascatalog..catalog(); item = source.at(sourceop)
     if item.kind() <> 'instruction' then return .activationfact(.siteproof(reference self,'unknown','target.site.not.call'),0)
     if catalog.callinvokes(item.opcode()) = 0 then return .activationfact(.siteproof(reference self,'unknown','target.site.not.call'),0)
-    state = 'proved'; reason = ''; allowed = 1
-    transport = scoped & catalog.scopeddiagnostics() & profile.premise() = 'canonical'
+    state = 'proved'; reason = ''; allowed = 1; diagnosticpending = 0; retainedpending = 0
+    transport = (scoped = 1) & catalog.scopeddiagnostics() & profile.premise() = 'canonical'
     do i = 1 to cfg.outedges(sourceop)
       if sitespend(i + 1) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
       edge = cfg.outedge(sourceop,i)
       if activationedgeknown(edge,transport) = 0 then do; state = 'unknown'; reason = 'target.activation.signal.context.unproved'; allowed = 0; end
-      if transport = 0 & edge.role() = 'terminal' & (edge.phase() <> 'none' | edge.signalname() <> '') then do; state = 'unknown'; reason = 'target.activation.terminal.diagnostic.unproved'; allowed = 0; end
-      if abiedge(edge,cfg) then do
+      if transport = 0 & edge.role() = 'terminal' & (edge.phase() <> 'none' | edge.signalname() <> '') then do
+        if scoped = 2 then diagnosticpending = 1
+        else do; state = 'unknown'; reason = 'target.activation.terminal.diagnostic.unproved'; allowed = 0; end
+      end
+      physicaltail = edge.targetblock() = 0 & wordpos(edge.role(),'terminal unwind async') > 0
+      if abiedge(edge,cfg) | (retained & physicaltail) then do
         abi = flow.abicallbackat(sourceop,edge.id())
         if flow.status() <> 'ok' then do; ignored = fail(flow.status(),flow.reason()); return .activationfact(.siteproof(reference self,flow.status(),flow.reason()),0); end
         if sitespend(abi.rows() * 8 + 1) = 0 | sitereserve(abi.bytes()) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
         proofs[proofs[0] + 1] = abi
-        if abi.possible() then do; state = 'unknown'; reason = abi.reason(); if reason = '' then reason = 'target.activation.abi.callback.possible'; allowed = 0; end
+        if abi.possible() then do
+          deferred = 0
+          if retained then deferred = retainedprefix(sourceop,edge,abi)
+          if deferred then do
+            if profile.boundaryobservation(item.procedureid()) <> 'none' then do; state = 'unknown'; reason = 'target.retained.caller.observations.unproved'; allowed = 0; end
+            else retainedpending = retainedpending + 1
+          end
+          else do; state = 'unknown'; reason = abi.reason(); if reason = '' then reason = 'target.activation.abi.callback.possible'; allowed = 0; end
+        end
       end
     end
     if allowed then do
@@ -1760,10 +4136,10 @@ analysis: class
         end
         if activationcharge(childproof) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
         dependencies[1] = childproof
-        if childproof.allowed() = 0 then do; state = childproof.status(); reason = childproof.reason(); allowed = 0; end
+        if childproof.semanticallowed() = 0 then do; state = childproof.status(); reason = childproof.reason(); allowed = 0; end
       end
     end
-    return .activationfact.contextual(.siteproof(reference self,state,reason),allowed,dependencies,targets,invocations,proofs)
+    return .activationfact.contextual(.siteproof(reference self,state,reason),allowed,dependencies,targets,invocations,proofs,diagnosticpending,retainedpending)
   /** A component delta immediately before this exact callback may change only
    * storage outside its complete observed projection. A checked correspondence
    * can relate two unchanged activations, but is not a delta-history proof.
@@ -1855,9 +4231,11 @@ analysis: class
     flow = dereference _flow; owner = flow.owner(); source = dereference owner
     target = flow.targetat(sourceop)
     if target.status() <> 'proved' then return .directmappingfact(.siteproof(reference self,'unknown',target.reason()),target)
-    provider = target.provider()
-    if (provider <refsame> owner) = 0 then return .directmappingfact(.siteproof(reference self,'unknown','target.argument.mapping.provider.unproved'),target)
-    profile_ref = flow.transfers(); profile = dereference profile_ref; body = source.body(target.procedure()); catalog = .llrxascatalog..catalog()
+    exactbody = bodyview(sourceop)
+    if exactbody.valid() = 0 then return .directmappingfact(.siteproof(reference self,exactbody.status(),exactbody.reason()),target)
+    provider = exactbody.owner(); provider_source = dereference provider
+    profile_ref = exactbody.transfers(); profile = dereference profile_ref; body = exactbody.body(); catalog = .llrxascatalog..catalog()
+    effects_ref = bodysummaries(exactbody); effects = dereference effects_ref
     callrecord = source.at(sourceop); callerbody = source.body(callrecord.procedureid()); callerentry = 0
     do i = 1 to callerbody.records()
       if sitespend(1) = 0 then return .directmappingfact(.siteproof(reference self,'limit',_sitefailure),target)
@@ -1882,15 +4260,15 @@ analysis: class
           knownextent = view.extentknown(); extent = view.extent()
           if knownextent = 0 & item.kind() = 'instruction' then do
             if catalog.callinvokes(item.opcode()) then do
-              childlayout = calllayout(item.id())
+              childlayout = effects.calllayout(item.id())
               if childlayout.countknown() then do; knownextent = 1; extent = childlayout.count() + 1; end
             end
           end
           if knownextent = 0 then return .directmappingfact(.siteproof(reference self,'unknown','target.argument.mapping.window.extent.unproved'),target)
           firstslot = view.index()
           if view.bank() = 'g' then firstslot = firstslot + body.locals()
-          else if view.bank() = 'a' then firstslot = firstslot + body.locals() + source.globals()
-          if extent > 0 & firstslot < body.locals() + source.globals() then do
+          else if view.bank() = 'a' then firstslot = firstslot + body.locals() + provider_source.globals()
+          if extent > 0 & firstslot < body.locals() + provider_source.globals() then do
             if firstslot >= body.locals() | extent > body.locals() - firstslot then return .directmappingfact(.siteproof(reference self,'unknown','target.global.mapping.window.unproved'),target)
           end
         end
@@ -1899,6 +4277,7 @@ analysis: class
           if view.index() > layout.count() then return .directmappingfact(.siteproof(reference self,'unknown','target.argument.mapping.presence.unproved'),target)
         end
         if view.bank() = 'g' then do
+          if exactbody.foreign() then return .directmappingfact(.siteproof(reference self,'unknown','target.global.mapping.foreign.binding.unproved'),target)
           if view.anchor() <> 'active' then return .directmappingfact(.siteproof(reference self,'unknown','target.global.mapping.anchor.unproved'),target)
           if sitespend(flow.lookupcost() * 2 + 1) = 0 then return .directmappingfact(.siteproof(reference self,'limit',_sitefailure),target)
           incoming = flow.captureat(sourceop,'g',view.index()); initial = flow.storageat(callerentry,'g',view.index())
@@ -1932,21 +4311,222 @@ analysis: class
         end
       end
     end
-    return .directmappingfact(.siteproof(reference self,'proved'),target)
-  scopefree: method = .lltargetsummary..scopefreefact
+    return .directmappingfact(.siteproof(reference self,'proved','',exactbody),target)
+  restorationfailure: method = .lltargetsummary..restorationfact
+    arg sourceop = .int, procedureid = .int, reason = .string, state = 'unknown'
+    domains = .int[]; modes = .string[]; getters = .string[]; setters = .string[]
+    literals = .lltarget..operand[]; saveordinals = .int[]; exits = .int[]
+    return .restorationfact.bound(.siteproof(reference self,state,reason),sourceop,procedureid,domains,modes,getters,setters,literals,saveordinals,0,exits)
+  /** Infer only the context that deleting this call frame exposes. Retained
+   * child frames keep their own numeric writes isolated. Canonical read/write
+   * domains select fields; no body mnemonic is an admission list. Getter and
+   * setter catalogue contracts validate executable lowering separately from
+   * knowing the caller's value. Unknown exits or hooks never publish a partial
+   * restore list. */
+  contextrestoration: method = .lltargetsummary..restorationfact
+    arg sourceop = .int, draft = 0
+    domains = .int[]; modes = .string[]; getters = .string[]; setters = .string[]
+    literals = .lltarget..operand[]; saveordinals = .int[]; exits = .int[]; noexits = .int[]
+    result = .restorationfact
+    i = .int; j = .int; k = .int; d = .int; ordinal = .int; saves = 0
+    providerfunction = 0; departure = ''; item = .lltarget..record; domain = .lltargettransfer..domain
+    if sitebegin(sourceop) = 0 then return restorationfailure(sourceop,0,_sitefailure,'limit')
+    if draft = 0 & sourceop <= _restorepresent[0] then do; if _restorepresent[sourceop] then return _restorefacts[sourceop]; end
+    flow = dereference _flow; owner = flow.owner(); source = dereference owner
+    profile_ref = flow.transfers(); profile = dereference profile_ref; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+    catalog = .llrxascatalog..catalog(); called = source.at(sourceop)
+    if called.kind() <> 'instruction' then return restorationfailure(sourceop,0,'target.site.not.call')
+    if catalog.callinvokes(called.opcode()) = 0 then return restorationfailure(sourceop,0,'target.site.not.call')
+    selected = flow.targetat(sourceop)
+    if selected.status() <> 'proved' then return restorationfailure(sourceop,0,selected.reason())
+    provider_ref = selected.provider(); providerfunction = selected.procedure()
+    if (provider_ref <refsame> owner) = 0 then return restorationfailure(sourceop,providerfunction,'target.context.restore.provider.unproved')
+    body = source.body(providerfunction)
+    if sitespend(body.records() * 8 + max(0,sourceop - _restorepresent[0]) + 1) = 0 | sitereserve(body.records() * 24 + max(0,sourceop - _restorepresent[0]) * 24 + 192) = 0 then return restorationfailure(sourceop,providerfunction,_sitefailure,'limit')
+    do i = 1 to body.records()
+      item = body.record(i)
+      /* The generic clone preserves dead records too. Publish their return
+       * rewrite sites without using dead effects to strengthen or weaken the
+       * reachable context and departure proof. */
+      if item.kind() = 'instruction' then do
+        if catalog.returnkind(item.opcode()) > 0 then exits[exits[0] + 1] = item.id()
+      end
+      if item.kind() = 'procedure' | flow.reached(item.id()) = 0 then iterate
+      instruction = profile.instruction(item.id())
+      if instruction.complete('numeric') = 0 then return restorationfailure(sourceop,providerfunction,'target.context.restore.effects.unproved')
+      do j = 1 to instruction.actions()
+        if sitespend(1) = 0 then return restorationfailure(sourceop,providerfunction,_sitefailure,'limit')
+        action = instruction.action(j)
+        /* Result publication and physical retirement retain their independent
+         * activation/ABI certificate. Explicit hooks cannot borrow it. */
+        if draft = 0 & action.kind() = 'callback' & abiaction(action) = 0 then do
+          if equivalencecallback(item.id(),j,1) then return restorationfailure(sourceop,providerfunction,'target.context.restore.callback.unproved')
+          if _sitefailure <> '' then return restorationfailure(sourceop,providerfunction,_sitefailure,'limit')
+        end
+        if action.kind() = 'unknown' then return restorationfailure(sourceop,providerfunction,'target.context.restore.effects.unproved')
+        if action.kind() <> 'context' then iterate
+        d = action.domain()
+        if d < 1 | d > profile.domains() then return restorationfailure(sourceop,providerfunction,'target.context.restore.domain.unrepresented')
+        domain = profile.domain(d)
+        if domain.kind() <> 'context' then return restorationfailure(sourceop,providerfunction,'target.context.restore.domain.unrepresented')
+        ordinal = 0
+        do k = 1 to domains[0]
+          if sitespend(1) = 0 then return restorationfailure(sourceop,providerfunction,_sitefailure,'limit')
+          if domains[k] = d then ordinal = k
+        end
+        if ordinal = 0 then do
+          if sitereserve(112 + length(domain.key())) = 0 then return restorationfailure(sourceop,providerfunction,_sitefailure,'limit')
+          domains[domains[0] + 1] = d
+        end
+      end
+      do j = 1 to cfg.outedges(item.id())
+        if sitespend(j + 1) = 0 then return restorationfailure(sourceop,providerfunction,_sitefailure,'limit')
+        edge = cfg.outedge(item.id(),j)
+        if edge.complete() = 0 | edge.role() = 'unknown' then departure = 'target.context.restore.departure.unproved'
+        else if edge.asynchronous() | edge.role() = 'async' | right(edge.exposure(),6) = '-async' then departure = 'target.context.restore.async.unproved'
+        else if edge.targetblock() = 0 then do
+          normalreturn = 0
+          if item.kind() = 'instruction' then normalreturn = catalog.returnkind(item.opcode()) > 0 & edge.role() = 'terminal' & edge.phase() = 'none' & edge.boundarykind() = 'departure' & edge.signalname() = ''
+          if normalreturn = 0 then departure = 'target.context.restore.departure.unproved'
+        end
+      end
+    end
+    /* Without a context write there is no restoration work, even when a
+     * separately proved control obligation still retains the call. */
+    if domains[0] = 0 then do
+      result = .restorationfact.bound(.siteproof(reference self,'proved'),sourceop,providerfunction,domains,modes,getters,setters,literals,saveordinals,0,noexits)
+    end
+    else do
+      if departure <> '' then return restorationfailure(sourceop,providerfunction,departure)
+      if exits[0] = 0 then return restorationfailure(sourceop,providerfunction,'target.context.restore.return.unproved')
+      do i = 1 to domains[0]
+        domain = profile.domain(domains[i]); getter = ''; setter = ''; getterop = -1; setterop = -1
+        do j = 1 to 5
+          if sitespend(1) = 0 then return restorationfailure(sourceop,providerfunction,_sitefailure,'limit')
+          name = word('getnumdgts getnumfuz getnumfrm getnumcas getnumstd',j); code = catalog.find(name,'R')
+          if code < 0 then iterate
+          if domain.nativebit() > 0 & catalog.contextreadmask(code) = domain.nativebit() then do
+            getter = name; getterop = code; setter = word('setnumdgts setnumfuz setnumfrm setnumcas setnumstd',j)
+            setterop = catalog.find(setter,'R'); leave
+          end
+        end
+        if getterop < 0 | setterop < 0 then return restorationfailure(sourceop,providerfunction,'target.context.restore.domain.unrepresented')
+        if catalog.contextwritemask(setterop) <> domain.nativebit() | catalog.contextwritemask(getterop) <> 0 | catalog.valuewriter(getterop,1) <> 'field' then return restorationfailure(sourceop,providerfunction,'target.context.restore.lowering.unproved')
+        if observablecallbacks(getterop) <> 0 then return restorationfailure(sourceop,providerfunction,'target.context.restore.getter.callback.unproved')
+        do k = 1 to i - 1
+          prior = profile.domain(domains[k])
+          if prior.nativebit() = domain.nativebit() then return restorationfailure(sourceop,providerfunction,'target.context.restore.domain.ambiguous')
+        end
+        point = flow.componentat(sourceop,'context',0,domains[i]); literal = point.literal()
+        modes[i] = 'saved'; saveordinals[i] = 0; literals[i] = .lltarget..operand()
+        if point.known() & literal.kind() = 'I' then do; modes[i] = 'literal'; literals[i] = literal; end
+        else do; saves = saves + 1; saveordinals[i] = saves; end
+        if modes[i] = 'literal' then setterop = catalog.find(setter,'I')
+        if setterop < 0 then return restorationfailure(sourceop,providerfunction,'target.context.restore.lowering.unproved')
+        if catalog.contextwritemask(setterop) <> domain.nativebit() then return restorationfailure(sourceop,providerfunction,'target.context.restore.lowering.unproved')
+        if observablecallbacks(setterop) <> 0 then return restorationfailure(sourceop,providerfunction,'target.context.restore.setter.callback.unproved')
+        getters[i] = getter; setters[i] = setter
+      end
+      result = .restorationfact.bound(.siteproof(reference self,'proved'),sourceop,providerfunction,domains,modes,getters,setters,literals,saveordinals,saves,exits)
+    end
+    if draft = 0 then do; _restorefacts[sourceop] = result; _restorepresent[sourceop] = 1; end
+    return result
+  /** The unpublished recipe has a deliberately weaker theorem than scopefree:
+   * exact structural capture and complete native effects, without an absolute
+   * dirty-entry or callback-absence premise. Final correspondence must prove
+   * every introduced action and removed ABI micro-event independently. */
+  expansionplan: method = .lltargetsummary..expansionplanfact
     arg sourceop = .int
+    returns = .int[]; modes = .string[]
+    target = .lltargetflow..targetfact; layout = .layoutfact
+    invocation = .lltargetflow..invocationfact; restoration = .restorationfact
+    state = 'proved'; reason = ''; i = .int; j = .int; kind = .int
+    binding = .lltargetflow..storagefact; value = .lltarget..operand
+    if sitebegin(sourceop) = 0 then return .expansionplanfact(reference self,sourceop,.siteproof(reference self,'limit',_sitefailure),target,layout,invocation,restoration,returns,modes)
+    flow = dereference _flow; sourceref = flow.owner(); source = dereference sourceref
+    profile_ref = flow.transfers(); profile = dereference profile_ref
+    catalog = .llrxascatalog..catalog(); called = source.at(sourceop)
+    if called.valid() = 0 | called.kind() <> 'instruction' then do; state = 'unknown'; reason = 'target.site.not.call'; end
+    else if catalog.callinvokes(called.opcode()) = 0 then do; state = 'unknown'; reason = 'target.site.not.call'; end
+    if state = 'proved' then do
+      target = flow.targetat(sourceop)
+      if target.status() <> 'proved' then do; state = target.status(); reason = target.reason(); end
+    end
+    if state = 'proved' then do
+      provider = target.provider()
+      if (provider <refsame> sourceref) = 0 then do; state = 'unknown'; reason = 'target.expansion.provider.binding.unproved'; end
+    end
+    if state = 'proved' then do
+      layout = calllayout(sourceop)
+      if layout.status() <> 'proved' then do; state = layout.status(); reason = layout.reason(); end
+      else if layout.countknown() = 0 then do; state = 'unknown'; reason = 'target.layout.count.unproved'; end
+    end
+    if state = 'proved' then do
+      invocation = flow.invocationat(sourceop)
+      restoration = contextrestoration(sourceop,1)
+      if restoration.allowed() = 0 then do; state = restoration.status(); reason = restoration.reason(); end
+    end
+    if state = 'proved' then do
+      body = source.body(target.procedure())
+      if sitespend(body.records() * 16 + 1) = 0 | sitereserve(body.records() * 24 + 192) = 0 then do; state = 'limit'; reason = _sitefailure; end
+      else do i = 1 to body.records()
+        item = body.record(i)
+        if item.kind() = 'procedure' then iterate
+        instruction = profile.instruction(item.id())
+        do j = 1 to 12
+          family = word('references components flags numeric signals order control values observations ownership effects bindings',j)
+          if instruction.complete(family) = 0 then do
+            state = 'unknown'; reason = instruction.unknownreason(family)
+            if reason = '' then reason = 'target.expansion.inventory.' || family || '.unproved'
+            leave
+          end
+        end
+        if state <> 'proved' then leave
+        if sitespend(instruction.references() + instruction.actions() + 1) = 0 then do; state = 'limit'; reason = _sitefailure; leave; end
+        /* Presence is a structural input. A missing actual is never replaced
+         * with a newly allocated private cell or an invented defined value. */
+        do j = 1 to instruction.references()
+          view = instruction.ref(j)
+          if view.bank() = 'a' & view.index() > layout.count() then do; state = 'unknown'; reason = 'target.argument.mapping.presence.unproved'; leave; end
+        end
+        if state <> 'proved' then leave
+        if item.kind() <> 'instruction' then iterate
+        kind = catalog.returnkind(item.opcode())
+        if kind <> 2 then iterate
+        value = item.operand(catalog.returnsource(item.opcode())); mode = 'copy'
+        binding = flow.storageat(item.id(),value.bank(),value.index())
+        if value.bank() = 'r' & binding.active() > 0 & binding.active() = binding.entry() then mode = 'move'
+        n = returns[0] + 1; returns[n] = item.id(); modes[n] = mode
+      end
+    end
+    return .expansionplanfact(reference self,sourceop,.siteproof(reference self,state,reason),target,layout,invocation,restoration,returns,modes)
+  scopefree: method = .lltargetsummary..scopefreefact
+    arg sourceop = .int, diagnosticmode = 0
+    return planscopefree(sourceop,diagnosticmode,0)
+  /** A direct plan authorizes only construction of an unpublished draft.
+   * Retained caller ABI and static diagnostics need the exact final clone. */
+  directplan: method = .lltargetsummary..scopefreefact
+    arg sourceop = .int
+    return planscopefree(sourceop,2,1)
+  planscopefree: method = .lltargetsummary..scopefreefact
+    arg sourceop = .int, diagnosticmode = .int, direct = .int
     returnops = .int[]; returnmodes = .string[]
     i = .int; j = .int; k = .int; d = .int; kind = .int; providerfunction = .int; mode = .string
     value = .lltarget..operand; point = .lltargetflow..valuefact; binding = .lltargetflow..storagefact
     if sitebegin(sourceop) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
-    if sourceop <= _scopepresent[0] then do; if _scopepresent[sourceop] then return _scopefacts[sourceop]; end
+    if diagnosticmode <> 0 & diagnosticmode <> 2 then return .scopefreefact(.siteproof(reference self,'invalid','target.activation.mode.invalid'),0)
+    scopekey = sourceop * 2 + (diagnosticmode = 2)
+    if direct = 0 & scopekey <= _scopepresent[0] then do; if _scopepresent[scopekey] then return _scopefacts[scopekey]; end
     flow = dereference _flow; owner = flow.owner(); source = dereference owner
     profile_ref = flow.transfers(); profile = dereference profile_ref; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
     catalog = .llrxascatalog..catalog(); callrecord = source.at(sourceop)
     if callrecord.kind() <> 'instruction' then return .scopefreefact(.siteproof(reference self,'unknown','target.site.not.call'),0)
     if catalog.callinvokes(callrecord.opcode()) = 0 then return .scopefreefact(.siteproof(reference self,'unknown','target.site.not.call'),0)
-    activation = activationequivalence(sourceop,0)
-    if activation.allowed() = 0 then return .scopefreefact(.siteproof(reference self,activation.status(),activation.reason()),0)
+    if direct then activation = directactivation(sourceop)
+    else activation = activationequivalence(sourceop,diagnosticmode)
+    permitted = activation.semanticallowed()
+    if direct then permitted = activation.draftallowed()
+    if permitted = 0 then return .scopefreefact(.siteproof(reference self,activation.status(),activation.reason()),0)
     directmapping = directactualmapping(sourceop)
     if directmapping.allowed() = 0 then return .scopefreefact(.siteproof(reference self,directmapping.status(),directmapping.reason()),0)
     target = flow.targetat(sourceop)
@@ -1955,12 +4535,19 @@ analysis: class
     if (provider_ref <refsame> owner) = 0 then return .scopefreefact(.siteproof(reference self,'unknown','scopefree.provider.context.unproved'),0)
     providerfunction = target.procedure(); body = source.body(providerfunction)
     state = 'proved'; reason = ''; allowed = 1
-    if profile.executioncontext() = '' | profile.defaulthalt(callrecord.procedureid()) = 0 | profile.defaulthalt(providerfunction) = 0 then do; state = 'unknown'; reason = 'scopefree.signal.context.unproved'; allowed = 0; end
+    if direct & profile.premise() <> 'canonical' then do
+      /* An independently supplied complete operational CFG is not an
+       * assertion that native inherited handlers are default-HALT. */
+      if cfg.normalizationcomplete(callrecord.procedureid()) = 0 | cfg.normalizationcomplete(providerfunction) = 0 then do; state = 'unknown'; reason = 'scopefree.signal.context.unproved'; allowed = 0; end
+    end
+    else if profile.executioncontext() = '' | profile.defaulthalt(callrecord.procedureid()) = 0 | profile.defaulthalt(providerfunction) = 0 then do; state = 'unknown'; reason = 'scopefree.signal.context.unproved'; allowed = 0; end
     if catalog.callprefix(callrecord.opcode()) <> '' then do; state = 'unknown'; reason = 'scopefree.preparation.unproved'; allowed = 0; end
     layout = calllayout(sourceop)
     if layout.status() <> 'proved' then do; state = layout.status(); reason = layout.reason(); allowed = 0; end
+    restoration = contextrestoration(sourceop)
+    if restoration.allowed() = 0 then do; state = restoration.status(); reason = restoration.reason(); allowed = 0; end
     if cfg.normalizationcomplete(providerfunction) = 0 | flow.complete(providerfunction,'entry-normalization') = 0 then do; state = 'unknown'; reason = 'scopefree.entry.normalization.unproved'; allowed = 0; end
-    if sitespend(body.records() * 8 + max(0,sourceop - _scopepresent[0]) + 1) = 0 | sitereserve(body.records() * 32 + max(0,sourceop - _scopepresent[0]) * 24 + 160) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
+    if sitespend(body.records() * 8 + max(0,scopekey - _scopepresent[0]) + 1) = 0 | sitereserve(body.records() * 32 + max(0,scopekey - _scopepresent[0]) * 24 + 160) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
     /* The exact sealed execution profile owns startup/initializer certainty.
      * A same-owner target does not acquire a new foreign ingress here. */
     do i = 1 to body.records()
@@ -1986,11 +4573,13 @@ analysis: class
       do j = 1 to instruction.actions()
         if sitespend(1) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
         action = instruction.action(j)
-        if action.kind() = 'callback' then do
-          if callbackmay(item.id(),action.ordinal(),1) then do; state = 'unknown'; reason = 'scopefree.callback.unproved'; allowed = 0; end
+        /* Mandatory activation above already proves canonical entry/RET ABI
+         * callbacks in this exact invocation. Keep ordinary body hooks here. */
+        if action.kind() = 'callback' & abiaction(action) = 0 then do
+          if equivalencecallback(item.id(),action.ordinal(),1) then do; state = 'unknown'; reason = 'scopefree.callback.unproved'; allowed = 0; end
           if _sitefailure <> '' then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
         end
-        if wordpos(action.kind(),'context policy lifetime resize scope-enter unknown') > 0 then do; state = 'unknown'; reason = 'scopefree.restoration.' || action.kind() || '.unproved'; allowed = 0; end
+        if wordpos(action.kind(),'policy lifetime resize scope-enter unknown') > 0 then do; state = 'unknown'; reason = 'scopefree.restoration.' || action.kind() || '.unproved'; allowed = 0; end
         if action.kind() = 'call' then do
           child = flow.targetat(item.id())
           if child.status() <> 'proved' then do; state = 'unknown'; reason = 'scopefree.child.effects.unproved'; allowed = 0; end
@@ -2027,8 +4616,8 @@ analysis: class
         if ownershipdomains <> 3 then do; state = 'unknown'; reason = 'scopefree.owned.cleanup.domains.unproved'; allowed = 0; end
       end
     end
-    result = .scopefreefact(.siteproof(reference self,state,reason),allowed,returnops,returnmodes)
-    _scopefacts[sourceop] = result; _scopepresent[sourceop] = 1
+    result = .scopefreefact(.siteproof(reference self,state,reason),allowed,returnops,returnmodes,restoration,max(direct,activation.diagnosticpending()),activation.retainedpending())
+    if direct = 0 then do; _scopefacts[scopekey] = result; _scopepresent[scopekey] = 1; end
     return result
   procedure: method = .lltargetsummary..summary
     arg functionid = .int, mode = 'transitive'
@@ -2042,7 +4631,7 @@ analysis: class
     if mode = 'direct' then current = _direct[functionid] as .row
     else current = _transitive[functionid] as .row
     may = current.has(family,kind,domain); unknown = current.isunknown(family)
-    if wordpos(family,'effects references components flags numeric signals order control values observations ownership calls arguments globals return bindings') = 0 then unknown = 1
+    if wordpos(family,'effects references components flags numeric signals order control values observations ownership calls arguments globals return bindings framecontrol') = 0 then unknown = 1
     if depth < 0 then assembler signal "ERROR","LL_TARGET_SUMMARY: negative must-query depth"
     if may = 0 & unknown = 0 then return .effectfact(reference self,0,0,0)
     if depth = 0 then return .effectfact(reference self,may,0,1,'target.summary.must.depth',1)

@@ -141,6 +141,28 @@ if(TARGET rxbvm)
     RUN_SERIAL TRUE TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_integrated_inline
     TARGETS llrxinline rxbvm rxas)
+  add_test(NAME levell_rxas_bottom_up
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/bottom-up-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-bottom-up.cmake")
+  set_tests_properties(levell_rxas_bottom_up PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_BOTTOM_UP[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 180 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_bottom_up
+    TARGETS llrxinline rxbvm rxas)
+  add_test(NAME levell_rxas_keep_diagnostics
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/keep-diagnostics-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-keep-diagnostics.cmake")
+  set_tests_properties(levell_rxas_keep_diagnostics PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_KEEP_DIAGNOSTICS[|]failures=0"
+    TIMEOUT 120 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_keep_diagnostics
+    TARGETS llrxinline rxbvm)
   add_test(NAME levell_rxas_policy_shapes
     COMMAND ${CMAKE_COMMAND}
       "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
@@ -363,6 +385,18 @@ if(TARGET rxbvm)
     TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_io_cli
     TARGETS levell_rxas_io_test_prep rxbvm rxas rxdas)
+  add_test(NAME levell_rxas_policy_never_budget
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/io-branch.rxas"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/policy-never-budget-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-policy-never-budget.cmake")
+  set_tests_properties(levell_rxas_policy_never_budget PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_POLICY_NEVER_BUDGET[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 180 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_policy_never_budget
+    TARGETS llrxinline rxbvm rxas)
   add_test(NAME levell_rxas_linked_window
     COMMAND ${CMAKE_COMMAND}
       "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"

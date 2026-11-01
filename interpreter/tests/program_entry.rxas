@@ -1,0 +1,55 @@
+/* Typed root entry, initializer defaults and dynamic child-entry refusal. */
+.globals=3
+main() .locals=3 .expose=entry.start .entry=program-default
+  call r0,defaults()
+  brf main_failed,r0
+  ieq r1,g1,1
+  brf main_failed,r1
+  iadd g0,g0,1
+  brf accepted,g2
+  sigbr rejected,"INVALID_ARGUMENTS"
+  load r0,73
+  load r1,0
+  .srcstep 1 1 17 "program-entry.rxas" 14 1 20 "dcall marked main"
+  dcall r0,g2,r1
+  br main_failed
+rejected:
+  sighalt "INVALID_ARGUMENTS"
+  ieq r1,r0,73
+  brf main_failed,r1
+accepted:
+  ret 0
+main_failed:
+  ret 1
+
+boot() .locals=1
+  .meta "entry.boot"="b" ".void" boot() ""
+  .meta "entry.boot"=".initializer" ".void" boot() ""
+  call r0,defaults()
+  icopy g1,r0
+  setnumdgts 53
+  setnumfuz 1
+  setnumfrm 2
+  setnumcas 2
+  setnumstd 2
+  ret
+
+defaults() .locals=2
+  getnumdgts r0
+  ieq r1,r0,18
+  brf defaults_failed,r1
+  getnumfuz r0
+  ieq r1,r0,0
+  brf defaults_failed,r1
+  getnumfrm r0
+  ieq r1,r0,1
+  brf defaults_failed,r1
+  getnumcas r0
+  ieq r1,r0,1
+  brf defaults_failed,r1
+  getnumstd r0
+  ieq r1,r0,1
+  brf defaults_failed,r1
+  ret 1
+defaults_failed:
+  ret 0

@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Diagnosed dirty owned-local entry-state normalization. */
 options levelb
-namespace lltargetnormalize expose warning change normalize entrycandidate entrycandidates explicit conditionalcertificate entrycertificate
+namespace lltargetnormalize expose warning change normalize entrycandidate entrycandidates explicit conditionalcertificate entrycertificate sitecertificate
 import rxfnsb
 import llir
 import lltarget
@@ -1015,6 +1015,146 @@ entrycertificate: class
   usedbytes: method = .int
     return _bytelimit - _bytes
 
+/** A normalization receipt for one unchanged caller site. This certifies
+ * neither the rest of the caller nor a provider body. Unknown later local
+ * ingress is retained by the shared CFG/flow query, not discarded here. */
+sitecertificate: class
+  _sourceflow = reference .lltargetflow..analysis
+  _candidateflow = reference .lltargetflow..analysis
+  _correspondence = reference .lltargetremap..correspondence
+  _sourceid = .int
+  _candidateid = .int
+  _sourceop = .int
+  _candidateop = .int
+  _resultid = .int
+  _sourcecoverage = .lltargetflow..entrycoveragefact
+  _candidatecoverage = .lltargetflow..entrycoveragefact
+  _dependencies = .lltargetflow..entrycoveragefact[]
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  *: factory
+    arg sourceflow = reference .lltargetflow..analysis, candidateflow = reference .lltargetflow..analysis, correspondence = reference .lltargetremap..correspondence, sourceop = .int, candidateop = .int, resultidentity = .int, work = 1000000, bytes = 67108864
+    _sourceflow = sourceflow; _candidateflow = candidateflow; _correspondence = correspondence
+    _sourceop = sourceop; _candidateop = candidateop; _resultid = resultidentity
+    _worklimit = work; _bytelimit = bytes; _status = 'building'
+    return
+  unavailable: factory
+    arg state = .string, reason = .string
+    _status = state; _reason = reason
+    return
+  fail: method = .int
+    arg state = .string, reason = .string
+    if _status = 'building' then do; _status = state; _reason = reason; end
+    return 0
+  spend: method = .int
+    arg work = 1, bytes = 0
+    if work < 0 | bytes < 0 | work > _worklimit - _work | bytes > _bytelimit - _bytes then return fail('limit','normalization.site.work.or.bytes')
+    _work = _work + work; _bytes = _bytes + bytes; return 1
+  ownersvalid: method = .int
+    if <refvalid>(_sourceflow) = 0 | <refvalid>(_candidateflow) = 0 | <refvalid>(_correspondence) = 0 then return 0
+    source = dereference _sourceflow; candidate = dereference _candidateflow; mapping = dereference _correspondence
+    if source.valid() = 0 | candidate.valid() = 0 | mapping.valid() = 0 then return 0
+    if source.identity() <> _sourceid | candidate.identity() <> _candidateid then return 0
+    a = source.owner(); b = candidate.owner(); expecteda = mapping.sourceowner(); expectedb = mapping.candidateowner()
+    p = source.transfers(); q = candidate.transfers(); expectedp = mapping.sourceprofile(); expectedq = mapping.candidateprofile()
+    c = source.cfg(); d = candidate.cfg(); expectedc = mapping.sourcecfg(); expectedd = mapping.candidatecfg()
+    return (a <refsame> expecteda) & (b <refsame> expectedb) & (p <refsame> expectedp) & (q <refsame> expectedq) & (c <refsame> expectedc) & (d <refsame> expectedd)
+  run: method = .void
+    i = .int; j = .int; ignored = .int; functionid = .int; head = .int; dependency = .int
+    pending = .int[]; seen = .int[]; body = .lltarget..body
+    if _status <> 'building' then return
+    if <refvalid>(_sourceflow) = 0 | <refvalid>(_candidateflow) = 0 | <refvalid>(_correspondence) = 0 then do; ignored = fail('invalid','normalization.site.owner.expired'); return; end
+    sourceflow = dereference _sourceflow; candidateflow = dereference _candidateflow; mapping = dereference _correspondence
+    if sourceflow.status() <> 'ok' | candidateflow.status() <> 'ok' then do; ignored = fail('invalid','normalization.site.flow.unavailable'); return; end
+    if mapping.status() <> 'proved' then do; ignored = fail(mapping.status(),mapping.reason()); return; end
+    _sourceid = sourceflow.identity(); _candidateid = candidateflow.identity()
+    if ownersvalid() = 0 then do; ignored = fail('invalid','normalization.site.owner.mismatch'); return; end
+    sourceref = sourceflow.owner(); candidateref = candidateflow.owner(); source = dereference sourceref; candidate = dereference candidateref
+    if _resultid = 0 | candidate.identity() <> _resultid then do; ignored = fail('invalid','normalization.site.result.mismatch'); return; end
+    graphref = source.ir(); graph = dereference graphref
+    if _sourceop < 1 | _sourceop > graph.operations() then do; ignored = fail('invalid','normalization.site.operation.invalid'); return; end
+    if mapping.operation(_sourceop) <> _candidateop then do; ignored = fail('invalid','normalization.site.operation.mapping'); return; end
+    original = source.at(_sourceop); selected = candidate.at(_candidateop); body = source.body(original.procedureid())
+    if candidate.procedureid(body.name()) <> selected.procedureid() then do; ignored = fail('invalid','normalization.site.function.mapping'); return; end
+    do i = 1 to mapping.insertions()
+      if spend(1) = 0 then return
+      item = candidate.at(mapping.insertion(i))
+      if item.procedureid() = selected.procedureid() then do; ignored = fail('unknown','normalization.site.caller.changed'); return; end
+    end
+    beforework = sourceflow.usedwork(); beforebytes = sourceflow.usedbytes()
+    _sourcecoverage = sourceflow.entrycoverageat(_sourceop,_worklimit - _work,_bytelimit - _bytes)
+    if spend(max(0,sourceflow.usedwork() - beforework),max(0,sourceflow.usedbytes() - beforebytes)) = 0 then return
+    if _sourcecoverage.complete() = 0 then do; ignored = fail(_sourcecoverage.status(),_sourcecoverage.reason()); return; end
+    if _sourcecoverage.operation() <> _sourceop then do; ignored = fail('invalid','normalization.site.source.operation.mismatch'); return; end
+    if _sourcecoverage.demands() <> 0 | _sourcecoverage.unresolved() <> 0 then do; ignored = fail('unknown','normalization.site.source.dirty'); return; end
+    beforework = candidateflow.usedwork(); beforebytes = candidateflow.usedbytes()
+    _candidatecoverage = candidateflow.entrycoverageat(_candidateop,_worklimit - _work,_bytelimit - _bytes)
+    if spend(max(0,candidateflow.usedwork() - beforework),max(0,candidateflow.usedbytes() - beforebytes)) = 0 then return
+    if _candidatecoverage.complete() = 0 then do; ignored = fail(_candidatecoverage.status(),_candidatecoverage.reason()); return; end
+    if _candidatecoverage.operation() <> _candidateop then do; ignored = fail('invalid','normalization.site.candidate.operation.mismatch'); return; end
+    if _candidatecoverage.demands() <> 0 | _candidatecoverage.unresolved() <> 0 then do; ignored = fail('unknown','normalization.site.candidate.dirty'); return; end
+    if spend(candidate.procedures() * 2 + 1,(candidate.procedures() + 2) * 16) = 0 then return
+    do i = 1 to candidate.procedures() + 1; seen[i] = 0; end
+    do i = 1 to _sourcecoverage.dependencies()
+      body = source.body(_sourcecoverage.dependency(i)); functionid = candidate.procedureid(body.name())
+      if functionid < 2 then do; ignored = fail('invalid','normalization.site.dependency.mapping'); return; end
+      if seen[functionid] = 0 then do; seen[functionid] = 1; pending[pending[0] + 1] = functionid; end
+    end
+    do i = 1 to _candidatecoverage.dependencies()
+      functionid = _candidatecoverage.dependency(i)
+      if functionid < 2 | functionid > seen[0] then do; ignored = fail('invalid','normalization.site.dependency.owner'); return; end
+      if seen[functionid] = 0 then do; seen[functionid] = 1; pending[pending[0] + 1] = functionid; end
+    end
+    head = 1
+    do while head <= pending[0]
+      if spend(1,256) = 0 then return
+      functionid = pending[head]; head = head + 1
+      beforework = candidateflow.usedwork(); beforebytes = candidateflow.usedbytes(); required = candidateflow.entrycoverage(functionid)
+      if spend(max(0,candidateflow.usedwork() - beforework),max(0,candidateflow.usedbytes() - beforebytes)) = 0 then return
+      if required.complete() = 0 | required.demands() <> 0 | required.unresolved() <> 0 then do; ignored = fail('unknown','normalization.site.dependency.not.discharged'); return; end
+      _dependencies[_dependencies[0] + 1] = required
+      do i = 1 to required.dependencies()
+        if spend(1) = 0 then return
+        dependency = required.dependency(i)
+        if dependency < 2 | dependency > seen[0] then do; ignored = fail('invalid','normalization.site.dependency.owner'); return; end
+        if seen[dependency] = 0 then do; seen[dependency] = 1; pending[pending[0] + 1] = dependency; end
+      end
+    end
+    if ownersvalid() = 0 then do; ignored = fail('invalid','normalization.site.owner.replaced'); return; end
+    _status = 'proved'
+    return
+  valid: method = .int
+    call run()
+    if _status <> 'proved' | ownersvalid() = 0 then return 0
+    if _sourcecoverage.valid() = 0 | _candidatecoverage.valid() = 0 then return 0
+    do i = 1 to _dependencies[0]; if _dependencies[i].valid() = 0 then return 0; end
+    return 1
+  status: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    if status() = 'invalid' & _reason = '' then return 'normalization.site.owner.expired.or.replaced'
+    return _reason
+  covered: method = .int
+    return valid()
+  matchessource: method = .int
+    arg points = reference .lltargetflow..analysis, operation = .int
+    return covered() & (_sourceflow <refsame> points) & _sourceop = operation
+  matchesresult: method = .int
+    arg owner = reference .lltarget..module, operation = .int
+    if covered() = 0 | <refvalid>(owner) = 0 then return 0
+    candidate = dereference owner; flow = dereference _candidateflow; expectedref = flow.owner(); expected = dereference expectedref
+    return candidate.valid() & candidate.identity() = _resultid & expected.identity() = _resultid & operation = _candidateop
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+
 normalize: procedure = .lltargetnormalize..change
   arg owner = reference .lltarget..module, flow = reference .lltargetflow..analysis, work = 1000000, bytes = 67108864
   return .change(owner,flow,work,bytes)
@@ -1109,7 +1249,7 @@ explicit: procedure = .lltargetnormalize..change
       if draft.preflight(1 + item.operands(),0) = 0 then return .change.resolved('limit',draft.error(),source)
       at = lltargetremap..copyorigin(graph_ref,item.origin(),reference draft,reference sources,reference origins)
       if item.kind() = 'procedure' then do
-        body = source.body(item.procedureid()); target = draft.procedure(body.name(),body.locals(),at,body.expose())
+        body = source.body(item.procedureid()); target = draft.procedure(body.name(),body.locals(),at,body.expose(),body.entrykind())
         bodies[item.procedureid()] = target as .object; mapping[item.id()] = target.headerid(); iterate
       end
       if item.procedureid() = 0 then do

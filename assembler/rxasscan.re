@@ -106,9 +106,13 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     ',' {return(COMMA);}
     '.globals' { return(KW_GLOBALS); }
     '.locals' { return(KW_LOCALS); }
+    '.entry' { return(KW_ENTRY); }
     '.expose' { return(KW_EXPOSE); }
     '.traceevent' { return(KW_TRACEEVENT); }
     '.srcstep' { return(KW_SRCSTEP); }
+    '.inlineframe' { return(KW_INLINEFRAME); }
+    '.inlinemap' { return(KW_INLINEMAP); }
+    '.inlinedprivate' { return(KW_INLINEDPRIVATE); }
     '.meta' { return(KW_META); }
     '.const' { return(KW_CONST); }
     '.jtable' { return(KW_JTABLE); }

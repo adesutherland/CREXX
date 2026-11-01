@@ -445,6 +445,11 @@ PROCEDURE(prepare_invocation) {
         ((value *)ARG3)->int_value<0 || ((value *)ARG4)->int_value<0 ||
         (uint64_t)((value *)ARG3)->int_value>SIZE_MAX || (uint64_t)((value *)ARG4)->int_value>SIZE_MAX) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS,"Stale invocation binding or invalid budget") }
     target=&binding->catalogue->targets[binding->ordinal]; vector=ARG1; presence=ARG2;
+    if (!target->procedure || target->procedure->entry_state_kind ==
+            RXBIN_ENTRY_PROGRAM_DEFAULT) {
+        RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS,
+                     "Program entry cannot be prepared as an invocation")
+    }
     extent=(size_t)((value *)ARG3)->int_value; budget=(size_t)((value *)ARG4)->int_value;
     vararg=target->contract.arg_count && target->contract.args[target->contract.arg_count-1].vararg;
     fixed=target->contract.arg_count-(vararg ? 1u : 0u); count=extent>fixed ? extent : fixed;
@@ -507,6 +512,11 @@ PROCEDURE(invoke_once) {
         request->binding->catalogue->generation!=context->semantic_generation ||
         !boundary->procedure || strcmp(boundary->procedure->name,"rxinvoke.invoke")) {
         RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS,"Invocation requires its own ordinary native-call boundary")
+    }
+    if (request->binding->catalogue->targets[request->binding->ordinal].procedure->
+            entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+        RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS,
+                     "Program entry cannot be invoked as a child")
     }
     request->state=INV_RUNNING; request->origin_module=boundary->origin_module; request->origin_address=boundary->origin_address;
     ++request->base.refs; boundary->request=request;

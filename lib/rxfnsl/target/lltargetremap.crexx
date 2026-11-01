@@ -1,12 +1,996 @@
 /* cREXX License (MIT). Typed target remapping and atomic insertion. */
 options levelb
-namespace lltargetremap expose mapping recordchange change copyorigin modulemap modulebinding globalref mappedrecord correspondence eventmap
+namespace lltargetremap expose mapping recordchange change copyorigin modulemap modulebinding globalref mappedrecord correspondence eventmap expansioninstance expansioncorrespondence expansionlimits identityreceipt
 import rxfnsb
 import llir
 import lltarget
 import lltargettransfer
 import lltargetcfg
 import llrxascatalog
+
+boot: initialiser expose correspondence_serial
+  correspondence_serial = 0
+  return
+nextcorrespondence: procedure = .int expose correspondence_serial
+  if correspondence_serial = 9223372036854775807 then assembler signal "ERROR","LL_TARGET_REMAP: correspondence identities exhausted"
+  correspondence_serial = correspondence_serial + 1
+  return correspondence_serial
+
+/** The structural checker has no flow/ABI solver. Reserve its own envelope
+ * from frozen source sizes and checked emission bounds, rather than another
+ * complete semantic/diagnostic theorem quota. The checker still enforces its
+ * own counters; these bounds grant no correspondence or publication fact. */
+expansionlimits: class
+  _owner = reference .lltarget..module
+  _identity = .int
+  _candidates = .int
+  _instances = .int
+  _slots = .int
+  _rows = .int
+  _identities = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _work = .int
+  _bytes = .int
+  _scan = .int
+  _prepared = .int
+  _status = .string
+  _reason = .string
+  *: factory
+    arg owner = reference .lltarget..module, candidates = .int, instances = .int, slots = .int, rows = .int, identities = .int, work = .int, bytes = .int
+    _owner = owner; _candidates = candidates; _instances = instances; _slots = slots; _rows = rows; _identities = identities
+    _worklimit = work; _bytelimit = bytes; _status = 'pending'
+    return
+  fail: method = .int
+    arg reason = .string
+    _status = 'limit'; _reason = reason; return 0
+  addwork: method = .int
+    arg left = .int, right = 1
+    if left < 0 | right < 0 then return fail('expansion.envelope.work')
+    if right > 0 then do; if left > (_worklimit - _scan - _work) <idiv> right then return fail('expansion.envelope.work'); end
+    _work = _work + left * right; return 1
+  addbytes: method = .int
+    arg left = .int, right = 1
+    if left < 0 | right < 0 then return fail('expansion.envelope.bytes')
+    if right > 0 then do; if left > (_bytelimit - 256 - _bytes) <idiv> right then return fail('expansion.envelope.bytes'); end
+    _bytes = _bytes + left * right; return 1
+  scan: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _worklimit - _scan then return fail('expansion.envelope.scan')
+    _scan = _scan + amount; return 1
+  prepare: method = .void
+    ignored = .int; i = .int; j = .int; signature = .int; operandbytes = .int; originbytes = .int; maxfile = .int; maxline = .int; maxstep = .int
+    if _prepared then return
+    _prepared = 1; _status = 'proved'
+    if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _reason = 'expansion.envelope.owner.expired'; return; end
+    source = dereference _owner
+    if source.valid() = 0 then do; _status = 'invalid'; _reason = 'expansion.envelope.owner.invalid'; return; end
+    _identity = source.identity(); graphref = source.ir(); graph = dereference graphref
+    n = source.records(); c = _candidates; instances = _instances; slots = _slots; rows = _rows; ids = _identities
+    if min(n,c,instances,slots,rows,ids,_worklimit,_bytelimit) < 0 | max(n,c,instances,slots,rows,ids,_worklimit,_bytelimit) > (9223372036854775807 <idiv> 64) - 256 then do; ignored = fail('expansion.envelope.extent'); return; end
+    do i = 1 to n
+      item = source.record(i); at = item.origin(); bytes = at.sourcebytes(); cost = length(at.filename()) + <blen>(bytes) + 1
+      if scan(cost + 1) = 0 then return
+      originbytes = max(originbytes,cost); signature = 0
+      do j = 1 to item.operands()
+        value = item.operand(j)
+        if scan(value.length() + 1) = 0 then return
+        operandbytes = operandbytes + value.length() + 1
+        if value.kind() = 'I' then signature = signature + 24
+        else signature = signature + value.length() * 2 + 4
+      end
+      if item.kind() = '.srcfile' then maxfile = max(maxfile,signature)
+      else if item.kind() = '.srcline' then maxline = max(maxline,signature)
+      else if item.kind() = '.srcstep' then maxstep = max(maxstep,signature)
+    end
+    active = maxfile + maxline + maxstep + 2
+    if max(active,operandbytes,originbytes) > (9223372036854775807 <idiv> 64) - 256 then do; ignored = fail('expansion.envelope.payload'); return; end
+    /* Sparse table scans; bounded slot/identity alias checks; record cuts;
+     * exact provenance/operand comparisons; active source signatures. */
+    if addwork(n + c + rows + instances + 1,32) = 0 then return
+    if addwork(slots + 1,(slots + 1) * 8) = 0 | addwork(ids + 1,(ids + 1) * 8) = 0 then return
+    if addwork(instances + 1,(instances + 1) * 4) = 0 | addwork(instances,n * 8 + 8) = 0 then return
+    if addwork(n + rows + 1,originbytes * 8 + 64) = 0 then return
+    if addwork(instances + 1,operandbytes * 8 + 64) = 0 then return
+    if addwork(n + c + 1,(active + 16) * 4) = 0 then return
+    if addbytes(graph.operations() + c + 1,64) = 0 then return
+    if addbytes(instances,graph.operations() * 16 + 256) = 0 then return
+    if addbytes(slots,512) = 0 | addbytes(rows + ids + instances + 1,128) = 0 then return
+    if addbytes(n + c + 1,active + 64) = 0 then return
+    return
+  status: method = .string
+    call prepare()
+    if <refvalid>(_owner) = 0 then return 'invalid'
+    source = dereference _owner
+    if source.valid() = 0 | (_identity > 0 & source.identity() <> _identity) then return 'invalid'
+    return _status
+  reason: method = .string
+    if status() = 'invalid' then return 'expansion.envelope.owner.expired.or.replaced'
+    return _reason
+  work: method = .int
+    call prepare(); return _work
+  bytes: method = .int
+    call prepare(); return _bytes
+  usedwork: method = .int
+    call prepare(); return _scan
+  usedbytes: method = .int
+    return 256
+
+/** One immutable-after-sealing clone manifest. Entries are locators, never
+ * semantic authority: the correspondence and final proof read both models. */
+expansioninstance: class
+  _call = .int
+  _provider = reference .lltarget..module
+  _providerid = .int
+  _procedure = .int
+  _frame = .int
+  _sources = .int[]
+  _candidates = .int[]
+  _counts = .int[]
+  _continuation = .string
+  _originals = .lltarget..operand[]
+  _replacements = .lltarget..operand[]
+  _roles = .string[]
+  _bases = .lltarget..operand[]
+  _rrows = .int[]
+  _arows = .int[]
+  _grows = .int[]
+  _additions = .lltarget..operand[]
+  _additionroles = .string[]
+  _recordsource = .int[]
+  _recordcandidate = .int[]
+  _namespace = .string
+  _steps = .int[]
+  _clauses = .int[]
+  _frames = .int[]
+  _sealed = .int
+  _error = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  *: factory
+    arg callid = .int, provider = reference .lltarget..module, procedureid = .int, frameid = .int, sourceops = .int[], candidateops = .int[], counts = .int[], continuationLabel = .string, work = 1000000, bytes = 67108864
+    _worklimit = work; _bytelimit = bytes
+    if sourceops[0] > work <idiv> 3 | sourceops[0] > bytes <idiv> 24 then do; _error = 'LL_RESOURCE_LIMIT: expansion.manifest.rows'; return; end
+    /* A factory has no source-level self receiver. Charge its initial rows
+     * directly; later mutations use the same reserve method. */
+    _work = sourceops[0] * 3 + 1; _bytes = sourceops[0] * 24
+    if _work > work | length(continuationLabel) > bytes - _bytes - 128 then do; _error = 'LL_RESOURCE_LIMIT: expansion.manifest.rows'; return; end
+    _bytes = _bytes + length(continuationLabel) + 128
+    _call = callid; _provider = provider; _procedure = procedureid; _frame = frameid
+    _sources = sourceops; _candidates = candidateops; _counts = counts; _continuation = continuationLabel
+    if <refvalid>(provider) = 0 then do; _error = 'expansion.instance.provider.expired'; return; end
+    source = dereference provider
+    if initialized(source) = 0 then do; _error = 'expansion.instance.provider.uninitialized'; return; end
+    if source.valid() = 0 then do; _error = 'expansion.instance.provider.invalid'; return; end
+    _providerid = source.identity()
+    return
+  reject: method = .int
+    arg reason = .string
+    if _error = '' then _error = reason
+    return 0
+  reserve: method = .int
+    arg work = .int, bytes = .int
+    if work < 0 | bytes < 0 | work > _worklimit - _work | bytes > _bytelimit - _bytes then return reject('LL_RESOURCE_LIMIT: expansion.manifest')
+    _work = _work + work; _bytes = _bytes + bytes
+    return 1
+  mappingid: method = .int
+    arg original = .lltarget..operand
+    if original.kind() <> 'R' | original.index() < 0 then return 0
+    if original.index() >= _bytelimit <idiv> 8 then return 0
+    index = original.index() + 1
+    select original.bank()
+      when 'r' then do; if index > _rrows[0] then return 0; return _rrows[index]; end
+      when 'a' then do; if index > _arows[0] then return 0; return _arows[index]; end
+      when 'g' then do; if index > _grows[0] then return 0; return _grows[index]; end
+      otherwise do; return 0; end
+    end
+    return 0
+  bind: method = .int
+    arg original = .lltarget..operand, replacement = .lltarget..operand, role = .string
+    if _sealed then return 0
+    if original.kind() <> 'R' | replacement.kind() <> 'R' | original.index() < 0 | replacement.index() < 0 then return reject('expansion.mapping.register.invalid')
+    if wordpos(role,'private argument proxy global count') = 0 then return reject('expansion.mapping.role.invalid')
+    row = mappingid(original)
+    if row > 0 then do
+      prior = _replacements[row]
+      if prior.bank() <> replacement.bank() | prior.index() <> replacement.index() | _roles[row] <> role then return reject('expansion.mapping.duplicate')
+      return 1
+    end
+    if original.index() >= _bytelimit <idiv> 8 then return reject('LL_RESOURCE_LIMIT: expansion.mapping.index')
+    growth = original.index() + 1
+    select original.bank()
+      when 'r' then growth = max(0,growth - _rrows[0])
+      when 'a' then growth = max(0,growth - _arows[0])
+      when 'g' then growth = max(0,growth - _grows[0])
+      otherwise do; return reject('expansion.mapping.bank.invalid'); end
+    end
+    if reserve(growth + 1,growth * 8 + 256 + length(role)) = 0 then return 0
+    row = _originals[0] + 1; _originals[row] = original; _replacements[row] = replacement; _roles[row] = role
+    /* Typed object-array holes are unconstructed values, not operand().
+     * Every map row needs a constructed empty base before optional binding. */
+    _bases[row] = .lltarget..operand()
+    index = original.index() + 1
+    select original.bank()
+      when 'r' then _rrows[index] = row
+      when 'a' then _arows[index] = row
+      when 'g' then _grows[index] = row
+      otherwise do; return reject('expansion.mapping.bank.invalid'); end
+    end
+    return 1
+  added: method = .int
+    arg candidate = .lltarget..operand, role = .string
+    if _sealed then return 0
+    if candidate.kind() <> 'R' | candidate.bank() <> 'r' | candidate.index() < 0 then return reject('expansion.addition.register.invalid')
+    if wordpos(role,'save return-temp base-proxy window result-temp binding-temp') = 0 then return reject('expansion.addition.role.invalid')
+    if reserve(_additions[0] + 1,128 + length(role)) = 0 then return 0
+    do i = 1 to _additions[0]
+      prior = _additions[i]
+      if prior.index() = candidate.index() then do
+        if _additionroles[i] = role then return 1
+        return reject('expansion.addition.duplicate')
+      end
+    end
+    row = _additions[0] + 1; _additions[row] = candidate; _additionroles[row] = role
+    return 1
+  bindbase: method = .int
+    arg original = .lltarget..operand, replacement = .lltarget..operand
+    if _sealed then return 0
+    row = mappingid(original)
+    if row = 0 | replacement.kind() <> 'R' then return reject('expansion.mapping.base.invalid')
+    if row <= _bases[0] then do
+      prior = _bases[row]
+      if prior.kind() = 'R' then do
+        if prior.bank() = replacement.bank() & prior.index() = replacement.index() then return 1
+        return reject('expansion.mapping.base.duplicate')
+      end
+    end
+    if reserve(1,64) = 0 then return 0
+    _bases[row] = replacement
+    return 1
+  bindrecord: method = .int
+    arg original = .int, replacement = .int
+    if _sealed then return 0
+    if original < 0 | replacement < 1 then return reject('expansion.record.locator.invalid')
+    if reserve(1,16) = 0 then return 0
+    row = _recordsource[0] + 1; _recordsource[row] = original; _recordcandidate[row] = replacement
+    return 1
+  metadata: method = .int
+    arg scope = .string, steps = .int[], clauses = .int[], frames = .int[]
+    if _sealed then return 0
+    if steps[0] > _worklimit | clauses[0] > _worklimit - steps[0] | frames[0] > _worklimit - steps[0] - clauses[0] then return reject('LL_RESOURCE_LIMIT: expansion.metadata.maps')
+    if steps[0] > _bytelimit <idiv> 8 | clauses[0] > _bytelimit <idiv> 8 - steps[0] | frames[0] > _bytelimit <idiv> 8 - steps[0] - clauses[0] then return reject('LL_RESOURCE_LIMIT: expansion.metadata.maps')
+    if reserve(steps[0] + clauses[0] + frames[0] + 1,(steps[0] + clauses[0] + frames[0]) * 8 + length(scope)) = 0 then return 0
+    _namespace = scope; _steps = steps; _clauses = clauses; _frames = frames
+    return 1
+  records: method = .int
+    return _recordsource[0]
+  recordsource: method = .int
+    arg ordinal = .int
+    return _recordsource[ordinal]
+  recordcandidate: method = .int
+    arg ordinal = .int
+    return _recordcandidate[ordinal]
+  metascope: method = .string
+    return _namespace
+  identitymap: method = .int[]
+    arg kind = .string
+    empty = .int[]
+    select kind
+      when 'step' then return _steps
+      when 'clause' then return _clauses
+      when 'frame' then return _frames
+      otherwise do; return empty; end
+    end
+    return empty
+  base: method = .lltarget..operand
+    arg original = .lltarget..operand
+    row = mappingid(original)
+    if row = 0 | row > _bases[0] then return .lltarget..operand()
+    return _bases[row]
+  seal: method = .int
+    _sealed = 1
+    return valid()
+  valid: method = .int
+    if _error <> '' | <refvalid>(_provider) = 0 | _providerid = 0 then return 0
+    source = dereference _provider
+    if initialized(source) = 0 then return 0
+    return source.valid() & source.identity() = _providerid & _procedure >= 2 & _call > 0 & _frame > 0 & _sources[0] = _candidates[0] & _sources[0] = _counts[0] & _continuation <> ''
+  reason: method = .string
+    if _error <> '' then return _error
+    if valid() = 0 then return 'expansion.instance.owner.or.shape.invalid'
+    return ''
+  callid: method = .int
+    return _call
+  provider: method = reference .lltarget..module
+    return _provider
+  procedure: method = .int
+    return _procedure
+  frame: method = .int
+    return _frame
+  rows: method = .int
+    return _sources[0]
+  source: method = .int
+    arg ordinal = .int
+    return _sources[ordinal]
+  candidate: method = .int
+    arg ordinal = .int
+    return _candidates[ordinal]
+  count: method = .int
+    arg ordinal = .int
+    return _counts[ordinal]
+  continuation: method = .string
+    return _continuation
+  mappings: method = .int
+    return _originals[0]
+  original: method = .lltarget..operand
+    arg ordinal = .int
+    return _originals[ordinal]
+  replacement: method = .lltarget..operand
+    arg ordinal = .int
+    return _replacements[ordinal]
+  mappingrole: method = .string
+    arg ordinal = .int
+    return _roles[ordinal]
+  mapped: method = .lltarget..operand
+    arg original = .lltarget..operand
+    row = mappingid(original)
+    if row = 0 then return .lltarget..operand()
+    return _replacements[row]
+  additions: method = .int
+    return _additions[0]
+  addition: method = .lltarget..operand
+    arg ordinal = .int
+    return _additions[ordinal]
+  additionrole: method = .string
+    arg ordinal = .int
+    return _additionroles[ordinal]
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+
+/** Checked structural source-to-final-clone correspondence. CALL/RET and
+ * generated row semantics remain obligations of the relational proof owner. */
+expansioncorrespondence: class
+  _identity = .int
+  _source = reference .lltarget..module
+  _candidate = reference .lltarget..module
+  _sourceid = .int
+  _candidateid = .int
+  _catalog = .string
+  _operations = .int[]
+  _instances = .expansioninstance[]
+  _calls = .int[]
+  _covered = .int[]
+  _instanceowners = .int[]
+  _next = .int[]
+  _starts = .int[]
+  _ends = .int[]
+  _functions = .int[]
+  _matched = .int[]
+  _sourcesteps = .string[]
+  _candidatesteps = .string[]
+  _occupiedfunctions = .int[]
+  _occupiedslots = .int[]
+  _phase = .string
+  _checking = .int
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _limit = .int
+  _bytelimit = .int
+  *: factory
+    arg source = reference .lltarget..module, candidate = reference .lltarget..module, callerOperations = .int[], instances = .object[], work = 1000000, bytes = 67108864
+    _identity = nextcorrespondence()
+    _source = source; _candidate = candidate; _operations = callerOperations
+    _limit = work; _bytelimit = bytes; _status = 'building'; _phase = 'setup'
+    if instances[0] > work | instances[0] > bytes <idiv> 32 then do; _status = 'limit'; _reason = 'expansion.instance.table.allowance'; return; end
+    do i = 1 to instances[0]
+      if instances[i] is .expansioninstance then _instances[i] = instances[i] as .expansioninstance
+      else do; _status = 'invalid'; _reason = 'expansion.instance.type.invalid'; return; end
+    end
+    return
+  fail: method = .int
+    arg state = .string, reason = .string
+    if _status = 'building' then do; _status = state; _reason = reason; end
+    return 0
+  spend: method = .int
+    arg work = 1, bytes = 0
+    if work < 0 | bytes < 0 then return fail('limit','expansion.correspondence.charge.invalid')
+    if work > _limit - _work then return fail('limit','expansion.correspondence.work [phase=' || _phase || ';instance=' || _checking || ';used=' || _work || ';attempt=' || work || ';cap=' || _limit || ';bytes=' || _bytes || ':' || _bytelimit || ']')
+    if bytes > _bytelimit - _bytes then return fail('limit','expansion.correspondence.bytes [phase=' || _phase || ';instance=' || _checking || ';used=' || _bytes || ';attempt=' || bytes || ';cap=' || _bytelimit || ';work=' || _work || ':' || _limit || ']')
+    _work = _work + work; _bytes = _bytes + bytes; return 1
+  sameoperand: method = .int
+    arg left = .lltarget..operand, right = .lltarget..operand
+    if left.kind() <> right.kind() then return 0
+    if left.kind() = 'R' then return left.bank() = right.bank() & left.index() = right.index()
+    if left.kind() = 'I' then return left.index() = right.index()
+    if spend(left.length() + right.length() + 1) = 0 then return 0
+    return bin2x(left.bytes()) == bin2x(right.bytes())
+  sameorigin: method = .int
+    arg left = .llir..origin, right = .llir..origin
+    a = left.sourcebytes(); b = right.sourcebytes()
+    if spend(length(left.filename()) + length(right.filename()) + <blen>(a) + <blen>(b) + 1) = 0 then return 0
+    return (left.filename() == right.filename()) & left.first() = right.first() & left.last() = right.last() & (bin2x(a) == bin2x(b))
+  steps: method = .int
+    arg owner = .lltarget..module, candidate = .int
+    value = .lltarget..operand; i = .int; j = .int
+    active = '||'; legacyfile = ''; legacyline = ''; step = ''; functionid = 0
+    do i = 1 to owner.records()
+      if spend(1) = 0 then return 0
+      item = owner.record(i)
+      if item.procedureid() <> functionid then do
+        functionid = item.procedureid(); active = '||'; legacyfile = ''; legacyline = ''; step = ''
+      end
+      if item.kind() = '.srcfile' | item.kind() = '.srcline' | item.kind() = '.srcstep' then do
+        signature = ''; unavailable = 1
+        do j = 1 to item.operands()
+          value = item.operand(j)
+          if spend(value.length() + 1) = 0 then return 0
+          if item.kind() = '.srcstep' & j = 1 then iterate
+          if value.kind() = 'I' then do
+            signature = signature || 'I:' || value.index() || ';'
+            if value.index() <> 0 then unavailable = 0
+          end
+          else do
+            signature = signature || value.kind() || ':' || bin2x(value.bytes()) || ';'
+            if value.length() <> 0 then unavailable = 0
+          end
+        end
+        if item.kind() = '.srcfile' then legacyfile = signature
+        else if item.kind() = '.srcline' then legacyline = signature
+        else do
+          value = item.operand(1); step = signature
+          if value.index() = 0 then do
+            if unavailable = 0 then return fail('unknown','expansion.source.unavailable.payload')
+            step = ''
+          end
+        end
+        active = legacyfile || '|' || legacyline || '|' || step
+      end
+      if item.kind() = 'instruction' then do
+        if spend(length(active) + 1,length(active)) = 0 then return 0
+        if candidate then _candidatesteps[item.id()] = active
+        else _sourcesteps[item.id()] = active
+      end
+    end
+    return 1
+  samerecord: method = .int
+    arg left = .lltarget..record, right = .lltarget..record
+    if left.kind() <> right.kind() | left.operands() <> right.operands() then return 0
+    if left.kind() = 'instruction' then do
+      if left.opcode() <> right.opcode() then return 0
+      if (_sourcesteps[left.id()] == _candidatesteps[right.id()]) = 0 then return 0
+    end
+    if sameorigin(left.origin(),right.origin()) = 0 then return 0
+    do j = 1 to left.operands()
+      if spend(1) = 0 | sameoperand(left.operand(j),right.operand(j)) = 0 then return 0
+    end
+    return 1
+  diagnostics: method = .int
+    arg item = .lltarget..record
+    return wordpos(item.kind(),'.srcfile .srcline .srcstep .inlineframe .inlinemap') > 0
+  claimslot: method = .int
+    arg functionid = .int, slot = .int
+    do i = 1 to _occupiedslots[0]
+      if spend(1) = 0 then return 0
+      if _occupiedfunctions[i] = functionid & _occupiedslots[i] = slot then return fail('invalid','expansion.mapping.fresh.slot.alias')
+    end
+    if spend(1,16) = 0 then return 0
+    row = _occupiedslots[0] + 1; _occupiedfunctions[row] = functionid; _occupiedslots[row] = slot
+    return 1
+  slotshape: method = .int
+    arg instance = .expansioninstance, provider = .lltarget..module, body = .lltarget..body, caller = .lltarget..body, receiver = .lltarget..body, candidate = .lltarget..module
+    i = .int; j = .int; found = .int; role = .string; original = .lltarget..operand; replacement = .lltarget..operand; base = .lltarget..operand; addition = .lltarget..operand; baseseen = .int[]
+    if instance.additions() > (_bytelimit - _bytes) <idiv> 8 then return fail('limit','expansion.addition.table.allowance')
+    if spend(instance.additions(),instance.additions() * 8) = 0 then return 0
+    do i = 1 to instance.additions(); baseseen[i] = 0; end
+    do i = 1 to instance.mappings()
+      if spend(1) = 0 then return 0
+      original = instance.original(i); replacement = instance.replacement(i); role = instance.mappingrole(i)
+      if original.kind() <> 'R' | replacement.kind() <> 'R' | original.owner() <> provider.identity() | original.procedureid() <> body.functionid() | replacement.owner() <> candidate.identity() | replacement.procedureid() <> receiver.functionid() then return fail('invalid','expansion.mapping.owner.mismatch')
+      select
+        when role = 'private' then do; if original.bank() <> 'r' | original.index() < 0 | original.index() >= body.locals() then return fail('invalid','expansion.mapping.role.source'); end
+        when role = 'count' then do; if original.bank() <> 'a' | original.index() <> 0 then return fail('invalid','expansion.mapping.role.source'); end
+        when role = 'proxy' | role = 'argument' then do; if original.bank() <> 'a' | original.index() < 1 then return fail('invalid','expansion.mapping.role.source'); end
+        when role = 'global' then do; if original.bank() <> 'g' | original.index() < 0 | original.index() >= provider.globals() then return fail('invalid','expansion.mapping.role.source'); end
+        otherwise do; return fail('invalid','expansion.mapping.role.source'); end
+      end
+      if role = 'argument' then do
+        if replacement.index() < 0 | wordpos(replacement.bank(),'r g a') = 0 then return fail('invalid','expansion.mapping.argument.coordinate')
+        if replacement.bank() = 'r' & replacement.index() >= caller.locals() then return fail('invalid','expansion.mapping.argument.coordinate')
+        if replacement.bank() = 'g' & replacement.index() >= candidate.globals() then return fail('invalid','expansion.mapping.argument.coordinate')
+      end
+      else do
+        if replacement.bank() <> 'r' | replacement.index() < caller.locals() | replacement.index() >= receiver.locals() then return fail('invalid','expansion.mapping.fresh.local.required')
+        if claimslot(receiver.functionid(),replacement.index()) = 0 then return 0
+      end
+      base = instance.base(original)
+      if role = 'proxy' | role = 'global' then do
+        if base.kind() <> 'R' | base.bank() <> 'r' | base.owner() <> candidate.identity() | base.procedureid() <> receiver.functionid() | base.index() < caller.locals() | base.index() >= receiver.locals() then return fail('invalid','expansion.mapping.base.coordinate')
+        found = 0
+        do j = 1 to instance.additions()
+          if spend(1) = 0 then return 0
+          addition = instance.addition(j)
+          if addition.bank() = base.bank() & addition.index() = base.index() & instance.additionrole(j) = 'base-proxy' then do
+            if baseseen[j] then return fail('invalid','expansion.mapping.base.alias')
+            found = 1; baseseen[j] = 1; leave
+          end
+        end
+        if found = 0 then return fail('invalid','expansion.mapping.base.addition.missing')
+      end
+      else if base.kind() <> '' then return fail('invalid','expansion.mapping.base.unexpected')
+    end
+    do i = 1 to instance.additions()
+      if spend(1) = 0 then return 0
+      addition = instance.addition(i)
+      if addition.kind() <> 'R' | addition.bank() <> 'r' | addition.owner() <> candidate.identity() | addition.procedureid() <> receiver.functionid() | addition.index() < caller.locals() | addition.index() >= receiver.locals() then return fail('invalid','expansion.addition.fresh.local.required')
+      if instance.additionrole(i) = 'base-proxy' & baseseen[i] = 0 then return fail('invalid','expansion.mapping.base.addition.orphan')
+      if claimslot(receiver.functionid(),addition.index()) = 0 then return 0
+    end
+    return 1
+  identityvalue: method = .int
+    arg identities = .int[], original = .int, replacement = .int
+    if original <= 0 then return original = replacement
+    if identities[0] <mod> 2 <> 0 then return 0
+    do i = 1 to identities[0] by 2
+      if spend(1) = 0 then return 0
+      if identities[i] = original then return identities[i + 1] = replacement
+    end
+    return 0
+  recordfields: method = .int
+    arg original = .lltarget..record, copied = .lltarget..record, instance = .expansioninstance
+    replacements = .object[]; value = .lltarget..operand; expected = .lltarget..operand; i = .int
+    if original.kind() <> copied.kind() | original.operands() <> copied.operands() | sameorigin(original.origin(),copied.origin()) = 0 then return 0
+    if original.kind() = '.meta' & (original.operands() = 1 | original.operands() = 4) & instance.metascope() = '' then return 0
+    do i = 1 to original.registerrefs()
+      value = instance.mapped(original.registerref(i))
+      if value.kind() <> 'R' then return 0
+      replacements[i] = value as .object
+    end
+    fields = lltarget..remapregisters(original,replacements)
+    do i = 1 to fields[0]
+      if spend(1) = 0 then return 0
+      expected = fields[i] as .lltarget..operand; value = copied.operand(i)
+      if original.kind() = '.traceevent' & (i = 7 | i = 8) then do
+        kind = 'step'; if i = 8 then kind = 'clause'
+        if expected.kind() <> 'I' | value.kind() <> 'I' | identityvalue(instance.identitymap(kind),expected.index(),value.index()) = 0 then return 0
+      end
+      else if original.kind() = 'label' & expected.kind() = 'L' then do
+        if value.kind() <> 'L' | (value.text() == expected.text() || instance.metascope()) = 0 then return 0
+      end
+      else if original.kind() = '.meta' & i = 1 & (fields[0] = 1 | fields[0] = 4) then do
+        if value.kind() <> 'S' | (bin2x(value.bytes()) == bin2x(expected.bytes() || (instance.metascope() as .binary))) = 0 then return 0
+      end
+      else if sameoperand(expected,value) = 0 then return 0
+    end
+    return 1
+  run: method = .void
+    i = .int; j = .int; k = .int; row = .int; point = .int; remaining = .int; prior = .int; ignored = .int
+    first = .int; last = .int; calladdress = .int; celladdress = .int; sourcecall = .int; sourceop = .int; found = .int; physical = .int
+    sourceitem = .lltarget..record; candidateitem = .lltarget..record; original = .lltarget..operand; replacement = .lltarget..operand
+    body = .lltarget..body; caller = .lltarget..body; receiver = .lltarget..body; namespaceowner = .lltarget..module; frame = .lltarget..record
+    providerref = reference .lltarget..module; providerirref = reference .llir..module
+    providerpoints = .int[]; providernext = .int[]; metanames = .string[]; metaactive = .int[]; emptyints = .int[]; emptystrings = .string[]
+    previousrecord = .int; previouscopy = .int; metadataexpected = .int; metadatacopied = .int; nextsource = .int; targetaddress = .int; key = .string; foundmeta = .int
+    higheststep = .int; highestclause = .int; identities = .int[]; usedsteps = .int[]; usedclauses = .int[]; kind = .string; index = .int; pair = .int; ceiling = .int
+    if _status <> 'building' then return
+    if <refvalid>(_source) = 0 | <refvalid>(_candidate) = 0 then do; ignored = fail('invalid','expansion.owner.expired'); return; end
+    source = dereference _source; candidate = dereference _candidate; catalog = .llrxascatalog..catalog()
+    if source.valid() = 0 | candidate.valid() = 0 then do; ignored = fail('invalid','expansion.owner.invalid'); return; end
+    _sourceid = source.identity(); _candidateid = candidate.identity(); _catalog = catalog.fingerprint()
+    sourceirref = source.ir(); candidateirref = candidate.ir()
+    sourceir = dereference sourceirref; candidateir = dereference candidateirref
+    if _instances[0] = 0 | source.name() <> candidate.name() | source.procedures() <> candidate.procedures() | source.globals() <> candidate.globals() then do; ignored = fail('unknown','expansion.module.shape.unproved'); return; end
+    if _instances[0] > (_bytelimit - _bytes) <idiv> 96 then do; ignored = fail('limit','expansion.instance.extent'); return; end
+    if sourceir.operations() > (_bytelimit - _bytes - _instances[0] * 96) <idiv> 48 - candidateir.operations() then do; ignored = fail('limit','expansion.operation.extent'); return; end
+    if spend(sourceir.operations() + candidateir.operations(),(sourceir.operations() + candidateir.operations()) * 48 + _instances[0] * 96) = 0 then return
+    do i = 1 to sourceir.operations(); _calls[i] = 0; end
+    do i = 1 to candidateir.operations(); _covered[i] = 0; _instanceowners[i] = 0; _next[i] = 0; _matched[i] = 0; end
+    _phase = 'source.steps'
+    if steps(source,0) = 0 then return
+    _phase = 'candidate.steps'
+    if steps(candidate,1) = 0 then return
+    _phase = 'source.identities'
+    do i = 1 to source.records()
+      if spend(1) = 0 then return
+      sourceitem = source.record(i)
+      if sourceitem.kind() = '.srcstep' then do
+        original = sourceitem.operand(1); higheststep = max(higheststep,original.index())
+        original = sourceitem.operand(2); highestclause = max(highestclause,original.index())
+      end
+      else if sourceitem.kind() = '.traceevent' then do
+        original = sourceitem.operand(7); higheststep = max(higheststep,original.index())
+        original = sourceitem.operand(8); highestclause = max(highestclause,original.index())
+      end
+    end
+    _phase = 'candidate.index'; physical = 0; point = 0
+    do i = candidate.records() to 1 by -1
+      if spend(1) = 0 then return
+      candidateitem = candidate.record(i)
+      if candidateitem.procedureid() <> physical then do; physical = candidateitem.procedureid(); point = 0; end
+      if candidateitem.kind() = 'instruction' then do; _next[candidateitem.id()] = point; point = candidateitem.id(); end
+    end
+    do i = 1 to _instances[0]
+      _phase = 'instance.manifest'; _checking = i
+      provider = .lltarget..module; providerir = .llir..module
+      instance = _instances[i]
+      if instance.seal() = 0 then do
+        state = 'invalid'; if pos('LL_RESOURCE_LIMIT',instance.reason()) > 0 then state = 'limit'
+        ignored = fail(state,instance.reason()); return
+      end
+      if spend(instance.usedwork(),instance.usedbytes()) = 0 then return
+      _instances[i] = instance
+      _phase = 'instance.identities'
+      do index = 1 to 2
+        kind = 'step'; ceiling = higheststep
+        if index = 2 then do; kind = 'clause'; ceiling = highestclause; end
+        identities = instance.identitymap(kind)
+        if identities[0] <mod> 2 <> 0 then do; ignored = fail('invalid','expansion.metadata.identity.shape'); return; end
+        do pair = 1 to identities[0] by 2
+          if spend(pair + usedsteps[0] + usedclauses[0] + 1,8) = 0 then return
+          if identities[pair] < 1 | identities[pair + 1] <= ceiling | identities[pair + 1] > 4294967295 then do; ignored = fail('invalid','expansion.metadata.identity.range'); return; end
+          do j = 1 to pair - 2 by 2
+            if identities[j] = identities[pair] then do; ignored = fail('invalid','expansion.metadata.identity.duplicate'); return; end
+          end
+          if index = 1 then do
+            do j = 1 to usedsteps[0]; if usedsteps[j] = identities[pair + 1] then do; ignored = fail('invalid','expansion.metadata.identity.collision'); return; end; end
+            usedsteps[usedsteps[0] + 1] = identities[pair + 1]
+          end
+          else do
+            do j = 1 to usedclauses[0]; if usedclauses[j] = identities[pair + 1] then do; ignored = fail('invalid','expansion.metadata.identity.collision'); return; end; end
+            usedclauses[usedclauses[0] + 1] = identities[pair + 1]
+          end
+        end
+      end
+      _phase = 'instance.region'; sourcecall = instance.callid()
+      if sourcecall < 1 | sourcecall > sourceir.operations() then do; ignored = fail('invalid','expansion.call.invalid'); return; end
+      if _calls[sourcecall] <> 0 then do; ignored = fail('invalid','expansion.call.duplicate'); return; end
+      _calls[sourcecall] = i; sourceitem = source.at(sourcecall)
+      if sourceitem.kind() <> 'instruction' then do; ignored = fail('invalid','expansion.call.not.instruction'); return; end
+      if catalog.callinvokes(sourceitem.opcode()) = 0 then do; ignored = fail('invalid','expansion.call.not.invocation'); return; end
+      caller = source.body(sourceitem.procedureid()); physical = candidate.procedureid(caller.name()); receiver = candidate.body(physical)
+      _functions[i] = physical; frameindex = candidate.inlineframeindex(instance.frame())
+      if frameindex = 0 then do; ignored = fail('invalid','expansion.frame.missing'); return; end
+      frame = candidate.inlineframe(frameindex)
+      if frame.procedureid() <> physical then do; ignored = fail('invalid','expansion.frame.owner.mismatch'); return; end
+      _starts[i] = candidate.inlineaddress(frame.id()); _ends[i] = -1
+      do j = 1 to candidate.records()
+        if spend(1) = 0 then return
+        candidateitem = candidate.record(j)
+        if candidateitem.procedureid() <> physical | candidateitem.kind() <> 'label' then iterate
+        original = candidateitem.operand(1)
+        if original.text() = instance.continuation() then _ends[i] = candidate.inlineaddress(candidateitem.id())
+      end
+      if _starts[i] < 0 | _ends[i] < _starts[i] then do; ignored = fail('invalid','expansion.continuation.missing.or.before.entry'); return; end
+      do j = 1 to i - 1
+        if _functions[j] <> physical then iterate
+        if _starts[i] < _ends[j] & _starts[j] < _ends[i] then do; ignored = fail('invalid','expansion.regions.overlap'); return; end
+      end
+      providerref = instance.provider(); provider = dereference providerref; providerirref = provider.ir(); providerir = dereference providerirref; found = 0
+      if providerir.operations() > (_bytelimit - _bytes) <idiv> 16 then do; ignored = fail('limit','expansion.provider.record.extent'); return; end
+      if spend(1,providerir.operations() * 16) = 0 then return
+      do j = 1 to provider.procedures()
+        if spend(1) = 0 then return
+        body = provider.procedure(j)
+        if body.functionid() = instance.procedure() then do; found = 1; leave; end
+      end
+      if found = 0 then do; ignored = fail('invalid','expansion.provider.procedure.invalid'); return; end
+      _phase = 'instance.slots'
+      if slotshape(instance,provider,body,caller,receiver,candidate) = 0 then return
+      _phase = 'instance.namespace'
+      if instance.metascope() <> '' then do index = 1 to 2
+        namespaceowner = source; if index = 2 then namespaceowner = provider
+        do j = 1 to namespaceowner.records()
+          if spend(1) = 0 then return
+          sourceitem = namespaceowner.record(j)
+          if sourceitem.kind() <> 'label' & sourceitem.kind() <> '.meta' then iterate
+          if sourceitem.operands() = 0 then iterate
+          original = sourceitem.operand(1)
+          if spend(original.length() + length(instance.metascope())) = 0 then return
+          if pos(instance.metascope(),original.text()) > 0 then do; ignored = fail('unknown','expansion.metadata.namespace.collision'); return; end
+        end
+      end
+      _phase = 'instance.provider.index'; expected = 0
+      providerpoints = emptyints; providernext = emptyints; metanames = emptystrings; metaactive = emptyints; metadataexpected = 0
+      do j = 1 to provider.records()
+        if spend(1) = 0 then return
+        sourceitem = provider.record(j)
+        if sourceitem.procedureid() <> body.functionid() then iterate
+        if sourceitem.kind() = 'instruction' then expected = expected + 1
+        else if sourceitem.kind() <> 'procedure' & diagnostics(sourceitem) = 0 then do
+          if sourceitem.kind() = '.meta' & (sourceitem.operands() = 3 | sourceitem.operands() = 5) then iterate
+          metadataexpected = metadataexpected + 1
+        end
+      end
+      point = 0
+      do j = body.records() to 1 by -1
+        if spend(1,8) = 0 then return
+        sourceitem = body.record(j)
+        if sourceitem.kind() = 'instruction' then point = sourceitem.id()
+        providernext[sourceitem.id()] = point
+      end
+      _phase = 'instance.instructions'; previoussource = 0; copied = 0
+      do row = 1 to instance.rows()
+        if spend(1) = 0 then return
+        point = instance.candidate(row); remaining = instance.count(row); sourceop = instance.source(row)
+        if remaining < 1 | point < 1 | point > candidateir.operations() then do; ignored = fail('invalid','expansion.row.extent.invalid'); return; end
+        if sourceop > 0 then do
+          if sourceop <= previoussource | sourceop > providerir.operations() then do; ignored = fail('invalid','expansion.provider.order.invalid'); return; end
+          sourceitem = provider.at(sourceop); previoussource = sourceop; copied = copied + 1
+          if sourceitem.kind() <> 'instruction' | sourceitem.procedureid() <> body.functionid() then do; ignored = fail('invalid','expansion.provider.row.invalid'); return; end
+          providerpoints[sourceop] = point
+        end
+        else if sourceop <> 0 | row <> 1 then do; ignored = fail('invalid','expansion.entry.row.invalid'); return; end
+        do while remaining > 0
+          if spend(1) = 0 then return
+          if point < 1 | point > candidateir.operations() then do; ignored = fail('invalid','expansion.row.truncated'); return; end
+          candidateitem = candidate.at(point); celladdress = candidate.inlineaddress(point)
+          if candidateitem.kind() <> 'instruction' | candidateitem.procedureid() <> physical | celladdress < _starts[i] | celladdress >= _ends[i] | _covered[point] then do; ignored = fail('invalid','expansion.row.overlap.or.owner'); return; end
+          _covered[point] = 1; _instanceowners[point] = i
+          remaining = remaining - 1; point = _next[point]
+        end
+        if sourceop = 0 then iterate
+        candidateitem = candidate.at(instance.candidate(row))
+        /* Return and binding-family lowering have several typed events.
+         * The final proof checks their recipe, not a same-opcode shortcut. */
+        if catalog.returnkind(sourceitem.opcode()) > 0 then iterate
+        if catalog.binding(sourceitem.opcode()) <> 0 & (instance.count(row) <> 1 | candidateitem.opcode() <> sourceitem.opcode()) then iterate
+        if instance.count(row) <> 1 | candidateitem.opcode() <> sourceitem.opcode() | candidateitem.operands() <> sourceitem.operands() then do; ignored = fail('unknown','expansion.provider.instruction.delta'); return; end
+        do k = 1 to sourceitem.operands()
+          original = sourceitem.operand(k); replacement = candidateitem.operand(k)
+          if original.kind() = 'R' then do
+            mapped = instance.mapped(original)
+            if mapped.kind() <> 'R' | sameoperand(mapped,replacement) = 0 then do; ignored = fail('unknown','expansion.provider.register.mapping'); return; end
+          end
+          else if original.kind() = 'L' then do
+            if replacement.kind() <> 'L' | (replacement.text() == original.text() || instance.metascope()) = 0 then do; ignored = fail('unknown','expansion.provider.label.mapping'); return; end
+          end
+          else do
+            if sameoperand(original,replacement) = 0 then do; ignored = fail('unknown','expansion.provider.operand.delta'); return; end
+          end
+        end
+      end
+      if copied <> expected then do; ignored = fail('invalid','expansion.provider.coverage.incomplete'); return; end
+      _phase = 'instance.metadata'; previousrecord = 0; previouscopy = 0; metadatacopied = 0
+      do row = 1 to instance.records()
+        if spend(1) = 0 then return
+        sourceop = instance.recordsource(row); point = instance.recordcandidate(row)
+        if point < 1 | point > candidateir.operations() | point <= previouscopy | _matched[point] then do; ignored = fail('invalid','expansion.provider.record.locator'); return; end
+        previouscopy = point; candidateitem = candidate.at(point)
+        if candidateitem.procedureid() <> physical | candidateitem.kind() = 'instruction' | diagnostics(candidateitem) then do; ignored = fail('invalid','expansion.provider.record.owner.or.kind'); return; end
+        celladdress = candidate.inlineaddress(point)
+        if sourceop > 0 then do
+          if sourceop <= previousrecord | sourceop > providerir.operations() then do; ignored = fail('invalid','expansion.provider.record.order'); return; end
+          previousrecord = sourceop; sourceitem = provider.at(sourceop)
+          if sourceitem.procedureid() <> body.functionid() | sourceitem.kind() = 'procedure' | sourceitem.kind() = 'instruction' | diagnostics(sourceitem) then do; ignored = fail('invalid','expansion.provider.record.source'); return; end
+          if recordfields(sourceitem,candidateitem,instance) = 0 then do; ignored = fail('unknown','expansion.provider.record.delta'); return; end
+          nextsource = providernext[sourceop]; targetaddress = _ends[i]
+          if nextsource > 0 then targetaddress = candidate.inlineaddress(providerpoints[nextsource])
+          if celladdress <> targetaddress then do; ignored = fail('unknown','expansion.provider.record.boundary'); return; end
+          metadatacopied = metadatacopied + 1
+        end
+        else if sourceop <> 0 | candidateitem.kind() <> '.meta' | candidateitem.operands() <> 1 | celladdress <> _ends[i] then do
+          ignored = fail('invalid','expansion.provider.generated.record'); return
+        end
+        if candidateitem.kind() = '.meta' & (candidateitem.operands() = 1 | candidateitem.operands() = 4) then do
+          replacement = candidateitem.operand(1); key = bin2x(replacement.bytes()); foundmeta = 0
+          do j = 1 to metanames[0]
+            if spend(1) = 0 then return
+            if (metanames[j] == key) then do; foundmeta = j; leave; end
+          end
+          if foundmeta = 0 then do; foundmeta = metanames[0] + 1; metanames[foundmeta] = key; metaactive[foundmeta] = 0; end
+          if sourceop = 0 & metaactive[foundmeta] = 0 then do; ignored = fail('unknown','expansion.provider.metadata.close.unmatched'); return; end
+          metaactive[foundmeta] = candidateitem.operands() = 4
+        end
+        _matched[point] = 1
+      end
+      if metadatacopied <> metadataexpected then do; ignored = fail('invalid','expansion.provider.record.coverage'); return; end
+      do j = 1 to metaactive[0]
+        if spend(1) = 0 then return
+        if metaactive[j] then do; ignored = fail('unknown','expansion.provider.metadata.scope.unclosed'); return; end
+      end
+      _phase = 'instance.mapping.owners'
+      do j = 1 to instance.mappings()
+        if spend(1) = 0 then return
+        original = instance.original(j); replacement = instance.replacement(j)
+        if original.owner() <> provider.identity() | original.procedureid() <> instance.procedure() | replacement.owner() <> candidate.identity() | replacement.procedureid() <> physical then do; ignored = fail('invalid','expansion.mapping.owner.mismatch'); return; end
+        if replacement.bank() = 'r' & replacement.index() >= receiver.locals() then do; ignored = fail('invalid','expansion.mapping.local.extent'); return; end
+      end
+      /* These loop-local views remain linked until their lexical scope
+       * exits. Detach before the next iteration assigns typed defaults;
+       * assigning through a live view would overwrite the provider itself. */
+      assembler unlink providerir
+      assembler unlink provider
+    end
+    _phase = 'caller.records'; _checking = 0; prior = 0
+    do i = 1 to source.records()
+      if spend(1) = 0 then return
+      sourceitem = source.record(i)
+      if _calls[sourceitem.id()] > 0 | (diagnostics(sourceitem) & sourceitem.kind() <> '.inlineframe') then iterate
+      if sourceitem.id() > _operations[0] then do; ignored = fail('invalid','expansion.caller.mapping.missing'); return; end
+      point = _operations[sourceitem.id()]
+      if point < 1 | point > candidateir.operations() | point <= prior then do; ignored = fail('invalid','expansion.caller.order.invalid'); return; end
+      prior = point; candidateitem = candidate.at(point); _matched[point] = 1
+      if sourceitem.kind() = 'procedure' then do
+        if candidateitem.kind() <> 'procedure' then do; ignored = fail('unknown','expansion.caller.header.delta'); return; end
+        body = source.body(sourceitem.procedureid()); receiver = candidate.body(candidateitem.procedureid())
+        if body.name() <> receiver.name() | body.expose() <> receiver.expose() | body.entrykind() <> receiver.entrykind() | receiver.locals() < body.locals() | sameorigin(sourceitem.origin(),candidateitem.origin()) = 0 then do; ignored = fail('unknown','expansion.caller.header.delta'); return; end
+        iterate
+      end
+      if samerecord(sourceitem,candidateitem) = 0 then do; ignored = fail('unknown','expansion.caller.record.delta'); return; end
+      celladdress = candidate.inlineaddress(point)
+      do j = 1 to _instances[0]
+        if sourceitem.procedureid() <> source.at(_instances[j].callid()).procedureid() then iterate
+        calladdress = source.inlineaddress(_instances[j].callid())
+        if source.inlineaddress(sourceitem.id()) < calladdress then do
+          extent = 0; if sourceitem.kind() = 'instruction' then extent = sourceitem.operands() + 1
+          if celladdress + extent > _starts[j] then do; ignored = fail('unknown','expansion.caller.entry.cut.mismatch'); return; end
+        end
+        else if source.inlineaddress(sourceitem.id()) > calladdress then do
+          if celladdress < _ends[j] then do; ignored = fail('unknown','expansion.caller.continuation.cut.mismatch'); return; end
+        end
+        else if sourceitem.kind() <> 'instruction' & celladdress <> _starts[j] then do; ignored = fail('unknown','expansion.caller.label.cut.mismatch'); return; end
+      end
+      if sourceitem.kind() = 'instruction' then do
+        if _covered[point] then do; ignored = fail('invalid','expansion.caller.clone.overlap'); return; end
+        if source.inlineframeat(sourceitem.id()) <> candidate.inlineframeat(point) then do; ignored = fail('unknown','expansion.caller.diagnostic.frame.delta'); return; end
+        _covered[point] = 1
+      end
+    end
+    _phase = 'candidate.coverage'
+    do i = 1 to candidate.records()
+      if spend(1) = 0 then return
+      candidateitem = candidate.record(i)
+      if candidateitem.kind() = 'instruction' then do
+        if _covered[candidateitem.id()] = 0 then do; ignored = fail('unknown','expansion.candidate.instruction.unaccounted'); return; end
+      end
+      else if diagnostics(candidateitem) = 0 & candidateitem.kind() <> 'label' & _matched[candidateitem.id()] = 0 then do
+        ignored = fail('unknown','expansion.candidate.record.unaccounted'); return
+      end
+    end
+    _status = 'proved'
+    return
+  valid: method = .int
+    call run()
+    if _status <> 'proved' | <refvalid>(_source) = 0 | <refvalid>(_candidate) = 0 then return 0
+    source = dereference _source; candidate = dereference _candidate; catalog = .llrxascatalog..catalog()
+    if source.identity() <> _sourceid | candidate.identity() <> _candidateid | catalog.fingerprint() <> _catalog then return 0
+    do i = 1 to _instances[0]; if _instances[i].valid() = 0 then return 0; end
+    return source.valid() & candidate.valid()
+  status: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'expansion.owner.expired.or.replaced'
+    return _reason
+  sourceowner: method = reference .lltarget..module
+    return _source
+  identity: method = .int
+    return _identity
+  candidateowner: method = reference .lltarget..module
+    return _candidate
+  operation: method = .int
+    arg sourceop = .int
+    if sourceop < 1 | sourceop > _operations[0] then return 0
+    return _operations[sourceop]
+  instances: method = .int
+    return _instances[0]
+  instance: method = .expansioninstance
+    arg ordinal = .int
+    return _instances[ordinal]
+  instanceat: method = .int
+    arg callid = .int
+    call run()
+    if callid < 1 | callid > _calls[0] then return 0
+    return _calls[callid]
+  candidatecovered: method = .int
+    arg operation = .int
+    call run()
+    if operation < 1 | operation > _covered[0] then return 0
+    return _covered[operation]
+  instanceowner: method = .int
+    arg operation = .int
+    call run()
+    if operation < 1 | operation > _instanceowners[0] then return 0
+    return _instanceowners[operation]
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+
+/** Exact no-clear normalization identity for one function. It says nothing
+ * about entry definedness, callback absence or activation equivalence. */
+identityreceipt: class
+  _correspondence = reference .lltargetremap..correspondence
+  _sourceid = .int
+  _candidateid = .int
+  _sourcefunction = .int
+  _candidatefunction = .int
+  _status = .string
+  _reason = .string
+  _work = .int
+  _limit = .int
+  *: factory
+    arg correspondence = reference .lltargetremap..correspondence, functionid = .int, work = 1000000, bytes = 67108864
+    _correspondence = correspondence; _sourcefunction = functionid; _status = 'building'; _limit = work
+    if work < 1 | bytes < 128 then do; _status = 'limit'; _reason = 'normalization.identity.allowance'; end
+    return
+  unavailable: factory
+    arg state = .string, reason = .string
+    _status = state; _reason = reason
+    return
+  spend: method = .int
+    if _work >= _limit then do; _status = 'limit'; _reason = 'normalization.identity.work'; return 0; end
+    _work = _work + 1; return 1
+  run: method = .void
+    i = .int; receiver = .lltarget..body
+    if _status <> 'building' then return
+    _status = 'unknown'; _reason = 'normalization.identity.correspondence.unavailable'
+    if <refvalid>(_correspondence) = 0 then do; _status = 'invalid'; return; end
+    correspondence = dereference _correspondence
+    _status = correspondence.status(); _reason = correspondence.reason()
+    if _status <> 'proved' then return
+    source_ref = correspondence.sourceowner(); candidate_ref = correspondence.candidateowner()
+    source = dereference source_ref; candidate = dereference candidate_ref
+    _sourceid = source.identity(); _candidateid = candidate.identity()
+    found = 0; body = .lltarget..body
+    do i = 1 to source.procedures()
+      if spend() = 0 then return
+      body = source.procedure(i)
+      if body.functionid() = _sourcefunction then do; found = 1; leave; end
+    end
+    if found = 0 then do; _status = 'invalid'; _reason = 'normalization.identity.source.function.unavailable'; return; end
+    do i = 1 to candidate.procedures()
+      if spend() = 0 then return
+      receiver = candidate.procedure(i)
+      if receiver.name() = body.name() then do; _candidatefunction = receiver.functionid(); leave; end
+    end
+    if _candidatefunction < 2 then do; _status = 'invalid'; _reason = 'normalization.identity.function.unavailable'; return; end
+    receiver = candidate.body(_candidatefunction)
+    if body.locals() <> receiver.locals() | body.records() <> receiver.records() then do; _status = 'unknown'; _reason = 'normalization.identity.function.changed'; return; end
+    do i = 1 to correspondence.insertions()
+      if spend() = 0 then return
+      item = candidate.at(correspondence.insertion(i))
+      if item.procedureid() = _candidatefunction then do; _status = 'unknown'; _reason = 'normalization.identity.clear.inserted'; return; end
+    end
+    _status = 'proved'; _reason = ''
+    return
+  valid: method = .int
+    call run()
+    if _status <> 'proved' | <refvalid>(_correspondence) = 0 then return 0
+    correspondence = dereference _correspondence
+    if correspondence.valid() = 0 then return 0
+    source_ref = correspondence.sourceowner(); candidate_ref = correspondence.candidateowner()
+    source = dereference source_ref; candidate = dereference candidate_ref
+    return source.identity() = _sourceid & candidate.identity() = _candidateid
+  status: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    call run()
+    if _status = 'proved' & valid() = 0 then return 'normalization.identity.owner.expired.or.replaced'
+    return _reason
+  unchanged: method = .int
+    return valid() & status() = 'proved'
+  matchesresult: method = .int
+    arg owner = reference .lltarget..module, functionid = .int
+    if valid() = 0 | <refvalid>(owner) = 0 | functionid <> _candidatefunction then return 0
+    actual = dereference owner; correspondence = dereference _correspondence; expectedref = correspondence.candidateowner(); expected = dereference expectedref
+    if actual.valid() = 0 | actual.identity() <> _candidateid | expected.identity() <> _candidateid then return 0
+    actualirref = actual.ir(); expectedirref = expected.ir()
+    actualir = dereference actualirref; expectedir = dereference expectedirref
+    actualstorage = actualir.storage(); expectedstorage = expectedir.storage()
+    actualarena = dereference actualstorage; expectedarena = dereference expectedstorage
+    /* Publication may copy the immutable module wrapper. It must preserve
+     * the exact frozen graph backing, not the wrapper's variable address. */
+    return actualarena.sealed() & expectedarena.sealed() & actualarena.error() = '' & expectedarena.error() = '' & actualarena.identity() = _candidateid & expectedarena.identity() = _candidateid
 
 bad: procedure = .void
   arg message = .string
@@ -176,6 +1160,8 @@ mapping: class
   _clauses = .int[]
   _stepold = .int[]
   _clauseold = .int[]
+  _frames = .int[]
+  _frameold = .int[]
   *: factory
     arg owner = reference .lltarget..module, target = reference .lltarget..bodydraft, work = 1000000, bytes = 67108864
     _owner = owner; _target = target; _worklimit = work; _bytelimit = bytes; _status = 'ok'
@@ -288,6 +1274,20 @@ mapping: class
     if reserve(16,1) = 0 then return 0
     id = _clauseold[0] + 1; _clauseold[id] = old; _clauses[id] = replacement
     return 1
+  frameid: method = .int
+    arg old = .int, replacement = .int
+    if old = 0 then return replacement = 0
+    if old < 0 | old > 4294967295 | replacement < 1 | replacement > 4294967295 then do; call reject('invalid','LL_TARGET_REMAP: invalid inline frame identity'); return 0; end
+    do i = 1 to _frameold[0]
+      if reserve(0,1) = 0 then return 0
+      if _frameold[i] = old then do
+        if _frames[i] <> replacement then call reject('invalid','LL_TARGET_REMAP: conflicting inline frame identity')
+        return _status = 'ok'
+      end
+    end
+    if reserve(16,1) = 0 then return 0
+    id = _frameold[0] + 1; _frameold[id] = old; _frames[id] = replacement
+    return 1
   origin: method = .int
     arg old = .llir..origin, replacement = .llir..origin
     if valid() = 0 | old.valid() = 0 | replacement.valid() = 0 then return 0
@@ -329,6 +1329,12 @@ mapping: class
         if _stepold[i] = old then return _steps[i]
       end
     end
+    else if family = 'frame' then do
+      do i = 1 to _frameold[0]
+        if reserve(0,1) = 0 then return 0
+        if _frameold[i] = old then return _frames[i]
+      end
+    end
     else do
       do i = 1 to _clauseold[0]
         if reserve(0,1) = 0 then return 0
@@ -357,7 +1363,7 @@ mapping: class
     do i = 1 to fields[0]
       value = fields[i] as .lltarget..operand
       if value.kind() = 'P' then fields[i] = mapped(value) as .object
-      if value.kind() = 'L' & (item.kind() = 'instruction' | item.kind() = 'label') then fields[i] = mapped(value) as .object
+      if value.kind() = 'L' & (item.kind() = 'instruction' | item.kind() = 'label' | item.kind() = '.inlinemap') then fields[i] = mapped(value) as .object
     end
     if item.kind() = '.srcstep' | item.kind() = '.traceevent' then do
       step = 1; clause = 2
@@ -366,6 +1372,15 @@ mapping: class
         value = fields[step] as .lltarget..operand; fields[step] = .lltarget..operand.integer(identity(value.index(),'source')) as .object
         value = fields[clause] as .lltarget..operand; fields[clause] = .lltarget..operand.integer(identity(value.index(),'clause')) as .object
       end
+    end
+    if item.kind() = '.inlineframe' then do
+      do i = 1 to 2
+        value = fields[i] as .lltarget..operand; fields[i] = .lltarget..operand.integer(identity(value.index(),'frame')) as .object
+      end
+      value = fields[5] as .lltarget..operand; fields[5] = .lltarget..operand.integer(identity(value.index(),'source')) as .object
+    end
+    if item.kind() = '.inlinemap' then do
+      value = fields[3] as .lltarget..operand; fields[3] = .lltarget..operand.integer(identity(value.index(),'frame')) as .object
     end
     oldat = item.origin()
     if oldat.id() <= _originpresent[0] then do
@@ -490,7 +1505,7 @@ change: class
       at = copyorigin(graph_ref,item.origin(),reference draft,reference sources,reference origins)
       if item.kind() = 'procedure' then do
         activefunction = f
-        body = source.body(f); bodies[f] = draft.procedure(body.name(),body.locals(),at,body.expose())
+        body = source.body(f); bodies[f] = draft.procedure(body.name(),body.locals(),at,body.expose(),body.entrykind())
         body_ref = reference bodies[f]
         mapper = .lltargetremap..mapping(_owner,body_ref,remaining,remainingbytes)
         if _relocation.provided() then do
@@ -526,6 +1541,11 @@ change: class
         value = item.operand(step); ignored = mapper.sourceid(value.index(),value.index())
         value = item.operand(clause); ignored = mapper.clauseid(value.index(),value.index())
       end
+      if item.kind() = '.inlineframe' then do
+        do j = 1 to 2; value = item.operand(j); ignored = mapper.frameid(value.index(),value.index()); end
+        value = item.operand(5); ignored = mapper.sourceid(value.index(),value.index())
+      end
+      if item.kind() = '.inlinemap' then do; value = item.operand(3); ignored = mapper.frameid(value.index(),value.index()); end
       insertion = _inserthead[opid]
       do while insertion > 0
         value = _registers[insertion]; clear = targetbody.reg('r',value.index())
@@ -1193,7 +2213,7 @@ modulemap: class
     if mutable() = 0 then return 0
     sourceid = selected(source); targetid = selected(target)
     if sourceid = 0 | targetid = 0 then return 0
-    if wordpos(kind,'procedure label source clause module') = 0 | old = '' | replacement = '' then do; call reject('invalid','LL_TARGET_REMAP: named binding shape'); return 0; end
+    if wordpos(kind,'procedure label source clause frame module') = 0 | old = '' | replacement = '' then do; call reject('invalid','LL_TARGET_REMAP: named binding shape'); return 0; end
     original = dereference source; destination = dereference target
     if kind = 'label' then do
       if functionid < 2 then do; call reject('invalid','LL_TARGET_REMAP: label requires source function'); return 0; end
@@ -1233,6 +2253,12 @@ modulemap: class
     arg source = reference .lltarget..module, old = .int, replacement = .int
     if old <= 0 | replacement <= 0 then do; call reject('invalid','LL_TARGET_REMAP: clause identity must be positive'); return 0; end
     return named(source,'clause',0,old as .string,replacement as .string,_receiver)
+  frameid: method = .int
+    arg source = reference .lltarget..module, old = .int, replacement = .int
+    if old < 1 | old > 4294967295 | replacement < 1 | replacement > 4294967295 then do; call reject('invalid','LL_TARGET_REMAP: inline frame identity must be canonical nonzero u32'); return 0; end
+    original = dereference source
+    if original.inlineframeindex(old) = 0 then do; call reject('invalid','LL_TARGET_REMAP: source inline frame missing'); return 0; end
+    return named(source,'frame',0,old as .string,replacement as .string,_receiver)
   seal: method = .int
     if _sealed then return valid()
     if _status <> 'building' then return 0
@@ -1310,7 +2336,7 @@ modulemap: class
       providers[i] = .lltargetremap..modulebinding(); value = fields[i] as .lltarget..operand
       kind = ''; functionid = 0
       if value.kind() = 'P' then kind = 'procedure'
-      if value.kind() = 'L' & (item.kind() = 'instruction' | item.kind() = 'label') then do; kind = 'label'; functionid = item.procedureid(); end
+      if value.kind() = 'L' & (item.kind() = 'instruction' | item.kind() = 'label' | item.kind() = '.inlinemap') then do; kind = 'label'; functionid = item.procedureid(); end
       if kind = '' then iterate
       found = lookup(moduleid,kind,functionid,value.text())
       if found = 0 then do; resultstate = 'keep'; reason = 'remap.' || kind || '.binding.missing'; iterate; end
@@ -1332,6 +2358,25 @@ modulemap: class
         found = lookup(moduleid,kind,0,value.index() as .string)
         if found = 0 then do; resultstate = 'keep'; reason = 'remap.' || kind || '.binding.missing'; end
         else fields[ordinal] = .lltarget..operand.integer(_bindingnew[found] as .int) as .object
+      end
+    end
+    if item.kind() = '.inlineframe' | item.kind() = '.inlinemap' then do
+      first = 1; last = 2
+      if item.kind() = '.inlinemap' then do; first = 3; last = 3; end
+      do i = first to last
+        value = fields[i] as .lltarget..operand
+        if value.index() = 0 then iterate
+        found = lookup(moduleid,'frame',0,value.index() as .string)
+        if found = 0 then do; resultstate = 'keep'; reason = 'remap.frame.binding.missing'; end
+        else fields[i] = .lltarget..operand.integer(_bindingnew[found] as .int) as .object
+      end
+      if item.kind() = '.inlineframe' then do
+        value = fields[5] as .lltarget..operand
+        if value.index() > 0 then do
+          found = lookup(moduleid,'source',0,value.index() as .string)
+          if found = 0 then do; resultstate = 'keep'; reason = 'remap.source.binding.missing'; end
+          else fields[5] = .lltarget..operand.integer(_bindingnew[found] as .int) as .object
+        end
       end
     end
     if item.kind() = 'instruction' then do

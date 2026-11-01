@@ -65,6 +65,7 @@ typedef struct rxvmplugin_pending_registration rxvmplugin_pending_registration;
 struct rxvmplugin_pending_registration {
     char name[16];
     rxvm_plugin_factory factory;
+    unsigned int decimal_sync_contract;
     rxvmplugin_pending_registration *next;
 };
 
@@ -72,6 +73,7 @@ typedef struct rxvmplugin_load_transaction {
     rxvmplugin_pending_registration *head;
     rxvmplugin_pending_registration *tail;
     int failed;
+    int incompatible;
 } rxvmplugin_load_transaction;
 
 #if defined(CREXX_VM_SINGLE_THREADED)
@@ -140,7 +142,8 @@ static void rxvmplugin_release_value_storage(value *value_storage) {
     clear_value(value_storage);
 }
 
-static int rxvmplugin_configure_instance(rxvm_plugin *plugin) {
+static int rxvmplugin_configure_instance(rxvm_plugin *plugin,
+                                         unsigned int decimal_sync_contract) {
     if (!plugin || !plugin->free ||
         plugin->type <= RXVM_PLUGIN_UNDEFINED ||
         plugin->type >= RXVM_PLUGIN_MAX) {
@@ -148,12 +151,18 @@ static int rxvmplugin_configure_instance(rxvm_plugin *plugin) {
     }
     if (plugin->type == RXVM_PLUGIN_DECIMAL) {
         decplugin *decimal = (decplugin *)plugin;
+        /* Check the opt-in before touching a possibly old decimal extension. */
+        if (decimal_sync_contract != RXVM_DECIMAL_SYNC_CONTRACT_V1)
+            return RXVMPLUGIN_LOAD_INCOMPATIBLE;
+        if (!decimal->syncNumericContext) return RXVMPLUGIN_LOAD_INCOMPATIBLE;
         decimal->number_to_simple_format = number_to_simple_format;
         decimal->format_number_components = RexxDecimalFormat;
         decimal->reserve_decimal = rxvm_value_reserve_decimal;
         decimal->reserve_string = rxvmplugin_reserve_string;
         decimal->release_value_storage = rxvmplugin_release_value_storage;
         decimal->num_context = NULL;
+    } else if (decimal_sync_contract) {
+        return RXVMPLUGIN_LOAD_INCOMPATIBLE;
     }
     return 0;
 }
@@ -172,13 +181,22 @@ static void rxvmplugin_close_library(void *handle) {
 static rxvmplugin_factory_entry *rxvmplugin_build_descriptor(
         const char *factory_name,
         rxvm_plugin_factory factory,
-        rxvmplugin_library *library) {
+        rxvmplugin_library *library,
+        unsigned int decimal_sync_contract,
+        int *incompatible) {
     rxvmplugin_factory_entry *entry;
     rxvm_plugin *compatibility_instance;
+    int status;
 
     if (!factory_name || !factory) return NULL;
     compatibility_instance = factory();
-    if (rxvmplugin_configure_instance(compatibility_instance) != 0) {
+    status = rxvmplugin_configure_instance(compatibility_instance, decimal_sync_contract);
+    if (status != 0) {
+        if (status == RXVMPLUGIN_LOAD_INCOMPATIBLE) {
+            if (incompatible) *incompatible = 1;
+            fprintf(stderr, "RXVM: incompatible decimal plugin %s; ABI 3 %s registration required\n",
+                    factory_name, RXVM_DECIMAL_SYNC_CONTRACT_NAME);
+        }
         if (compatibility_instance && compatibility_instance->free) {
             compatibility_instance->free(compatibility_instance);
         }
@@ -197,6 +215,7 @@ static rxvmplugin_factory_entry *rxvmplugin_build_descriptor(
     entry->handle = library ? library->handle : NULL;
     entry->type = compatibility_instance->type;
     entry->library = library;
+    entry->decimal_sync_contract = decimal_sync_contract;
     return entry;
 }
 
@@ -273,28 +292,60 @@ static void rxvmplugin_pending_free(rxvmplugin_pending_registration *entry) {
     }
 }
 
-static void rxvmplugin_transaction_register(
+static int rxvmplugin_transaction_register_contract(
         char *factory_name,
-        rxvm_plugin_factory factory) {
+        rxvm_plugin_factory factory,
+        unsigned int decimal_sync_contract) {
     rxvmplugin_load_transaction *transaction =
             rxvmplugin_current_load_transaction;
     rxvmplugin_pending_registration *pending;
 
     if (!transaction || !factory_name || !factory) {
         if (transaction) transaction->failed = 1;
-        return;
+        return -1;
     }
     pending = (rxvmplugin_pending_registration *)calloc(1, sizeof(*pending));
     if (!pending) {
         transaction->failed = 1;
-        return;
+        return -1;
     }
     strncpy(pending->name, factory_name, sizeof(pending->name) - 1u);
     pending->name[sizeof(pending->name) - 1u] = '\0';
     pending->factory = factory;
+    pending->decimal_sync_contract = decimal_sync_contract;
     if (transaction->tail) transaction->tail->next = pending;
     else transaction->head = pending;
     transaction->tail = pending;
+    return 0;
+}
+
+static void rxvmplugin_transaction_register(char *factory_name,
+                                            rxvm_plugin_factory factory) {
+    (void)rxvmplugin_transaction_register_contract(factory_name, factory, 0u);
+}
+
+static int rxvmplugin_decimal_registration_valid(
+        const rxvm_decimal_registration_v3 *registration) {
+    return registration && registration->struct_size == sizeof(*registration) &&
+        registration->abi_version == RXVM_DECIMAL_PLUGIN_ABI_V3 &&
+        registration->type == RXVM_PLUGIN_DECIMAL &&
+        registration->sync_contract == RXVM_DECIMAL_SYNC_CONTRACT_V1 &&
+        registration->factory_name && registration->factory_name[0] && registration->factory;
+}
+
+static int rxvmplugin_transaction_register_decimal_v3(
+        const rxvm_decimal_registration_v3 *registration) {
+    rxvmplugin_load_transaction *transaction = rxvmplugin_current_load_transaction;
+    if (!rxvmplugin_decimal_registration_valid(registration)) {
+        if (transaction) {
+            transaction->incompatible = 1;
+            transaction->failed = 1;
+        }
+        fputs("RXVM: incompatible decimal plugin registration; ABI 3 descriptor required\n", stderr);
+        return RXVMPLUGIN_LOAD_INCOMPATIBLE;
+    }
+    return rxvmplugin_transaction_register_contract((char *)registration->factory_name,
+            registration->factory, registration->sync_contract);
 }
 
 static int rxvmplugin_commit_dynamic_transaction(
@@ -307,7 +358,8 @@ static int rxvmplugin_commit_dynamic_transaction(
     rxvmplugin_factory_entry *discarded = NULL;
     size_t published = 0u;
 
-    if (!transaction || transaction->failed || !transaction->head) return -1;
+    if (!transaction || transaction->failed || !transaction->head)
+        return transaction && transaction->incompatible ? RXVMPLUGIN_LOAD_INCOMPATIBLE : -1;
     library = (rxvmplugin_library *)calloc(1, sizeof(*library));
     if (!library) return -1;
     library->handle = handle;
@@ -315,7 +367,8 @@ static int rxvmplugin_commit_dynamic_transaction(
     pending = transaction->head;
     while (pending) {
         rxvmplugin_factory_entry *entry = rxvmplugin_build_descriptor(
-                pending->name, pending->factory, library);
+                pending->name, pending->factory, library,
+                pending->decimal_sync_contract, &transaction->incompatible);
         if (!entry) {
             while (prepared_head) {
                 rxvmplugin_factory_entry *next = prepared_head->next;
@@ -323,7 +376,7 @@ static int rxvmplugin_commit_dynamic_transaction(
                 prepared_head = next;
             }
             free(library);
-            return -1;
+            return transaction->incompatible ? RXVMPLUGIN_LOAD_INCOMPATIBLE : -1;
         }
         if (prepared_tail) prepared_tail->next = entry;
         else prepared_head = entry;
@@ -380,6 +433,7 @@ int load_rxvmplugin(char* dir, char *name) {
     char *combined_dir = NULL;
     void *loaded_handle = NULL;
     rxvmplugin_register_function init = NULL;
+    rxvmdecimal_register_function_v3 decimal_init = NULL;
     rxvmplugin_load_transaction transaction;
 
     if (!name || rxvmplugin_current_load_transaction) return -3;
@@ -485,12 +539,16 @@ int load_rxvmplugin(char* dir, char *name) {
 #ifdef _WIN32
     loaded_handle = (void *)LoadLibraryA(full_file_name);
     if (loaded_handle) {
+        decimal_init = (rxvmdecimal_register_function_v3)GetProcAddress(
+                (HMODULE)loaded_handle, "_register_rxvm_decimal_plugin_v3");
         init = (rxvmplugin_register_function)GetProcAddress(
                 (HMODULE)loaded_handle, "_register_rxvm_plugin");
     }
 #else
     loaded_handle = dlopen(full_file_name, RTLD_LAZY);
     if (loaded_handle) {
+        decimal_init = (rxvmdecimal_register_function_v3)dlsym(
+                loaded_handle, "_register_rxvm_decimal_plugin_v3");
         init = (rxvmplugin_register_function)dlsym(
                 loaded_handle, "_register_rxvm_plugin");
     }
@@ -498,18 +556,27 @@ int load_rxvmplugin(char* dir, char *name) {
 
     if (!loaded_handle) {
         rc = -1;
-    } else if (!init) {
+    } else if (!decimal_init && !init) {
         rxvmplugin_close_library(loaded_handle);
         rc = -2;
     } else {
         rxvmplugin_current_load_transaction = &transaction;
-        init(rxvmplugin_transaction_register);
+        if (decimal_init) {
+            if (decimal_init(rxvmplugin_transaction_register_decimal_v3) != 0)
+                transaction.failed = 1;
+        }
+        /* A library may also provide legacy Unicode factories. Both sets
+         * publish together; invalid decimal declarations never fall back. */
+        if (init && !transaction.failed) {
+            init(rxvmplugin_transaction_register);
+        }
         rxvmplugin_current_load_transaction = NULL;
         commit_result = rxvmplugin_commit_dynamic_transaction(
                 &transaction, loaded_handle);
         if (commit_result != 0) {
             rxvmplugin_close_library(loaded_handle);
-            rc = commit_result < 0 ? -3 : 0;
+            rc = commit_result == RXVMPLUGIN_LOAD_INCOMPATIBLE
+                ? RXVMPLUGIN_LOAD_INCOMPATIBLE : (commit_result < 0 ? -3 : 0);
         }
     }
 
@@ -520,16 +587,18 @@ int load_rxvmplugin(char* dir, char *name) {
 #endif
 }
 
-/* Function to register a plugin factory */
-void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
+static int rxvmplugin_register_static(char *factory_name, rxvm_plugin_factory factory,
+                                       unsigned int decimal_sync_contract) {
     rxvmplugin_factory_entry *entry;
     int duplicate;
+    int incompatible = 0;
 
-    entry = rxvmplugin_build_descriptor(factory_name, factory, NULL);
+    entry = rxvmplugin_build_descriptor(factory_name, factory, NULL,
+            decimal_sync_contract, &incompatible);
     if (!entry) {
         fprintf(stderr, "Unable to register RXVM plugin factory %s\n",
                 factory_name ? factory_name : "(null)");
-        return;
+        return incompatible ? RXVMPLUGIN_LOAD_INCOMPATIBLE : -1;
     }
 
     RXVMPLUGIN_LOCK();
@@ -541,6 +610,21 @@ void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
     }
     RXVMPLUGIN_UNLOCK();
     if (duplicate) rxvmplugin_destroy_unpublished_descriptor(entry);
+    return 0;
+}
+
+/* Legacy generic registration is a Unicode path, never a decimal ABI opt-in. */
+void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
+    (void)rxvmplugin_register_static(factory_name, factory, 0u);
+}
+
+int register_rxvm_decimal_plugin_v3(const rxvm_decimal_registration_v3 *registration) {
+    if (!rxvmplugin_decimal_registration_valid(registration)) {
+        fputs("RXVM: incompatible decimal plugin registration; ABI 3 descriptor required\n", stderr);
+        return RXVMPLUGIN_LOAD_INCOMPATIBLE;
+    }
+    return rxvmplugin_register_static((char *)registration->factory_name,
+            registration->factory, registration->sync_contract);
 }
 
 /* Detach the active catalogue.  Live VM instances retain their descriptor and
@@ -656,7 +740,8 @@ int rxvmplugin_instance_set_prepare(rxvmplugin_instance_set *set,
     if (!descriptor) return -1;
 
     plugin = descriptor->factory();
-    if (rxvmplugin_configure_instance(plugin) != 0 || plugin->type != type) {
+    if (rxvmplugin_configure_instance(plugin, descriptor->decimal_sync_contract) != 0 ||
+            plugin->type != type) {
         if (plugin && plugin->free) plugin->free(plugin);
         rxvmplugin_release_descriptor_instance(descriptor);
         return -1;

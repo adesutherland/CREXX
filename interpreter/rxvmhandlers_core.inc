@@ -50,6 +50,11 @@ RXVM_HANDLER(CALL_FUNC,
     VM_ADVANCE(1);
     {
         proc_runtime *called_function = PROC_OP(1);
+        if (called_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+            SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                           "Program entry cannot be called as a child")
+            DISPATCH;
+        }
         DEBUG("TRACE - CALL %s()\n", called_function->name);
         if (called_function->start == SIZE_MAX) {
             RXVM_INSTRUMENTATION_CALL(

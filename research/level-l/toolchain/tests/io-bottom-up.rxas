@@ -1,0 +1,19 @@
+/* Lexical caller-first order: outer must copy the already expanded middle. */
+.globals=0
+main() .locals=3
+  load r0,7
+  call1 r1,outer(),r0
+  ieq r2,r1,8
+  brf failure,r2
+  ret 0
+failure:
+  ret 1
+outer() .locals=1
+  call1 r0,middle(),a1
+  ret r0
+middle() .locals=1
+  call1 r0,leaf(),a1
+  ret r0
+leaf() .locals=1
+  iadd r0,a1,1
+  ret r0

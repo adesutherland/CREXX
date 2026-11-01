@@ -48,12 +48,14 @@ struct avl_tree_node;
 enum queue_item_type {
     EMPTY, ASM_LABEL, OP_CODE, SRC_STEP,
     FUNC_META, REG_META, CONST_META, CLEAR_META,
-    CLASS_META, ATTR_META, INTERFACE_META, IMPLEMENTS_META, MEMBER_META, INLINE_META, TRACE_EVENT
+    CLASS_META, ATTR_META, INTERFACE_META, IMPLEMENTS_META, MEMBER_META, INLINE_META, TRACE_EVENT,
+    INLINE_FRAME_META, INLINE_MAP_META, INLINED_PRIVATE_META
 };
 
 /* Keyhole Queue Item  */
 typedef struct instruction_queue {
     enum queue_item_type instrType;
+    unsigned char borrowed_private_boundary;
     Assembler_Token *instrToken;
     /* OP_CODE operands are owned by the queue and have no fixed limit. */
     Assembler_Token **operandTokens;
@@ -91,6 +93,9 @@ typedef struct Assembler_Context {
     size_t inst_buffer_size;
     size_t const_buffer_size;
     int current_locals;
+    int current_owned_locals;
+    unsigned char current_has_private;
+    unsigned char current_proc_has_code;
     int proc_head; /* int because we need -1 */
     int proc_tail;
     int expose_head;
@@ -106,6 +111,7 @@ typedef struct Assembler_Context {
     struct avl_tree_node *label_constants_tree;
     struct avl_tree_node *extern_constants_tree;
     struct rxas_jump_table *jump_tables;
+    struct rxas_inline_map_patch *inline_maps;
     char *extern_regs;
     char *current_proc_name;
     instruction_queue *optimiser_queue;
@@ -252,5 +258,7 @@ Assembler_Token *rxas_queue_operand(const instruction_queue *item, size_t operan
 
 /* Release any variable-length operands owned by a queued opcode. */
 void rxas_free_queue_item(instruction_queue *item);
+
+int rxas_instruction_borrows_private(Assembler_Context *, const instruction_queue *);
 
 #endif //CREXX_RXSA_H

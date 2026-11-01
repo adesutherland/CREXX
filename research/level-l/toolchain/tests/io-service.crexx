@@ -139,9 +139,62 @@ main: procedure = .int expose checks failures
   call check(invalid.status() = 2,'input allowance refuses before target publication')
   last = frontend.parse(('main() .locals=0' || nl || 'ret 0' || nl) as .binary,'last','fixture:last')
   call check(last.status() = 0,'small request succeeds after malformed and over-budget requests')
+  call inlinechecks(frontend,nl)
+  call entrychecks(frontend,nl)
   say 'RXAS_IO|checks=' || checks || '|failures=' || failures
   if failures > 0 then return 1
   return 0
+
+/** Executable entry state is a typed procedure property, preserved by RXAS
+ * roundtrip. An ordinary metadata string cannot manufacture the declaration. */
+entrychecks: procedure = .void
+  arg frontend = .llrxasinput..reader, nl = .string
+  mode = .int; item = .lltarget..record; body = .lltarget..body
+  header = .string; parsed = .llrxasinput..parsed; source = .lltarget..module
+  emitted = .llrxasoutput..emission; bounded = .llrxasoutput..emission
+  do mode = 0 to 2
+    header = 'main() .locals=0'; exposed = ''
+    if mode = 2 then do; exposed = 'published.main'; header = header || ' .expose=' || exposed; end
+    if mode > 0 then header = header || ' .entry=program-default'
+    parsed = frontend.parse((header || nl || 'ret 0' || nl) as .binary,'entry-' || mode,'fixture:entry')
+    call check(parsed.status() = 0,'ordinary and marked main headers parse ' || mode || ': ' || parsed.error())
+    if parsed.status() <> 0 then iterate
+    source = parsed.result(); body = source.body(source.procedureid('main')); expected = mode > 0
+    call check(body.entrykind() = expected & body.expose() = exposed,'typed entry kind and exposure remain independent ' || mode)
+    emitted = llrxasoutput..render(reference source)
+    call check(emitted.error() = '','typed entry header renders ' || mode)
+    if emitted.error() <> '' then iterate
+    output = emitted.output()
+    call check(pos(header || nl,output.text()) > 0,'canonical exact entry option spelling renders ' || mode)
+    bounded = llrxasoutput..render(reference source,output.bytes())
+    call check(bounded.error() = '' & bounded.output().bytes() = output.bytes(),'entry rendering admits the exact output byte bound ' || mode)
+    bounded = llrxasoutput..render(reference source,output.bytes() - 1)
+    call check(bounded.error() <> '' & bounded.output().bytes() = 0,'entry rendering below its byte bound publishes nothing ' || mode)
+    again = frontend.parse(output.text() as .binary,'entry-roundtrip-' || mode,'fixture:entry-roundtrip')
+    call check(again.status() = 0,'typed entry output reads back ' || mode)
+    if again.status() = 0 then do
+      result = again.result(); body = result.body(result.procedureid('main'))
+      call check(body.entrykind() = expected & body.expose() = exposed,'entry kind survives RXAS roundtrip ' || mode)
+    end
+  end
+  do mode = 0 to 4
+    select mode
+      when 0 then header = 'main() .locals=0 .entry=unknown'
+      when 1 then header = 'helper() .locals=0 .entry=program-default'
+      when 2 then header = 'main() .locals=0 .entry=program-default .entry=program-default'
+      when 3 then header = 'main() .locals=0 .entry=program-default .expose=published.main'
+      otherwise header = 'main() .locals=0 .expose=published.main .entry=program-default .entry=program-default'
+    end
+    invalid = frontend.parse((header || nl || 'ret 0' || nl) as .binary,'entry-invalid-' || mode,'fixture:entry-invalid')
+    call check(invalid.status() <> 0,'malformed or unsupported entry header refuses ' || mode)
+  end
+  parsed = frontend.parse(('main() .locals=0' || nl || '.meta "main.entry"="b" "program-default" main() ""' || nl || 'ret 0' || nl) as .binary,'entry-string','fixture:entry-string')
+  call check(parsed.status() = 0,'ordinary metadata string remains ordinary metadata')
+  if parsed.status() = 0 then do
+    source = parsed.result(); body = source.body(source.procedureid('main'))
+    call check(body.entrykind() = 0,'metadata text confers no executable entry contract')
+  end
+  return
 
 tracecodes: procedure = .int
   arg module = .lltarget..module, expected = .binary
@@ -157,6 +210,80 @@ tracecodes: procedure = .int
     end
   end
   return count = 1
+
+/** Diagnostic names label logical frames without asserting executable target
+ * identity. Independent parser/model negatives exercise the static contract. */
+inlinechecks: procedure = .void
+  arg frontend = .llrxasinput..reader, nl = .string
+  mode = .int; i = .int; item = .lltarget..record
+  do mode = 0 to 10
+    parsed = frontend.parse(inlinefixture(mode,nl) as .binary,'inline-diagnostics-' || mode,'fixture:inline-diagnostics')
+    if mode > 0 then do
+      expected = word('duplicate missing cycle anchor overlapping empty unresolved nonempty conflicting NUL',mode)
+      call check(parsed.status() <> 0 & pos(expected,parsed.error()) > 0,'static inline diagnostic refusal ' || mode || ': ' || parsed.error())
+      iterate
+    end
+    call check(parsed.status() = 0,'nested disjoint inline diagnostic source admitted: ' || parsed.error())
+    if parsed.status() <> 0 then iterate
+    source = parsed.result(); call check(source.inlineframes() = 2 & source.inlinemaps() = 3,'typed static tree and split ranges retained')
+    call check(inlinesourcesteps(source),'explicit source step zero clears the caller anchor inside the clone')
+    loads = 0
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.kind() <> 'instruction' | item.mnemonic() <> 'load' then iterate
+      loads = loads + 1; expectedframe = 1; if loads = 2 then expectedframe = 2
+      call check(source.inlineframeat(item.id()) = expectedframe,'instruction chooses its deepest static frame ' || loads)
+    end
+    emitted = llrxasoutput..render(reference source)
+    call check(emitted.error() = '','static diagnostic records render')
+    if emitted.error() = '' then do
+      output = emitted.output(); again = frontend.parse(output.text() as .binary,'inline-diagnostics-roundtrip','fixture:inline-roundtrip')
+      call check(again.status() = 0,'rendered static diagnostic records parse again: ' || again.error())
+      if again.status() = 0 then do
+        result = again.result(); call check(result.inlineframes() = 2 & result.inlinemaps() = 3,'static diagnostic tree/ranges survive RXAS roundtrip')
+        call check(inlinesourcesteps(result),'source-step clearing survives RXAS roundtrip')
+      end
+    end
+  end
+  return
+
+inlinefixture: procedure = .string
+  arg mode = .int, nl = .string
+  parent = 0; child = 2; childparent = 1; anchor = 7; module = 'provider.rxas'
+  if mode = 1 then child = 1
+  if mode = 2 then childparent = 99
+  if mode = 3 then parent = 2
+  if mode = 4 then anchor = 99
+  if mode = 8 then module = ''
+  if mode = 10 then module = 'provider\x00rxas'
+  source = 'main() .locals=1' || nl || '.srcstep 7 7 0 "caller.rxas" 1 0 1 "call helper"' || nl
+  source = source || '.inlineframe 1 ' || parent || ' "' || module || '" "helper" ' || anchor || nl
+  source = source || 'outer_begin:' || nl || 'load r0,1' || nl
+  source = source || '.inlineframe ' || child || ' ' || childparent || ' "nested.rxas" "nested" 7' || nl
+  source = source || '.srcstep 0 0 0 "" 0 0 0 ""' || nl || 'child_begin:' || nl || 'load r0,2' || nl || 'child_end:' || nl
+  source = source || '.srcstep 7 7 0 "caller.rxas" 1 0 1 "call helper"' || nl || 'load r0,3' || nl || 'outer_end:' || nl || 'ret 0' || nl
+  if mode = 5 then source = source || '.inlinemap outer_begin,outer_end,1' || nl
+  else if mode = 6 then source = source || '.inlinemap outer_begin,outer_begin,1' || nl
+  else if mode = 7 then source = source || '.inlinemap missing,child_begin,1' || nl
+  else source = source || '.inlinemap outer_begin,child_begin,1' || nl
+  source = source || '.inlinemap child_begin,child_end,' || child || nl || '.inlinemap child_end,outer_end,1' || nl
+  /* Identical source-anchor records are legal even at a second address. */
+  line = 1; if mode = 9 then line = 2
+  source = source || '.srcstep 7 7 0 "caller.rxas" ' || line || ' 0 1 "call helper"' || nl
+  return source
+
+inlinesourcesteps: procedure = .int
+  arg source = .lltarget..module
+  active = 0; loads = 0; item = .lltarget..record; value = .lltarget..operand
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = '.srcstep' then do; value = item.operand(1); active = value.index(); end
+    if item.kind() = 'instruction' & item.mnemonic() = 'load' then do
+      loads = loads + 1; expected = 7; if loads = 2 then expected = 0
+      if active <> expected then return 0
+    end
+  end
+  return loads = 3
 
 check: procedure = .void expose checks failures
   arg condition = .int, name = .string

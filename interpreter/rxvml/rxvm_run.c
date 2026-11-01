@@ -134,6 +134,12 @@ int rxvm_link(struct rxvm_context* ctx) {
         }
     } while (autoloaded > 0);
 
+    if (rxvm_resolve_inlined_privates(ctx) != 0) {
+        fprintf(stderr,"ERROR: unresolved or corrupt inlined private storage binding\n");
+        rxvm_memory_leave(previous);
+        return -1;
+    }
+
     ctx->link_dirty = 0;
 
     if (linked_any) {
@@ -192,6 +198,8 @@ static int rxvm_execute_initializer(struct rxvm_context *ctx,
     value *saved_ret;
     value *ret;
     proc_runtime *saved_fault_entry;
+    proc_runtime *saved_initializer_entry;
+    size_t saved_initializer_entry_depth;
     value *fault_sink;
     int sink_was_empty, captured_fault;
     int rc;
@@ -217,7 +225,13 @@ static int rxvm_execute_initializer(struct rxvm_context *ctx,
     sink_was_empty = fault_sink && !fault_sink->num_attributes;
     if (fault_sink)
         ctx->active.invocation_fault_entry = procedure;
+    saved_initializer_entry = ctx->initializer_entry_procedure;
+    saved_initializer_entry_depth = ctx->initializer_entry_depth;
+    ctx->initializer_entry_procedure = procedure;
+    ctx->initializer_entry_depth = ctx->worker.execution_depth + 1u;
     rc = run(ctx, 0, 0);
+    ctx->initializer_entry_procedure = saved_initializer_entry;
+    ctx->initializer_entry_depth = saved_initializer_entry_depth;
     /* Only this scoped run's new owned event replaces its generic summary.
      * A pre-existing sink event does not witness this initializer's failure. */
     captured_fault = sink_was_empty && ctx->active.invocation_fault_sink == fault_sink &&
@@ -366,9 +380,19 @@ int rxvm_ensure_callee_initialized(struct rxvm_context *ctx,
                        target->module_number <= ctx->initialized_module_count
                 ? 0 : -1;
     }
-    if (target == caller || target->initializer_state == RXVM_INIT_READY) {
+    if (target->initializer_state == RXVM_INIT_READY) {
         return 0;
     }
+    if (target->initializer_state == RXVM_INIT_INITIALIZING) {
+        if (caller == target && ctx->current_initializer_module == target &&
+            ctx->initializer_entry_procedure &&
+            ctx->worker.execution_depth == ctx->initializer_entry_depth)
+            return 0;
+        fprintf(stderr, "ERROR: external entry or cycle reaches initializing module %s\n",
+                target->name);
+        return -1;
+    }
+    if (target->initializer_state == RXVM_INIT_FAILED || !caller) return -1;
     return rxvm_initialize_module(ctx, target);
 }
 
@@ -376,6 +400,59 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
     int initialization_rc;
     int rc;
     if (!ctx) return -1;
+    /* This legacy C entry does not save the running root's external call
+     * trampoline. An initializer callback cannot borrow its lineage or mutate
+     * that trampoline, even to call an already READY module. */
+    if (ctx->initializer_depth != 0u) {
+        fprintf(stderr, "ERROR: public rxvm_call during module initialization\n");
+        return -1;
+    }
+    if (ctx->worker.execution_depth != 0u &&
+        (!proc_name || strcmp(proc_name, "main") == 0)) {
+        fprintf(stderr, "ERROR: public main reentry requires a checked entry API\n");
+        return -1;
+    }
+    /* Resolve selected aliases without running user initializer code. An
+     * entry-only target must be refused before initialization and before the
+     * ordinary call allocates its result or argument window. */
+    if (rxvm_link(ctx) != 0) return -1;
+    if (!proc_name || strcmp(proc_name, "main") == 0) {
+        size_t module_index;
+        if (!ctx->program_entry_pending) {
+            for (module_index = 0u; module_index < ctx->num_modules;
+                 ++module_index) {
+                module *owner = ctx->modules[module_index];
+                int offset = owner->proc_head;
+                while (offset != -1) {
+                    proc_constant *definition = (proc_constant *)
+                            (owner->segment.const_pool + offset);
+                    if (definition->base.type == PROC_CONST &&
+                        strcmp(definition->name, "main") == 0) {
+                        proc_runtime *selected =
+                                rxvm_get_module_runtime_procedure(owner,
+                                                                 (size_t)offset);
+                        if (selected && selected->entry_state_kind ==
+                                        RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                            fprintf(stderr,
+                                    "ERROR: marked main requires checked program entry\n");
+                            return -1;
+                        }
+                        break;
+                    }
+                    offset = definition->next;
+                }
+            }
+        }
+    } else if (proc_name) {
+        proc_runtime *selected = NULL;
+        if (src_node(ctx->exposed_proc_tree, proc_name,
+                     (size_t *)&selected) && selected &&
+            selected->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+            fprintf(stderr,
+                    "ERROR: marked main requires checked program entry\n");
+            return -1;
+        }
+    }
     initialization_rc = rxvm_initialize(ctx);
     rxvm_memory_worker *previous =
             rxvm_memory_enter(ctx->worker.memory_worker);
@@ -472,8 +549,19 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
 }
 
 int rxvm_run(struct rxvm_context* ctx, int argc, char** argv) {
+    unsigned char saved_pending;
+    size_t saved_depth;
+    int result;
+    if (!ctx || ctx->worker.execution_depth != 0u) return -1;
     if (rxvm_link(ctx) != 0) return -1;
     if (rxvm_prepare(ctx) != 0) return -1;
     if (rxvm_initialize(ctx) != 0) return -1;
-    return rxvm_call(ctx, "main", argc, argv);
+    saved_pending = ctx->program_entry_pending;
+    saved_depth = ctx->program_entry_depth;
+    ctx->program_entry_pending = 1;
+    ctx->program_entry_depth = ctx->worker.execution_depth + 1u;
+    result = rxvm_call(ctx, "main", argc, argv);
+    ctx->program_entry_pending = saved_pending;
+    ctx->program_entry_depth = saved_depth;
+    return result;
 }

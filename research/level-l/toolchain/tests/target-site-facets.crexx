@@ -59,7 +59,8 @@ points: procedure = .int
   visible = one(outputcontrol,'sayx',.lltarget..operand.string('visible' as .binary),at)
   ignored = one(outputcontrol,'ret',.lltarget..operand.integer(0),at)
   dead = draft.procedure('unreached',3,at)
-  ignored = one(dead,'ret',.lltarget..operand.integer(0),at)
+  ignored = label(dead,'closed.cycle',at)
+  ignored = one(dead,'br',.lltarget..operand.symbol('closed.cycle'),at)
   fields = .object[]; fields[1] = dead.reg('r',0) as .object
   fields[2] = dead.reg('r',1) as .object; fields[3] = dead.reg('r',2) as .object
   unreachable = dead.emit('dcall',fields,at)
@@ -180,6 +181,7 @@ rootresource: procedure = .int
 retained: procedure = .int
   arg count = .int
   failures = 0; i = .int; ignored = .int; destination = .int
+  binding = .lltargetflow..storagefact; captured = .lltargetflow..storagefact
   loads = .int[]
   draft = .lltarget..draft('site.layout.' || count,'fixture:site.layout',0)
   at = draft.synthetic('independent retained count and window')
@@ -199,14 +201,18 @@ retained: procedure = .int
   flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
   summaries = .lltargetsummary..analysis(reference flow)
   layout = summaries.calllayout(called)
-  failures = failures + check(layout.status() = 'unknown' & layout.countknown() = 0 & layout.reason() = 'target.layout.count.unproved','raw root setter callbacks cannot certify a captured count ' || count)
+  failures = failures + check(layout.status() = 'proved' & layout.countknown() & layout.count() = count,'normal setter postwrite certifies the local captured count without root freshness ' || count)
+  if layout.status() = 'proved' then do i = 1 to count
+    binding = layout.actual(i); captured = flow.captureat(called,'r',i)
+    failures = failures + check(binding.active() > 0 & binding.active() = captured.active() & binding.slotidentity() = captured.slotidentity(),'local counted ingress preserves ordered actual pointer identity ' || count || ':' || i)
+  end
   changed = llcleanup..transport(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
   failures = failures + check(changed.status() = 'keep' | changed.status() = 'changed','unproved canonical call layout retains a valid result ' || count)
   if changed.status() <> 'changed' & changed.status() <> 'keep' then do; say changed.reason(); return failures; end
   result = changed.result(); row = result.at(changed.operation(called)); catalog = .llrxascatalog..catalog()
-  failures = failures + check(row.opcode() = source.at(called).opcode(),'canonical unknown count retains its counted invocation ' || count)
+  failures = failures + check(row.opcode() = source.at(called).opcode(),'capture precision alone retains the counted invocation checkpoint ' || count)
   counter = row.operand(catalog.callcount(row.opcode()))
-  failures = failures + check(counter.bank() = 'r' & counter.index() = 0,'unproved root count cannot acquire a synthetic known window ' || count)
+  failures = failures + check(counter.bank() = 'r' & counter.index() = 0,'captured root count keeps its original physical window ' || count)
   /* This independent operational client explicitly supplies exact scalar
    * definitions with no callbacks. It proves the generic layout algorithm,
    * and does not donate a freshness premise to the canonical RXAS owner. */
@@ -525,7 +531,7 @@ resourceinduction: procedure = .int
   flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
   failures = failures + check(flow.status() = 'ok','resource induction flow builds ' || mode)
   if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
-  functionid = source.procedureid('leaf'); expected = mode = 0 | mode = 1
+  functionid = source.procedureid('leaf'); expected = mode = 0 | mode = 1 | mode = 5
   failures = failures + check(flow.resourceclean(functionid) = expected,'resource theorem distinguishes scalar preservation and unknown resource effects ' || mode)
   if expected = 0 then do
     failures = failures + check(flow.resourcereason(functionid) <> '','resource refusal has an explicit reason ' || mode)

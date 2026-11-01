@@ -109,6 +109,17 @@ crexx_add_rxdas_roundtrip(
         EXPECT_DISASSEMBLY_TEXT_3 "linkargv"
 )
 
+add_test(NAME inline_diagnostic_roundtrip
+        COMMAND ${CMAKE_COMMAND}
+        -DRXAS=$<TARGET_FILE:rxas> -DRXDAS=$<TARGET_FILE:rxdas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_inline_diagnostics.rxas
+        -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-diagnostic-work
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_inline_diagnostics.cmake)
+set_tests_properties(inline_diagnostic_roundtrip PROPERTIES
+        LABELS "binutils;assembler;linker;disassembler;inline;regression" TIMEOUT 120
+        CREXX_PREP_TARGETS "rxas;rxdas;rxlink")
+
 add_executable(test_inline_quote tests/test_inline_quote.c)
 target_link_libraries(test_inline_quote PRIVATE rxdaslib)
 set_target_properties(test_inline_quote PROPERTIES

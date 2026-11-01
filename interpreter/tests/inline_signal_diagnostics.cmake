@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-foreach(_required VM ASSEMBLER MUTATOR WORK)
+foreach(_required VM ASSEMBLER LINKER MUTATOR WORK)
   if(NOT DEFINED ${_required})
     message(FATAL_ERROR "Missing ${_required}")
   endif()
@@ -41,7 +41,10 @@ inner() .locals=0
 ]=])
   run_checked("assemble ${_case} provider" "${ASSEMBLER}" -n "${_case_dir}/provider.rxas")
   set(_baseline_sources "")
-  foreach(_lane baseline expanded)
+  foreach(_lane baseline expanded static)
+    if(_case STREQUAL "failed" AND _lane STREQUAL "static")
+      continue()
+    endif()
     set(_dir "${_case_dir}/${_lane}")
     file(MAKE_DIRECTORY "${_dir}")
     file(WRITE "${_dir}/root.rxas" ".globals=1\nmain() .locals=3\n")
@@ -74,6 +77,18 @@ inner() .locals=0
         file(APPEND "${_dir}/root.rxas" "  call r0,@1::1(),r1\n")
       else()
         file(APPEND "${_dir}/root.rxas" "  call @1::1()\n")
+      endif()
+    elseif(_lane STREQUAL "static")
+      file(APPEND "${_dir}/root.rxas"
+        "  .inlineframe 1 0 \"${_case_dir}/provider.rxas\" \"helper\" 3\nstatic_helper_begin:\n")
+      if(_case STREQUAL "direct")
+        file(APPEND "${_dir}/root.rxas"
+          "  .srcstep 4 4 17 \"helper-cause.rexx\" 31 1 12 \"raise helper\"\n  signal \"OTHER\",\"inline diagnostic fault\"\n  br after_helper\nafter_helper:\n  .inlinemap static_helper_begin,after_helper,1\n")
+      else()
+        # The retained child returns into a physical static clone. Its saved
+        # return PC, rather than a current raw event origin, selects frame 2.
+        file(APPEND "${_dir}/root.rxas"
+          "  .srcstep 4 4 17 \"helper-inner.rexx\" 32 1 10 \"call inner\"\n  .inlineframe 2 1 \"${_case_dir}/provider.rxas\" \"inner\" 4\nstatic_inner_begin:\n  .srcstep 5 5 17 \"inner-child.rexx\" 42 1 10 \"call child\"\n  call @1::2()\n  br after_inner\nafter_inner:\n  br after_helper\nafter_helper:\n  .inlinemap static_inner_begin,after_inner,2\n  .inlinemap after_inner,after_helper,1\n")
       endif()
     else()
       set(_recipe "count=0;args=list();a0=r4;proxies=();owned=(r4,r5);prep=none")
@@ -160,6 +175,88 @@ inner() .locals=0
       endif()
     endif()
   endforeach()
+endforeach()
+
+# Names/maps survive source stripping without resolving a provider by name.
+# A second call after the mapped clone proves that its ended range contributes
+# no logical frame; stored rethrow must keep the first event's detached chain.
+foreach(_case direct retained ended stored)
+  set(_dir "${WORK}/stripped-${_case}")
+  file(MAKE_DIRECTORY "${_dir}")
+  file(WRITE "${_dir}/root.rxas" ".globals=1\nmain() .locals=3\n")
+  if(_case STREQUAL "stored")
+    file(APPEND "${_dir}/root.rxas" "  sigbrv captured,r1,\"OTHER\"\n")
+  endif()
+  file(APPEND "${_dir}/root.rxas"
+    "  .srcstep 1 1 17 \"strip-main.rexx\" 10 1 12 \"call wrapper\"\n  call wrapper()\n  ret 99\n")
+  if(_case STREQUAL "stored")
+    file(APPEND "${_dir}/root.rxas" [=[captured:
+  copy g0,r1
+  null r1
+  sighalt "OTHER"
+  .srcstep 2 2 17 "strip-rethrow.rexx" 90 1 7 "rethrow"
+  linkattr1 r2,g0,5
+  linkattr1 r0,r2,5
+  signalorigin "OTHER",r0,g0
+  ret 98
+]=])
+  endif()
+  file(APPEND "${_dir}/root.rxas" [=[wrapper() .locals=1
+  .srcstep 3 3 17 "strip-wrapper.rexx" 20 1 11 "call clone"
+  .inlineframe 7 0 "diagnostic-only-provider" "clone" 3
+clone_begin:
+  .srcstep 4 4 17 "strip-clone.rexx" 30 1 10 "clone body"
+]=])
+  if(_case STREQUAL "direct" OR _case STREQUAL "stored")
+    file(APPEND "${_dir}/root.rxas" "  signal \"OTHER\",\"inline diagnostic fault\"\n")
+  elseif(_case STREQUAL "retained")
+    file(APPEND "${_dir}/root.rxas" "  call child()\n")
+  else()
+    file(APPEND "${_dir}/root.rxas" "  load r0,1\n")
+  endif()
+  file(APPEND "${_dir}/root.rxas" "clone_end:\n  .inlinemap clone_begin,clone_end,7\n")
+  if(_case STREQUAL "ended")
+    file(APPEND "${_dir}/root.rxas" "  call child()\n")
+  endif()
+  file(APPEND "${_dir}/root.rxas" [=[  ret
+child() .locals=0
+  .srcstep 5 5 17 "strip-child.rexx" 40 1 11 "raise child"
+  signal "OTHER","inline diagnostic fault"
+  ret
+]=])
+  run_checked("assemble strip ${_case}" "${ASSEMBLER}" -n "${_dir}/root.rxas")
+  file(WRITE "${_dir}/strip.control"
+    "INPUT \"${_dir}/root.rxbin\"\nOUTPUT \"${_dir}/stripped.rxbin\"\nSTRIP SOURCE\nSTRIP INLINE\n")
+  run_checked("strip ${_case}" "${LINKER}" -c "${_dir}/strip.control")
+  execute_process(COMMAND "${VM}" "${_dir}/stripped.rxbin"
+    RESULT_VARIABLE _result OUTPUT_VARIABLE _stdout ERROR_VARIABLE _diagnostic TIMEOUT 30)
+  string(REPLACE "\r\n" "\n" _diagnostic "${_diagnostic}")
+  string(REGEX MATCHALL "PANIC:" _panics "${_diagnostic}")
+  list(LENGTH _panics _panic_count)
+  string(REGEX MATCHALL "called from:" _callers "${_diagnostic}")
+  list(LENGTH _callers _caller_count)
+  if(_case STREQUAL "direct" OR _case STREQUAL "stored")
+    set(_expected_callers 2)
+    set(_logical_label "logical origin: clone")
+  elseif(_case STREQUAL "retained")
+    set(_expected_callers 3)
+    set(_logical_label "logical caller: clone")
+  else()
+    set(_expected_callers 2)
+    set(_logical_label "")
+  endif()
+  if(NOT "${_result}" STREQUAL "30" OR NOT _stdout STREQUAL "" OR
+     NOT _panic_count EQUAL 1 OR NOT _caller_count EQUAL _expected_callers OR
+     _diagnostic MATCHES "source:|unavailable|FAIL:")
+    message(FATAL_ERROR "stripped ${_case} lost diagnostic structure: ${_result}\n${_stdout}${_diagnostic}")
+  endif()
+  if(_logical_label STREQUAL "")
+    if(_diagnostic MATCHES "logical origin:|logical caller:")
+      message(FATAL_ERROR "ended static range invented a logical frame\n${_diagnostic}")
+    endif()
+  elseif(NOT _diagnostic MATCHES "${_logical_label} [(]module diagnostic-only-provider[)]")
+    message(FATAL_ERROR "stripped ${_case} lost static name\n${_diagnostic}")
+  endif()
 endforeach()
 file(REMOVE_RECURSE "${WORK}")
 message("INLINE_SIGNAL_DIAGNOSTICS|failures=0")

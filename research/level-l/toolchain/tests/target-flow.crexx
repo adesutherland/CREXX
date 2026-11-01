@@ -38,17 +38,27 @@ stalewitness: procedure = .int
   end
   return 0
 
-/* Canonical call-point alias oracles; values and availability are distinct. */
+/* Callback-free field writes isolate canonical alias/value projection.
+ * Original resource-setter/reference forms remain separate raw negatives. */
 callavailability: procedure = .int
-  arg mode = .string
+  arg mode = .string, rawcase = 0
   failures = 0; ignored = .int; i = .int; called = .int; integer = 0
-  draft = .lltarget..draft('availability.' || mode,'fixture:availability',0)
+  draft = .lltarget..draft('availability.' || mode || '.' || rawcase,'fixture:availability',0)
   at = draft.synthetic('captured actual identity and dirty provenance')
   body = draft.procedure('main',4,at)
-  if mode = 'defined' | mode = 'dirty' | mode = 'unknown' | mode = 'constant' | mode = 'unknown-observe' then ignored = two(body,'load',body.reg('r',0),.lltarget..operand.integer(11),at)
-  if mode = 'defined' then ignored = two(body,'copy',body.reg('r',1),body.reg('r',0),at)
-  if mode = 'unknown' | mode = 'constant' | mode = 'unknown-observe' then ignored = two(body,'linkref',body.reg('r',1),body.reg('r',0),at)
-  if mode = 'join' then ignored = two(body,'load',body.reg('r',3),.lltarget..operand.integer(1),at)
+  if mode = 'defined' | mode = 'dirty' | mode = 'unknown' | mode = 'constant' | mode = 'unknown-observe' then do
+    if rawcase then ignored = two(body,'load',body.reg('r',0),.lltarget..operand.integer(11),at)
+    else ignored = one(body,'getnumdgts',body.reg('r',0),at)
+  end
+  if mode = 'defined' then do
+    if rawcase then ignored = two(body,'copy',body.reg('r',1),body.reg('r',0),at)
+    else ignored = one(body,'getnumdgts',body.reg('r',1),at)
+  end
+  if rawcase & (mode = 'unknown' | mode = 'constant' | mode = 'unknown-observe') then ignored = two(body,'linkref',body.reg('r',1),body.reg('r',0),at)
+  if mode = 'join' then do
+    if rawcase then ignored = two(body,'load',body.reg('r',3),.lltarget..operand.integer(1),at)
+    else ignored = one(body,'getnumdgts',body.reg('r',3),at)
+  end
   fields = .object[]
   fields[1] = body.reg('r',2) as .object; fields[2] = .lltarget..operand.procedure('snapshot') as .object
   fields[3] = body.reg('r',1) as .object; fields[4] = body.reg('r',0) as .object
@@ -64,7 +74,8 @@ callavailability: procedure = .int
   if mode = 'unknown-observe' then ignored = one(body,'itos',body.reg('a',1),at)
   if mode = 'constant' | mode = 'unknown-observe' then ignored = one(body,'ret',.lltarget..operand.integer(7),at)
   else do
-    ignored = two(body,'load',body.reg('a',2),.lltarget..operand.integer(99),at)
+    if rawcase then ignored = two(body,'load',body.reg('a',2),.lltarget..operand.integer(99),at)
+    else ignored = one(body,'getnumdgts',body.reg('a',2),at)
     if mode = 'join' then ignored = label(body,'untouched',at)
     ignored = one(body,'ret',body.reg('a',1),at)
   end
@@ -87,38 +98,112 @@ callavailability: procedure = .int
   /* The normal call result is separate from failure/skip paths joining at
    * the later observation; normalization must retain every dirty origin. */
   value = flow.componentat(called,'r',2,integer,1)
-  if mode = 'defined' | mode = 'repeated' then do
-    failures = failures + check(value.availability() = 'defined','actual identity proves return availability ' || mode)
+  if rawcase then failures = failures + check(value.availability() = 'unknown' & value.known() = 0,'raw resource/unknown-reference paths cannot prove a normal borrowed or literal result ' || mode)
+  else if mode = 'defined' | mode = 'repeated' then do
+    failures = failures + check(value.availability() = 'unknown','raw frame callback can replace even defined/repeated actual components ' || mode || ': ' || value.availability() || ' / ' || value.reason())
     failures = failures + check(value.known() = 0,'may-alias availability never invents return literal ' || mode)
   end
   else if mode = 'constant' | mode = 'unknown-observe' then do
     literal = value.literal()
-    failures = failures + check(value.availability() = 'defined' & value.known() & literal.index() = 7,'actual-independent return remains precise with unresolved actuals')
+    failures = failures + check(value.availability() = 'defined' & value.known() & literal.index() = 7,'literal return is precise with unknown actual values and a checked result binding: ' || value.availability() || ' / ' || value.reason())
   end
   else if mode = 'unknown' then failures = failures + check(value.availability() = 'unknown','unresolved alias remains unknown')
-  else failures = failures + check(value.availability() <> 'defined' & value.dirty(),'dirty alternative survives ' || mode)
-  if mode = 'dirty' then do
-    actualdirty = 0; resultdirty = 0
-    do i = 1 to flow.entryobservations()
-      witness = flow.entryobservation(i)
-      if witness.function() <> target.procedureid('main') then iterate
-      if witness.ownedindex() = 1 then actualdirty = 1
-      if witness.ownedindex() = 2 then resultdirty = 1
-    end
-    failures = failures + check(actualdirty & resultdirty,'distinct actual and skipped-call result retain separate dirty witnesses')
-  end
+  else failures = failures + check(value.availability() = 'unknown' & value.known() = 0,'raw frame callback prevents an exhaustive dirty-origin proof ' || mode || ': ' || value.availability() || ' / ' || value.reason())
   normalized = lltargetnormalize..normalize(reference target,reference flow)
   failures = failures + check(wordpos(normalized.status(),'changed keep') > 0,'partial normalization remains a valid result ' || mode)
   failures = failures + check(normalized.complete(target.procedureid('unrelated')) = 0,'unrelated incomplete body is not certified ' || mode)
-  if mode <> 'unknown' & mode <> 'unknown-observe' then failures = failures + check(normalized.complete(target.procedureid('main')),'proved caller survives unrelated uncertainty ' || mode)
-  else failures = failures + check(normalized.complete(target.procedureid('main')) = 0,'unknown caller stays uncertified')
-  if mode = 'unknown-observe' then failures = failures + check(normalized.unknownreason(target.procedureid('main')) = 'target.flow.call.observation.actuals.unproved','borrowed observation retains the exact unresolved-actual reason')
-  if mode = 'dirty' | mode = 'join' then failures = failures + check(normalized.warnings() > 0,'dirty caller receives owned-entry warning/clear ' || mode)
+  failures = failures + check(normalized.complete(target.procedureid('main')) = 0 & normalized.unknownreason(target.procedureid('main')) <> '','point-value precision cannot discharge raw whole-function callbacks/policy ' || mode || '.' || rawcase)
   return failures
 
-/* A linker-service-shaped helper can receive its argument on a normal
- * child return or retain its dirty result on a skipped call. Both owned
- * result and borrowed-entry origins must survive the shared join. */
+/* The corresponding callback-free transfer retains precise availability.
+ * Raw CALL hooks above must not weaken this independent positive/dirty oracle. */
+callbackfreetransfer: procedure = .int
+  arg defined = .int
+  failures = 0; ignored = .int; integer = 0; subject = .int; origin = .int
+  draft = .lltarget..draft('flow.callback.free.' || defined,'fixture:flow.callback.free',0)
+  at = draft.synthetic('callback-free scalar transfer preserves entry availability')
+  body = draft.procedure('main',2,at)
+  written = 0
+  if defined then written = one(body,'getnumdgts',body.reg('r',0),at)
+  copied = two(body,'icopy',body.reg('r',1),body.reg('r',0),at)
+  returned = one(body,'ret',.lltarget..operand.integer(0),at)
+  target = draft.finish(); catalog = .llrxascatalog..catalog()
+  premise = .lltargettransfer..profiledraft(reference target,'fixture.callback.free.v1')
+  integer = premise.domain('component','fixture.integer',catalog.componentmask('I'))
+  if defined then do
+    ignored = premise.operation(written); subject = premise.ref(written,1)
+    ignored = premise.event(written,'write',subject,integer)
+  end
+  ignored = premise.operation(copied); subject = premise.ref(copied,1); origin = premise.ref(copied,2)
+  ignored = premise.event(copied,'transport',subject,integer,'reference',origin)
+  ignored = premise.operation(returned)
+  ignored = premise.event(returned,'return',0,integer,'literal',0,.lltarget..operand.integer(0))
+  profile = premise.finish()
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','callback-free transfer flow completes')
+  if flow.status() <> 'ok' then return failures
+  value = flow.componentat(returned,'r',1,integer)
+  if defined then failures = failures + check(value.availability() = 'defined' & value.known() = 0,'callback-free actual copy retains defined unknown value')
+  else failures = failures + check(value.availability() = 'entry' & value.dirty(),'callback-free actual copy retains exact dirty origin')
+  return failures
+
+/* A possible entry frame hook precedes the normal result, and can change
+ * actual pointees. It cannot donate a pre-hook literal or a failure result. */
+callhookreturn: procedure = .int
+  arg recover = .int
+  failures = 0; ignored = .int; i = .int; integer = .int; hook = .int; failureschecked = .int
+  action = .lltargettransfer..action; edge = .lltargetcfg..edge
+  draft = .lltarget..draft('flow.call.hook.return.' || recover,'fixture:flow.call.hook.return',0)
+  at = draft.synthetic('frame callback precedes normal result projection')
+  body = draft.procedure('main',2,at)
+  ignored = two(body,'load',body.reg('r',0),.lltarget..operand.integer(11),at)
+  /* Defining the actual before a possible frame hook does not constrain a
+   * later callback: it can copy a dirty component from another value. */
+  if recover = 1 then ignored = one(body,'getnumdgts',body.reg('r',0),at)
+  fields = .object[]; fields[1] = body.reg('r',1) as .object
+  fields[2] = .lltarget..operand.procedure('leaf') as .object; fields[3] = body.reg('r',0) as .object
+  called = body.emit('call1',fields,at)
+  redefined = 0
+  if recover = 2 then redefined = one(body,'getnumdgts',body.reg('r',1),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('leaf',0,at); ignored = one(body,'ret',body.reg('a',1),at)
+  target = draft.finish(); profile = .lltargettransfer..profile(reference target)
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','raw frame-hook return flow builds')
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  catalog = .llrxascatalog..catalog()
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I') then integer = i
+  end
+  instruction = profile.instruction(called)
+  do i = 1 to instruction.actions()
+    action = instruction.action(i)
+    if action.kind() = 'callback' & action.detail() = 'catalog.callback.call-frame' then hook = flow.callbackpossibleat(called,i)
+  end
+  failures = failures + check(hook & flow.complete(target.procedureid('main'),'entry-observation') = 0,'normal result precision retains the real frame hook and raw observation veto')
+  value = flow.componentat(called,'r',1,integer,1)
+  failures = failures + check(value.availability() = 'unknown' & value.known() = 0,'a possible frame hook can import dirty components despite earlier definition ' || recover || ': ' || value.availability() || ' / ' || value.reason())
+  if redefined > 0 then do
+    value = flow.componentat(redefined,'r',1,integer,1)
+    failures = failures + check(value.availability() = 'defined' & value.known() = 0,'a callback-free write after the last callback genuinely restores scalar availability')
+  end
+  binding = flow.storageat(called,'r',1)
+  failures = failures + check(binding.active() > 0,'resumed resource callback preserves the captured result pointer independently of value facts ' || recover)
+  do i = 1 to cfg.outedges(called)
+    edge = cfg.outedge(called,i)
+    if edge.phase() = 'none' | edge.role() = 'normal' | edge.role() = 'table' | edge.asynchronous() then iterate
+    value = flow.componenton(edge.id(),'r',1,integer)
+    failures = failures + check(value.known() = 0,'exceptional call checkpoint cannot borrow the successful return projection')
+    failureschecked = failureschecked + 1
+  end
+  failures = failures + check(failureschecked > 0,'frame-hook return control retains separate exceptional alternatives')
+  return failures
+
+/* This raw service shape has real setter/frame hooks. An exhaustive owned
+ * clear list is unproved until callback/handler preservation is supplied. */
 callresultorigins: procedure = .int
   failures = 0; ignored = .int
   draft = .lltarget..draft('availability.service','fixture:availability.service',1)
@@ -144,15 +229,10 @@ callresultorigins: procedure = .int
   flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
   failures = failures + check(flow.status() = 'ok','service-shaped call result flow: ' || flow.message())
   if flow.status() <> 'ok' then return failures
-  ownedmain = 0; ownedchild = 0
-  do i = 1 to flow.entryobservations()
-    witness = flow.entryobservation(i)
-    if witness.function() = target.procedureid('main') & witness.ownedindex() = 1 then ownedmain = 1
-    if witness.function() = target.procedureid('helper') & witness.ownedindex() = 0 then ownedchild = 1
-  end
-  failures = failures + check(ownedmain & ownedchild,'normal return and skipped child call retain both owned result witnesses')
+  maincoverage = flow.entrycoverage(target.procedureid('main')); helpercoverage = flow.entrycoverage(target.procedureid('helper'))
+  failures = failures + check(maincoverage.complete() = 0 & maincoverage.unresolved() & helpercoverage.complete() = 0 & helpercoverage.unresolved(),'raw setter/frame callbacks retain unresolved service-shaped owned-entry coverage')
   normalized = lltargetnormalize..normalize(reference target,reference flow)
-  failures = failures + check(normalized.complete(target.procedureid('main')) & normalized.complete(target.procedureid('helper')),'service-shaped caller/helper normalize independently')
+  failures = failures + check(normalized.complete(target.procedureid('main')) = 0 & normalized.complete(target.procedureid('helper')) = 0,'raw service callbacks cannot publish whole-function entry certificates')
   return failures
 
 /* Sixty-five possible writes cannot be silently dropped from a bounded
@@ -222,6 +302,55 @@ indexedbudget: procedure = .int
   failures = failures + check(limited.status() = 'limit','indexed accounting still enforces exhausted fuel')
   return failures
 
+/* An unknown component and a defined component join to unknown in either
+ * incoming-edge order; intact bindings distinguish this from alias havoc. */
+unknownmeet: procedure = .int
+  arg knownleft = .int
+  failures = 0; ignored = .int; i = .int; subject = .int
+  item = .lltarget..record
+  draft = .lltarget..draft('flow.unknown.meet.' || knownleft,'fixture:flow.unknown.meet',0)
+  at = draft.synthetic('unknown availability absorbs both meet operand orders')
+  body = draft.procedure('main',1,at)
+  ignored = two(body,'brt',.lltarget..operand.symbol('right'),body.reg('a',1),at)
+  leftwrite = two(body,'load',body.reg('r',0),.lltarget..operand.integer(7),at)
+  ignored = one(body,'br',.lltarget..operand.symbol('joined'),at)
+  ignored = label(body,'right',at)
+  rightwrite = two(body,'load',body.reg('r',0),.lltarget..operand.integer(7),at)
+  ignored = label(body,'joined',at)
+  observed = one(body,'itos',body.reg('r',0),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  target = draft.finish(); failures = failures + check(target.valid(),'unknown meet source validates ' || knownleft)
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  premise = .lltargettransfer..profiledraft(reference target,'independent.unknown.meet')
+  integer = premise.domain('component','fixture.meet.integer')
+  do i = 1 to target.records()
+    item = target.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+    if item.id() = leftwrite | item.id() = rightwrite then do
+      subject = premise.ref(item.id(),1)
+      certainty = 'unknown'
+      if (item.id() = leftwrite & knownleft) | (item.id() = rightwrite & knownleft = 0) then certainty = 'must'
+      ignored = premise.event(item.id(),'write',subject,integer,'literal',0,.lltarget..operand.integer(7),certainty)
+    end
+    else if item.id() = observed then do
+      subject = premise.ref(observed,1); ignored = premise.event(observed,'observe',subject,integer)
+    end
+    else if item.kind() = 'instruction' then do
+      if item.mnemonic() = 'brt' then do
+        subject = premise.ref(item.id(),2); ignored = premise.event(item.id(),'observe',subject,integer)
+      end
+      else if item.mnemonic() = 'ret' then ignored = premise.event(item.id(),'return',0,0)
+    end
+  end
+  profile = premise.finish(); cfg = .lltargetcfg..graph(reference target,reference profile)
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','unknown meet flow builds ' || knownleft)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  value = flow.componentat(observed,'r',0,integer); binding = flow.storageat(observed,'r',0)
+  failures = failures + check(binding.active() > 0 & value.availability() = 'unknown' & value.known() = 0,'unknown availability cannot become mixed or donate a literal in either edge order ' || knownleft || ': ' || value.availability())
+  return failures
+
 /* The caller precedes both providers in the module. Its unchanged incoming
  * cells do not imply an unchanged transitive return summary. */
 summaryrevisit: procedure = .int
@@ -254,11 +383,140 @@ summaryrevisit: procedure = .int
   failures = failures + check(value.availability() = 'defined' & value.known() & literal.index() = 13,'call-dependent block revisits a changed callee summary')
   return failures
 
-/* A caller observation can demand initialization of a private returned
- * cell. The normal return and skipped call retain distinct owned bases. */
+/* Independent operational CALL/RET programs expose the dependency without
+ * borrowing a native callback/resource theorem. Both callers precede leaf. */
+summaryworklist: procedure = .int
+  arg dirty = .int
+  failures = 0; ignored = .int; i = .int; resultref = .int; targetref = .int
+  item = .lltarget..record; operand = .lltarget..operand
+  draft = .lltarget..draft('flow.summary.worklist.' || dirty,'fixture:flow.summary.worklist',0)
+  at = draft.synthetic('subscribed late return facts refine a stable caller')
+  body = draft.procedure('main',1,at)
+  called = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('bridge'),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('bridge',1,at)
+  ignored = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('leaf'),at)
+  ignored = one(body,'ret',body.reg('r',0),at)
+  body = draft.procedure('leaf',dirty,at)
+  if dirty then ignored = one(body,'ret',body.reg('r',0),at)
+  else ignored = one(body,'ret',.lltarget..operand.integer(13),at)
+  target = draft.finish(); failures = failures + check(target.valid(),'independent return-worklist source validates ' || dirty)
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  failures = failures + check(target.procedureid('main') < target.procedureid('bridge') & target.procedureid('bridge') < target.procedureid('leaf'),'return providers occur after their unchanged callers')
+  catalog = .llrxascatalog..catalog(); premise = .lltargettransfer..profiledraft(reference target,'independent.summary.worklist')
+  integer = premise.domain('component','fixture.worklist.integer',catalog.componentmask('I'))
+  do i = 1 to target.records()
+    item = target.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'call' then do
+      resultref = premise.ref(item.id(),1); targetref = premise.ref(item.id(),2,'procedure','symbolic')
+      ignored = premise.event(item.id(),'clear',resultref,0)
+      ignored = premise.event(item.id(),'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.exact.call')
+      ignored = premise.event(item.id(),'call',0,0,'reference',targetref,.lltarget..operand(),'must','normal','after','fixture.exact.call')
+    end
+    else do
+      operand = item.operand(1)
+      if operand.kind() = 'R' then ignored = premise.ref(item.id(),1)
+      ignored = premise.event(item.id(),'return',0,0)
+    end
+  end
+  profile = premise.finish(); cfg = .lltargetcfg..graph(reference target,reference profile)
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','independent transitive return worklist converges ' || dirty || ': ' || flow.reason())
+  if flow.status() <> 'ok' then return failures
+  value = flow.componentat(called,'r',0,integer,1); operand = value.literal()
+  if dirty then failures = failures + check(value.availability() = 'entry' & value.known() = 0,'late dirty return cannot become the cleared caller result or a literal')
+  else failures = failures + check(value.availability() = 'defined' & value.known() & operand.kind() = 'I' & operand.index() = 13,'changed leaf RET reschedules both unchanged caller inputs')
+  return failures
+
+/* An explicit complete no-hook program isolates dirty owner/dependency
+ * certification. The branch skips the entire result-clear/call sequence. */
+privatecertificate: procedure = .int
+  arg incomplete = .int
+  failures = 0; ignored = .int; i = .int; subject = .int; targetref = .int; rootdirty = .int; privatedirty = .int
+  item = .lltarget..record; operand = .lltarget..operand
+  draft = .lltarget..draft('flow.private.certificate.' || incomplete,'fixture:flow.private.certificate',0)
+  at = draft.synthetic('complete operational premise isolates private and skipped result entries')
+  body = draft.procedure('main',1,at)
+  ignored = two(body,'brt',.lltarget..operand.symbol('after.call'),body.reg('a',1),at)
+  ignored = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('leaf'),at)
+  ignored = label(body,'after.call',at)
+  ignored = one(body,'itos',body.reg('r',0),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  locals = 1; if incomplete then locals = 3
+  body = draft.procedure('leaf',locals,at)
+  if incomplete then do
+    fields = .object[]; fields[1] = body.reg('r',2) as .object; fields[2] = body.reg('r',1) as .object
+    fields[3] = .lltarget..operand.integer(768) as .object; ignored = body.emit('getandtp',fields,at)
+  end
+  returned = one(body,'ret',body.reg('r',0),at)
+  target = draft.finish(); failures = failures + check(target.valid(),'private certificate source validates ' || incomplete)
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  catalog = .llrxascatalog..catalog(); premise = .lltargettransfer..profiledraft(reference target,'independent.private.certificate')
+  integer = premise.domain('component','fixture.private.integer',catalog.componentmask('I'))
+  do i = 1 to target.records()
+    item = target.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+    if item.kind() <> 'instruction' then iterate
+    select item.mnemonic()
+      when 'call' then do
+        subject = premise.ref(item.id(),1); targetref = premise.ref(item.id(),2,'procedure','symbolic')
+        ignored = premise.event(item.id(),'clear',subject,0)
+        ignored = premise.event(item.id(),'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.exact.call')
+        ignored = premise.event(item.id(),'call',0,0,'reference',targetref,.lltarget..operand(),'must','normal','after','fixture.exact.call')
+      end
+      when 'brt' then do
+        subject = premise.ref(item.id(),2); ignored = premise.event(item.id(),'observe',subject,integer)
+      end
+      when 'itos' then do
+        subject = premise.ref(item.id(),1); ignored = premise.event(item.id(),'observe',subject,integer)
+      end
+      when 'getandtp' then do
+        subject = premise.ref(item.id(),1); ignored = premise.ref(item.id(),2)
+        ignored = premise.event(item.id(),'write',subject,integer)
+        call premise.unknown(item.id(),'observations','fixture.status.observation.unrepresented')
+      end
+      when 'ret' then do
+        operand = item.operand(1)
+        if operand.kind() = 'R' then do
+          subject = premise.ref(item.id(),1); ignored = premise.event(item.id(),'observe',subject,integer)
+        end
+        ignored = premise.event(item.id(),'return',0,0)
+      end
+      otherwise call premise.unknown(item.id(),'effects','fixture.operation.unrepresented')
+    end
+  end
+  profile = premise.finish(); cfg = .lltargetcfg..graph(reference target,reference profile)
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','private no-hook certificate flow builds ' || incomplete)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  do i = 1 to flow.entryobservations()
+    witness = flow.entryobservation(i)
+    if witness.function() = target.procedureid('main') & witness.ownedindex() = 0 then rootdirty = 1
+    if witness.function() = target.procedureid('leaf') & witness.ownedindex() = 0 & witness.operation() = returned then privatedirty = 1
+  end
+  failures = failures + check(rootdirty & privatedirty,'explicit no-hook skip and private return retain both exact dirty owners ' || incomplete)
+  if incomplete = 0 then do
+    coverage = flow.entrycoverage(target.procedureid('main'))
+    failures = failures + check(coverage.complete() & coverage.dependencies() = 1,'complete intrinsic observations retain one explicit private-return normalization dependency')
+    if coverage.dependencies() = 1 then failures = failures + check(coverage.dependency(1) = target.procedureid('leaf'),'private-return dependency names the exact source owner requiring normalization')
+  end
+  normalized = lltargetnormalize..normalize(reference target,reference flow)
+  if incomplete then do
+    failures = failures + check(normalized.complete(target.procedureid('main')) = 0 & normalized.complete(target.procedureid('leaf')) = 0,'incomplete provider cannot borrow a known dirty origin as a normalization certificate')
+    failures = failures + check(normalized.unknownreason(target.procedureid('main')) = 'target.flow.call.intrinsic.footprint.unproved','deliberate provider observation gap retains the earliest intrinsic-footprint refusal: ' || normalized.unknownreason(target.procedureid('main')))
+  end
+  else failures = failures + check(normalized.complete(target.procedureid('main')) & normalized.complete(target.procedureid('leaf')) & normalized.warnings() >= 2,'complete no-hook coverage normalizes and warns for both required owners')
+  return failures
+
+/* Raw callback/policy paths cannot certify a caller's exhaustive dirty list.
+ * A private RET point fact remains separate from its contextual demand. */
 ownedreturn: procedure = .int
   arg mode = .int
-  failures = 0; ignored = .int; i = .int; rootdirty = 0; privatedirty = 0
+  failures = 0; ignored = .int; i = .int
   draft = .lltarget..draft('flow.owned.return.' || mode,'fixture:flow.owned.return',0)
   at = draft.synthetic('typed caller demand reaches original private return')
   body = draft.procedure('main',2,at)
@@ -284,24 +542,22 @@ ownedreturn: procedure = .int
   flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
   failures = failures + check(flow.status() = 'ok','owned return demand analysis remains bounded')
   if flow.status() <> 'ok' then return failures
-  do i = 1 to flow.entryobservations()
-    witness = flow.entryobservation(i)
-    if witness.function() = target.procedureid('main') & witness.ownedindex() = 1 then rootdirty = 1
-    if witness.function() = target.procedureid('private') & witness.ownedindex() = 0 & witness.operation() = returned then privatedirty = 1
+  catalog = .llrxascatalog..catalog(); integer = 0
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I') then integer = i
   end
+  value = flow.componentat(returned,'r',0,integer)
   normalized = lltargetnormalize..normalize(reference target,reference flow)
   if mode = 1 then do
-    failures = failures + check(privatedirty = 0 & normalized.complete(target.procedureid('main')) = 0,'unresolved return binding cannot invent a private initialization proof')
-  end
-  else if mode = 2 then do
-    failures = failures + check(privatedirty,'incomplete callee certificate preserves its independently resolved private RET origin')
-    failures = failures + check(normalized.complete(target.procedureid('private')) = 0 & normalized.complete(target.procedureid('main')) = 0,'resolved return origin cannot bypass the required incomplete callee certificate')
-    failures = failures + check(normalized.unknownreason(target.procedureid('main')) = 'target.flow.return.origin.certificate.unproved','caller refusal names its required callee return-origin certificate')
+    failures = failures + check(value.availability() = 'unknown' & value.dirty() = 0,'unresolved raw return binding cannot invent a private origin')
   end
   else do
-    failures = failures + check(rootdirty & privatedirty,'normal private return and skipped caller result retain exact distinct obligations')
-    failures = failures + check(normalized.complete(target.procedureid('main')) & normalized.complete(target.procedureid('private')) & normalized.warnings() > 0,'private return demand normalizes both required owners')
+    if mode = 2 then failures = failures + check(value.availability() = 'unknown' & value.known() = 0,'raw ambient handler may import an unnamed dirty origin into the private RET: ' || value.availability())
+    else failures = failures + check(value.availability() = 'entry' & value.dirty(),'raw private RET retains its local dirty origin despite the caller coverage gap ' || mode)
+    if mode = 2 then failures = failures + check(normalized.complete(target.procedureid('private')) = 0,'unrepresented flag observation keeps the private whole-function certificate unproved')
   end
+  failures = failures + check(normalized.complete(target.procedureid('main')) = 0 & normalized.unknownreason(target.procedureid('main')) <> '','raw caller callback/handler uncertainty remains an explicit entry-certificate refusal ' || mode)
   return failures
 
 main: procedure = .int
@@ -462,7 +718,10 @@ main: procedure = .int
   status = flow.status()
   failures = failures + check(prior.valid() = 0,'replacing analysis invalidates old value view')
   if haswitness then failures = failures + check(witness.valid() = 0 & stalewitness(witness,'operation') & stalewitness(witness,'origin'),'stale observation getters and provenance reject a replacement owner')
-  failures = failures + callavailability('defined') + callavailability('repeated') + callavailability('dirty') + callavailability('join') + callavailability('unknown') + callavailability('constant') + callavailability('unknown-observe') + callresultorigins() + aliaslimit() + indexedbudget() + summaryrevisit() + ownedreturn(0) + ownedreturn(1) + ownedreturn(2)
+  failures = failures + callavailability('defined') + callavailability('repeated') + callavailability('dirty') + callavailability('join') + callavailability('constant') + callavailability('unknown-observe')
+  failures = failures + callavailability('defined',1) + callavailability('dirty',1) + callavailability('constant',1) + callavailability('unknown',1) + callavailability('unknown-observe',1)
+  failures = failures + callbackfreetransfer(0) + callbackfreetransfer(1)
+  failures = failures + callhookreturn(0) + callhookreturn(1) + callhookreturn(2) + callresultorigins() + aliaslimit() + indexedbudget() + unknownmeet(0) + unknownmeet(1) + summaryrevisit() + summaryworklist(0) + summaryworklist(1) + privatecertificate(0) + privatecertificate(1) + ownedreturn(0) + ownedreturn(1) + ownedreturn(2)
   if failures = 0 then say 'TARGET_FLOW|failures=0'
   else say 'TARGET_FLOW|failures=' || failures
   return failures

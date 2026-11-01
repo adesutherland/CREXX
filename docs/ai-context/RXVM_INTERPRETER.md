@@ -98,6 +98,34 @@ scope and exact-contract approval; this principle authorizes no unrelated work.
 
 ### Checked ordinary invocation
 
+The typed `main() .locals=N .entry=program-default` declaration is an executable
+root-entry contract (`META_ENTRY_STATE`, RXBIN007 bit 11, version/kind 1). The
+loader binds it to `proc_runtime.entry_state_kind`; imported wrappers retain the
+exact target's kind. `rxvm_run` and `rxvml_run` supply the checked program-entry
+handshake with a
+one-shot authorization at the exact worker entry depth. Ordinary `rxvm_call`
+(implicit NULL, named main or an exposed alias), rxvml, task/native invocation
+and bytecode child entry cannot silently treat marked main as an inheriting
+child. Rejection precedes initialization or argument/result preparation; a
+dynamic child violation raises `INVALID_ARGUMENTS` at the invoking instruction.
+
+Authorized entry presents the canonical logical root signal policy and numeric
+state DIGITS 18, FUZZ 0, SCIENTIFIC, LOWER and COMMON. The contract does not imply
+clean recycled local storage or hide later callbacks, debugger policy changes
+or pending delivery. Initializer bodies receive that same observable default
+entry view through their existing typed `META_INITIALIZER` owner, with separate
+once-only readiness, failure poison and checked initialization-lineage rules.
+
+The internal default-entry data owner is `interpreter/rxvmentry.h`: complete
+31-name signal-response and five-field numeric X-macro inventories consumed
+by root-frame setup and the generated Level L RXAS catalog. Existing numeric
+default constants remain owned by `rxvalue.h`. The response inventory preserves
+the VM's mixed IGNORE/HALT/SILENT_HALT policy, including ignored
+`INVALID_SIGNAL_CODE` and silent-halt `CANCEL`; `RXSIGNAL_MAX` is an invalid
+sentinel rather than a named default. This shared data introduces no new
+entry permission, metadata or readiness assertion. The catalog fingerprint
+includes these owners; unknown names/masks never become a known default.
+
 The built-in `rxinvoke` service supports a checked ordinary procedure call from
 an interpreter or another runtime adapter. A catalogue seals exact loaded
 callable names, complete result/argument metadata and native provider identities;
@@ -394,9 +422,25 @@ struct stack_frame {
 };
 ```
 
+Procedure-level `.inlinedprivate` declarations (RXBIN007 feature bit 10) split
+the encoded local extent into an owned prefix and a contiguous borrowed suffix.
+The loader resolves sealed provider globals after all module globals exist,
+without running initializers. Canonical runtime procedures own one binding
+table; imported wrappers share it. Frame entry/reuse installs its worker-local
+storage into both suffix pointer maps and resets slot identities, allocating
+value backing only for the owned prefix and `a0`. Full cleanup and reference
+expiry skip borrowed backing; references identify the original provider owner.
+Borrowed RET copies, including when its active pointer has been swapped; MOVE
+requires an owned encoded slot still at its own base. Binding tables survive
+relink and are released once with their canonical procedure. A failed resolution
+keeps the context dirty and nonexecutable; partially prepared tables remain
+context-owned for retry or destruction.
+
 Frame recycling is a performance feature, not a semantic shortcut. When a
 frame is reused, the VM relinks local register pointers back to their base
-storage, relinks globals, and resets the argument-count register. Incoming
+storage, relinks globals, and resets the argument-count register. `a0` therefore
+contains the current argument count at entry even if the previous activation
+left another component on its private backing. Incoming
 arguments do not own value storage, but their entry pointers are recorded in
 both `baselocals` and the active `locals` map. This makes `UNLINK` well-defined
 for argument registers and preserves the frame-entry mapping needed when a
@@ -562,6 +606,16 @@ numeric order, clears ignored signals during the scan, and clears the selected
 non-breakpoint signal before handling it. `BREAKPOINT` remains pending until
 `bpoff`, which lets the debugger/trace path keep stepping.
 
+An asynchronous signal handler must not depend on delivery occurring before
+or after a surrounding call's numeric settings, signal policy, register
+bindings or other program state are set or restored. Delivery can occur
+between ordinary instructions, so the handler may see work in progress. A
+handler that needs stable settings must establish them itself. This rule does
+not change the faulting instruction or source attribution of synchronous
+signals. The VM must still present internally valid state, preserve pending
+events, and perform required cleanup when a handler leaves a call or inline
+body without returning through its normal path.
+
 For `CALL` and `CALL_BRANCH` handlers the VM passes a raw object-like argument
 with five attributes:
 
@@ -627,7 +681,23 @@ records and their procedure-range checks always use the physical instruction
 owner; no provider address is inferred from a clone offset. Both detached event
 rendering and the live fallback use the same walker. COPY and SIGNALORIGIN
 retain this logical context after scope unwind, including empty/unavailable
-allocation outcomes. RXBIN and the raw signal value layout are unchanged.
+allocation outcomes. Direct clones instead use the typed RXBIN 007
+`INLINE_FRAME`/`INLINE_MAP` metadata and its required inline-diagnostics feature
+bit. The module loader prepares immutable frame, parent, source-step and
+disjoint address-range indexes once. Ordinary execution adds no scope state,
+per-call allocation or diagnostic instructions. These records provide names
+and source identity only; they never select an executable provider.
+
+The same walker selects the initial static frame from the actual fault/resume
+PC and each suspended physical caller's static frame from its retained child's
+return PC. A SIGNALORIGIN raw-coordinate override does not choose static frames.
+Static parents and runtime inline scopes contribute to the same ordered caller
+chain. Each frame record's physical clone-entry address is its removed-call
+coordinate; its referenced source step supplies exact file/line/span text,
+including repeated identical step IDs at restored source anchors. SOURCE
+stripping preserves logical names and maps but clears these source-step
+references; INLINE stripping also preserves diagnostic frames and maps.
+The raw signal value layout is unchanged.
 Both the snapshot and its value-side descriptor survive worker teardown;
 descriptor publication reuses the allocator's existing detached extent scope.
 
@@ -1429,11 +1499,16 @@ The selected implementation and governed contract/performance evidence are in
 sidecar described above. The payload bytes contain the selected plugin's
 decimal representation; the plugin must obtain or grow that storage through
 the host `reserve_decimal` service and must not call `free(decimal_value)`.
-The VM loads the default decimal plugin before executing the first
-frame, attaches it to the frame numeric context, and syncs that plugin whenever
-a child frame inherits a copied numeric context. A frame that loads its own
-decimal plugin marks `decimal_loaded_here`, so cleanup can free it when that
-frame exits.
+The VM loads the default decimal plugin for the worker before executing the
+first frame. Ordinary child frames borrow the plugin instance and attach it to
+their numeric context; the published VM and plugin interfaces do not install a
+frame-owned decimal or Unicode plugin. Current entry/return paths synchronize
+inherited numeric settings; the ABI also permits the host to omit a redundant
+synchronization when effective numeric settings are unchanged. The legacy
+`decimal_loaded_here` and `unicode_loaded_here` cleanup checks are defensive;
+their flags remain unset on published entry and instruction paths. This
+ownership fact does not imply that plugin values, context, callbacks or
+external observations are unchanged.
 
 The decimal plugin interface is the boundary between VM instructions and the
 concrete decimal engine. The current `decplugin` API covers numeric-context
@@ -1447,9 +1522,48 @@ backend maps conversion-syntax and invalid-operation status bits explicitly,
 while the long-double backend maps its invalid parsed value. Decimal conversion
 instructions then raise that through the ordinary catchable VM signal path.
 The decimal-plugin interface and `value` layout are one tightly coupled
-internal contract: bundled/static/dynamic plugins and their host must be
-rebuilt together for ABI version 2. This does not change RXBIN decimal
+internal contract: bundled/static/dynamic decimal plugins and their host must
+be rebuilt together for ABI version 3. The `decplugin` and `value` layouts do
+not change in this revision; its new registration gate establishes semantics
+that an old binary cannot silently acquire. It does not change RXBIN decimal
 semantics or create a stable third-party wire ABI.
+
+ABI 3 `syncNumericContext` has the mandatory
+`value-only-nonreentrant.v1` contract. It reads only numeric setting values (or
+the documented defaults when `num_context` is null) and updates only private
+cached effective settings. It is total for valid contexts, performs no
+allocation/resource operations or I/O, cannot signal or exit abnormally, and
+cannot change plugin diagnostics. It must not invoke VM/native/host callbacks,
+reenter execution, access register/value state, mutate the supplied context,
+retain or observe its pointer identity, or expose synchronization call count
+or order. Equal effective values at distinct context addresses are equivalent.
+Other decimal operations and frame/value cleanup keep their ordinary effects;
+this contract does not certify those operations as callback-free.
+Decimal operations must leave the synchronized effective configuration intact
+between sync calls, including when they temporarily adjust private precision.
+The bundled mc comparison path restores arithmetic precision before returning
+from its FUZZ-adjusted comparison; a subsequent operation needs no repair sync.
+
+A rebuilt decimal provider explicitly uses `REGISTER_DECIMAL_PLUGIN(factory)`.
+Dynamic providers export `_register_rxvm_decimal_plugin_v3`; static providers
+use `register_rxvm_decimal_plugin_v3`. The checked descriptor supplies exact
+structure size, ABI version 3, decimal type, the mandatory sync contract, factory
+name and factory. The loader checks this versioned registrar first and, when
+it succeeds, also accepts a legacy Unicode registrar in the same library and
+atomic transaction. It validates the complete transaction before publication;
+malformed declarations, wrong returned
+types and missing sync callbacks fail. Published catalogue descriptors retain
+the checked contract when creating private VM instances. The bundled db/mc
+factories both opt in and only update their existing private numeric caches.
+
+Legacy `_register_rxvm_plugin`/`register_rxvmplugin` continues to admit Unicode
+providers. A decimal factory through either legacy path is rejected before the
+host writes any decimal extension fields. Dynamic compatibility failures return
+`RXVMPLUGIN_LOAD_INCOMPATIBLE` (`-4`) with an explicit ABI diagnostic; they leave
+the catalogue and existing private instances intact and release all unpublished
+descriptors and the rejected dynamic-library handle. An invalid versioned
+declaration never falls back to legacy registration. Rebuild old decimal
+providers with the ABI 3 contract and registration macro.
 
 ### Copy, Move, and Native Payloads
 
@@ -1541,6 +1655,16 @@ source offset and overwrite it with `-1`, `0`, or `1`.
 
 `FREADB` reads bytes with `fread(ptr, 1, n, file)`, so `binary_length` is the
 actual byte count read, not a C item count.
+
+Native payload finalization caused only by cleanup of dirty private frame
+storage has no specified call-relative or instruction-relative time. The VM
+may run it on frame reuse, frame retirement or context teardown; an optimizer
+may change which of those opportunities occurs. Programs and provider hooks
+must not use that incidental timing to order program work. Each payload that
+is actually installed remains owned until transfer or destruction and must be
+finalized exactly once when its ownership ends. Explicit value operations
+retain their documented effects and ordering; this rule does not defer an
+explicit clear or turn a borrowed `a1+` value into callee-owned storage.
 
 When `native_payload_ops` is set:
 

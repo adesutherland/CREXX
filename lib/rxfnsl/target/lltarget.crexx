@@ -329,9 +329,13 @@ recordshape: procedure = .string
       return ''
     end
     when kind = 'procedure' then do
-      if signature <> 'PIL' | body < 2 then return 'procedure shape'
+      if (signature <> 'PIL' & signature <> 'PILI') | body < 2 then return 'procedure shape'
       name = item.operand(1); locals = item.operand(2); exposed = item.operand(3)
       if namesafe(name.text()) = 0 | locals.index() < 0 | namesafe(exposed.text(),1) = 0 then return 'procedure fields'
+      if signature = 'PILI' then do
+        entry = item.operand(4)
+        if entry.index() <> 1 | lower(name.text()) <> 'main' then return 'procedure entry contract'
+      end
     end
     when kind = 'label' then do
       if signature <> 'L' | body < 2 then return 'label shape'
@@ -371,6 +375,21 @@ recordshape: procedure = .string
       field = item.operand(6)
       if field.index() < -1 then return 'TRACE requires canonical absent reference'
     end
+    when kind = '.inlineframe' then do
+      if signature <> 'IISSI' | body < 2 then return 'inline frame shape'
+      do i = 1 to 5
+        field = item.operand(i)
+        if i = 3 | i = 4 then do
+          if field.length() = 0 then return 'inline frame requires nonempty diagnostic names'
+        end
+        else if field.index() < 0 | field.index() > 4294967295 | (i = 1 & field.index() = 0) then return 'inline frame requires canonical u32 identities'
+      end
+    end
+    when kind = '.inlinemap' then do
+      if signature <> 'LLI' | body < 2 then return 'inline map shape'
+      field = item.operand(3)
+      if field.index() < 1 | field.index() > 4294967295 then return 'inline map requires nonzero canonical u32 frame'
+    end
     when kind = '.meta' then do
       if signature = 'S' & body > 1 then return ''
       if signature = 'SSS' then do
@@ -389,7 +408,7 @@ appendrecord: procedure = .int
   arg owner = reference .llir..arena, fuel_ref = reference .fuel, block = .llir..block, bodyid = .int, kind = .string, opcode = .int, fields = .object[], at = .llir..origin, ?edges = .object[]
   store = dereference owner; work = dereference fuel_ref
   if work.take(owner,fields[0] + 1) = 0 then return 0
-  if wordpos(kind,'procedure instruction label .meta .srcfile .srcline .srcstep .traceevent .const .import .globalexpose') = 0 then do
+  if wordpos(kind,'procedure instruction label .meta .srcfile .srcline .srcstep .traceevent .inlineframe .inlinemap .const .import .globalexpose') = 0 then do
     call store.fail('LL_TARGET_RECORD: unsupported record kind ' || kind); return 0
   end
   if at.belongs(owner) = 0 then do
@@ -531,8 +550,13 @@ draft: class
   _cursors = .bodycursor[]
   _globals = .int
   _sealed = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _validationbytes = .int
+  _finishedok = .int
   *: factory
     arg logicalModule = .string, artifact = .string, globals = .int, entries = 1000000, bytes = 67108864, work = 1000000
+    _worklimit = work; _bytelimit = bytes
     contract = schema(); _store = .llir..arena(contract,entries,bytes); _fuel = .fuel(work)
     _globals = globals
     if logicalModule = '' | artifact = '' | globals < 0 | work < 1 then call _store.fail('LL_TARGET_MODULE: invalid identity, globals or work budget')
@@ -590,10 +614,13 @@ draft: class
     if preflight(parents[0] + 1,0) = 0 then return .llir..origin(reference _store,0)
     return file.contributingorigin(first,last,kind,parents)
   procedure: method = .lltarget..bodydraft
-    arg name = .string, locals = .int, at = .llir..origin, exposed = ''
+    arg name = .string, locals = .int, at = .llir..origin, exposed = '', entrykind = 0
     if _store.error() <> '' then return .lltarget..bodydraft()
     if name = '' | locals < 0 then do
       call _store.fail('LL_TARGET_PROCEDURE: invalid name or local count'); return .lltarget..bodydraft()
+    end
+    if (entrykind <> 0 & entrykind <> 1) | (entrykind = 1 & lower(name) <> 'main') then do
+      call _store.fail('LL_TARGET_PROCEDURE: invalid entry contract'); return .lltarget..bodydraft()
     end
     contract = dereference _store.contract()
     functionid = _store.function(name,contract.voidtype())
@@ -604,11 +631,72 @@ draft: class
     _functions[n] = fn.id(); _cursors[n] = .bodycursor(reference _store,reference _fuel,fn,block)
     fields = .object[]; fields[1] = .operand.procedure(name) as .object
     fields[2] = .operand.integer(locals) as .object; fields[3] = .operand.symbol(exposed) as .object
+    if entrykind then fields[4] = .operand.integer(entrykind) as .object
     headerid = appendrecord(reference _store,reference _fuel,_catalogue,fn.id(),'procedure',-1,fields,at)
     return .lltarget..bodydraft(reference _store,reference _fuel,reference _cursors[n],_catalogue,fn.id(),locals,_globals,headerid)
   record: method = .int
     arg kind = .string, fields = .object[], at = .llir..origin
     return appendrecord(reference _store,reference _fuel,_catalogue,0,kind,-1,fields,at)
+  finishfee: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 0 then do; call _store.fail('LL_RESOURCE_LIMIT: target.finish.work'); return 0; end
+    if width > 0 then do
+      if count > _fuel.remaining() <idiv> width then do; call _store.fail('LL_RESOURCE_LIMIT: target.finish.work'); return 0; end
+    end
+    return _fuel.take(reference _store,count * width)
+  finishsquare: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call _store.fail('LL_RESOURCE_LIMIT: target.finish.work'); return 0; end
+    if count = 0 then return 1
+    if count > (_fuel.remaining() <idiv> count) <idiv> width then do; call _store.fail('LL_RESOURCE_LIMIT: target.finish.work'); return 0; end
+    return _fuel.take(reference _store,count * count * width)
+  finishbytes: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call _store.fail('LL_RESOURCE_LIMIT: target.finish.bytes'); return 0; end
+    available = _bytelimit - _store.capacity()
+    if available < _validationbytes then do; call _store.fail('LL_RESOURCE_LIMIT: target.finish.bytes'); return 0; end
+    if count > (available - _validationbytes) <idiv> width then do; call _store.fail('LL_RESOURCE_LIMIT: target.finish.bytes'); return 0; end
+    _validationbytes = _validationbytes + count * width; return 1
+  preparefinish: method = .int
+    i = .int; table = .int; column = .int; maximum = .int; width = .int; count = .int; poolid = .int
+    /* The target schema has fixed codecs and no semantic verifier callback.
+     * Charge its generic IR verification by actual rows/payload, including
+     * duplicate-name scans, before invoking that existing validator. */
+    do table = 1 to 13
+      if finishfee(_store.count(table),32) = 0 then return 0
+    end
+    if finishfee(_store.bytes(),4) = 0 then return 0
+    do table = 1 to 3
+      count = _store.count(table); column = 1
+      if table = 2 then column = 4
+      if table = 3 then do; count = _store.count(5); column = 3; end
+      maximum = 1
+      if finishfee(count,4) = 0 then return 0
+      do i = 1 to count
+        source = table; if table = 3 then source = 5
+        poolid = _store.get(source,i,column); bits = _store.bits(poolid)
+        maximum = max(maximum,<blen>(bits))
+        if table = 1 then do
+          poolid = _store.get(1,i,6)
+          if poolid > 0 then do; bits = _store.bits(poolid); maximum = max(maximum,<blen>(bits)); end
+        end
+      end
+      if maximum > (9223372036854775807 - 8) <idiv> 2 then do; call _store.fail('LL_RESOURCE_LIMIT: target.finish.names'); return 0; end
+      width = maximum * 2 + 8
+      if finishsquare(count,width) = 0 then return 0
+    end
+    /* Logical capacity + a checked envelope for target indexes, sorting and
+     * verification vectors/codec scratch; this is not an RSS measurement. */
+    if finishbytes(1,4096) = 0 | finishbytes(_store.count(3),512) = 0 then return 0
+    if finishbytes(_store.count(2),256) = 0 | finishbytes(_store.count(1),128) = 0 then return 0
+    if finishbytes(_store.bytes(),16) = 0 then return 0
+    return 1
+  usedwork: method = .int
+    if _finishedok = 0 then return _worklimit
+    return _worklimit - _fuel.remaining()
+  usedbytes: method = .int
+    if _finishedok = 0 then return _bytelimit
+    return _store.capacity() + _validationbytes
   finish: method = .lltarget..module
     if _sealed then do
       call bad('LL_TARGET_STATE: draft already finished'); return .lltarget..module(.llir..module(_store),0)
@@ -621,8 +709,13 @@ draft: class
       call cursor.finish(origin)
     end
     call _catalogue.returnvoid(origin)
+    if preparefinish() = 0 then return .lltarget..module(.llir..module(_store),0)
     ok = _store.freeze(); graph = .llir..module(_store)
-    return .lltarget..module(graph,_fuel.remaining())
+    result = .lltarget..module(graph,_fuel.remaining())
+    if result.valid() then do
+      if _fuel.take(reference _store,result.validationwork()) then _finishedok = 1
+    end
+    return result
 
 bodydraft: class
   _owner = reference .llir..arena
@@ -984,7 +1077,7 @@ mappedidentity: procedure = .int
  * zero/negative native sentinels are preserved. Callable and opaque compiler
  * transport declarations are retained with their original procedure. */
 remapmetadata: procedure = .object[]
-  arg item = .lltarget..record, fields = .object[], scope = '', ?steps = .int[], ?clauses = .int[]
+  arg item = .lltarget..record, fields = .object[], scope = '', ?steps = .int[], ?clauses = .int[], ?frames = .int[], frameparent = 0
   value = .operand; old = .operand
   if fields[0] <> item.operands() then call bad('LL_TARGET_METADATA: field remap arity')
   if item.kind() = '.srcstep' then do
@@ -995,6 +1088,16 @@ remapmetadata: procedure = .object[]
     if ?steps then do; old = fields[7] as .operand; fields[7] = .operand.integer(mappedidentity(steps,old.index())) as .object; end
     if ?clauses then do; old = fields[8] as .operand; fields[8] = .operand.integer(mappedidentity(clauses,old.index())) as .object; end
   end
+  else if item.kind() = '.inlineframe' then do
+    if ?steps then do; old = fields[5] as .operand; fields[5] = .operand.integer(mappedidentity(steps,old.index())) as .object; end
+    if ?frames then do
+      old = fields[1] as .operand; fields[1] = .operand.integer(mappedidentity(frames,old.index())) as .object
+      old = fields[2] as .operand
+      if old.index() = 0 then fields[2] = .operand.integer(frameparent) as .object
+      else fields[2] = .operand.integer(mappedidentity(frames,old.index())) as .object
+    end
+  end
+  else if item.kind() = '.inlinemap' & ?frames then do; old = fields[3] as .operand; fields[3] = .operand.integer(mappedidentity(frames,old.index())) as .object; end
   else if item.kind() = '.meta' & scope <> '' then do
     if fields[0] = 1 | fields[0] = 4 then do
       value = fields[1] as .operand
@@ -1014,11 +1117,14 @@ cfgcheck: class
   _bodies = .int[]
   _entries = .int[]
   _groups = .int[]
+  _usedwork = .int
   *: factory
-    arg owner = reference .llir..module, records_ref = reference .int[], work = .int
+    arg owner = reference .llir..module, records_ref = reference .int[], work = .int, ?diagnostics = .inlineindex
+    initialwork = work; _usedwork = work
     i = .int; j = .int; b = .int; f = .int; id = .int; at = .int; prior = .int
     arity = .int; found = .int; operand = .int; code = .int; first = .int; last = .int; ordinal = .int; activefn = .int
     name = .string; expectedname = .string; bits = .binary
+    metadataend = .int
     item = .record; field = .operand; op = .llir..opview
     blockkind = .int[]; nextgroup = .int[]; lastgroup = .int[]; sequence = .int[]
     firstrecord = .int[]; lastrecord = .int[]; firstmachine = .int[]; machines = .int[]; priorrecord = .int[]
@@ -1166,7 +1272,11 @@ cfgcheck: class
           do j = 1 to _entries[0]; if _entries[j] = b then found = j; end
           if found = 0 | first <> last | code <> 5 then do; _error = 'LL_TARGET_CFG: malformed label entry'; return; end
           if op.successors() <> 1 | op.successor(1) <> _groups[found] then do; _error = 'LL_TARGET_CFG: label entry address mismatch'; return; end
-          if firstmachine[_groups[found]] = 0 then _complete[f] = 0
+          if firstmachine[_groups[found]] = 0 then do
+            metadataend = 0
+            if ?diagnostics then metadataend = diagnostics.endlabel(f,_names[found])
+            if metadataend = 0 then _complete[f] = 0
+          end
           iterate
         end
         if firstrecord[b] = 0 then do
@@ -1195,7 +1305,10 @@ cfgcheck: class
     on signal as problem
       if _error = '' then _error = 'LL_TARGET_CFG: ' || problem.name() || ': ' || problem.message()
     end
+    if _error = '' then _usedwork = initialwork - work
     return
+  usedwork: method = .int
+    return _usedwork
   valid: method = .int
     return _error = '' & _identity > 0
   identity: method = .int
@@ -1249,6 +1362,12 @@ body: class
   expose: method = .string
     call require(); header = .record(_owner,_header); item = header.operand(3)
     return item.text()
+  /** Typed executable entry contract: zero is ordinary, one program-default.
+   * The checked header owns this fact; metadata strings grant no permission. */
+  entrykind: method = .int
+    call require(); header = .record(_owner,_header)
+    if header.operands() < 4 then return 0
+    item = header.operand(4); return item.index()
   normalcfgcomplete: method = .int
     call require()
     if <refvalid>(_target) = 0 then return 0
@@ -1291,17 +1410,275 @@ body: class
     call bad('LL_TARGET_RECORD: body ordinal outside records')
     return .record(_owner,0)
 
+/** Static diagnostic labels are validated separately from executable binding
+ * and proof authority. Addresses count ordinary instruction cells only. */
+inlineindex: class
+  _owner = reference .llir..module
+  _recordsref = reference .int[]
+  _prepared = .int
+  _identity = .int
+  _error = .string
+  _used = .int
+  _limit = .int
+  _addresses = .int[]
+  _addresspresent = .int[]
+  _frames = .int[]
+  _frameids = .int[]
+  _maps = .int[]
+  _starts = .int[]
+  _ends = .int[]
+  _mapframes = .int[]
+  _labelkeys = .string[]
+  _sourceids = .int[]
+  _sourcerecords = .int[]
+  _endkeys = .string[]
+  *: factory
+    arg owner = reference .llir..module, records_ref = reference .int[], work = .int
+    _owner = owner; _recordsref = records_ref; _limit = work
+    return
+  prepare: method = .void
+    if _prepared then return
+    _prepared = 1
+    if <refvalid>(_owner) = 0 | <refvalid>(_recordsref) = 0 then do; _error = 'LL_TARGET_OWNER: expired inline diagnostics input'; return; end
+    owner = _owner; records_ref = _recordsref
+    graph = dereference owner; records = dereference records_ref; _identity = graph.identity()
+    item = .record; prior = .record; field = .operand; name = .operand
+    i = .int; j = .int; n = .int; ordinal = .int; parent = .int; next = .int; state = .int[]; path = .int[]
+    frames = .string[]; sources = .string[]; maps = .string[]; framefn = .int[]; parents = .int[]
+    maprecords = .int[]; first = .int; last = .int; row = .string; key = .string
+    previous = .int; id = .int; opid = .int; celladdress = .int; levels = .int; ignored = .int
+    if spend(graph.operations() * 2 + records[0] * 2) = 0 then return
+    celladdress = 0
+    do i = 1 to records[0]
+      item = .record(owner,records[i]); _addresses[item.id()] = celladdress; _addresspresent[item.id()] = 1
+      if item.kind() = 'instruction' then celladdress = celladdress + 1 + item.operands()
+      if item.kind() = '.inlineframe' then do
+        field = item.operand(1); n = frames[0] + 1
+        frames[n] = right(field.index() as .string,10,'0') || ':' || right(item.id() as .string,10,'0')
+      end
+      if item.kind() = '.inlinemap' then maprecords[maprecords[0] + 1] = item.id()
+    end
+    if frames[0] = 0 & maprecords[0] = 0 then return
+    levels = 1; n = max(1,records[0]); do while n > 1; n = n <idiv> 2; levels = levels + 1; end
+    if spend(records[0] * (levels * 4 + 12)) = 0 then return
+    ignored = arraysort(frames)
+    do i = 1 to frames[0]
+      row = frames[i]; _frameids[i] = left(row,10) as .int; _frames[i] = right(row,10) as .int
+      if i > 1 then do; if _frameids[i] = _frameids[i - 1] then do; _error = 'LL_TARGET_INLINE: duplicate frame identity'; return; end; end
+      item = .record(owner,_frames[i]); framefn[i] = item.procedureid()
+      do j = 3 to 4
+        field = item.operand(j); if validname(field.bytes()) = 0 then return
+      end
+    end
+    do i = 1 to records[0]
+      item = .record(owner,records[i])
+      if item.kind() = 'label' then do
+        field = item.operand(1); key = right(item.procedureid() as .string,10,'0') || ':' || field.text()
+        if spend(length(key)) = 0 then return
+        _labelkeys[_labelkeys[0] + 1] = key || ':' || right(item.id() as .string,10,'0')
+      end
+      if item.kind() = '.srcstep' then do
+        field = item.operand(1)
+        if field.index() > 0 then sources[sources[0] + 1] = right(field.index() as .string,10,'0') || ':' || right(item.id() as .string,10,'0')
+      end
+    end
+    ignored = arraysort(_labelkeys); ignored = arraysort(sources)
+    previous = 0
+    do i = 1 to sources[0]
+      row = sources[i]; id = left(row,10) as .int; opid = right(row,10) as .int
+      if id = previous then do
+        item = .record(owner,opid); prior = .record(owner,_sourcerecords[_sourcerecords[0]])
+        if samefields(item,prior) = 0 then do; if _error = '' then _error = 'LL_TARGET_INLINE: conflicting source anchor'; return; end
+      end
+      else do; n = _sourceids[0] + 1; _sourceids[n] = id; _sourcerecords[n] = opid; previous = id; end
+    end
+    do i = 1 to _frames[0]
+      item = .record(owner,_frames[i]); field = item.operand(2); parent = field.index()
+      if parent > 0 then do
+        ordinal = frameindex(parent)
+        if ordinal = 0 then do; _error = 'LL_TARGET_INLINE: missing parent frame'; return; end
+        if framefn[ordinal] <> framefn[i] then do; _error = 'LL_TARGET_INLINE: parent belongs to another physical procedure'; return; end
+        parents[i] = ordinal
+      end
+      else parents[i] = 0
+      field = item.operand(5)
+      if field.index() > 0 then do
+        if sourceindex(field.index()) = 0 then do; if _error = '' then _error = 'LL_TARGET_INLINE: missing source anchor'; return; end
+      end
+      state[i] = 0
+    end
+    do i = 1 to _frames[0]
+      if state[i] = 2 then iterate
+      assembler setattrs path,0
+      next = i
+      do while next > 0
+        if spend(1) = 0 then return
+        if state[next] = 1 then do; _error = 'LL_TARGET_INLINE: parent cycle'; return; end
+        if state[next] = 2 then leave
+        state[next] = 1; path[path[0] + 1] = next; next = parents[next]
+      end
+      do j = 1 to path[0]; state[path[j]] = 2; end
+    end
+    do i = 1 to maprecords[0]
+      item = .record(owner,maprecords[i]); field = item.operand(3); ordinal = frameindex(field.index())
+      if ordinal = 0 then do; _error = 'LL_TARGET_INLINE: map names missing frame'; return; end
+      if framefn[ordinal] <> item.procedureid() then do; _error = 'LL_TARGET_INLINE: map belongs to another physical procedure'; return; end
+      field = item.operand(1); first = labelid(item.procedureid(),field.text())
+      field = item.operand(2); last = labelid(item.procedureid(),field.text())
+      _endkeys[_endkeys[0] + 1] = right(item.procedureid() as .string,10,'0') || ':' || field.text()
+      if first = 0 | last = 0 then do; if _error = '' then _error = 'LL_TARGET_INLINE: unresolved range label'; return; end
+      first = _addresses[first]; last = _addresses[last]
+      if first >= last then do; _error = 'LL_TARGET_INLINE: empty or reversed range'; return; end
+      maps[i] = right(first as .string,20,'0') || ':' || right(last as .string,20,'0') || ':' || right(i as .string,10,'0')
+    end
+    ignored = arraysort(maps); ignored = arraysort(_endkeys); previous = -1
+    do i = 1 to maps[0]
+      row = maps[i]; first = left(row,20) as .int; last = substr(row,22,20) as .int; ordinal = right(row,10) as .int
+      if first < previous then do; _error = 'LL_TARGET_INLINE: overlapping ranges'; return; end
+      _maps[i] = maprecords[ordinal]; _starts[i] = first; _ends[i] = last
+      item = .record(owner,_maps[i]); field = item.operand(3); _mapframes[i] = field.index(); previous = last
+    end
+    return
+  spend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _limit - _used then do; _error = 'LL_RESOURCE_LIMIT: target.inline diagnostics work'; return 0; end
+    _used = _used + amount; return 1
+  validname: method = .int
+    arg text = .binary
+    if <blen>(text) = 0 then do; _error = 'LL_TARGET_INLINE: empty diagnostic name'; return 0; end
+    if spend(<blen>(text)) = 0 then return 0
+    do n = 0 to <blen>(text) - 1
+      if (<at..u8>(n) text) = 0 then do; _error = 'LL_TARGET_INLINE: NUL diagnostic name'; return 0; end
+    end
+    return 1
+  samefields: method = .int
+    arg left = .lltarget..record, right = .lltarget..record
+    field = .operand; other = .operand
+    if left.operands() <> right.operands() then return 0
+    if spend(left.operands()) = 0 then return 0
+    do n = 1 to left.operands()
+      field = left.operand(n); other = right.operand(n)
+      if field.kind() <> other.kind() then return 0
+      if field.kind() = 'I' then do; if field.index() <> other.index() then return 0; end
+      else if field.bytes() <> other.bytes() then return 0
+    end
+    return 1
+  labelid: method = .int
+    arg functionid = .int, name = .string
+    key = right(functionid as .string,10,'0') || ':' || name; lower = 1; upper = _labelkeys[0]; less = .int
+    do while lower <= upper
+      if spend(1) = 0 then return 0
+      middle = lower + (upper - lower) <idiv> 2; row = _labelkeys[middle]; candidate = left(row,length(row) - 11)
+      if key == candidate then return right(row,10) as .int
+      assembler slt less,key,candidate
+      if less then upper = middle - 1
+      else lower = middle + 1
+    end
+    return 0
+  sourceindex: method = .int
+    arg id = .int
+    call prepare()
+    lower = 1; upper = _sourceids[0]
+    do while lower <= upper
+      middle = lower + (upper - lower) <idiv> 2
+      if _sourceids[middle] = id then return middle
+      if id < _sourceids[middle] then upper = middle - 1
+      else lower = middle + 1
+    end
+    return 0
+  sourcerecord: method = .int
+    arg id = .int
+    call prepare()
+    ordinal = sourceindex(id)
+    if ordinal = 0 then return 0
+    return _sourcerecords[ordinal]
+  frameindex: method = .int
+    arg id = .int
+    call prepare()
+    lower = 1; upper = _frameids[0]
+    do while lower <= upper
+      middle = lower + (upper - lower) <idiv> 2
+      if _frameids[middle] = id then return middle
+      if id < _frameids[middle] then upper = middle - 1
+      else lower = middle + 1
+    end
+    return 0
+  endlabel: method = .int
+    arg functionid = .int, name = .string
+    call prepare()
+    key = right(functionid as .string,10,'0') || ':' || name; lower = 1; upper = _endkeys[0]; less = .int
+    do while lower <= upper
+      middle = lower + (upper - lower) <idiv> 2; candidate = _endkeys[middle]
+      if key == candidate then return 1
+      assembler slt less,key,candidate
+      if less then upper = middle - 1
+      else lower = middle + 1
+    end
+    return 0
+  identity: method = .int
+    call prepare()
+    return _identity
+  error: method = .string
+    call prepare()
+    return _error
+  usedwork: method = .int
+    call prepare()
+    return _used
+  frames: method = .int
+    call prepare()
+    return _frames[0]
+  frame: method = .int
+    arg ordinal = .int
+    call prepare()
+    return _frames[ordinal]
+  maps: method = .int
+    call prepare()
+    return _maps[0]
+  map: method = .int
+    arg ordinal = .int
+    call prepare()
+    return _maps[ordinal]
+  mapstart: method = .int
+    arg ordinal = .int
+    call prepare()
+    return _starts[ordinal]
+  mapend: method = .int
+    arg ordinal = .int
+    call prepare()
+    return _ends[ordinal]
+  addressat: method = .int
+    arg operation = .int
+    call prepare()
+    if operation < 1 | operation > _addresspresent[0] then return -1
+    if _addresspresent[operation] = 0 then return -1
+    return _addresses[operation]
+  frameat: method = .int
+    arg operation = .int
+    call prepare()
+    celladdress = addressat(operation); lower = 1; upper = _maps[0]
+    if celladdress < 0 then return -1
+    do while lower <= upper
+      middle = lower + (upper - lower) <idiv> 2
+      if celladdress < _starts[middle] then upper = middle - 1
+      else if celladdress >= _ends[middle] then lower = middle + 1
+      else return _mapframes[middle]
+    end
+    return 0
+
 module: class
   _graph = .llir..module
   _cfg = .cfgcheck
+  _inline = .inlineindex
   _records = .int[]
   _headers = .int[]
   _error = .string
   _name = .string
   _artifact = .string
   _globals = .int
+  _validationwork = .int
   *: factory
     arg graph = .llir..module, work = 1000000
+    initialwork = work; _validationwork = work
     i = .int; j = .int; k = .int; fn = .int; slot = .int
     found = .int; n = .int; size = .int; cost = .int; index = .int
     position = .int; payloadbytes = .int
@@ -1509,8 +1886,12 @@ module: class
       end
       if _error <> '' then return
     end
-    _cfg = .cfgcheck(reference _graph,reference _records,work)
+    _inline = .inlineindex(reference _graph,reference _records,work)
+    if _inline.error() <> '' then do; _error = _inline.error(); return; end
+    work = work - _inline.usedwork()
+    _cfg = .cfgcheck(reference _graph,reference _records,work,_inline)
     if _cfg.error() <> '' then _error = _cfg.error()
+    else _validationwork = initialwork - work + _cfg.usedwork()
     on signal as problem
       if _error = '' then _error = 'LL_TARGET_INVALID: ' || problem.name() || ': ' || problem.message()
     end
@@ -1519,6 +1900,8 @@ module: class
     return _error
   valid: method = .int
     return _error = ''
+  validationwork: method = .int
+    return _validationwork
   identity: method = .int
     graph_ref = reference _graph; graph = dereference graph_ref
     return graph.identity()
@@ -1530,6 +1913,46 @@ module: class
     return _artifact
   globals: method = .int
     return _globals
+  /** These are validated diagnostic labels only. Their presence grants no
+   * executable selection, activation equivalence or optimizer permission. */
+  inlineframes: method = .int
+    if _error <> '' then return 0
+    return _inline.frames()
+  inlineframe: method = .lltarget..record
+    arg ordinal = .int
+    if _error <> '' | ordinal < 1 | ordinal > _inline.frames() then call bad('LL_TARGET_INLINE: invalid frame ordinal')
+    return .record(reference _graph,_inline.frame(ordinal))
+  inlineframeindex: method = .int
+    arg id = .int
+    if _error <> '' then return 0
+    return _inline.frameindex(id)
+  inlinemaps: method = .int
+    if _error <> '' then return 0
+    return _inline.maps()
+  inlinemap: method = .lltarget..record
+    arg ordinal = .int
+    if _error <> '' | ordinal < 1 | ordinal > _inline.maps() then call bad('LL_TARGET_INLINE: invalid map ordinal')
+    return .record(reference _graph,_inline.map(ordinal))
+  inlinemapstart: method = .int
+    arg ordinal = .int
+    if _error <> '' | ordinal < 1 | ordinal > _inline.maps() then return -1
+    return _inline.mapstart(ordinal)
+  inlinemapend: method = .int
+    arg ordinal = .int
+    if _error <> '' | ordinal < 1 | ordinal > _inline.maps() then return -1
+    return _inline.mapend(ordinal)
+  inlineaddress: method = .int
+    arg operation = .int
+    if _error <> '' then return -1
+    return _inline.addressat(operation)
+  inlineframeat: method = .int
+    arg operation = .int
+    if _error <> '' then return -1
+    return _inline.frameat(operation)
+  inlinesourceid: method = .int
+    arg step = .int
+    if _error <> '' | step < 1 then return 0
+    return _inline.sourcerecord(step)
   normalcfgcomplete: method = .int
     arg functionid = .int
     if _error <> '' then return 0

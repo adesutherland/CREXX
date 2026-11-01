@@ -984,6 +984,7 @@ static int executor_run_external(rxvm_context *context,
 
     if (!context || !procedure || argc < 0 || (argc && !arguments) ||
         !return_value) return -1;
+    if (procedure->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) return -1;
     saved_proc = context->ext_proc;
     saved_argc = context->ext_argc;
     saved_args = context->ext_args;
@@ -1314,6 +1315,8 @@ static rxvm_executor_request_state executor_worker_call(
     }
 
     if (!procedure) return RXVM_EXECUTOR_REQUEST_PROCEDURE_NOT_FOUND;
+    if (procedure->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT)
+        return RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
     if (task_kind == 3u) {
         size_t factory_index;
 

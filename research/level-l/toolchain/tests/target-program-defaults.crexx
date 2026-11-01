@@ -1,0 +1,44 @@
+/* cREXX License (MIT). Independent generated default-entry catalog oracle. */
+options levelb
+import rxfnsb
+import llrxascatalog
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+
+main: procedure = .int
+  failures = 0; i = .int; bit = .int; wanted = .int
+  catalog = .llrxascatalog..catalog()
+  signals = catalog.programdefaultsignals()
+  expected = 'KILL FAILURE ERROR OVERFLOW_UNDERFLOW DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OUT_OF_RANGE UNICODE_ERROR UNKNOWN_INSTRUCTION FUNCTION_NOT_FOUND NOT_IMPLEMENTED INVALID_SIGNAL_CODE REFERENCE_INVALID NOTREADY OBJECT_NOT_INITIALIZED RXBIN_CORRUPTION CANCEL QUIT TERM POSIX_INT POSIX_HUP POSIX_USR1 POSIX_USR2 POSIX_CHLD CHANNEL_ERROR TASK_FAILURE CLASSIC_SYNTAX CLASSIC_CONDITION OTHER BREAKPOINT'
+  failures = failures + check(catalog.programdefaultcontract() == 'program-default.v1','versioned VM entry-default contract')
+  failures = failures + check(signals == expected & words(signals) = 31,'all valid canonical names remain in native signal-code order')
+  ignored = 'OVERFLOW_UNDERFLOW INVALID_SIGNAL_CODE POSIX_HUP POSIX_USR1 POSIX_USR2 POSIX_CHLD BREAKPOINT'
+  do i = 1 to words(expected)
+    name = word(expected,i); response = 'HALT'
+    if name = 'CANCEL' then response = 'SILENT_HALT'
+    else if wordpos(name,ignored) > 0 then response = 'IGNORE'
+    failures = failures + check(catalog.programdefaultresponse(name) == response,'exact native mixed response for ' || name)
+  end
+  invalid = .string[]
+  invalid[1] = ''; invalid[2] = '*'; invalid[3] = 'NONE'; invalid[4] = 'RXSIGNAL_MAX'
+  invalid[5] = 'error'; invalid[6] = 'ERROR '; invalid[7] = ' ERROR'
+  invalid[8] = 'FAILURE ERROR'; invalid[9] = 'KILL|OTHER'; invalid[10] = 'not-a-signal'
+  do i = 1 to invalid[0]
+    failures = failures + check(catalog.programdefaultresponse(invalid[i]) == 'unknown','invalid whole signal name stays unknown ' || i)
+  end
+  do i = 1 to 5
+    getter = word('getnumdgts getnumfuz getnumfrm getnumcas getnumstd',i)
+    bit = catalog.contextreadmask(catalog.find(getter,'R'))
+    wanted = word('18 0 1 1 1',i) as .int
+    failures = failures + check(bit > 0 & catalog.programdefaultnumeric(bit) = wanted,'native numeric default for ' || getter)
+  end
+  masks = .int[]; masks[1] = -1; masks[2] = 0; masks[3] = 3; masks[4] = 31; masks[5] = 32; masks[6] = 512
+  do i = 1 to masks[0]
+    failures = failures + check(catalog.programdefaultnumeric(masks[i]) = -1,'combined or nonnumeric context mask stays unknown ' || masks[i])
+  end
+  say 'TARGET_PROGRAM_DEFAULTS|failures=' || failures
+  return failures

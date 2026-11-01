@@ -17,6 +17,32 @@ first and then pass that linked image to `rxcpack`.
 
 `rxlink` is not a replacement for the VM loader. The output still contains multiple module records, and `rxvm` still performs the final runtime link/load work.
 
+Procedure-level `.inlinedprivate rK,"exact-provider",gN` declarations retain
+private provider storage through typed executable `META_INLINED_PRIVATE`
+records (RXBIN007 feature bit 10). Selection uses the exact input module name,
+never a basename or public export. The provider must exist uniquely and contain
+`gN`; omission, ambiguity and an invalid global index fail before publication.
+The linker seals the provider image identity and remaps both its selector and
+owning procedure reference into the output pool. Relinking resolves an existing
+seal within its original image before assigning new output ordinals. Source
+and compiler-inline stripping preserve this ownership metadata. This adds no
+initializer execution: readiness/poison/cycle remains a separate inliner proof.
+
+`main() .locals=N .entry=program-default` emits typed `META_ENTRY_STATE`
+(RXBIN007 feature bit 11, version 1, kind 1). The owning local PROC and entry
+address are validated by the codec. Linking preserves and relocates this
+runtime contract, including when stripping source/compiler inline metadata.
+More than one selected marked main is ambiguous. The native linker rejects
+an input in which that same PROC is also a module initializer through the
+shared typed RXBIN validator. Program and initializer roles remain distinct.
+The native linker also rejects
+executable procedure targets that resolve locally, through an import, or through
+an exact sealed image binding to marked main; the same check runs before and
+after its trusted inline service. Handler and logical activation targets share
+the canonical P-operand rule. This metadata grants no permission to clone code.
+At runtime the existing `rxvm_run` and `rxvml_run` supply checked program entry; ordinary
+`rxvm_call` and child entry reject before initialization/preparation side effects.
+
 `-E encoding` selects the external page for control files, link maps and
 provider-requirements text before those files are opened. The shared platform
 codec supplies the seven beta 3 native selectors; desktop behavior remains

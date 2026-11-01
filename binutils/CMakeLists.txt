@@ -30,6 +30,27 @@ target_include_directories(rxbin
 set_target_properties(rxbin PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(BUILD_TESTING)
+    add_executable(test_entry_state tests/test_entry_state.c)
+    target_link_libraries(test_entry_state PRIVATE rxbin)
+    add_test(NAME program_entry_records COMMAND test_entry_state)
+    set_tests_properties(program_entry_records PROPERTIES
+        LABELS "unit;binutils;metadata;entry;regression" TIMEOUT 30
+        CREXX_PREP_TARGETS test_entry_state)
+
+    add_executable(test_inlined_private tests/test_inlined_private.c)
+    target_link_libraries(test_inlined_private PRIVATE rxbin)
+    add_test(NAME inlined_private_records COMMAND test_inlined_private)
+    set_tests_properties(inlined_private_records PROPERTIES
+        LABELS "unit;binutils;metadata;inline;regression" TIMEOUT 30
+        CREXX_PREP_TARGETS test_inlined_private)
+
+    add_executable(test_inline_diagnostics tests/test_inline_diagnostics.c)
+    target_link_libraries(test_inline_diagnostics PRIVATE rxbin)
+    add_test(NAME inline_diagnostic_records COMMAND test_inline_diagnostics)
+    set_tests_properties(inline_diagnostic_records PROPERTIES
+        LABELS "unit;binutils;metadata;inline;regression" TIMEOUT 30
+        CREXX_PREP_TARGETS test_inline_diagnostics)
+
     add_executable(test_rxinline_recipe tests/test_rxinline_recipe.c)
     target_link_libraries(test_rxinline_recipe PRIVATE rxbin)
     add_test(NAME inline_typed_recipe COMMAND test_rxinline_recipe)

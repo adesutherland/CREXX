@@ -4,6 +4,7 @@ namespace llrxinline expose main selectionresult selectionexecute
 import rxfnsb
 import lllimits
 import llir
+import llirgraph
 import lltarget
 import llinline
 import lltargetnormalize
@@ -18,7 +19,11 @@ import llrxascatalog
 import rxjson
 import llrxinlinestage
 
-main: procedure = .int
+boot: initialiser expose inlinephase
+  inlinephase = 'startup'
+  return
+
+main: procedure = .int expose inlinephase
   arg argv = .string[]
   limits = .lllimits..policy; frontend = .llrxasinput..reader; parsed = .llrxasinput..parsed
   target = .lltarget..module; emitted = .llrxasoutput..emission; output = .llir..output
@@ -72,6 +77,7 @@ main: procedure = .int
   if profile <> 'unknown' & profile <> 'closed-main-default-halt.v1' & profile <> 'closed-main-static-exact-default-halt.v1' then return usage('unknown preservation profile ' || profile)
   if artifact = '' then artifact = sourcepath
   do
+    inlinephase = 'parse'
     limits = .lllimits..policy(); inputbytes = 67108864
     frontend = .llrxasinput..reader()
     source = readsource(sourcepath,min(inputbytes,limits.limit('source.bytes'))); inputbytes = inputbytes - <blen>(source)
@@ -84,14 +90,20 @@ main: procedure = .int
       if parsed.status() <> 0 then do; call lineout 'stderr',parsed.diagnostic(); return 1; end
       bodies[i] = parsed.result()
     end
+    inlinephase = 'applybatch'
     if applybatch(target,reference bodies,profile,policy,cleanup,workbudget) <> 0 then return 1
+    inlinephase = 'render'
     emitted = llrxasoutput..render(reference target)
     if emitted.error() <> '' then do; call lineout 'stderr',emitted.error(); return 1; end
+    inlinephase = 'publish'
     output = emitted.output(); message = llfileoutput..publish(output,destination)
     if message <> '' then do; call lineout 'stderr',message; return 1; end
     return 0
   on signal as problem
-    call lineout 'stderr','LL_INLINE_ERROR: ' || problem.name() || ': ' || problem.message(); return 1
+    detail = 'LL_INLINE_ERROR: ' || problem.name() || ': ' || left(problem.message(),512)
+    detail = detail || ' [phase=' || inlinephase || ';module=' || problem.module() || ';address=' || problem.address()
+    detail = detail || ';filehex=' || bin2x(left(problem.file(),160) as .binary) || ';line=' || problem.line() || ']'
+    call lineout 'stderr',detail; return 1
   end
   return 1
 
@@ -143,12 +155,246 @@ selectprovider: procedure = .int
   end
   return selected
 
+/** Project exact local calls into one ordinary L graph. The synthetic root
+ * makes every procedure available to the shared SCC service, including
+ * disconnected authored helpers. Names locate later revisions; they confer
+ * no executable-body or target authority. */
+callorder: class
+  _owner = reference .lltarget..module
+  _worklimit = .int
+  _bytelimit = .int
+  _graph = .llir..module
+  _index = .llirgraph..index
+  _cycles = .llirgraph..cycles
+  _names = .string[]
+  _sortednames = .string[]
+  _sortednodes = .int[]
+  _waves = .int[]
+  _components = .int[]
+  _levels = .int[]
+  _hascalls = .int[]
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _lookupwork = .int
+  _lookuplevels = .int
+  *: factory
+    arg owner = reference .lltarget..module, work = .int, bytes = .int
+    _owner = owner; _worklimit = work; _bytelimit = bytes; _status = 'building'
+    return
+  run: method = .void
+    if _status <> 'building' then return
+    owner = _owner; work = _worklimit; bytes = _bytelimit
+    if <refvalid>(owner) = 0 then do; _status = 'invalid'; _reason = 'inline.callgraph.owner.expired'; return; end
+    source = dereference owner
+    body = .lltarget..body; item = .lltarget..record; field = .lltarget..operand
+    registry = .llir..schema; family = .llir..family; contract = .llir..contract
+    opcode = .llir..operation; builder = .llir..builder; fn = .llir..function
+    blocks = .llir..block[]; operation = .llir..opdraft; at = .llir..origin
+    nodes = .int[]; from = .int[]; destinations = .int[]; heads = .int[]; links = .int[]; keys = .string[]
+    pending = .int[]; incoming = .int[]; nextedge = .int[]; ready = .int[]; levels = .int[]; active = .int[]
+    i = .int; edge = .int; caller = .int; callee = .int; count = .int
+    first = .int; last = .int; component = .int; targetcomponent = .int
+    count = source.procedures()
+    if count < 1 | work < 1 | bytes < 1 then do; _status = 'limit'; _reason = 'inline.callgraph.allowance'; return; end
+    _work = source.records() + count * 8; _bytes = count * 192 + source.records() * 32
+    if _work > work | _bytes > bytes then do; _status = 'limit'; _reason = 'inline.callgraph.tables'; return; end
+    longestname = 0
+    do i = 1 to count
+      body = source.procedure(i); _names[i] = body.name(); nodes[body.functionid()] = i
+      namebytes = <blen>(body.name() as .binary)
+      longestname = max(longestname,namebytes); _bytes = _bytes + namebytes * 4 + 10
+      keys[i] = right(i as .string,10,'0') || body.name()
+      _hascalls[i] = 0; heads[i] = 0
+    end
+    if _bytes >= bytes then do; _status = 'limit'; _reason = 'inline.callgraph.names.bytes'; return; end
+    width = count; _lookuplevels = 1
+    do while width > 0; width = width <idiv> 2; _lookuplevels = _lookuplevels + 1; end
+    _lookupwork = _lookuplevels * (longestname * 2 + 4) + 1
+    _work = _work + count * _lookuplevels * 8 * (longestname + 11)
+    if _work > work then do; _status = 'limit'; _reason = 'inline.callgraph.names.work'; return; end
+    /* Use the shared case-sensitive lexical sort once. The fixed-width node
+     * prefix travels with its name while offset 11 selects only the name. */
+    ignoredsort = arraysort(keys,11)
+    do i = 1 to count
+      _sortednames[i] = substr(keys[i],11); _sortednodes[i] = left(keys[i],10) as .int
+    end
+    catalog = .llrxascatalog..catalog()
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if catalog.callinvokes(item.opcode()) = 0 then iterate
+      if item.procedureid() < 1 then iterate
+      caller = nodes[item.procedureid()]
+      if caller = 0 then iterate
+      _hascalls[caller] = 1
+      if catalog.callkind(item.opcode()) <> 1 then iterate
+      field = item.operand(catalog.calltarget(item.opcode()))
+      _work = _work + _lookupwork + field.length() * _lookuplevels
+      if _work > work then do; _status = 'limit'; _reason = 'inline.callgraph.lookup.work'; return; end
+      callee = findname(field.text())
+      if callee = 0 then iterate
+      edge = from[0] + 1; from[edge] = caller; destinations[edge] = callee
+      links[edge] = heads[caller]; heads[caller] = edge
+    end
+    registry = .llir..schema(); family = registry.family('llinline.callgraph',1)
+    opcode = family.operation('node'); call opcode.control('terminal',0,max(count,from[0]))
+    contract = registry.finish(); builder = .llir..builder(contract,max(1,count * 4 + from[0] * 2 + 8),bytes - _bytes)
+    at = builder.synthetic('inline call ordering'); fn = builder.function('calls',contract.type('core.void'))
+    blocks[1] = fn.block('root')
+    do i = 1 to count; blocks[i + 1] = fn.block('procedure' || i); end
+    operation = blocks[1].operation(contract.operation('llinline.callgraph.node'),at)
+    do i = 1 to count; call operation.successor(blocks[i + 1]); end
+    ignored = operation.finish()
+    do i = 1 to count
+      operation = blocks[i + 1].operation(contract.operation('llinline.callgraph.node'),at)
+      edge = heads[i]
+      do while edge > 0
+        call operation.successor(blocks[destinations[edge] + 1]); edge = links[edge]
+      end
+      ignored = operation.finish()
+    end
+    _graph = builder.finish()
+    if _graph.error() <> '' then do; _status = 'invalid'; _reason = _graph.error(); return; end
+    _bytes = _bytes + _graph.bytes()
+    if _bytes >= bytes then do; _status = 'limit'; _reason = 'inline.callgraph.ir.bytes'; return; end
+    _index = .llirgraph..index(reference _graph,work - _work,bytes - _bytes)
+    if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
+    _work = _work + _index.usedwork(); _bytes = _bytes + _index.usedbytes()
+    _cycles = _index.loops(work - _work,bytes - _bytes)
+    if _cycles.status() <> 'ok' then do; _status = _cycles.status(); _reason = _cycles.message(); return; end
+    _work = _work + _cycles.usedwork(); _bytes = _bytes + _cycles.usedbytes()
+    _work = _work + count * 3 + from[0] * 3 + _cycles.components() * 3
+    if _work > work then do; _status = 'limit'; _reason = 'inline.callgraph.order.work'; return; end
+    do i = 1 to _cycles.components(); pending[i] = 0; incoming[i] = 0; levels[i] = 1; end
+    do i = 1 to count; _components[i] = _cycles.component(blocks[i + 1].id()); end
+    do edge = 1 to from[0]
+      component = _components[from[edge]]; targetcomponent = _components[destinations[edge]]
+      if component = targetcomponent then iterate
+      pending[component] = pending[component] + 1
+      nextedge[edge] = incoming[targetcomponent]; incoming[targetcomponent] = edge
+    end
+    first = 1; last = 0
+    do i = 1 to _cycles.components()
+      if pending[i] = 0 then do; last = last + 1; ready[last] = i; end
+    end
+    do while first <= last
+      component = ready[first]; first = first + 1
+      edge = incoming[component]
+      do while edge > 0
+        caller = _components[from[edge]]; levels[caller] = max(levels[caller],levels[component] + 1)
+        pending[caller] = pending[caller] - 1
+        if pending[caller] = 0 then do; last = last + 1; ready[last] = caller; end
+        edge = nextedge[edge]
+      end
+    end
+    do i = 1 to count
+      _levels[i] = levels[_components[i]]
+      if _hascalls[i] then active[_levels[i]] = 1
+    end
+    do i = 1 to active[0]
+      if active[i] then _waves[_waves[0] + 1] = i
+    end
+    _status = 'ok'
+    return
+  status: method = .string
+    call run()
+    return _status
+  reason: method = .string
+    call run()
+    return _reason
+  usedwork: method = .int
+    call run()
+    return _work
+  usedbytes: method = .int
+    call run()
+    return _bytes
+  size: method = .int
+    call run()
+    return _waves[0]
+  level: method = .int
+    arg ordinal = .int
+    call run()
+    return _waves[ordinal]
+  lookupwork: method = .int
+    call run()
+    return _lookupwork * 2 + 1
+  /** Exact lexical lookup into the already constructed index. During run,
+   * callers have precharged this bounded search before invoking it. */
+  findname: method = .int
+    arg name = .string
+    lower = 1; upper = _sortednames[0]; comparison = .int
+    do while lower <= upper
+      middle = lower + (upper - lower) <idiv> 2; probe = _sortednames[middle]
+      if probe == name then return _sortednodes[middle]
+      assembler slt comparison,probe,name
+      if comparison then lower = middle + 1
+      else upper = middle - 1
+    end
+    return 0
+  includes: method = .int
+    arg name = .string, level = .int
+    call run()
+    node = findname(name)
+    if node = 0 then return 0
+    return _levels[node] = level
+  recursive: method = .int
+    arg caller = .string, callee = .string
+    call run()
+    left = findname(caller); right = findname(callee)
+    if left = 0 | right = 0 then return 0
+    return _components[left] = _components[right]
+
+/** Rebuild proof owners between leaf-to-caller waves. A later caller clones
+ * the newly published local provider body; no receipt or point fact survives
+ * replacement of its exact module owner. */
+applybatch: procedure = .int expose inlinephase
+  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, policy = .string, cleanup = .int, workbudget = .int
+  order = .callorder; bytebudget = 67108864; i = .int
+  if policy = 'never' then return applywave(target,supplied,profile,policy,cleanup,workbudget,bytebudget)
+  order = .callorder(reference target,workbudget,bytebudget)
+  if order.status() <> 'ok' then do; call lineout 'stderr','LL_INLINE_' || upper(order.status()) || ': ' || order.reason(); return 1; end
+  workbudget = workbudget - order.usedwork(); bytebudget = bytebudget - order.usedbytes()
+  if order.size() = 0 then return applywave(target,supplied,profile,policy,cleanup,workbudget,bytebudget)
+  if profile = 'closed-main-static-exact-default-halt.v1' then do
+    if checkproviders(reference target,supplied) = 0 then return 1
+  end
+  do i = 1 to order.size()
+    inlinephase = 'wave.schedule'
+    remaining = order.size() - i + 1; allowance = workbudget <idiv> remaining; bytes = bytebudget <idiv> remaining
+    workbudget = workbudget - allowance; bytebudget = bytebudget - bytes
+    if allowance < 1 | bytes < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: inline.bottomup.allowance'; return 1; end
+    if applywave(target,supplied,profile,policy,cleanup,allowance,bytes,order.level(i),reference order) <> 0 then return 1
+  end
+  return 0
+
+checkproviders: procedure = .int
+  arg owner = reference .lltarget..module, supplied = reference .lltarget..module[]
+  source = dereference owner; providers = dereference supplied; used = .int[]
+  item = .lltarget..record; field = .lltarget..operand; provider = .lltarget..module
+  providerindex = .int; procedureid = .int; called = .string; i = .int
+  catalog = .llrxascatalog..catalog(); calls = callsites(owner)
+  do i = 1 to calls[0]
+    item = source.at(calls[i])
+    if catalog.callkind(item.opcode()) <> 1 then iterate
+    field = item.operand(catalog.calltarget(item.opcode())); called = field.text()
+    selected = selectprovider(owner,called,supplied,providerindex,procedureid)
+    if selected < 0 then return 0
+    if selected = 1 then used[providerindex] = 1
+  end
+  do i = 1 to providers[0]
+    if used[i] then iterate
+    provider = providers[i]; call lineout 'stderr','LL_INLINE_BINDING: unused supplied provider ' || provider.name(); return 0
+  end
+  return 1
+
 /** Expand original bindings atomically, then run the separately callable
  * cleanup once per changed caller, resolving stable names after each change.
  * The checked expansion is independently executable. Optional cleanup failure
  * preserves the latest valid owner and cannot veto its publication. */
-applybatch: procedure = .int
-  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, policy = .string, cleanup = .int, workbudget = .int
+applywave: procedure = .int expose inlinephase
+  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, policy = .string, cleanup = .int, workbudget = .int, bytebudget = 67108864, wave = 0, ?schedule = reference .callorder
   change = .llinline..change; body = .lltarget..body; request = .llinline..binding
   item = .lltarget..record; field = .lltarget..operand; bodies = .lltarget..module[]
   normalized = .lltargetnormalize..change; context = .llinline..context
@@ -157,12 +403,20 @@ applybatch: procedure = .int
   prepared = .object[]; names = .string[]; sitenames = .string[]
   siteids = .int[]; providerindices = .int[]; procedureids = .int[]; providerused = .int[]
   procedureid = .int; providerindex = .int; i = .int; j = .int
-  bytebudget = 67108864
+  ordering = .callorder; callername = .string
+  inlinephase = 'wave.selection'
+  if ?schedule then ordering = dereference schedule
   bodies = dereference supplied; calls = callsites(reference target); catalog = .llrxascatalog..catalog()
   do i = 1 to calls[0]
     item = target.at(calls[i]); called = ''
+    body = target.body(item.procedureid()); callername = body.name()
+    if wave > 0 then do
+      workbudget = workbudget - ordering.lookupwork()
+      if workbudget < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: inline.callgraph.lookup.work'; return 1; end
+      if ordering.includes(callername,wave) = 0 then iterate
+    end
     if catalog.callkind(item.opcode()) <> 1 then do
-      call lineout 'stderr','LL_INLINE_KEEP: target.selection.authority.unavailable'
+      call keepdiagnostic(reference target,item.id(),'target.selection.authority.unavailable','availability','selection')
       iterate
     end
     do j = 1 to item.operands()
@@ -172,8 +426,16 @@ applybatch: procedure = .int
     selected = selectprovider(reference target,called,supplied,providerindex,procedureid)
     if selected < 0 then return 1
     if selected = 0 then do
-      call lineout 'stderr','LL_INLINE_KEEP: unavailable exact body ' || called
+      call keepdiagnostic(reference target,item.id(),'unavailable exact body ' || called,'availability','binding')
       iterate
+    end
+    if selected = 2 & ?schedule then do
+      workbudget = workbudget - ordering.lookupwork()
+      if workbudget < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: inline.callgraph.lookup.work'; return 1; end
+      if ordering.recursive(callername,called) then do
+        call keepdiagnostic(reference target,item.id(),'policy.recursive.scc','policy','selection')
+        iterate
+      end
     end
     index = siteids[0] + 1
     siteids[index] = calls[i]
@@ -186,7 +448,7 @@ applybatch: procedure = .int
       body = target.body(procedureid); sitenames[index] = body.name()
     end
   end
-  if profile = 'closed-main-static-exact-default-halt.v1' then do
+  if profile = 'closed-main-static-exact-default-halt.v1' & wave = 0 then do
     do j = 1 to bodies[0]
       if workbudget < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: import.providers.work'; return 1; end
       workbudget = workbudget - 1
@@ -196,6 +458,7 @@ applybatch: procedure = .int
       end
     end
   end
+  inlinephase = 'wave.normalization'
   if profile <> 'unknown' then do
     execution = .lltargettransfer..profile.closedcalls(reference target,target.procedureid('main'),profile,workbudget,bytebudget)
     if execution.status() <> 'ok' then do; call lineout 'stderr','LL_INLINE_' || upper(execution.status()) || ': ' || execution.message(); return 1; end
@@ -215,6 +478,7 @@ applybatch: procedure = .int
     call lineout 'stderr',warning.diagnostic()
   end
   if policy = 'never' | siteids[0] = 0 then return 0
+  inlinephase = 'wave.context'
   context = .llinline..context('assembler',policy)
   if profile <> 'unknown' then do
     /* Normalization has published another exact owner. Recheck the caller's
@@ -228,9 +492,10 @@ applybatch: procedure = .int
     executionbound = context.useexecution(reference target,reference execution)
   end
   if context.certifyreceipt(reference target,normalized,reference receipt) = 0 then do
-    call lineout 'stderr','LL_INLINE_KEEP: ' || normalized.reason()
+    call keepdiagnostic(reference target,0,normalized.reason(),'proof','normalization')
     return 0
   end
+  inlinephase = 'wave.bindings'
   do i = 1 to siteids[0]
     callid = normalized.operation(siteids[i])
     if providerindices[i] = 0 then do
@@ -242,14 +507,21 @@ applybatch: procedure = .int
     end
     prepared[i] = request as .object
   end
+  inlinephase = 'wave.expand'
   change = llinline..expandcontext(prepared,context,workbudget,1000000,bytebudget)
+  inlinephase = 'wave.expand.returned'
   do i = 1 to change.sites()
     site = change.site(i)
-    if change.statusat(site) = 'keep' then call lineout 'stderr','LL_INLINE_KEEP: ' || change.reasonat(site)
+    if change.statusat(site) = 'keep' then do
+      inlinephase = 'wave.keepdiagnostic'
+      call keepdiagnostic(reference target,site,change.reasonat(site))
+    end
   end
   if change.status() = 'keep' then return 0
   if change.status() <> 'changed' then do; call lineout 'stderr','LL_INLINE_' || upper(change.status()) || ': ' || change.reason(); return 1; end
+  inlinephase = 'wave.result'
   target = change.result()
+  inlinephase = 'wave.result.returned'
   if cleanup = 0 then return 0
   do i = 1 to change.callers()
     body = target.body(change.caller(i)); names[i] = body.name()
@@ -283,6 +555,61 @@ optionalcleanup: procedure = .void
     call lineout 'stderr',prefix || '_FAILED: ' || problem.name() || ': ' || problem.message()
   end
   return
+
+/** Retain the complete authoritative reason and one record for every site.
+ * The appended labels describe its diagnostic namespace, never proof facts.
+ * IDs and spans refer to the frozen input, before output-owner replacement. */
+keepdiagnostic: procedure = .void
+  arg owner = reference .lltarget..module, callid = .int, reason = .string, category = '', layer = ''
+  source = dereference owner; root = ''; second = ''
+  item = .lltarget..record; field = .lltarget..operand
+  if category = '' then do
+    names = translate(reason,' ','.'); root = word(names,1); second = word(names,2)
+    category = 'unclassified'; layer = 'unclassified'
+    select
+      when root = 'policy' then do; category = 'policy'; layer = 'selection'; end
+      when root = 'binding' | root = 'import' then do; category = 'availability'; layer = 'binding'; end
+      when root = 'target' then do
+        category = 'proof'; layer = 'target.' || second
+        if wordpos(second,'body bodyview selection') > 0 then category = 'availability'
+      end
+      when root = 'normalization' then do; category = 'proof'; layer = 'normalization'; end
+      when root = 'expansion' then do
+        category = 'proof'; layer = 'target.expansion'
+        if second = 'correspondence' then layer = 'target.correspondence'
+        if pos('.work',reason) > 0 | pos('.bytes',reason) > 0 then category = 'resource'
+      end
+      when root = 'signal' then do; category = 'proof'; layer = 'signal'; end
+      when wordpos(root,'scopefree argument arithmetic binary component entry global profile return string value') > 0 then do; category = 'proof'; layer = root; end
+      when root = 'inline' then do; category = 'proof'; layer = 'inline'; end
+      otherwise nop
+    end
+  end
+  scope = 'module'; if callid > 0 then scope = 'call'
+  context = ' [category=' || category || ' layer=' || layer || ' scope=' || scope
+  context = context || ' owner=' || source.identity() || ' module=' || keepfield(source.name())
+  if callid > 0 then do
+    item = source.at(callid); graph_ref = source.ir(); graph = dereference graph_ref
+    fn = graph.function(item.procedureid()); at = item.origin()
+    context = context || ' procedure=' || keepfield(fn.name()) || ' call=' || callid
+    context = context || ' source=' || keepfield(at.filename()) || ' bytes=' || at.first() || ':' || at.last() || ' origin=' || at.kind()
+    catalog = .llrxascatalog..catalog(); ordinal = catalog.calltarget(item.opcode()); target = ''
+    if ordinal > 0 & ordinal <= item.operands() then do
+      field = item.operand(ordinal)
+      if field.kind() = 'R' then target = field.bank() || field.index()
+      else target = field.text()
+    end
+    context = context || ' target=' || keepfield(target)
+  end
+  call lineout 'stderr','LL_INLINE_KEEP: ' || reason || context || ']'
+  return
+
+/** Bound before escaping; the full API reason and numeric site locators stay
+ * available even when a displayed name is longer than this fixed allowance. */
+keepfield: procedure = .string
+  arg text = .string
+  if length(text) > 256 then text = left(text,256) || '...[truncated]'
+  return rxjson..jsonquote(text)
 
 usage: procedure = .int
   arg reason = ''
@@ -432,7 +759,7 @@ selectionmode: procedure = .int
         else receipt_ref = reference receipts[i]
         if context.certifyreceipt(reference frozen[i],normalized,receipt_ref) = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: normalization certificate"
       end
-      else call lineout 'stderr','LL_INLINE_KEEP: ' || normalized.reason()
+      else call keepdiagnostic(reference frozen[i],0,normalized.reason(),'proof','normalization')
       do j = 1 to normalized.warnings()
         warning = normalized.warning(j)
         call lineout 'stderr','LL_RXAS_WARNING: ' || warning.message()
@@ -510,7 +837,7 @@ selectionmode: procedure = .int
       if expanded.status() = 'changed' then do; outputs[i] = expanded.result(); changed[i] = 1; end
       else if expanded.status() <> 'keep' then do; fault = 'LL_INLINE_SELECTION: expansion ' || expanded.status() || ': ' || expanded.reason(); assembler signal "ERROR",fault; end
       do j = 1 to expanded.sites()
-        if expanded.statusat(expanded.site(j)) = 'keep' then call lineout 'stderr','LL_INLINE_KEEP: ' || expanded.reasonat(expanded.site(j))
+        if expanded.statusat(expanded.site(j)) = 'keep' then call keepdiagnostic(reference frozen[i],expanded.site(j),expanded.reasonat(expanded.site(j)))
       end
     end
     response = '{"version":"llinline.selection.result.v1","transaction":' || rxjson..jsonquote(transaction) || ',"catalog":' || rxjson..jsonquote(catalog.fingerprint()) || ',"modules":['

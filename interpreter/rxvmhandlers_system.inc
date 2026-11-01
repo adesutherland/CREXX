@@ -1369,6 +1369,11 @@ RXVM_HANDLER(RESERVED_279,
 
 
 RXVM_HANDLER(SWAPCALL_REG_FUNC_REG_REG_REG, VM_ADVANCE(5);
+            if (PROC_OP(2)->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                               "Program entry cannot be called as a child")
+                DISPATCH;
+            }
             RXVM_SWAP_PAIR(4, 5);
             RXVM_MAPPED_CALL_BODY(REG_OP(1), PROC_OP(2),
                                   REG_OP(3)->int_value, REG_IDX(3) + 1);
@@ -1378,6 +1383,11 @@ RXVM_HANDLER(SWAPCALL_REG_FUNC_REG_REG_REG, VM_ADVANCE(5);
 )
 
 RXVM_HANDLER(SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG, VM_ADVANCE(6);
+            if (PROC_OP(2)->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                               "Program entry cannot be called as a child")
+                DISPATCH;
+            }
             REG_OP(4)->status.all_type_flags =
                     RXFLAGS_PUBLIC_WRITE(REG_OP(4)->status.all_type_flags,
                                          (uint32_t)INT_OP(5));
@@ -1390,6 +1400,11 @@ RXVM_HANDLER(SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG, VM_ADVANCE(6);
 )
 
 RXVM_HANDLER(SETTPCALL_REG_FUNC_REG_REG_INT, VM_ADVANCE(5);
+            if (PROC_OP(2)->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
+                SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
+                               "Program entry cannot be called as a child")
+                DISPATCH;
+            }
             REG_OP(4)->status.all_type_flags =
                     RXFLAGS_PUBLIC_WRITE(REG_OP(4)->status.all_type_flags,
                                          (uint32_t)INT_OP(5));
@@ -1579,6 +1594,11 @@ RXVM_HANDLER(RESERVED_299,
 #define RXVM_FIXED_CALL_BODY(ARITY_)                                           \
         do {                                                                    \
             proc_runtime *explicit_called__ = PROC_OP(2);                      \
+            if (explicit_called__->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) { \
+                SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,                    \
+                               "Program entry cannot be called as a child")   \
+                DISPATCH;                                                       \
+            }                                                                   \
             value *explicit_result__ = REG_OP(1);                              \
             value *explicit_args__[4];                                         \
             size_t explicit_i__;                                               \

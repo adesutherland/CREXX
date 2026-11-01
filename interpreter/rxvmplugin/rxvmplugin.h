@@ -65,7 +65,9 @@ struct rxvm_plugin {
 typedef struct decplugin decplugin;
 struct decplugin {
     rxvm_plugin base; // Base plugin information
-    numeric_context *num_context; // Numeric context for the plugin - this is set by the client, and readonly by the plugin
+    /* Host-owned read-only numeric values. Its address has no provider-visible
+     * identity; synchronization must not retain it in another location. */
+    numeric_context *num_context;
 
     // Functions provided by the framework
     // Function number_to_simple_format as defined in rxvmplugin_framework.h
@@ -81,7 +83,15 @@ struct decplugin {
     void (*release_value_storage)(value *value_storage);
 
     // Functions provided by the plugin
-    void (*syncNumericContext)(decplugin *plugin); // Sync a numeric context into the plugin (should be called by the client after changing the context)
+    /* ABI 3: update only private cached effective numeric values, using the
+     * documented defaults for a null context. Non-signalling and non-reentrant:
+     * total for valid contexts; no allocation/resource operations, I/O,
+     * abnormal exit, diagnostics, VM/native/host callbacks, register/value access,
+     * context mutation, pointer-identity observation or visible call count/order.
+     * Other decimal operations preserve the synchronized effective configuration
+     * between sync calls, including after temporary internal adjustments.
+     * The host may omit a sync when effective numeric settings are unchanged. */
+    void (*syncNumericContext)(decplugin *plugin);
     size_t (*getDigits)(decplugin *plugin); // Get the number of digits in the rxvmplugin context (maybe smaller than num_context->digits)
     /* Size a conversion buffer for both the active context and, when supplied,
      * the stored value. Values can legitimately cross a numeric-context
@@ -147,9 +157,26 @@ typedef rxvm_plugin *(*rxvm_plugin_factory)();
 /* typedef for the function used to register a rxvm plugin factory */
 typedef void (*register_rxvmplugin_factory)(char* factory_name, rxvm_plugin_factory factory);
 
-/* Function to register a rxvm plugin factory */
-/* This is the external function provided to the plugin when linked statically */
+/* Legacy Unicode factory registration; decimal factories require ABI 3 below. */
 void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory);
+
+/* Decimal ABI 3 is an explicit semantic opt-in, not a decplugin layout change.
+ * Old generic registration remains available for Unicode, never decimal. */
+#define RXVM_DECIMAL_PLUGIN_ABI_V3 3u
+#define RXVM_DECIMAL_SYNC_CONTRACT_V1 1u
+#define RXVM_DECIMAL_SYNC_CONTRACT_NAME "value-only-nonreentrant.v1"
+#define RXVMPLUGIN_LOAD_INCOMPATIBLE (-4)
+typedef struct rxvm_decimal_registration_v3 {
+    size_t struct_size;
+    unsigned int abi_version;
+    rxvm_plugin_type type;
+    unsigned int sync_contract;
+    const char *factory_name;
+    rxvm_plugin_factory factory;
+} rxvm_decimal_registration_v3;
+typedef int (*register_rxvm_decimal_factory_v3)(
+        const rxvm_decimal_registration_v3 *registration);
+int register_rxvm_decimal_plugin_v3(const rxvm_decimal_registration_v3 *registration);
 
 // These are designed to force the expansion of macros before concatenation
 // and be compatible with both GCC and MSVC
@@ -195,48 +222,66 @@ typedef void (*initializer_function)();
 #endif
 #define REGISTER_PLUGIN(factory) EXPORT INITIALIZER(factory)
 
+#define REGISTER_DECIMAL_PLUGIN(factory) \
+    EXPORT int _register_rxvm_decimal_plugin_v3(register_rxvm_decimal_factory_v3 register_func); \
+    EXPORT int _register_rxvm_decimal_plugin_v3(register_rxvm_decimal_factory_v3 register_func) { \
+        const rxvm_decimal_registration_v3 registration = { \
+            sizeof(rxvm_decimal_registration_v3), RXVM_DECIMAL_PLUGIN_ABI_V3, \
+            RXVM_PLUGIN_DECIMAL, RXVM_DECIMAL_SYNC_CONTRACT_V1, \
+            EXPAND_AND_STRINGIFY(RXVM_PLUGIN), factory }; \
+        return register_func(&registration); \
+    }
+
 #else
 
 // Else Static build
 
 #ifdef MANUAL_PLUGIN_LINK
 // Need to manually call the initializer via macro CALL_PLUGIN_INITIALIZER(plugin_id)
-#define INITIALIZER(factory,f,plugin_name) \
-    void f(void) {register_rxvmplugin(plugin_name,factory);}
+#define INITIALIZER(factory,f,plugin_name,register_func) \
+    void f(void) {register_func(plugin_name,factory);}
 
 #else
 
 // With thanks to this Initializer/finalizer sample for MSVC and GCC/Clang. 2010-2016 Joe Lowe. Released into the public domain.
 #ifdef __cplusplus
-#define INITIALIZER(factory,f,plugin_name) \
+#define INITIALIZER(factory,f,plugin_name,register_func) \
         static void f(void); \
         struct f##_t_ { f##_t_(void) { f(); } }; static f##_t_ f##_; \
-        static void f(void) {register_rxvmplugin(plugin_name,factory);}
+        static void f(void) {register_func(plugin_name,factory);}
 #elif defined(_MSC_VER)
 #pragma section(".CRT$XCU",read)
-#define INITIALIZER2_(factory,f,p,plugin_name) \
+#define INITIALIZER2_(factory,f,p,plugin_name,register_func) \
         static void f(void); \
         __declspec(allocate(".CRT$XCU")) void (*f##_)(void) = f; \
         __pragma(comment(linker,"/include:" p #f "_")) \
-        static void f(void) {register_rxvmplugin(plugin_name,factory);}
+        static void f(void) {register_func(plugin_name,factory);}
 #ifdef _WIN64
-#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"",plugin_name)
+#define INITIALIZER(factory,f,plugin_name,register_func) INITIALIZER2_(factory,f,"",plugin_name,register_func)
 #else
-#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"_",plugin_name)
+#define INITIALIZER(factory,f,plugin_name,register_func) INITIALIZER2_(factory,f,"_",plugin_name,register_func)
 #endif
 
 #else // Not _MSC_VER -> GCC/Clang
 
-#define INITIALIZER(factory,f,plugin_name) \
+#define INITIALIZER(factory,f,plugin_name,register_func) \
     static void f(void) __attribute__((constructor)); \
-    static void f(void) {register_rxvmplugin(plugin_name,factory);}
+    static void f(void) {register_func(plugin_name,factory);}
 
 #endif // _MSC_VER
 
 #endif // MANUAL_INIT
 
 // Define the REGISTER_PLUGIN macro
-#define REGISTER_PLUGIN(factory) INITIALIZER(factory, UNIQUE_VMINIT_FUNCTION_NAME(RXVM_PLUGIN),EXPAND_AND_STRINGIFY(RXVM_PLUGIN))
+#define REGISTER_PLUGIN(factory) INITIALIZER(factory, UNIQUE_VMINIT_FUNCTION_NAME(RXVM_PLUGIN),EXPAND_AND_STRINGIFY(RXVM_PLUGIN),register_rxvmplugin)
+
+#define RXVM_REGISTER_DECIMAL_FACTORY_V3(name,factory) do { \
+    const rxvm_decimal_registration_v3 registration = { \
+        sizeof(rxvm_decimal_registration_v3), RXVM_DECIMAL_PLUGIN_ABI_V3, \
+        RXVM_PLUGIN_DECIMAL, RXVM_DECIMAL_SYNC_CONTRACT_V1, name, factory }; \
+    (void)register_rxvm_decimal_plugin_v3(&registration); \
+} while (0)
+#define REGISTER_DECIMAL_PLUGIN(factory) INITIALIZER(factory, UNIQUE_VMINIT_FUNCTION_NAME(RXVM_PLUGIN),EXPAND_AND_STRINGIFY(RXVM_PLUGIN),RXVM_REGISTER_DECIMAL_FACTORY_V3)
 
 #endif // BUILD_DLL
 #endif // RXVM_PLUGIN

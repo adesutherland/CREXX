@@ -61,7 +61,7 @@ reader: class
       first = original.start(i); last = original.finish(i + 1)
       if original.symbol(i) = directive then do
         spelling = lower(binsubstr(source,first + 1,last - first) as .string)
-        if wordpos(spelling,'.globals .locals .expose .meta .const .srcstep .traceevent') = 0 then return .parsed(source,logicalModule,1,'LL_RXAS_PROFILE: unsupported directive ' || spelling,first)
+        if wordpos(spelling,'.globals .locals .expose .entry .meta .const .srcstep .traceevent .inlineframe .inlinemap') = 0 then return .parsed(source,logicalModule,1,'LL_RXAS_PROFILE: unsupported directive ' || spelling,first)
       end
       ok = tokens.append(original.symbol(i),first,last)
     end
@@ -77,7 +77,7 @@ reader: class
     do while cursor.next()
       item = cursor.node(); failureOffset = item.start(); remaining = remaining - 1
       if remaining < 0 then return .parsed(source,logicalModule,2,'LL_RESOURCE_LIMIT: RXAS binding work',item.start())
-      if item.kind() = 'Procedure' | item.kind() = 'ExposedProcedure' | item.kind() = 'Import' then inbody = 1
+      if item.kind() = 'Procedure' | item.kind() = 'ExposedProcedure' | item.kind() = 'ExposedEntryProcedure' | item.kind() = 'Import' then inbody = 1
       if item.kind() = 'Globals' then do
         if lower(item.text('directive')) <> '.globals' then return .parsed(source,logicalModule,1,'LL_RXAS_PROFILE: expected .globals directive',item.start())
         if seen | inbody then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: duplicate or misplaced .globals',item.start())
@@ -98,15 +98,28 @@ reader: class
       fields = .object[]; kind = item.kind()
       select
         when kind = 'Blank' | kind = 'Globals' then nop
-        when kind = 'Procedure' | kind = 'ExposedProcedure' then do
+        when kind = 'Procedure' | kind = 'ExposedProcedure' | kind = 'ExposedEntryProcedure' then do
           if lower(item.text('locals')) <> '.locals' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: procedure requires .locals',item.start())
           if natural(item.text('count')) = 0 then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: invalid local count',item.start())
-          exposed = ''
-          if kind = 'ExposedProcedure' then do
-            exposed = item.text('symbol')
-            if lower(item.text('expose')) <> '.expose' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: expected .expose',item.start())
+          exposed = ''; entrykind = 0; entrycontract = ''; name = procname(item.text('name'))
+          if kind = 'ExposedProcedure' | kind = 'ExposedEntryProcedure' then do
+            option = lower(item.text('expose'))
+            if kind = 'ExposedProcedure' & option = '.entry' then entrycontract = lower(item.text('symbol'))
+            else do
+              if option <> '.expose' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: expected .expose before .entry',item.start())
+              exposed = item.text('symbol')
+            end
           end
-          body = draft.procedure(procname(item.text('name')),number(item.text('count')),at,fold(exposed)); active = 1; functionsStarted = 1
+          if kind = 'ExposedEntryProcedure' then do
+            if lower(item.text('entry')) <> '.entry' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: expected .entry',item.start())
+            entrycontract = lower(item.text('contract'))
+          end
+          if entrycontract <> '' then do
+            if entrycontract <> 'program-default' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: unsupported entry contract',item.start())
+            if name <> 'main' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: program-default entry requires main',item.start())
+            entrykind = 1
+          end
+          body = draft.procedure(name,number(item.text('count')),at,fold(exposed),entrykind); active = 1; functionsStarted = 1
         end
         when kind = 'Import' then do
           if lower(item.text('expose')) <> '.expose' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: import requires .expose',item.start())
@@ -189,6 +202,24 @@ reader: class
             if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
           end
           ignored = body.record('.traceevent',fields,at)
+        end
+        when kind = 'InlineFrame' then do
+          if active = 0 | lower(item.text('directive')) <> '.inlineframe' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: inline frame requires a procedure',item.start())
+          names = 'id parent provider member step'
+          do j = 1 to 5
+            raw = item.text(word(names,j))
+            if j = 3 | j = 4 then fields[j] = .lltarget..operand.string(unquote(raw,reference draft,item.finish() - item.start())) as .object
+            else fields[j] = .lltarget..operand.integer(number(raw)) as .object
+            if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+          end
+          ignored = body.record('.inlineframe',fields,at)
+        end
+        when kind = 'InlineMap' then do
+          if active = 0 | lower(item.text('directive')) <> '.inlinemap' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: inline map requires a procedure',item.start())
+          fields[1] = .lltarget..operand.symbol(fold(item.text('first'))) as .object
+          fields[2] = .lltarget..operand.symbol(fold(item.text('last'))) as .object
+          fields[3] = .lltarget..operand.integer(number(item.text('frame'))) as .object
+          ignored = body.record('.inlinemap',fields,at)
         end
         otherwise return .parsed(source,logicalModule,1,'LL_RXAS_PROFILE: unsupported source record ' || kind,item.start())
       end

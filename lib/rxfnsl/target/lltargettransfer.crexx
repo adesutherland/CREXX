@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Checked operational target transfers, never proofs. */
 options levelb
-namespace lltargettransfer expose profile profiledraft instruction refview action domain selectionbinding
+namespace lltargettransfer expose profile profiledraft instruction refview action domain bindingprogram selectionbinding callcausefact
 import rxfnsb
 import llir
 import lltarget
@@ -222,6 +222,73 @@ action: class
     if _certainty = 'unknown' | _kind = 'unknown' then return _detail
     return ''
 
+/** One canonical CALL cause at an exact frozen operation. These are checked
+ * ingress observations, not permission to remove a callback or activation.
+ * A disproved condition is distinct from an unknown propagated signal set. */
+callcausefact: class
+  _owner = reference .lltargettransfer..profile
+  _identity = .int
+  _operation = .int
+  _ordinal = .int
+  *: factory
+    arg owner = reference .lltargettransfer..profile, operation = .int, ordinal = .int
+    _owner = owner; _operation = operation; _ordinal = ordinal
+    profile = dereference owner; _identity = profile.identity()
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    profile = dereference _owner
+    if profile.valid() = 0 | profile.identity() <> _identity then return 0
+    targetref = profile.owner(); target = dereference targetref; graphref = target.ir(); graph = dereference graphref
+    if _operation < 1 | _operation > graph.operations() then return 0
+    item = target.at(_operation); catalog = .llrxascatalog..catalog()
+    if item.valid() = 0 then return 0
+    return item.kind() = 'instruction' & _ordinal > 0 & _ordinal <= catalog.callcauses(item.opcode())
+  require: method = .void
+    if valid() = 0 then call bad('LL_TARGET_OWNER: CALL cause expired, replaced or unavailable')
+    return
+  operation: method = .int
+    return _operation
+  ordinal: method = .int
+    return _ordinal
+  kind: method = .string
+    call require(); profile = dereference _owner; instruction = profile.instruction(_operation); item = instruction.record()
+    catalog = .llrxascatalog..catalog(); return catalog.callcausekind(item.opcode(),_ordinal)
+  checkpoint: method = .string
+    call require(); profile = dereference _owner; instruction = profile.instruction(_operation); item = instruction.record()
+    catalog = .llrxascatalog..catalog(); return catalog.callcausecheckpoint(item.opcode(),_ordinal)
+  condition: method = .string
+    call require(); profile = dereference _owner; instruction = profile.instruction(_operation); item = instruction.record()
+    catalog = .llrxascatalog..catalog(); return catalog.callcausecondition(item.opcode(),_ordinal)
+  sourcekind: method = .int
+    call require(); profile = dereference _owner; instruction = profile.instruction(_operation); item = instruction.record()
+    catalog = .llrxascatalog..catalog(); return catalog.callcausesource(item.opcode(),_ordinal)
+  callbacks: method = .int
+    call require(); profile = dereference _owner; instruction = profile.instruction(_operation); item = instruction.record()
+    catalog = .llrxascatalog..catalog(); return catalog.callcausecallbacks(item.opcode(),_ordinal)
+  names: method = .string
+    call require(); profile = dereference _owner; instruction = profile.instruction(_operation); item = instruction.record()
+    catalog = .llrxascatalog..catalog(); return catalog.callcausenames(item.opcode(),_ordinal)
+  possible: method = .int
+    call require(); profile = dereference _owner; return profile.callcausepossible(_operation,_ordinal)
+  status: method = .string
+    if valid() = 0 then return 'invalid'
+    if possible() = 0 then return 'proved'
+    if sourcekind() = 1 & names() <> '' then return 'proved'
+    return 'unknown'
+  reason: method = .string
+    if valid() = 0 then return 'target.call.cause.owner.expired.or.replaced'
+    if status() = 'proved' then return ''
+    return 'target.call.cause.' || kind() || '.unproved'
+  /** Checkpoints preceding provider execution have not entered its frame.
+   * Fused preparation may already have committed, hence partial, not before. */
+  phase: method = .string
+    call require(); profile = dereference _owner; instruction = profile.instruction(_operation); item = instruction.record()
+    catalog = .llrxascatalog..catalog(); point = checkpoint()
+    if point = 'target' & catalog.callprefix(item.opcode()) = '' then return 'before'
+    if wordpos(point,'target initializer after-initializer frame-allocation') > 0 then return 'partial'
+    return 'unknown'
+
 instruction: class
   _profile = reference .lltargettransfer..profile
   _profileid = .int
@@ -279,12 +346,15 @@ bindingprogram: class
   _three = .int[]
   _four = .int[]
   _arity = .int[]
+  _work = .int
+  _bytes = .int
   *: factory
     arg item = .lltarget..record, text = .string, work = .int, allowempty = 0
     last = .int; step = .string; tokens = .string; kind = .string; arity = .int; signature = .string
     token = .string; ordinal = .int; value = .lltarget..operand; expected = .string; row = .int; j = .int
     stepone = .int; steptwo = .int; stepthree = .int; stepfour = .int
     _status = 'ok'; first = 1; valuecapture = 0; indexcapture = 0
+    _work = length(text) * 4 + 1; _bytes = length(text) * 128 + 64
     if work < 1 | length(text) > work then do; _status = 'limit'; _reason = 'LL_RESOURCE_LIMIT: binding recipe validation'; return; end
     if text = '' then do
       if allowempty = 0 then do; _status = 'unsupported'; _reason = 'catalog.binding.recipe.missing'; end
@@ -325,6 +395,14 @@ bindingprogram: class
       first = last + 1
     end
     return
+  unavailable: factory
+    arg state = .string, reason = .string
+    _status = state; _reason = reason
+    return
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
   status: method = .string
     return _status
   reason: method = .string
@@ -429,6 +507,9 @@ profile: class
   _executioncalls = .int
   _executionmembers = .int[]
   _executionreason = .string
+  _initializerfree = .int
+  _callpolicystate = .int[]
+  _callpolicyreason = .string[]
   _nativebindings = .bindingbucket[]
   _nativepresent = .int[]
   _status = .string
@@ -441,6 +522,7 @@ profile: class
   _bytelimit = .int
   _declared = .int[]
   _relocationknown = .int[]
+  _boundaryobservations = .string[]
   _refs = .lltargettransfer..refview[]
   _acts = .lltargettransfer..action[]
   _domains = .lltargettransfer..domain[]
@@ -556,6 +638,7 @@ profile: class
     return
   prepare: method = .void
     arg owner = reference .lltarget..module, premiseid = .string, work = .int, bytes = .int
+    i = .int
     _owner = owner; _premise = premiseid
     if work < 1 | bytes < 1 then do; call reject('limit','LL_RESOURCE_LIMIT: target.transfer budgets'); return; end
     if <refvalid>(owner) = 0 then do; call reject('invalid','LL_TARGET_OWNER: expired transfer owner'); return; end
@@ -563,12 +646,20 @@ profile: class
     if target.valid() = 0 then do; call reject('invalid',target.error()); return; end
     _graph = target.ir(); graph = dereference _graph; _revision = graph.identity()
     catalog = .llrxascatalog..catalog(); _catalog = catalog.fingerprint()
-    if reserve(graph.operations() * 72,graph.operations() + 1) = 0 then return
+    if reserve(graph.operations() * 72,graph.operations() + target.records() + 1) = 0 then return
+    _initializerfree = 1
     do i = 1 to graph.operations()
       _declared[i] = 0; _rfirst[i] = 0; _rlast[i] = 0; _rcount[i] = 0
       _relocationknown[i] = 0
       _afirst[i] = 0; _alast[i] = 0; _acount[i] = 0
       _unknownfirst[i] = 0
+    end
+    do i = 1 to target.records()
+      item = target.record(i)
+      if item.kind() = '.meta' & item.operands() > 1 then do
+        option = item.operand(2)
+        if option.text() = '.initializer' then _initializerfree = 0
+      end
     end
     return
   checkcontext: method = .void
@@ -865,6 +956,33 @@ profile: class
     if observation = 'none' then _relocationknown[opid] = 1
     else call unknown(opid,'relocation','transfer.relocation.observer.' || observation)
     return _status = 'building'
+  /** Complete observations of the retained physical caller cleanup, across
+   * normal, terminal and asynchronous departures. This is operational input
+   * for an independent model, not callback absence or transformation proof.
+   * Canonical native input stays unknown until its owner supplies a checked
+   * observation contract; an entry marker is not that contract. */
+  boundary: method = .int
+    arg functionid = .int, observation = .string
+    call ensureprepared()
+    if _status <> 'building' then return 0
+    graph = dereference _graph
+    if _premise = 'canonical' | functionid < 2 | functionid > graph.functions() | wordpos(observation,'none frame module code debug unknown') = 0 then do
+      call reject('invalid','LL_TARGET_TRANSFER: independent physical-boundary observation inventory required'); return 0
+    end
+    if functionid <= _boundaryobservations[0] then do
+      if _boundaryobservations[functionid] <> '' then do
+        call reject('invalid','LL_TARGET_TRANSFER: duplicate physical-boundary observation inventory'); return 0
+      end
+    end
+    if reserve(max(0,functionid - _boundaryobservations[0]) * 24 + length(observation),max(0,functionid - _boundaryobservations[0]) + 1) = 0 then return 0
+    _boundaryobservations[functionid] = observation
+    return 1
+  boundaryobservation: method = .string
+    arg functionid = .int
+    call require()
+    if functionid < 2 | functionid > _boundaryobservations[0] then return 'unknown'
+    if _boundaryobservations[functionid] = '' then return 'unknown'
+    return _boundaryobservations[functionid]
   maskevents: method = .void
     arg opid = .int, kind = .string, refid = .int, mask = .int, certainty = .string, path = .string, phase = .string
     bit = 1; ordinal = 0
@@ -878,7 +996,82 @@ profile: class
       if mask > 0 then bit = bit * 2
     end
     return
+  /** This closure theorem proves structural policy preservation only. Its
+   * resource and ABI callbacks remain actions for the flow/storage owners. */
+  preparecallpolicy: method = .void
+    f = .int; i = .int; child = .int; item = .lltarget..record
+    target = dereference _owner; graph = dereference _graph; catalog = .llrxascatalog..catalog()
+    if reserve(graph.functions() * 24,graph.functions()) = 0 then return
+    do f = 1 to graph.functions(); _callpolicystate[f] = 0; _callpolicyreason[f] = ''; end
+    if _executioncalls = 0 then return
+    do i = 1 to target.records()
+      if reserve(0,1) = 0 then return
+      item = target.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if catalog.callinvokes(item.opcode()) = 0 then iterate
+      child = localcalltarget(item.id())
+      if child < 2 then iterate
+      /* Structural policy preservation is local to this exact body/closure.
+       * A caller's unrelated policy effect can prevent closed membership while
+       * leaving this weaker property available at an earlier selected call. */
+      ignored = providerpolicy(child,0)
+      if _status <> 'building' then return
+    end
+    return
+  localcalltarget: method = .int
+    arg opid = .int
+    target = dereference _owner; item = target.at(opid); catalog = .llrxascatalog..catalog()
+    if item.kind() <> 'instruction' then return 0
+    if catalog.callinvokes(item.opcode()) = 0 | catalog.callkind(item.opcode()) <> 1 then return 0
+    if opid <= _nativepresent[0] then do; if _nativepresent[opid] then return 0; end
+    selected = item.operand(catalog.calltarget(item.opcode()))
+    if selected.kind() <> 'P' then return 0
+    return target.procedureid(selected.text())
+  providerpolicy: method = .int
+    arg functionid = .int, depth = .int
+    overlap = .int
+    target = dereference _owner; catalog = .llrxascatalog..catalog()
+    if depth >= 32 | functionid < 2 | functionid > _callpolicystate[0] then return 0
+    if _callpolicystate[functionid] = 2 then return 1
+    if _callpolicystate[functionid] <> 0 then return 0
+    _callpolicystate[functionid] = 1; reason = ''
+    body = target.body(functionid)
+    resources = catalog.callbackmask('input'); bit = catalog.callbackmask('output'); assembler ior resources,resources,bit
+    bit = catalog.callbackmask('capacity'); assembler ior resources,resources,bit
+    do i = 1 to body.records() while reason = ''
+      if reserve(0,1) = 0 then return 0
+      item = body.record(i)
+      if item.kind() <> 'instruction' then iterate
+      code = item.opcode()
+      if catalog.classification(code) <> 0 | lltarget..normalsuccessors(code) = -2 then do; reason = 'target.call.provider.effects.unproved'; leave; end
+      if (catalog.signalproperties(code) <idiv> 8) % 2 | (catalog.signalproperties(code) <idiv> 32) % 2 then do; reason = 'target.call.provider.policy.unproved'; leave; end
+      if catalog.callinvokes(code) then do
+        child = localcalltarget(item.id())
+        if child = 0 then do; reason = 'target.call.provider.binding.unproved'; leave; end
+        if providerpolicy(child,depth + 1) = 0 then do; reason = 'target.call.provider.closure.unproved'; leave; end
+        iterate
+      end
+      /* A complete public callback route can preserve this frame's handler
+       * table while retaining every value/observer/host callback obligation.
+       * Authored policy writes above remain an independent rejection. */
+      if catalog.callbackpreservessignalpolicy(code) then iterate
+      mask = catalog.callbackobligations(code)
+      if catalog.contextsynccontract() = 'value-only-nonreentrant.v1' then do
+        bit = catalog.callbackmask('plugin-sync'); assembler iand overlap,mask,bit; mask = mask - overlap
+        if catalog.returnkind(code) > 0 then do
+          bit = catalog.callbackmask('abi'); assembler iand overlap,mask,bit; mask = mask - overlap
+          bit = catalog.callbackmask('departure'); assembler iand overlap,mask,bit; mask = mask - overlap
+        end
+      end
+      assembler iand overlap,mask,resources
+      if mask <> overlap then reason = 'target.call.provider.callback.unproved'
+    end
+    _callpolicystate[functionid] = 3; _callpolicyreason[functionid] = reason
+    if reason = '' then do; _callpolicystate[functionid] = 2; return 1; end
+    return 0
   canonical: method = .void
+    call preparecallpolicy()
+    if _status <> 'building' then return
     j = .int; mask = .int; bit = .int; ordinal = .int; id = .int; refid = .int; flagmask = .int
     program = .bindingprogram; integerdomain = .int; selectionkind = .int; windowref = .int
     hookcaptures = .int[]
@@ -1076,12 +1269,55 @@ profile: class
         call unknown(opid,'observations','catalog.physical.observation.unknown')
         call unknown(opid,'relocation','catalog.physical.observation.unknown')
       end
-      /* Native hooks can run in the middle of a value implementation. A
-       * final all-path barrier prevents subsequent ordinary setters from
-       * falsely restoring facts invalidated by reentry. */
+      /* Native hooks can run in the middle of a value implementation. Keep
+       * incoming conditions and callback observations explicit; only the
+       * flow owner's licensed normal postwrite may restore computed cells. */
       call callbackevents(opid,hookcaptures)
     end
     return
+  deferredlocalcall: method = .int
+    arg opid = .int
+    target = dereference _owner; item = target.at(opid); catalog = .llrxascatalog..catalog()
+    if item.kind() <> 'instruction' then return 0
+    code = item.opcode()
+    return catalog.callinvokes(code) & catalog.callcausestate(code) = 'known' & catalog.callcount(code) = 0 & catalog.callprefix(code) = '' & localcalltarget(opid) > 0 & catalog.contextsynccontract() = 'value-only-nonreentrant.v1'
+  callframedeferred: method = .int
+    arg opid = .int
+    call require(); return deferredlocalcall(opid)
+  /** Equivalence classification, never callback absence or a value fact.
+   * The native known-frame contract seals this one reused original-a0 reset;
+   * explicit preparation and current-execution payload hooks are separate.
+   * Raw callback actions, possible() results and havoc remain unchanged. */
+  recyclercleanup: method = .int
+    arg opid = .int, ordinal = .int, surface = .string
+    call require()
+    if _premise <> 'canonical' then return 0
+    target = dereference _owner; item = target.at(opid); catalog = .llrxascatalog..catalog()
+    if item.kind() <> 'instruction' | ordinal < 1 then return 0
+    code = item.opcode()
+    if catalog.callframestate(code) <> 'known' then return 0
+    if catalog.callframefreshmode(code) <> 'value-init' | catalog.callframeclearrole(code) <> 'a0-original-backing' | catalog.callframeclearextent(code) <> 'active-tree' | catalog.callframeclearwhen(code) <> 'reused-frame' | catalog.callframelocalmode(code) <> 'relink-original' | catalog.callframecountrole(code) <> 'a0-original-backing' then return 0
+    if surface = 'cause' then do
+      if ordinal > catalog.callcauses(code) then return 0
+      return catalog.callcausekind(code,ordinal) = 'frame-callback' & catalog.callcausecondition(code,ordinal) = 'bytecode-frame-hook' & catalog.callcausecheckpoint(code,ordinal) = 'frame-preparation'
+    end
+    if surface <> 'callback' | deferredlocalcall(opid) = 0 then return 0
+    view = instruction(opid)
+    if ordinal > view.actions() then return 0
+    action = view.action(ordinal)
+    return action.kind() = 'callback' & action.detail() = 'catalog.callback.call-frame' & action.subject() = 0 & action.domain() = 0 & action.sourcekind() = 'none'
+  bindingprogram: method = .lltargettransfer..bindingprogram
+    arg opid = .int, mode = 'binding', work = 1000000, bytes = 67108864
+    call require(); source = dereference _owner; item = source.at(opid); catalog = .llrxascatalog..catalog()
+    if item.valid() = 0 then return .bindingprogram.unavailable('invalid','target.binding.program.source.invalid')
+    if item.kind() <> 'instruction' then return .bindingprogram.unavailable('invalid','target.binding.program.source.invalid')
+    if mode = 'preparation' then text = catalog.callprefix(item.opcode())
+    else if mode = 'binding' then text = catalog.bindingrecipe(item.opcode())
+    else return .bindingprogram.unavailable('invalid','target.binding.program.mode.invalid')
+    if length(text) * 4 + 1 > work | length(text) * 128 + 64 > bytes then return .bindingprogram.unavailable('limit','target.binding.program.work.or.bytes')
+    /* This read-only query cannot use the building-only reserve path. Its
+     * caller consumes the same checked decoder envelope exactly once. */
+    return .bindingprogram(item,text,length(text) + 1,1)
   callbackcaptures: method = .int[]
     arg opid = .int, refs = .int[], binding = .int
     captures = .int[]; refid = .int; mask = .int; bit = .int; ordinal = .int; domainid = .int; captured = .int
@@ -1091,6 +1327,7 @@ profile: class
      * result mask is not another value write at this incoming active cell.
      * callbackevents still publishes the ABI obligation; no hook is waived. */
     if catalog.recipeoperand(code) > 0 & catalog.scopecontinuation(code) > 0 then return captures
+    if deferredlocalcall(opid) then return captures
     unconditional = 0
     do j = 1 to item.operands()
       refid = refs[j]
@@ -1125,6 +1362,15 @@ profile: class
     capture = .lltargettransfer..action; domain = .lltargettransfer..domain; ignored = .int
     catalog = .llrxascatalog..catalog(); item = .lltarget..record(_graph,opid); code = item.opcode()
     covered = 0; mask = .int; bit = .int; overlap = .int
+    if deferredlocalcall(opid) then do
+      /* The call action owns provider execution and its exact summary. Entry
+       * resource clearing stays a separate conditional callback observation. */
+      ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.call-frame')
+      covered = catalog.callbackmask('input'); bit = catalog.callbackmask('output'); assembler ior covered,covered,bit
+      bit = catalog.callbackmask('capacity'); assembler ior covered,covered,bit
+      bit = catalog.callbackmask('invocation'); assembler ior covered,covered,bit
+      bit = catalog.callbackmask('plugin-sync'); assembler ior covered,covered,bit
+    end
     resources = catalog.callbackmask('input'); bit = catalog.callbackmask('output')
     assembler ior resources,resources,bit
     do i = 1 to captures[0]
@@ -1148,6 +1394,10 @@ profile: class
     if catalog.hostcallbacks(code) then do
       ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.host')
       bit = catalog.callbackmask('host'); assembler ior covered,covered,bit
+    end
+    if catalog.contextsynccallbacks(code) then do
+      if catalog.contextsynccontract() <> 'value-only-nonreentrant.v1' then ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.plugin-sync')
+      bit = catalog.callbackmask('plugin-sync'); assembler ior covered,covered,bit
     end
     if catalog.abicallbacks(code) then do
       ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.abi')
@@ -1392,7 +1642,10 @@ profile: class
     arg functionid = .int
     call require()
     if _executioncontext = '' then return 0
-    if _executioncalls = 0 then return functionid = _executionroot
+    /* This is the checked root-entry premise, not whole-body policy or a
+     * native marked-main default. Later effects remain point-local CFG rows. */
+    if functionid = _executionroot then return 1
+    if _executioncalls = 0 then return 0
     if functionid < 2 | functionid > _executionmembers[0] then return 0
     return _executionmembers[functionid]
   executionreason: method = .string
@@ -1408,6 +1661,138 @@ profile: class
     call require(); item = .lltarget..record(_graph,opid)
     if item.valid() = 0 then call bad('LL_TARGET_TRANSFER: not a source operation')
     return .lltargettransfer..instruction(reference self,opid)
+  /** A same-module bytecode procedure is already entered in its module.
+   * This does not select foreign providers or certify decimal/plugin hooks. */
+  calllocaltarget: method = .int
+    arg opid = .int
+    call require(); return localcalltarget(opid)
+  /** Structural startup fact over the original checked module. Preparation
+   * is sufficient; following a peer's complete effects here would recurse
+   * while mutually selected profiles are being materialized. This does not
+   * select a provider or establish any inherited signal/numeric policy. */
+  initializerfree: method = .int
+    arg ?owner = reference .lltarget..module
+    call ensureprepared()
+    if _status <> 'building' & _status <> 'ok' then return 0
+    if <refvalid>(_owner) = 0 | <refvalid>(_graph) = 0 then return 0
+    if ?owner then do; if (_owner <refsame> owner) = 0 then return 0; end
+    source = dereference _owner; graph = dereference _graph
+    if source.valid() = 0 | graph.identity() <> _revision then return 0
+    actual = source.ir()
+    return (actual <refsame> _graph) & _initializerfree
+  /** Exact bytecode target selection is separate from initializer ingress.
+   * Only the native-enrolled tuple can supply a foreign executable body. */
+  callexacttarget: method = .int
+    arg opid = .int
+    if calllocaltarget(opid) > 0 then return 1
+    selected = invocationtarget(opid)
+    return selected.valid() & selected.typeoperation() = 0
+  /** A no-initializer provider has no user-code startup work. This structural
+   * fact is not an arbitrary runtime READY or initializer-lineage assertion. */
+  callinitializerfree: method = .int
+    arg opid = .int
+    if calllocaltarget(opid) > 0 then return 1
+    selected = invocationtarget(opid)
+    if selected.valid() = 0 | selected.typeoperation() <> 0 then return 0
+    provider = selected.provider()
+    if provider <refsame> _owner then return 1
+    profileref = selected.providerprofile()
+    if <refvalid>(profileref) = 0 then return 0
+    profile = dereference profileref
+    return profile.initializerfree(provider)
+  callinitializeringress: method = .int
+    arg opid = .int
+    if calllocaltarget(opid) > 0 then return 1
+    selected = invocationtarget(opid)
+    if selected.valid() = 0 | selected.typeoperation() <> 0 then return 0
+    provider = selected.provider()
+    /* A foreign structural no-initializer fact remains separately available
+     * through callinitializerfree. Runtime readiness/lineage still needs its
+     * own checked entry contract before this ingress cause can disappear. */
+    return provider <refsame> _owner
+  callcausepossible: method = .int
+    arg opid = .int, ordinal = .int
+    call require(); target = dereference _owner; item = target.at(opid); catalog = .llrxascatalog..catalog()
+    condition = catalog.callcausecondition(item.opcode(),ordinal)
+    if catalog.callcausecallbacks(item.opcode(),ordinal) = catalog.callbackmask('plugin-sync') & catalog.contextsynccontract() = 'value-only-nonreentrant.v1' then return 0
+    if wordpos(condition,'target-unresolved fixed-target-native') > 0 then do
+      if callexacttarget(opid) then return 0
+    end
+    if condition = 'bytecode-initializer-needed' then do
+      if callinitializeringress(opid) then return 0
+    end
+    /* frame_f synchronizes an inherited dynamic decimal provider even with
+     * pristine backing. Do not replace that route with resource cleanliness. */
+    return 1
+  callcause: method = .lltargettransfer..callcausefact
+    arg opid = .int, ordinal = .int
+    call require(); return .callcausefact(reference self,opid,ordinal)
+  /** Effective callback inventory retains every non-value-only route. */
+  callbackobligations: method = .int
+    arg opid = .int
+    overlap = .int
+    call require(); target = dereference _owner; item = target.at(opid); catalog = .llrxascatalog..catalog()
+    if item.kind() <> 'instruction' then return 0
+    mask = catalog.callbackobligations(item.opcode())
+    if catalog.contextsynccontract() = 'value-only-nonreentrant.v1' then do
+      bit = catalog.callbackmask('plugin-sync'); assembler iand overlap,mask,bit; mask = mask - overlap
+    end
+    return mask
+  callbackpolicyunknown: method = .int
+    arg opid = .int
+    overlap = .int; mask = .int
+    call require(); target = dereference _owner; item = target.at(opid); catalog = .llrxascatalog..catalog()
+    if item.kind() <> 'instruction' then return 0
+    code = item.opcode(); resources = catalog.callbackmask('input'); bit = catalog.callbackmask('output'); assembler ior resources,resources,bit
+    bit = catalog.callbackmask('capacity'); assembler ior resources,resources,bit
+    if catalog.callbackpreservessignalpolicy(code) then return 0
+    if catalog.callinvokes(code) = 0 | catalog.callcausestate(code) <> 'known' then do
+      mask = callbackobligations(opid)
+      /* Physical return's remaining COPY/clear/retire work is resource
+       * implementation. Its decimal synchronization is independently bound
+       * by v3; this proves policy preservation, never callback absence. */
+      if catalog.returnkind(code) > 0 & catalog.contextsynccontract() = 'value-only-nonreentrant.v1' then do
+        bit = catalog.callbackmask('abi'); assembler iand overlap,mask,bit; mask = mask - overlap
+        bit = catalog.callbackmask('departure'); assembler iand overlap,mask,bit; mask = mask - overlap
+      end
+      assembler iand overlap,mask,resources; return mask <> overlap
+    end
+    do ordinal = 1 to catalog.callcauses(code)
+      cause = callcause(opid,ordinal)
+      if cause.possible() = 0 then iterate
+      mask = catalog.callcausecallbacks(code,ordinal)
+      if mask = catalog.callbackmask('invocation') then do
+        child = localcalltarget(opid)
+        if child < 2 then return 1
+        if child > _callpolicystate[0] then return 1
+        if _callpolicystate[child] <> 2 then return 1
+        iterate
+      end
+      assembler iand overlap,mask,resources
+      if mask <> overlap then return 1
+      if mask = 0 & cause.status() <> 'proved' then return 1
+    end
+    return 0
+  callcausescomplete: method = .int
+    arg opid = .int
+    call require(); target = dereference _owner; item = target.at(opid); catalog = .llrxascatalog..catalog()
+    if item.kind() <> 'instruction' then return 0
+    if catalog.callcausestate(item.opcode()) <> 'known' then return 0
+    do ordinal = 1 to catalog.callcauses(item.opcode())
+      cause = callcause(opid,ordinal)
+      if cause.status() <> 'proved' then return 0
+    end
+    return 1
+  callcausereason: method = .string
+    arg opid = .int
+    call require(); target = dereference _owner; item = target.at(opid); catalog = .llrxascatalog..catalog()
+    if item.kind() <> 'instruction' then return 'target.site.not.call'
+    if catalog.callcausestate(item.opcode()) <> 'known' then return 'target.call.causes.unavailable'
+    do ordinal = 1 to catalog.callcauses(item.opcode())
+      cause = callcause(opid,ordinal)
+      if cause.status() <> 'proved' then return cause.reason()
+    end
+    return ''
   unknownreason: method = .string
     arg opid = .int, family = .string
     call require()
@@ -1486,6 +1871,11 @@ profiledraft: class
   relocation: method = .int
     arg opid = .int, observation = 'none'
     return _profile.relocation(opid,observation)
+  /** Describe the complete physical cleanup observation set for a procedure.
+   * Omission remains unknown. This never asserts a preserved/absent hook. */
+  boundary: method = .int
+    arg functionid = .int, observation = .string
+    return _profile.boundary(functionid,observation)
   domain: method = .int
     arg kind = .string, key = .string, nativebit = 0
     return _profile.adddomain(kind,key,nativebit)

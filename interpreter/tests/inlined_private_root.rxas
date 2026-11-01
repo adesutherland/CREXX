@@ -1,0 +1,81 @@
+/* Independent storage/ownership oracle; no INLENTER or per-call binding. */
+.globals=1
+main() .locals=4
+  load g0,77
+  call r0,bump()
+  ieq r1,r0,1
+  brf failed,r1
+  call r0,bump()
+  ieq r1,r0,2
+  brf failed,r1
+  call r0,throughswap()
+  ieq r1,r0,3
+  brf failed,r1
+  call r0,throughswap()
+  ieq r1,r0,4
+  brf failed,r1
+  call r0,throughlink()
+  ieq r1,r0,5
+  brf failed,r1
+  call r0,throughlink()
+  ieq r1,r0,6
+  brf failed,r1
+  call r3,makeref()
+  refvalid r1,r3
+  brf failed,r1
+  call r0,bump()
+  deref r0,r3
+  ieq r1,r0,7
+  brf failed,r1
+  sigbr caught,"OTHER"
+  call abrupt()
+  br failed
+caught:
+  sighalt "OTHER"
+  call r0,peek()
+  ieq r1,r0,8
+  brf failed,r1
+  refvalid r1,r3
+  brf failed,r1
+  ieq r1,g0,77
+  brf failed,r1
+  ret 0
+failed:
+  ret 1
+
+bump() .locals=1
+  .inlinedprivate r0,"private-provider.rxas",g0
+  iadd r0,r0,1
+  ret r0
+
+throughswap() .locals=3
+  .inlinedprivate r2,"private-provider.rxas",g0
+  load r0,100
+  swap r0,r2
+  /* r0 now addresses the provider, not its own base. */
+  iadd r0,r0,1
+  ret r0
+
+throughlink() .locals=3
+  .inlinedprivate r2,"private-provider.rxas",g0
+  load r0,900
+  link r2,r0
+  load r2,901
+  unlink r2
+  iadd r2,r2,1
+  ret r2
+
+makeref() .locals=2
+  .inlinedprivate r1,"private-provider.rxas",g0
+  mkref r0,r1
+  ret r0
+
+abrupt() .locals=1
+  .inlinedprivate r0,"private-provider.rxas",g0
+  iadd r0,r0,1
+  signal "OTHER","borrowed unwind"
+  ret
+
+peek() .locals=1 .expose=private.peek
+  .inlinedprivate r0,"private-provider.rxas",g0
+  ret r0
