@@ -1496,6 +1496,16 @@ boundary works. The wider TGT toolchain replacement is separate.
 | **INL-CAP06 — cleanup and admission policy** | **partly implemented:** shared liveness/cleanup, swap-window and status proofs, work limits and KEEP diagnostics exist | Run a generic Level L register assignment and bounded cleanup after the complete correct no-cleanup expansion: reuse noninterfering cells, minimize register extent and copy/swap cost while preserving contiguous ordered windows required by counted calls, remove proved outer setup/inverse swaps, dead status/branches and unused lifetime. Keep alias snapshots and nested windows. A checked unchanged layout is the fallback when compaction cannot be proved. Separate semantic refusal from recursion, resource and profitability policy; the normal direct path adds no per-call heap scope and is assessed against ordinary CALL cost. Depends on CAP02–05. |
 | **INL-CAP07 — standalone acceptance** | **todo:** focused slices pass, final whole-POC panel has not run | Freeze the above and run one compact panel through the existing assembler-local and linker-selected adapters, generated and handwritten producers, one VM, cleanup off/on, structural output, retained-call reasons and atomic failure/lifecycle checks. Repair any independently established Level L fixture defect before declaring the panel green. Only then close INL-AC01–09 and INL-STEP06. Depends on CAP01–06. |
 
+Before repeated direct expansion, repair the shared target summary's growing-row
+cost. Its provenance-bearing row insertion and transitive union currently scan
+the full row for exact-tuple deduplication and charge that full length on each
+action; a caller with one accepted clone can exhaust the next relation's work
+allowance during eager summary construction. Use an indexed exact-tuple lookup
+while preserving row order, provenance, must flags and unknowns. Keep the
+bounded ledger and semantic gates; neither a larger allowance nor an inliner
+special case is the repair. Reanalyse the changed owner after that repair,
+then perform the final generic register assignment after accepted expansions.
+
 For CAP01–02, the fused-call slice exposed a general catalogue boundary:
 reviewed bytes-only output callbacks preserve the suspended VM frame's pointer
 table and logical activation on normal return. Record that positive contract
