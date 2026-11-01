@@ -190,7 +190,7 @@ must still preserve VM invariants, pending events, synchronous faults and
 required cleanup on normal and nonlocal exits. Interrupt deferral, if needed
 for a short VM-internal transition, belongs in the taken cold interrupt path;
 ordinary dispatch must not gain a new per-instruction condition. The earlier
-`callbr`/`retinline` return-plan design is being rolled back. A direct scalar
+`callbr`/`retinline` return-plan design was rolled back. A direct scalar
 path must be judged against an ordinary CALL's actual cost before proposing
 new boundary instructions. Diagnostic maps grant no polling or cleanup
 permission.
