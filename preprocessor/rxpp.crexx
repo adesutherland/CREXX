@@ -37,7 +37,7 @@ import rexxscript
 import precomp
 import rxfnsb
 import system
-namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text source_mcall_depth callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias rxpp_build_mode fortran_bind_count fortran_bind_target fortran_bind_host fortran_bindings_declared fortran_export_count fortran_export_target fortran_export_host fortran_exports_declared fortran_call_insert_at rxpp_stats_directives rxpp_stats_includes rxpp_stats_include_duplicates rxpp_stats_suppressed rxpp_stats_pass1_lines rxpp_stats_pass2_links
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text source_mcall_depth callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias dalias_handler rxpp_build_mode fortran_bind_count fortran_bind_target fortran_bind_host fortran_bindings_declared fortran_export_count fortran_export_target fortran_export_host fortran_exports_declared fortran_call_insert_at rxpp_stats_directives rxpp_stats_includes rxpp_stats_include_duplicates rxpp_stats_suppressed rxpp_stats_pass1_lines rxpp_stats_pass2_links
 
 /* ------------------------------------------------------------------
  * CREXX Pre Compiler
@@ -60,6 +60,7 @@ arg command=.string[]
   verbose = 0
   cnext   = .string
   dalias  = .string
+  dalias_handler = .stem()
   rexx_version = .string
   rxpp_build_timestamp = 'RXPP_BUILD_TIMESTAMP'
   rxpp_timing_mark = .int
@@ -2035,9 +2036,22 @@ CMD_dalias: procedure
    line=DropComment(line,3)
 
    alias_count=0
+   alias=''
+   handler=''
+   handler_alias=''
    do i=2 to words(line)
       alias=upper(word(line,i))
       if left(alias,2)='##' then alias=substr(alias,3)
+
+      if alias='HANDLER' then do
+         if i=words(line) then do
+            say 'RXPP error: ##DALIAS HANDLER requires a macro name'
+            exit 8
+         end
+         handler=upper(word(line,i+1))
+         i=i+1
+         iterate
+      end
 
       if alias='' then do
          say 'RXPP error: empty DALIAS name at line' line_no
@@ -2047,13 +2061,13 @@ CMD_dalias: procedure
          say 'RXPP error: invalid DALIAS name' alias '- expected an identifier'
          exit 8
       end
-      if verify(alias,'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_','N') \= 0 then do
+      if verify(alias,'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-','N') \= 0 then do
          say 'RXPP error: invalid DALIAS name' alias '- expected an identifier'
          exit 8
       end
 
       reserved = ' ADDRESS ARG BY CALL DO ELSE END EXIT IF IMPORT INTERPRET ITERATE LEAVE NOP NUMERIC OPTIONS OTHERWISE PARSE PROCEDURE PULL PUSH RETURN SAY SELECT SIGNAL THEN TRACE WHEN WHILE '
-      rxpp_reserved = ' ARRAY ASSERT BUILDDIR CFLAG COPYBLOCK DALIAS DATA DEFINE ELSE EMIT END ERROR EXTERNAL FOR FORTRAN GLOBAL IF IFN INCLUDE INFO INPUT LIBRARY LINK LOADMACRO MACRO NORUN PROGRAM REXXSCRIPT RULE RXBUILD SET SYS USE UNSET WARN '
+      rxpp_reserved = ' ARRAY ASSERT BUILDDIR CFLAG COPYBLOCK DALIAS DATA DEFINE ELSE EMIT END ERROR EXTERNAL FOR FORTRAN GLOBAL HANDLER IF IFN INCLUDE INFO INPUT LIBRARY LINK LOADMACRO MACRO NORUN PROGRAM REXXSCRIPT RULE RXBUILD SET SYS USE UNSET WARN '
       if pos(' 'alias' ',reserved)>0 | pos(' 'alias' ',rxpp_reserved)>0 then do
          say 'RXPP error: invalid DALIAS name' alias '- reserved keyword'
          exit 8
@@ -2067,10 +2081,19 @@ CMD_dalias: procedure
       dalias= dalias '<##'alias'>'
       dalias= dalias '<'alias'>'
       alias_count=alias_count+1
+      handler_alias=alias
    end
    if alias_count=0 then do
       say 'RXPP error: ##DALIAS requires at least one alias name'
       exit 8
+   end
+   if handler \= '' then do
+      if alias_count > 1 then do
+         say 'RXPP error: DALIAS HANDLER requires exactly one alias'
+         exit 8
+      end
+      alias=handler_alias
+      dalias_handler.alias=handler
    end
 return
 /* ------------------------------------------------------------------
@@ -2353,6 +2376,7 @@ CMD_data_alias: procedure
    *     <##FORTRAN> <FORTRAN> <##PYTHON> <PYTHON>
    */
   aliasToken = '<'alias'>'
+  handler = dalias_handler.alias
    /*
    * The second word is the receiving array.
    * The third word is an optional callback procedure.
@@ -2380,6 +2404,7 @@ CMD_data_alias: procedure
   endMarker2 = 'END 'alias
   endMarker3 = '##END'
   j = 0
+  handler_body = ''
   foundEnd = 0
   i = .int
   /*
@@ -2395,9 +2420,18 @@ CMD_data_alias: procedure
      /* BLOCKMACROS applies the same two-stage expansion to DALIAS blocks. */
      if rxpp_expand_block_line(i) then iterate
      line=source.i
-     j = j + 1
-     source.i = array'.'j'='safe_quote(line)
-     stype.i = 'noexp'
+     if handler = '' then do
+        j = j + 1
+        source.i = array'.'j'='safe_quote(line)
+        stype.i = 'noexp'
+     end
+     else do
+       line = changestr('"',line,'__RXPP_QUOTE__')
+        if handler_body = '' then handler_body = line
+        else handler_body = handler_body || '~' || line
+        source.i = ''
+        stype.i = 'D'
+     end
   end
   /*
    * Protect against an unterminated data block. Without this
@@ -2413,7 +2447,11 @@ CMD_data_alias: procedure
    * Without a callback, suppress the end marker as an RXPP
    * directive.
    */
-  if callback = '' then stype.i = 'D'
+  if handler <> '' then do
+        source.i = '##'handler' BLOCK 'array' "' || handler_body || '"'
+     stype.i = ' '
+  end
+  else if callback = '' then stype.i = 'D'
   /*
    * With a callback, replace the end marker by a call that
    * receives the populated array.

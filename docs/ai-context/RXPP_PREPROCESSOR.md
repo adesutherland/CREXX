@@ -136,6 +136,20 @@ The alias applies to the directive name (`##config`), not to the generated
 `settings.` stem. The aliased form retains the normal optional keyword/callback
 syntax and invokes the callback once after the complete block.
 
+An alias can instead dispatch the completed block to a scripted macro:
+
+```rexx
+##DALIAS DEFINE-GUI HANDLER UI_GUI
+DEFINE-GUI TextInspector
+  LABEL path "File: (none)"
+END DEFINE-GUI
+```
+
+`HANDLER` is declaration syntax, not an alias. The handler receives the phase,
+namespace and collected block; the preprocessor remains unaware of the
+embedded language's tags. Handler declarations currently require exactly one
+alias.
+
 ## Build metadata directives
 
 Recent additions separate macro discovery from output placement:
