@@ -25,22 +25,16 @@ execution logic into the grammar.
 
 ## Step 2: Generate the grammar module
 
-Use the repository grammar generator:
+Use the current `crexx` driver with prepared tools from one configured build.
+The [MiniBASIC README](README.md#manual-build-and-run) gives the preparation
+commands. Replace `<language>` in this template with your language name:
 
-```powershell
-$work = "$PWD\cmake-build-release\<language>"
-New-Item -ItemType Directory -Force $work | Out-Null
-
-cmake `
-  -DLEVEL_L="$PWD\cmake-build-release\bin\levell.exe" `
-  -DSPEC="$PWD\examples\<language>\grammar\<language>.levell" `
-  -DOUTPUT="$work\<language>grammar.rxas" `
-  -DFORMAT=rxas `
-  -P lib\rxfnsl\tools\generate.cmake
-
-& .\cmake-build-release\bin\rxas.exe `
-  -o "$work\<language>grammar" `
-  "$work\<language>grammar.rxas"
+```sh
+task_bin="$PWD/cmake-build-debug/bin"
+task_work="$PWD/cmake-build-debug/<language>"
+mkdir -p "$task_work"
+"$task_bin/crexx" --library "$task_work/<language>grammar" \
+  examples/<language>/grammar/<language>.levell
 ```
 
 This produces a generated grammar module:
@@ -49,8 +43,10 @@ This produces a generated grammar module:
 <language>grammar.rxbin
 ```
 
-The generated `.rxas` and `.rxbin` files belong in the build directory, not in
-the source tree.
+The driver invokes `rxlang`, compiles its generated source, and assembles the
+grammar module. Generated source, `.rxas`, and `.rxbin` files belong in the
+build directory, not in the source tree. When calling the lower-level CMake
+generator directly, its current path is `langtools/cmake/generate.cmake`.
 
 ## Step 3: Create the reader
 
@@ -85,7 +81,7 @@ is an ordinary Level B program that consumes the generated grammar module.
 
 ## Step 4: Inspect the parse tree
 
-Before implementing execution, run the reader in parse-tree mode and inspect:
+Before implementing execution, inspect the reader's resulting named tree:
 
 - node names;
 - child order;
@@ -115,38 +111,25 @@ reader gives that program meaning.
 
 ## Step 6: Compile, assemble, and link
 
-Compile the Level B reader:
+Build the Level B reader with the same driver and generated grammar:
 
-```powershell
-$work = "$PWD\cmake-build-release\<language>"
-
-& .\cmake-build-release\bin\rxc.exe `
-  -i ".\cmake-build-release\bin;$work" `
-  -o "$work\<language>_reader" `
-  examples\<language>\<language>_reader.crexx
-
-& .\cmake-build-release\bin\rxas.exe `
-  -o "$work\<language>_reader" `
-  "$work\<language>_reader.rxas"
-
-Push-Location $work
-& ..\bin\rxlink.exe -s `
-  -o <language>_reader-linked `
-  <language>_reader <language>grammar
-Pop-Location
+```sh
+"$task_bin/crexx" --program "$task_work/<language>_reader" \
+  examples/<language>/<language>_reader.crexx \
+  -i "$task_work" -l "$task_work/<language>grammar"
 ```
 
-If the reader uses `pull()` or another runtime facility that is disabled by
-`-x --no-exe-import`, omit those options as appropriate for the reader.
+The driver compiles, assembles, and links the reader with the grammar and
+required runtime libraries. `--program` chooses the output and builds without
+running it. Use your platform's executable suffix as appropriate.
 
 ## Step 7: Run and test
 
 Run the linked reader against a sample source file:
 
-```powershell
-& .\cmake-build-release\bin\rxtvm.exe `
-  "$work\<language>_reader-linked.rxbin" `
-  -a examples\<language>\<sample-source>
+```sh
+"$task_bin/rxvme" "$task_work/<language>_reader.rxbin" \
+  -a examples/<language>/<sample-source>
 ```
 
 Test at least:
@@ -157,6 +140,13 @@ Test at least:
 - missing labels or runtime targets;
 - input and branch behavior if supported;
 - optimized and non-optimized builds where applicable.
+
+If you provide an ordinary `.build` plan, run it through `crexx` or
+`rxbuild-legacy`. Canonical `rxbuild` accepts the separate graph language:
+
+```sh
+"$task_bin/crexx" examples/<language>/BUILD/<plan>.build
+```
 
 ## Recommended source layout
 

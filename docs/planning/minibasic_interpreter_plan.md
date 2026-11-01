@@ -86,3 +86,49 @@ available for interactive/debugging use.
   runtime behavior, and missing/invalid-source diagnostics.
 - **STEP-C04 (complete)** — Add the rxbuild `CREATE EXE` phase to the prime
   application sample and verify native and bytecode execution independently.
+
+## Scalar-string repair
+
+### Bounded contract
+
+Repair the existing interpreter's string values without changing the grammar.
+A string literal evaluates to its contents: outer double quotes are removed
+and doubled double quotes become one literal double quote. Assignment and
+variable reads retain that value. Expression wrappers with no arithmetic
+operator preserve scalar strings, and `PRINT` evaluates every list item and
+inserts one space between items, including empty strings. The interpreter and
+compiled `basic1.bas` output must agree for the existing positive and negative
+input branches. String arithmetic/comparisons, new syntax, and broader compiler
+repairs remain outside this increment; report deeper compiler findings to the
+coordinator rather than widening this repair.
+
+Refresh the example instructions to use the current `crexx` grammar/program
+driver and the separate `rxbuild-legacy` command for ordinary `.build` plans.
+The coordinator owns all build and execution checks.
+
+### Acceptance criteria
+
+- **AC-S01 (verified)** — Direct, assigned, copied, grouped, empty, and
+  doubled-quote string values print their contents without source delimiters;
+  a focused maintained sample supplies the independent expected output.
+- **AC-S02 (verified)** — The interpreter and standalone compiled application
+  produce identical `basic1.bas` output for input `5` and `-5`, including the
+  sum `55`, prompt, and selected branch. Arithmetic and control-flow behavior
+  remain covered by this existing sample.
+- **AC-S03 (verified)** — Malformed source still returns a parse diagnostic and
+  nonzero status; missing `GOTO` targets still return `MINIBASIC_EXEC` and
+  status 4 from the interpreter.
+- **AC-S04 (verified)** — Documented current-driver grammar/reader/compiler
+  commands build the example and keep generated artifacts outside its source
+  directory. Ordinary `.build` plans are routed to `rxbuild-legacy`.
+
+### Implementation steps
+
+- **STEP-S01 (complete)** — Decode literal strings in evaluation, preserve
+  operator-free scalar values, and make `PRINT` use the common evaluator.
+  Serves AC-S01 and AC-S02.
+- **STEP-S02 (complete)** — Add the small scalar-string sample and update the
+  example README and generic workflow instructions. Serves AC-S01 and AC-S04.
+- **STEP-S03 (complete)** — Coordinator runs the selected positive, parity, and
+  negative checks; report any deeper compiler issue without broadening scope.
+  Serves AC-S01 through AC-S04.

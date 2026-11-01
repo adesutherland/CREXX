@@ -104,14 +104,14 @@ execute_assignment: procedure = .void expose mb_name mb_value mb_count
 execute_print: procedure = .void
   arg tree = .lltree..view, statement = .int
   list = tree.child(statement,2); output = ''
+  printed = 0
   do i = 1 to tree.count(list)
     item = tree.child(list,i)
     if tree.name(item) <> 'expression' then iterate
-    if output <> '' then output = output || ' '
-    raw = strip(tree.text(item))
-    if left(raw,1) = '"' then value = raw
-    else value = eval_node(tree,item)
+    if printed > 0 then output = output || ' '
+    value = eval_node(tree,item)
     output = output || value
+    printed = printed + 1
   end
   say output
 
@@ -128,7 +128,8 @@ eval_node: procedure = .string expose mb_name mb_value mb_count
   operator = .string
   if name = 'integer' then return tree.text(node)
   if name = 'string' then do
-    return tree.text(node)
+    raw = tree.text(node)
+    return changestr('""',substr(raw,2,length(raw) - 2),'"')
   end
   if name = 'identifier' then return lookup_variable(translate(tree.text(node)))
   if name = 'variable' then return lookup_variable(variable_name(tree,node))
@@ -154,6 +155,7 @@ eval_node: procedure = .string expose mb_name mb_value mb_count
     end
   end
   if name = 'additive' | name = 'multiplicative' then do
+    if tree.count(node) = 1 then return eval_node(tree,tree.child(node,1))
     result = eval_node(tree,tree.child(node,1)) as .float
     i = 2
     do while i <= tree.count(node)

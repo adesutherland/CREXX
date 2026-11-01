@@ -40,59 +40,77 @@ syntax; Level B supplies the application logic and interpreter behavior.
 [`basic1.bas`](basic1.bas) demonstrates a loop using `LET`, `IF`, `GOTO`,
 `PRINT`, and `INPUT`.
 
+[`strings.bas`](strings.bas) covers direct, assigned, copied, grouped, empty,
+and doubled-quote string values using the same grammar.
+
 ## Manual build and run
 
-Run these commands from the repository root:
+Run these commands from the repository root with a configured Debug build:
 
-```powershell
-$work = "$PWD\cmake-build-release\minibasic"
-New-Item -ItemType Directory -Force $work | Out-Null
+```sh
+cmake --build cmake-build-debug --target crexx rxlang rxfnsl rxbuild_legacy --parallel 4
+task_bin="$PWD/cmake-build-debug/bin"
+task_work="$PWD/cmake-build-debug/minibasic"
+mkdir -p "$task_work"
 
-cmake `
-  -DLEVEL_L="$PWD\cmake-build-release\bin\levell.exe" `
-  -DSPEC="$PWD\examples\minibasic\grammar\minibasic.levell" `
-  -DOUTPUT="$work\minibasicgrammar.rxas" `
-  -DFORMAT=rxas `
-  -P lib\rxfnsl\tools\generate.cmake
+"$task_bin/crexx" --library "$task_work/minibasicgrammar" \
+  examples/minibasic/grammar/minibasic.levell
+"$task_bin/crexx" --program "$task_work/minibasic_reader" \
+  examples/minibasic/minibasic_reader.crexx \
+  -i "$task_work" -l "$task_work/minibasicgrammar"
 
-& .\cmake-build-release\bin\rxas.exe `
-  -o "$work\minibasicgrammar" `
-  "$work\minibasicgrammar.rxas"
-
-& .\cmake-build-release\bin\rxc.exe `
-  -i ".\cmake-build-release\bin;$work" `
-  -o "$work\minibasic_reader" `
-  examples\minibasic\minibasic_reader.crexx
-
-& .\cmake-build-release\bin\rxas.exe `
-  -o "$work\minibasic_reader" `
-  "$work\minibasic_reader.rxas"
-
-Push-Location $work
-& ..\bin\rxlink.exe -s `
-  -o minibasic_reader-linked `
-  minibasic_reader minibasicgrammar
-Pop-Location
+printf '5\n' | "$task_bin/rxvme" "$task_work/minibasic_reader.rxbin" \
+  -a examples/minibasic/basic1.bas
 ```
 
-The reader can then be run with input supplied through standard input:
+Use your configured build directory and platform executable suffix as
+appropriate. The driver generates the grammar with `rxlang` and performs
+compilation, assembly, and linking. The linked reader includes the grammar and
+Level L runtime. `INPUT` uses the Level B `pull()` facility.
 
-```powershell
-"5" | & .\cmake-build-release\bin\rxtvm.exe `
-  "$work\minibasic_reader-linked.rxbin" `
-  -a examples\minibasic\basic1.bas
+The expected sample output includes `SUM = 55` and
+`The number is non-negative: 5`, without string-literal quote delimiters.
+Using `printf '%s\n' -5` instead exercises the negative branch.
+
+The declarative plan
+[`BUILD/build-minibasic.build`](BUILD/build-minibasic.build) performs the same
+grammar/reader build and supplies input `5` for the sample:
+
+```sh
+"$task_bin/crexx" examples/minibasic/BUILD/build-minibasic.build
 ```
 
-The current sample produces a sum of `55` and takes the non-negative branch.
-Using `"-5"` exercises the negative branch.
+The driver routes ordinary `.build` files to `rxbuild-legacy`; invoking
+`"$task_bin/rxbuild-legacy"` with the same plan is equivalent. Canonical
+`rxbuild` accepts the separate graph language. These maintained MiniBASIC plans
+explicitly place their products under `cmake-build-release/minibasic`, even
+when launched by tools from another configured build.
 
-The reader is compiled without `-x --no-exe-import` because `INPUT` uses the
-Level B `pull()` facility.
+### Scalar-string check
 
-The declarative build example in
-[`BUILD/build-minibasic.build`](BUILD/build-minibasic.build) is consumed
-directly by the `rxbuild` command. It compiles the grammar and reader and then
-runs the sample program without an RXPP wrapper.
+Run the focused string sample through the prepared reader:
+
+```sh
+"$task_bin/rxvme" "$task_work/minibasic_reader.rxbin" \
+  -a examples/minibasic/strings.bas
+```
+
+The expected output is:
+
+```text
+direct "quote"
+assigned "quote"
+assigned "quote"
+assigned "quote"
+left  right
+left  right
+```
+
+A final empty `PRINT` adds one blank line. Each `left  right` line contains two
+spaces because an empty middle list item still has a separator on each side.
+Literal delimiters are removed once during evaluation; doubled quotes become
+one quote in the stored value. `PRINT` reads that value through the same
+evaluator for literals, variables, and grouped expressions.
 
 ## Build a standalone application
 
@@ -102,11 +120,10 @@ uses `COMPILE APPLICATION`. It compiles the MiniBASIC compiler, translates
 `basic1.bas` into generated cREXX source, and compiles that source to
 `cmake-build-release/minibasic/application/basic1.rxbin`.
 
-Run it from the repository root with:
+Run it from the repository root with the prepared tools:
 
-```powershell
-& .\cmake-build-release\bin\rxbuild.exe `
-  examples\minibasic\BUILD\build-minibasic-application.build
+```sh
+"$task_bin/crexx" examples/minibasic/BUILD/build-minibasic-application.build
 ```
 
 The resulting `basic1.rxbin` is the application image. Its runtime does not
@@ -117,20 +134,18 @@ The prime-number application is a more control-flow-oriented example. It
 prints the prime numbers from 1 through 100 using arithmetic, comparisons, and
 `GOTO` loops:
 
-```powershell
-& .\cmake-build-release\bin\rxbuild.exe `
-  examples\minibasic\BUILD\build-minibasic-primes.build
+```sh
+"$task_bin/crexx" examples/minibasic/BUILD/build-minibasic-primes.build
 ```
 
 Its standalone image is
 `cmake-build-release/minibasic/primes/prime.rxbin`.
 
-The same plan also creates a native Windows executable:
-
-`cmake-build-release/minibasic/primes/prime.exe`
+The same plan also creates a native executable named `prime.exe` on Windows
+or `prime` on Unix in the same directory.
 
 It is created by the `CREATE EXE` phase from the generated application source;
-the `.rxbin` remains independently runnable with `rxtvm`.
+the `.rxbin` remains independently runnable with `rxvme`.
 
 ## Development sequence
 
