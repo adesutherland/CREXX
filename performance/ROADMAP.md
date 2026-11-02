@@ -304,6 +304,7 @@ immediate work; January/February is not a reason to postpone their repair.
 | PERF-COMPILER-01 / RXAS-MAINT-01 | Which source/inlining or machine transformations remain useful on the complete C/G/L product? | Current emitted-shape/cost evidence; coherent AST rewriting; common RXAS facts, typed proof plans and edit contracts; no transported compiler-only assertion. |
 | PERF-COMPILE-LATENCY-01 | Can a no-optimizer assembler build and in-memory RXC-to-RXAS handoff materially shorten compile/load/first-result without losing diagnostics or correctness? | Compare current `rxc -n`/`rxas -n` and file-based `crexx` against in-memory text and, only if justified, typed handoff; report cold/repeated latency, RSS, artifact/package size and later execution cost separately. The [compiler-profile roadmap](../docs/ROADMAP.md#compiler-profiles-and-low-latency-compilation--comp-pipe-01) owns language and architecture decisions. |
 | PERF-RUNTIME-01 / PERF-REVIEW-01 / PERF-NEXT-02 | Which numeric/conversion, string-copy, signal or object/graph costs remain material? | Current profiles and representative workloads, including C/G/L and real consumers; equivalent semantics, ownership and exact negative controls. |
+| VM-FINALIZER-SCAN-01 | Can frame retirement skip its owned-payload scan when no finalizer-bearing payload could have entered that activation? | Prove clean owned backing at entry and a conservative no-false-negative change indicator across payload set/copy/move, nested and inactive attributes, native callbacks, ancestor aliases and worker transfer. Preserve once-only cleanup on every exit; first measure whether the scan is material. |
 | PERF-LINK-01 | Can loading, binding, dead-code or artifact work improve real application lifecycle? | Separate startup/steady-state/memory/artifact verdicts with late-load, plugin and installed-application correctness. |
 
 The candidate descriptions below remain the detailed idea ledger. Inclusion
@@ -391,6 +392,20 @@ are recorded here or appeared in the completed programme ledger:
 - `PERF-RUNTIME-01`: numeric value caching, string-copy fast paths, signal
   specialization, and related runtime ideas. Each needs an attributable current
   workload, semantic guards, and a regression budget before selection.
+- `VM-FINALIZER-SCAN-01` (deferred, unselected; recorded 2 November 2026):
+  native finalizers are expected to be uncommon, while ordinary frame retirement
+  currently scans owned locals, `a0` and owned attribute backing. Consider a
+  sticky conservative frame indication or a monotonic payload-generation
+  counter captured at clean frame entry. An unchanged counter may skip only
+  that payload scan; any possible insertion, copy or move of a finalizer-bearing
+  value, including nested/inactive attributes and writes through an ancestor
+  alias, must force the scan. Opaque native mutation and cross-worker transfer
+  need a conservative fallback; counter saturation must never permit a false
+  clean result. Signal, reference, invocation and other frame cleanup still run.
+  Focused normal/nonlocal/recycle, transfer and once-only-finalization controls
+  precede a representative call-retirement cost check and any production
+  performance verdict. This candidate is independent of, and does not gate,
+  the current signal-semantics repair or Level L inliner proof.
 - `VM-MEMO-01`: user-proposed procedure-result memoization, captured
   18 September. Hypothesis: repeated runtime argument values at expensive pure
   procedures justify a bounded result cache even when RXAS cannot fold the

@@ -1050,6 +1050,10 @@ prototype has been qualified by this roadmap update.
   instruction-family studies require fresh attribution and separate selection.
   The Beta 6 queue owns candidate selection; broad host-opcode/ISA migration
   retains its existing post-Release-1 disposition unless explicitly changed.
+- The deferred VM frame-retirement finalizer-scan fast path is
+  [`VM-FINALIZER-SCAN-01`](../performance/ROADMAP.md#candidate-detail-and-deferred-ideas).
+  It needs a conservative ownership/change proof and current cost evidence;
+  it is independent of the signal and Level L inliner work now under review.
 - JIT/MIR/LLVM-style backend work remains research. It does not displace the
   interpreter/bytecode product sequence.
 
