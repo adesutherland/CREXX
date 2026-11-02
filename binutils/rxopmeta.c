@@ -438,6 +438,17 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (rxop_call_invokes(opcode) &&
         operand_index + 1 == rxop_call_contract(opcode).target_operand)
         return rxop_call_target_components(opcode);
+    /* SIGBRV stores the register slot number, not its current value. */
+    if (opcode == OP_SIGBRV_ID_REG_STRING && operand_index == 1)
+        return RXOP_COMPONENT_NONE;
+    /* Signal producers inspect a dynamic name or integer condition. Payloads
+     * are transported whole; SIGNALORIGIN separately validates its event tree. */
+    if ((opcode == OP_SIGNAL_REG || opcode == OP_SIGNAL_REG_REG) && operand_index == 0)
+        return RXOP_COMPONENT_STRING;
+    if ((opcode == OP_SIGNALT_STRING_REG || opcode == OP_SIGNALF_STRING_REG) && operand_index == 1)
+        return RXOP_COMPONENT_INTEGER;
+    if ((opcode == OP_SIGNALT_STRING_STRING_REG || opcode == OP_SIGNALF_STRING_STRING_REG) && operand_index == 2)
+        return RXOP_COMPONENT_INTEGER;
     /* Public flag operations inspect status bits, never value components.
      * Preserve the distinction from the conservative ALL default below. */
     if (((opcode == OP_SETTP_REG_INT || opcode == OP_SETORTP_REG_INT) && operand_index == 0) ||
@@ -1454,6 +1465,19 @@ int rxop_intrinsic_value_footprint_is_known(int opcode) {
         case OP_SAY_REG: case OP_SAYX_REG: case OP_SAYX_STRING:
         case OP_SAY_INT: case OP_SAY_FLOAT: case OP_SAY_STRING:
         case OP_SAY_CHAR: return 1;
+        /* These handlers change pending state, frame policy or source save
+         * nodes. Explicit source observations and real payload COPY hooks are
+         * described independently; OPAQUE and signal/control barriers remain. */
+        case OP_BPON_FUNC: case OP_BPON: case OP_BPOFF:
+        case OP_SIGIGNORE_STRING: case OP_SIGHALT_STRING: case OP_SIGSHALT_STRING:
+        case OP_SIGBR_ID_STRING: case OP_SIGBRV_ID_REG_STRING:
+        case OP_SIGCALL_FUNC_STRING: case OP_SIGCALLA_FUNC_STRING:
+        case OP_SIGCALLBR_ID_FUNC_STRING: case OP_SIGPUSH_STRING: case OP_SIGPOP_STRING:
+        case OP_SIGNAL_STRING: case OP_SIGNAL_REG: case OP_SIGNAL_REG_REG:
+        case OP_SIGNAL_STRING_STRING: case OP_SIGNAL_STRING_REG:
+        case OP_SIGNALT_STRING_REG: case OP_SIGNALF_STRING_REG:
+        case OP_SIGNALT_STRING_STRING_REG: case OP_SIGNALF_STRING_STRING_REG:
+        case OP_SIGNALORIGIN_STRING_REG_REG: return 1;
         /* Direct context getters observe no Rexx value operand. Their
          * numeric context read and integer field write remain separate. */
         case OP_GETNUMDGTS_REG: case OP_GETNUMFUZ_REG:
@@ -1760,8 +1784,36 @@ static int callback_binding_only(int opcode) {
     return 1;
 }
 
+unsigned int rxop_policy_binding_operand(int opcode) {
+    return opcode == OP_SIGBRV_ID_REG_STRING ? 2u : 0u;
+}
+
+const char *rxop_signal_delivery_type_name(int opcode) {
+    return rxop_policy_binding_operand(opcode) ? RXVM_RUNTIME_SIGNAL_TYPE_NAME : NULL;
+}
+
+unsigned int rxop_signal_delivery_attribute_count(int opcode) {
+    return rxop_policy_binding_operand(opcode) ? RXVM_RUNTIME_SIGNAL_ATTRIBUTE_COUNT : 0u;
+}
+
+uint32_t rxop_signal_delivery_initialized_flag(int opcode) {
+    return rxop_policy_binding_operand(opcode) ? RXFLAG_VM_OBJECT_UNINITIALIZED : UINT32_C(0);
+}
+
+/* SET_SIGNAL_PAYLOAD uses ordinary COPY into pending storage. This source
+ * selector does not describe an explicit instruction result or a value read. */
+static unsigned int signal_payload_operand(int opcode) {
+    switch (opcode) {
+        case OP_SIGNAL_STRING_REG: case OP_SIGNAL_REG_REG:
+        case OP_SIGNALORIGIN_STRING_REG_REG: return 2u;
+        default: return 0u;
+    }
+}
+
 unsigned int rxop_callback_inputs(int opcode, size_t operand_index) {
     unsigned int source = rxop_transport_source_operand(opcode);
+    if (signal_payload_operand(opcode) && signal_payload_operand(opcode) == operand_index + 1u)
+        return RXOP_COMPONENT_NATIVE_PAYLOAD | RXOP_COMPONENT_ATTRIBUTE_COUNT;
     if (callback_binding_only(opcode)) return RXOP_COMPONENT_NONE;
     /* MOVE transfers ownership and never invokes the source copy hook. */
     if (opcode == OP_MOVE_REG_REG) return RXOP_COMPONENT_NONE;
@@ -2140,7 +2192,7 @@ unsigned int rxop_observed_components(int opcode, size_t operand_index) {
         return RXOP_COMPONENT_NONE;
     /* The payload is copied whole into pending signal storage. Validation
      * observes the separate origin structure, not unused payload components. */
-    if (opcode == OP_SIGNALORIGIN_STRING_REG_REG && operand_index == 1)
+    if (signal_payload_operand(opcode) && signal_payload_operand(opcode) == operand_index + 1u)
         return RXOP_COMPONENT_NONE;
     if (rxop_selection_contract(opcode).kind != RXOP_SELECTION_NONE)
         return rxop_component_reads(opcode, operand_index);
@@ -2156,11 +2208,6 @@ unsigned int rxop_observed_components(int opcode, size_t operand_index) {
     if (rxop_transport_source_operand(opcode) ||
         rxop_binding_action(opcode) != RXOP_BINDING_NONE)
         return RXOP_COMPONENT_NONE;
-    /* SIGBRV records the register slot number for later event delivery. The
-     * installation handler stores REG_IDX(2), without reading the selected
-     * register's payload. Keep the conservative may-read/liveness inventory
-     * separate from this typed read-before-definition observation. */
-    if (opcode == OP_SIGBRV_ID_REG_STRING) return RXOP_COMPONENT_NONE;
     /* These operations only inspect status. Preserving unrelated flags is
      * transport, not a typed observation of a scalar payload. */
     if (opcode == OP_GETTP_REG_REG || opcode == OP_GETANDTP_REG_REG_INT ||

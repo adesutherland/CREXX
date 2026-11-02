@@ -141,9 +141,99 @@ main: procedure = .int expose checks failures
   call check(last.status() = 0,'small request succeeds after malformed and over-budget requests')
   call inlinechecks(frontend,nl)
   call entrychecks(frontend,nl)
+  call coldchecks(frontend,nl)
   say 'RXAS_IO|checks=' || checks || '|failures=' || failures
   if failures > 0 then return 1
   return 0
+
+/** A handwritten metadata client: PCs are derived from four LOADs (3 cells
+ * each) followed by RET (2). No inliner or native-output oracle participates. */
+coldchecks: procedure = .void
+  arg frontend = .llrxasinput..reader, nl = .string
+  item = .lltarget..record; value = .lltarget..operand; emitted = .llrxasoutput..emission
+  parsed = frontend.parse(coldsource(0,nl) as .binary,'cold-phases.rxas','fixture:cold-phases')
+  call check(parsed.status() = 0,'handwritten executable phases and borrowed suffix admitted: ' || parsed.error())
+  if parsed.status() = 0 then do
+    source = parsed.result(); body = source.body(source.procedureid('main')); loads = 0
+    call check(body.locals() = 4 & body.ownedlocals() = 3 & body.privatebindings() = 1,'self global is borrowed even though spelled in the local bank')
+    call check(source.regions() = 2,'executable region IDs are independent of diagnostic frames')
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'load' then do
+        loads = loads + 1; expected = 1
+        if loads = 2 | loads = 4 then expected = 2
+        call check(source.inlineaddress(item.id()) = (loads - 1) * 3,'ordinary instruction-cell PC ' || loads)
+        call check(source.regionat(item.id()) = expected,'deepest lexical region includes fragmented child ' || loads)
+        actions = source.exitactions(2,item.id()); expectedactions = 0
+        if loads = 2 then expectedactions = 1
+        if loads = 4 then expectedactions = 2
+        call check(actions = expectedactions,'cold actions exist only in their half-open phase ' || loads)
+        if loads = 4 then do
+          first = source.exitaction(2,item.id(),1); second = source.exitaction(2,item.id(),2)
+          call check(first.action() = 'endlife' & second.action() = 'digits','actions use declared order rather than metadata record order')
+          actionwork = source.exitactionwork(2); ids = source.exitactionids(2,item.id(),actionwork,actionwork * 8)
+          call check(ids[0] = 2 & ids[1] = first.id() & ids[2] = second.id(),'one bounded phase snapshot retains public action order')
+          refusedids = .int[]; limited = 0
+          do
+            refusedids = source.exitactionids(2,item.id(),actionwork - 1,actionwork * 8)
+          on signal
+            limited = 1
+          end
+          call check(limited & refusedids[0] = 0 & source.error() = '','short phase-query work publishes no partial snapshot or owner error')
+
+          value = second.registerref(1)
+          call check(second.registerrefs() = 1 & value.bank() = 'r' & value.index() = 1 & value.owner() = source.identity(),'saved numeric source is an exact typed local reference')
+        end
+      end
+      else if item.mnemonic() = 'ret' then call check(source.regionat(item.id()) = 0 & source.exitactions(2,item.id()) = 0,'range endpoint retires lexical child and its actions')
+    end
+    emitted = llrxasoutput..render(reference source)
+    call check(emitted.error() = '','executable metadata and exact provider selector render')
+    if emitted.error() = '' then do
+      output = emitted.output(); again = frontend.parse(output.text() as .binary,'cold-roundtrip.rxas','fixture:cold-roundtrip')
+      call check(again.status() = 0,'feature10/12 metadata reads after canonical rendering: ' || again.error())
+      if again.status() = 0 then do
+        result = again.result(); finalbody = result.body(result.procedureid('main'))
+        call check(result.regions() = 2 & finalbody.ownedlocals() = 3,'region and borrowed ownership survive roundtrip')
+      end
+      bounded = llrxasoutput..render(reference source,output.bytes())
+      call check(bounded.error() = '' & bounded.output().bytes() = output.bytes(),'exact metadata output byte bound admits complete publication')
+      bounded = llrxasoutput..render(reference source,output.bytes() - 1)
+      call check(bounded.error() <> '' & bounded.output().bytes() = 0,'short metadata output bound publishes nothing')
+    end
+  end
+  do mode = 1 to 10
+    invalid = frontend.parse(coldsource(mode,nl) as .binary,'invalid-cold-' || mode,'fixture:invalid-cold')
+    call check(invalid.status() <> 0,'invalid region/phase/borrowed contract rejected ' || mode)
+  end
+  last = frontend.parse(coldsource(0,nl) as .binary,'cold-after-failures','fixture:cold-after-failures')
+  call check(last.status() = 0,'cold failures do not poison later independent request')
+  return
+
+coldsource: procedure = .string
+  arg mode = .int, nl = .string
+  parent = 1; outerparent = 0; saved = 'r1'; suffix = 'r3'; provider = 'self'; literal = 1
+  if mode = 1 then parent = 99
+  if mode = 3 then parent = 0
+  if mode = 5 then saved = 'r3'
+  if mode = 6 then suffix = 'r2'
+  if mode = 8 then literal = 0
+  if mode = 9 then provider = '@4294967295'
+  if mode = 10 then outerparent = 2
+  text = '.globals=1' || nl || 'main() .locals=4' || nl
+  if mode <> 7 then text = text || '.inlinedprivate ' || suffix || ',"' || provider || '",g0' || nl
+  text = text || '.inlineregion 1,' || outerparent || nl || 'outer_begin:' || nl || 'load r0,7' || nl
+  if mode = 7 then text = text || '.inlinedprivate r3,"self",g0' || nl
+  text = text || '.inlineregion 2,' || parent || nl || 'child_begin:' || nl || 'load r1,18' || nl
+  text = text || 'child_end:' || nl || 'load r2,4' || nl || 'frag_begin:' || nl || 'load r0,9' || nl || 'frag_end:' || nl || 'outer_end:' || nl || 'ret 0' || nl
+  ending = 'outer_end'; if mode = 2 then ending = 'child_end'
+  text = text || '.inlinerange outer_begin,' || ending || ',1' || nl || '.inlinerange child_begin,child_end,2' || nl || '.inlinerange frag_begin,frag_end,2' || nl
+  text = text || '.inlineexit 2,frag_begin,frag_end,9,"digits",' || saved || nl
+  text = text || '.inlineexit 2,child_begin,child_end,2,"endlife",r2' || nl || '.inlineexit 2,frag_begin,frag_end,2,"endlife",r2' || nl
+  text = text || '.inlineexit 1,outer_begin,outer_end,5,"digits",' || literal || nl
+  if mode = 4 then text = text || '.inlineexit 2,frag_begin,frag_end,2,"unlink",a1' || nl
+  return text
 
 /** Executable entry state is a typed procedure property, preserved by RXAS
  * roundtrip. An ordinary metadata string cannot manufacture the declaration. */

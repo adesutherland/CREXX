@@ -104,15 +104,12 @@ still has entry policy or that an initializer succeeded. VM inventory,
 signal-code and numeric-default owners are part of the shared catalog
 fingerprint and generation dependencies.
 
-The explicit `rxas --inline-service <llrxinline.rxbin> --inline-module <name>`
-option runs the shared Level B/Level L inliner on a private UTF8 source
-snapshot before the normal assembler pass. `--inline-vm <rxvm>` selects the VM
-(default: the sibling executable), `--inline-runtime <image>` may be repeated
-for its runtime dependencies, and `--inline-policy default|all-legal|never`
-selects the service policy. The assembler passes `--no-cleanup` to the service;
-`-n` still controls only native RXAS optimization. A separate input path keeps
-the original source name and default `.rxbin` output stem in the emitted
-module. Service failure ends before assembly and does not alter the source.
+The earlier native `--inline-service` adapters are experimental inliner1
+integration, not the qualified shared Level L foundation. Their former
+`llrxinline` CLI/stage is removed. There is currently no delivered replacement
+service for these options; inliner2 starts through a new standalone path after
+phase 2. Later native integration must replace the old staging/proof handshake,
+reusing only reviewed exact provider-selection and codec/rebase primitives.
 
 The experimental `inlenter`, `linkargv` and `qglobbind` instructions are
 retired. Their opcode numbers are reserved so later RXBIN opcode identities
@@ -910,27 +907,75 @@ to parse arbitrary C handler bodies formally.
 
 ### Level L target-analysis consumer map
 
-The research Level L target owner is in `lib/rxfnsl/target/`. Its checked
-`lltarget` module is the common input for `lltargettransfer..profile`
-(canonical ordered references/effects), `lltargetcfg..graph` (normal, signal,
-unwind and terminal edges), `lltargetflow..analyse` (storage/component/flag
-point facts and liveness), and `lltargetsummary..analyse` (direct and
-transitive procedure facts). `lltargetnormalize..normalize` performs the
-entry-dependent owned-local clear/warning transaction; `lltargetremap` owns
-typed register/reference relocation and foreign module/global identities.
-The replacement `inliner2` will consume these services rather than define them;
-the old `llinline` admission machinery is not its baseline. Constructed
-rich profiles exercise the generic algorithms independently of the current
-native catalogue. A canonical unknown is an explicit missing fact, never a
-proof of no effect. Keep the exact module, catalogue revision, profile and
-flow owners alive together; each service rejects stale or foreign evidence.
+The research Level L target owner is `lib/rxfnsl/target/`. The foundation
+contains independent target services; the replacement inliner2 will consume
+these services rather than define them. Abandoned `llinline`, `lltargetfacts`,
+`llcleanup`, `lltargetrecipe` and the receipt-driven CLI are removed. There is
+no fake-scope executor, recycled-value history or clone-permission certificate
+in the shared baseline.
+
+| Service | Published contract | Maintained independent controls |
+|---|---|---|
+| `lltarget` and target IO | Checked owned records, truthful source identity, `.entry`, `.inlinedprivate`, diagnostic frames and executable regions/ranges/phased exits. Owned local extent excludes the borrowed private-global suffix. Region ancestry, half-open ranges and action ordering are validated before publication. | `target-cold-metadata`, `target-program-defaults`, `io-service` |
+| `lltargettransfer..profile` | Canonical typed references and ordered component/flag/context/policy/callback effects. Numeric reads and writes are separate. Terminal signal-instruction misuse is distinct from a requested catchable event. Cleanup-only finalizers and ABI-3 numeric synchronization are not Rexx callbacks. | `target-transfer-cfg`, `target-canonical-flow`, `target-activation-abi` |
+| `lltargetcfg..graph` | Normal/table/call/return/signal/resume/unwind/terminal and explicit unknown paths, checked handler/save owners, correlated policy alternatives and feasible edges. Cold edges name crossed lexical regions and phase-active actions. | `target-cfg`, `target-signal-cfg`, `target-generic-flow` |
+| `lltargetflow..analyse` | Separate slot/active/base/entry/storage identities; published subvalues and individual flags; conversion dependencies, aliases, ownership, reference lifetimes and liveness. `policiesat/policyat` and `policieson/policyon` retain whole handler/save-stack alternatives. `conversionat/conversionon` check captured source component/context identities. | `target-flow`, `target-generic-flow`, `target-binding-recipe`, `target-site-facets` |
+| `lltargetsummary..analyse` | Direct/transitive may/must/unknown procedure effects, finite normal-return existence, independent call layout and storage footprints. `outwardeffect` describes an actual retained call after normal return. `contextrestoration` reports changed fields, literal/saved GET/SET choices, ordinary return sites and potential cold edges; it grants no CALL deletion permission. Cold actions contribute edge effects, not reads at metadata declarations. | `target-summary`, `target-context-restoration`, `target-execution-context` |
+| `lltargetnormalize..normalize` | Atomic owned-local dirty-read clear/warning processing and explicit checked clear insertion. Proved entry-dependent reads receive safe ingress placement; uncertainty alone permits no clear and borrowed storage is excluded. | `foundation-normalize`, `target-normalization-site`, `target-normalization-preservation` |
+| `lltargetremap` | Checked typed register/reference/source/metadata relocation, exact module/global providers, affine register growth preserving packed dynamic windows and validated constrained assignment. Generic same-activation event correspondence is independent of inlining admission. | `target-module-remap`, `target-cold-metadata`, `target-correspondence` |
+
+The controls live in `research/level-l/toolchain/tests/`. Constructed rich
+profiles exercise generic algorithms independently of the native catalogue;
+ordinary RXAS controls check its projection. All call transfers execute their
+ordered canonical capture/action program. Absence of a callback does not permit
+skipping argument/result capture or retained-child state restoration. The catalogue remains the one
+instruction-behavior owner. Owned-root retirement facts follow the VM surface: previous owned reference
+roots and finalizing payload obligations have retired. Non-finalizing native
+payloads may still be dirty, so entry alone cannot suppress their real COPY
+hooks. Current contents, attributes and capacity are not invented empty. Actual COPY hooks,
+native/host calls and root external copyback retain their published effects.
+
+Factories retain owned values rather than handles into their own temporary
+result fields. Public operations bind self-interior handles on the stable
+receiver. Prepared copies of the same frozen revision rebind private indexes,
+including nested address and record-list references; a new graph revision
+revalidates them. Already-issued external views remain tied to their original
+owner and expire when that owner is replaced or retired. The helper-return and
+prepared-copy controls in `target-cold-metadata` cover this lifetime boundary.
+
+Keep exact module, catalogue revision, profile, selected binding and flow
+owners alive together. Stale or foreign evidence is invalid. Missing body,
+unknown signal destination, unrepresented/incomplete numeric fields, opaque
+external effects and exhausted path/work/byte limits remain explicit unknowns;
+none proves absence. Recursive may summaries use bounded fixed points; must
+queries cannot prove themselves through recursion. Repeated queries share
+cumulative allowances and failed requests do not publish partial results.
+A numeric delta with an asynchronous, terminal or callback edge is not itself
+an inlining refusal: its separate mapping/control duties still need evidence.
+
+`SIGBRV` installation records a slot without reading its old value. On a
+successful delivery edge, the shared flow resolves that slot in its physical
+owner after cold cleanup and defines an initialized `rxfnsb.runtime_signal`
+with the published six-attribute layout. Its contents are unknown, defined
+values; the overwritten value contributes no old dirty origin. Exact
+`edge.policyinstallation()` identity keeps different installations and ordinary
+incoming paths separate. The native catalogue supplies `policybindingoperand`,
+`deliverytype`, `deliveryattributes` and `deliveryinitializedflag`; Level L does
+not infer this contract from an opcode name.
+
+Pending raw payload COPY observations and native hooks remain a separate edge
+effect. `flow.deliverycallbackat(edgeid)` reports the unresolved obligation as
+`target.flow.delivery.copy.hook.unproved`, independently of the guaranteed shell
+postcondition. That obligation also limits observation/normalization coverage
+and call sites whose incoming cone crosses delivery; earlier sites stay exact.
+The VM completes raw COPY effects before final shell publication;
+cleanup-only finalizers do not acquire COPY callbacks. Missing owner/slot facts
+remain conservative, without declaring a handler label unconditionally typed.
+
 The [inlining architecture](../../research/level-l/toolchain/doc/inlining.md)
-sets the intended shared semantics, and
-`research/level-l/toolchain/tests/target-{transfer-cfg,flow,module-remap,summary}.crexx`
-contains small independent consumers. The shared baseline and its qualification
-remain open under LLF-AC01–04 in phase 2 of the
-[toolchain plan](../../research/level-l/toolchain/PLAN.md#phase-2--complete-the-shared-level-l-foundation),
-after the approved VM changes and QA.
+owns intended semantics. Qualification remains governed by LLF-AC01–04 in
+phase 2 of the [toolchain plan](../../research/level-l/toolchain/PLAN.md#phase-2--complete-the-shared-level-l-foundation).
+These APIs do not claim a complete L assembler/linker or a working inliner2.
 
 RXAS optimisation routing is explicit in `assembler/rxas_flow_pass.c`. Every
 current rule family has one stable owner—local mechanical scan, immutable CFG,

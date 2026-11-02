@@ -5,7 +5,6 @@ import rxfnsb
 import llir
 import llrxascatalog
 import llsource
-import lltargetrecipe
 
 bad: procedure = .void
   arg message = .string
@@ -390,6 +389,60 @@ recordshape: procedure = .string
       field = item.operand(3)
       if field.index() < 1 | field.index() > 4294967295 then return 'inline map requires nonzero canonical u32 frame'
     end
+    when kind = '.inlineregion' then do
+      if signature <> 'II' | body < 2 then return 'inline region shape'
+      do i = 1 to 2
+        field = item.operand(i)
+        if field.index() < 0 | field.index() > 4294967295 | (i = 1 & field.index() = 0) then return 'inline region requires canonical u32 identities'
+      end
+    end
+    when kind = '.inlinerange' then do
+      if signature <> 'LLI' | body < 2 then return 'inline range shape'
+      field = item.operand(3)
+      if field.index() < 1 | field.index() > 4294967295 then return 'inline range requires canonical nonzero u32 region'
+    end
+    when kind = '.inlineexit' then do
+      if wordpos(signature,'ILLISI ILLISR ILLISRR') = 0 | body < 2 then return 'inline exit shape'
+      field = item.operand(1)
+      if field.index() < 1 | field.index() > 4294967295 then return 'inline exit requires canonical nonzero u32 region'
+      field = item.operand(4)
+      if field.index() < 0 | field.index() > 4294967295 then return 'inline exit requires canonical u32 order'
+      name = item.operand(5); field = item.operand(6)
+      if wordpos(name.text(),'digits fuzz form case standard') > 0 then do
+        if item.operands() <> 6 then return 'numeric inline exit arity'
+        if field.kind() = 'R' then do
+          if field.bank() <> 'r' then return 'numeric inline exit requires owned local base'
+        end
+        else do
+          if field.index() > 2147483647 then return 'numeric inline exit literal bounds'
+          if name.text() = 'digits' then do; if field.index() < 1 then return 'inline DIGITS literal'; end
+          else if name.text() = 'fuzz' then do; if field.index() < 0 then return 'inline FUZZ literal'; end
+          else if field.index() <> 1 & field.index() <> 2 then return 'inline numeric enum literal'
+        end
+      end
+      else do
+        if wordpos(name.text(),'endlife unlink swap link') = 0 | field.kind() <> 'R' then return 'inline exit action'
+        if name.text() = 'swap' | name.text() = 'link' then do
+          if signature <> 'ILLISRR' then return 'binary inline binding arity'
+        end
+        else if item.operands() <> 6 then return 'unary inline exit arity'
+        if name.text() = 'endlife' & field.bank() <> 'r' then return 'inline ENDLIFE requires owned local base'
+      end
+    end
+    when kind = '.inlinedprivate' then do
+      if signature <> 'RSI' | body < 2 then return 'private binding shape'
+      field = item.operand(1); provider = item.operand(2); foreign = item.operand(3)
+      if field.bank() <> 'r' | field.index() > 4294967295 | foreign.index() < 0 | foreign.index() > 4294967295 then return 'private binding slot bounds'
+      if provider.length() < 1 | provider.length() > 4096 then return 'private provider selector length'
+      do i = 0 to provider.length() - 1
+        if provider.byte(i) = 0 then return 'private provider selector NUL'
+      end
+      if left(provider.text(),1) = '@' then do
+        selector = substr(provider.text(),2)
+        if length(selector) < 1 | length(selector) > 10 | verify(selector,'0123456789') <> 0 then return 'private image selector'
+        if selector as .int >= 4294967295 then return 'private image selector bounds'
+      end
+    end
     when kind = '.meta' then do
       if signature = 'S' & body > 1 then return ''
       if signature = 'SSS' then do
@@ -408,7 +461,7 @@ appendrecord: procedure = .int
   arg owner = reference .llir..arena, fuel_ref = reference .fuel, block = .llir..block, bodyid = .int, kind = .string, opcode = .int, fields = .object[], at = .llir..origin, ?edges = .object[]
   store = dereference owner; work = dereference fuel_ref
   if work.take(owner,fields[0] + 1) = 0 then return 0
-  if wordpos(kind,'procedure instruction label .meta .srcfile .srcline .srcstep .traceevent .inlineframe .inlinemap .const .import .globalexpose') = 0 then do
+  if wordpos(kind,'procedure instruction label .meta .srcfile .srcline .srcstep .traceevent .inlineframe .inlinemap .inlineregion .inlinerange .inlineexit .inlinedprivate .const .import .globalexpose') = 0 then do
     call store.fail('LL_TARGET_RECORD: unsupported record kind ' || kind); return 0
   end
   if at.belongs(owner) = 0 then do
@@ -454,6 +507,7 @@ bodycursor: class
   _function = .llir..function
   _current = .llir..block
   _fallthrough = .llir..block
+  _hasfallthrough = .int
   _names = .string[]
   _thunks = .object[]
   _defined = .int[]
@@ -464,6 +518,19 @@ bodycursor: class
   *: factory
     arg owner = reference .llir..arena, work = reference .fuel, functionview = .llir..function, entry = .llir..block
     _owner = owner; _fuel = work; _function = functionview; _current = entry; _sequence = 1
+    return
+  rebind: method = .void
+    arg owner = reference .llir..arena, work = reference .fuel
+    allowance = dereference work
+    if allowance.take(owner,_thunks[0] + 4) = 0 then return
+    _owner = owner; _fuel = work
+    _function = .llir..function(owner,_function.id())
+    _current = .llir..block(owner,_current.id())
+    if _hasfallthrough then _fallthrough = .llir..block(owner,_fallthrough.id())
+    do i = 1 to _thunks[0]
+      prior = _thunks[i] as .llir..block
+      _thunks[i] = .llir..block(owner,prior.id()) as .object
+    end
     return
   newgroup: method = .llir..block
     work = dereference _fuel
@@ -518,7 +585,7 @@ bodycursor: class
         edges[edges[0] + 1] = labelentry(field.text()) as .object
       end
       if normalfallthrough(opcode) then do
-        _fallthrough = newgroup(); edges[edges[0] + 1] = _fallthrough as .object
+        _fallthrough = newgroup(); _hasfallthrough = 1; edges[edges[0] + 1] = _fallthrough as .object
       end
     end
     return edges
@@ -546,6 +613,9 @@ draft: class
   _store = .llir..arena
   _fuel = .fuel
   _catalogue = .llir..block
+  _catalogueid = .int
+  _name = .string
+  _artifact = .string
   _functions = .int[]
   _cursors = .bodycursor[]
   _globals = .int
@@ -558,13 +628,27 @@ draft: class
     arg logicalModule = .string, artifact = .string, globals = .int, entries = 1000000, bytes = 67108864, work = 1000000
     _worklimit = work; _bytelimit = bytes
     contract = schema(); _store = .llir..arena(contract,entries,bytes); _fuel = .fuel(work)
-    _globals = globals
+    _globals = globals; _name = logicalModule; _artifact = artifact
     if logicalModule = '' | artifact = '' | globals < 0 | work < 1 then call _store.fail('LL_TARGET_MODULE: invalid identity, globals or work budget')
+    return
+  /** Factories return owned values by COPY. Interior handles are established
+   * only on the receiving draft and rebound after an owning-value copy. */
+  prepare: method = .void
     if _store.error() <> '' then return
+    if _catalogueid > 0 then do
+      if _catalogue.belongs(reference _store) then return
+      _catalogue = .llir..block(reference _store,_catalogueid)
+      do i = 1 to _cursors[0]
+        cursor_ref = reference _cursors[i]; cursor = dereference cursor_ref
+        call cursor.rebind(reference _store,reference _fuel)
+      end
+      return
+    end
+    contract = dereference _store.contract()
     functionid = _store.function('$target.catalogue',contract.voidtype())
     if _store.error() <> '' then return
     fn = .llir..function(reference _store,functionid)
-    _catalogue = fn.block('records')
+    _catalogue = fn.block('records'); _catalogueid = _catalogue.id()
     if _store.error() <> '' then return
     sourceid = _store.source('target module',''x as .binary)
     if _store.error() <> '' then return
@@ -574,30 +658,35 @@ draft: class
     op = _catalogue.operation(contract.operation('rxas.target.module'),origin)
     if _store.error() <> '' then return
     catalog = .llrxascatalog..catalog()
-    call op.attribute('name',logicalModule as .binary); call op.attribute('artifact',artifact as .binary)
-    call op.attribute('globals',integerbits(globals)); call op.attribute('catalog',catalog.fingerprint() as .binary)
+    call op.attribute('name',_name as .binary); call op.attribute('artifact',_artifact as .binary)
+    call op.attribute('globals',integerbits(_globals)); call op.attribute('catalog',catalog.fingerprint() as .binary)
     result = op.finish()
     return
   error: method = .string
+    call prepare()
     store_ref = reference _store; store = dereference store_ref
     return store.error()
   /** Charge adapter work before scanning/copying and check prospective bytes
    * through the existing arena owner. No bytes are reserved by this check. */
   preflight: method = .int
     arg work = .int, bytes = .int
+    call prepare()
     if _fuel.take(reference _store,work) = 0 then return 0
     return _store.canreserve(0,bytes)
   source: method = .llir..sourcefile
     arg name = .string, bytes = .binary
+    call prepare()
     id = _store.source(name,bytes)
     return .llir..sourcefile(reference _store,id)
   synthetic: method = .llir..origin
     arg description = .string
+    call prepare()
     return syntheticorigin(reference _store,description)
   /** Create provenance through the L origin owner. A parent is an owned
    * contributor, not an executable/virtual runtime frame. */
   origin: method = .llir..origin
     arg file = .llir..sourcefile, first = .int, last = .int, kind = 'exact', ?parent = .llir..origin
+    call prepare()
     parentid = 0
     if file.belongs(reference _store) = 0 then call _store.fail('LL_TARGET_OWNER: foreign source file')
     if ?parent then do
@@ -608,6 +697,7 @@ draft: class
     return .llir..origin(reference _store,id)
   contributingorigin: method = .llir..origin
     arg file = .llir..sourcefile, first = .int, last = .int, kind = .string, parents = .object[]
+    call prepare()
     if file.belongs(reference _store) = 0 then do
       call _store.fail('LL_TARGET_OWNER: foreign source file'); return .llir..origin(reference _store,0)
     end
@@ -615,6 +705,7 @@ draft: class
     return file.contributingorigin(first,last,kind,parents)
   procedure: method = .lltarget..bodydraft
     arg name = .string, locals = .int, at = .llir..origin, exposed = '', entrykind = 0
+    call prepare()
     if _store.error() <> '' then return .lltarget..bodydraft()
     if name = '' | locals < 0 then do
       call _store.fail('LL_TARGET_PROCEDURE: invalid name or local count'); return .lltarget..bodydraft()
@@ -636,6 +727,7 @@ draft: class
     return .lltarget..bodydraft(reference _store,reference _fuel,reference _cursors[n],_catalogue,fn.id(),locals,_globals,headerid)
   record: method = .int
     arg kind = .string, fields = .object[], at = .llir..origin
+    call prepare()
     return appendrecord(reference _store,reference _fuel,_catalogue,0,kind,-1,fields,at)
   finishfee: method = .int
     arg count = .int, width = .int
@@ -692,12 +784,15 @@ draft: class
     if finishbytes(_store.bytes(),16) = 0 then return 0
     return 1
   usedwork: method = .int
+    call prepare()
     if _finishedok = 0 then return _worklimit
     return _worklimit - _fuel.remaining()
   usedbytes: method = .int
+    call prepare()
     if _finishedok = 0 then return _bytelimit
     return _store.capacity() + _validationbytes
   finish: method = .lltarget..module
+    call prepare()
     if _sealed then do
       call bad('LL_TARGET_STATE: draft already finished'); return .lltarget..module(.llir..module(_store),0)
     end
@@ -770,14 +865,13 @@ bodydraft: class
     return .operand.bound(store.identity(),_function,slotid,bank,index)
   emit: method = .int
     arg mnemonic = .string, fields = .object[], at = .llir..origin
-    return emitchecked(mnemonic,fields,at,0)
-  /** Native RXAS admission alone supplies packed recipe selectors. Keep the
-   * established logical emit callable unchanged for all target consumers. */
+    return emitchecked(mnemonic,fields,at)
+  /** Source admission uses the same canonical typed operand contract. */
   emitphysical: method = .int
     arg mnemonic = .string, fields = .object[], at = .llir..origin
-    return emitchecked(mnemonic,fields,at,1)
+    return emitchecked(mnemonic,fields,at)
   emitchecked: method = .int
-    arg mnemonic = .string, fields = .object[], at = .llir..origin, physicalrecipe = .int
+    arg mnemonic = .string, fields = .object[], at = .llir..origin
     i = .int; j = .int
     if <refvalid>(_owner) = 0 then return 0
     signature = ''; item = .operand; store = dereference _owner; work = dereference _fuel
@@ -807,25 +901,6 @@ bodydraft: class
     catalog = .llrxascatalog..catalog(); opcode = catalog.find(mnemonic,signature)
     if opcode < 0 then do
       call store.fail('LL_TARGET_OPCODE: unknown source-visible instruction/signature ' || mnemonic || '/' || signature); return 0
-    end
-    recipeordinal = catalog.recipeoperand(opcode)
-    if recipeordinal > 0 then do
-      encoded = fields[recipeordinal] as .operand
-      if encoded.kind() <> 'S' then do; call store.fail('LL_TARGET_RECIPE: source text expected'); return 0; end
-      if work.take(_owner,encoded.length() + 1) = 0 then return 0
-      recipeview = .lltargetrecipe..view(encoded.text(),catalog.scopecontinuation(opcode) > 0,encoded.length() + 1)
-      if recipeview.error() <> '' then do; call store.fail(recipeview.error()); return 0; end
-      /* Only native RXAS admission supplies packed physical recipe indices.
-       * Resolve them before registering typed slots; the L model itself keeps
-       * banks stable while later caller-local growth changes packed offsets. */
-      if physicalrecipe then do
-        if work.take(_owner,encoded.length() * 3 + recipeview.registers() * 8 + 1) = 0 then return 0
-        text = recipeview.logical(_locals,_globals)
-        fields[recipeordinal] = .operand.string(text as .binary) as .object
-        recipeview = .lltargetrecipe..view(text,catalog.scopecontinuation(opcode) > 0,length(text) + 1)
-        if recipeview.error() <> '' then do; call store.fail(recipeview.error()); return 0; end
-      end
-      do i = 1 to recipeview.registers(); registered = reg(recipeview.bank(i),recipeview.index(i)); end
     end
     cursor = dereference _cursor; block = cursor.before(at)
     edges = cursor.targets(opcode,fields)
@@ -857,8 +932,6 @@ record: class
   _owner = reference .llir..module
   _identity = .int
   _id = .int
-  _recipeprepared = .int
-  _recipeview = .lltargetrecipe..view
   *: factory
     arg owner = reference .llir..module, id = .int
     _owner = owner; graph = dereference owner; _identity = graph.identity(); _id = id
@@ -915,49 +988,6 @@ record: class
   /** Enumerate spelled register operands and typed TRACE bank/index pairs.
    * Implicit call windows/addressed registers still require the canonical
    * operation contract plus call-site facts; this is not a completeness proof. */
-  /** Checked roles for the catalogue-selected operational recipe. An ordinary
-   * instruction has no recipe and must not acquire one by mnemonic guessing. */
-  recipe: method = .lltargetrecipe..view
-    call require()
-    if _recipeprepared then return _recipeview
-    if kind() <> 'instruction' then call bad('LL_TARGET_RECIPE: record has no recipe')
-    catalog = .llrxascatalog..catalog(); ordinal = catalog.recipeoperand(opcode())
-    if ordinal < 1 | ordinal > operands() then call bad('LL_TARGET_RECIPE: instruction has no recipe')
-    encoded = operand(ordinal)
-    if encoded.kind() <> 'S' then call bad('LL_TARGET_RECIPE: recipe is not string')
-    result = .lltargetrecipe..view(encoded.text(),catalog.scopecontinuation(opcode()) > 0,encoded.length() + 1)
-    if result.error() <> '' then call bad(result.error())
-    _recipeview = result; _recipeprepared = 1
-    return _recipeview
-  reciperef: method = .lltarget..operand
-    arg ordinal = .int
-    view = recipe()
-    if ordinal < 1 | ordinal > view.registers() then call bad('LL_TARGET_RECIPE: register ordinal')
-    total = 0
-    do i = 1 to operands()
-      value = operand(i)
-      if value.kind() = 'R' then total = total + 1
-    end
-    return registerref(total + ordinal)
-  /** The role vector has exactly the registerref order. Recipe tokens retain
-   * capture/destination/preparation identities; other references stay explicit
-   * or metadata and require their own canonical instruction contract. */
-  registerrole: method = .string
-    arg ordinal = .int
-    if ordinal < 1 | ordinal > registerrefs() then call bad('LL_TARGET_RECIPE: register role ordinal')
-    total = 0
-    do i = 1 to operands()
-      value = operand(i)
-      if value.kind() = 'R' then total = total + 1
-    end
-    if ordinal <= total then return 'explicit'
-    if kind() = '.traceevent' then return 'metadata'
-    view = recipe(); return view.role(ordinal - total)
-  registerroleordinal: method = .int
-    arg ordinal = .int
-    role = registerrole(ordinal)
-    if role = 'explicit' | role = 'metadata' then return 0
-    view = recipe(); return view.roleordinal(ordinal - registerrefs() + view.registers())
   registerrefs: method = .int
     total = 0; field = .operand; i = .int
     do i = 1 to operands()
@@ -967,14 +997,6 @@ record: class
     if kind() = '.traceevent' then do
       source = operand(3); bank = operand(5); number = operand(6)
       if source.text() = 'R' & number.index() >= 0 & wordpos(lower(bank.text()),'r g a') > 0 then total = total + 1
-    end
-    if kind() = 'instruction' then do
-      catalog = .llrxascatalog..catalog(); recipeordinal = catalog.recipeoperand(opcode())
-      if recipeordinal > 0 then do
-        recipeview = recipe()
-        if recipeview.error() <> '' then call bad(recipeview.error())
-        total = total + recipeview.registers()
-      end
     end
     return total
   registerref: method = .lltarget..operand
@@ -999,24 +1021,19 @@ record: class
         return .operand.bound(_identity,procedureid(),slotid,lower(bank.text()),number.index())
       end
     end
-    if kind() = 'instruction' then do
-      catalog = .llrxascatalog..catalog(); recipeordinal = catalog.recipeoperand(opcode())
-      if recipeordinal > 0 then do
-        recipeview = recipe()
-        selected = ordinal - total
-        if selected >= 1 & selected <= recipeview.registers() then do
-          slotid = 0
-          bankname = recipeview.bank(selected); index = recipeview.index(selected)
-          do i = 1 to store.count(5)
-            if store.get(5,i,1) = procedureid() & store.text(store.get(5,i,3)) = (bankname || index) then slotid = i
-          end
-          if slotid = 0 then call bad('LL_TARGET_RECIPE: register has no storage descriptor')
-          return .operand.bound(_identity,procedureid(),slotid,bankname,index)
-        end
-      end
-    end
     call bad('LL_TARGET_METADATA: register reference ordinal outside record')
     return .operand()
+  regionid: method = .int
+    recordkind = kind(); value = .operand
+    if recordkind = '.inlineregion' | recordkind = '.inlineexit' then do; value = operand(1); return value.index(); end
+    if recordkind = '.inlinerange' then do; value = operand(3); return value.index(); end
+    call bad('LL_TARGET_REGION: record has no executable region identity'); return 0
+  parentregion: method = .int
+    if kind() <> '.inlineregion' then do; call bad('LL_TARGET_REGION: record is not a region'); return 0; end
+    value = operand(2); return value.index()
+  action: method = .string
+    if kind() <> '.inlineexit' then do; call bad('LL_TARGET_REGION: record is not a cold action'); return ''; end
+    value = operand(5); return value.text()
   origin: method = .llir..origin
     call require(); graph = dereference _owner; op = graph.operation(_id)
     return op.origin()
@@ -1046,19 +1063,6 @@ remapregisters: procedure = .object[]
     fields[5] = .operand.string(replacement.bank() as .binary) as .object
     fields[6] = .operand.integer(replacement.index()) as .object
   end
-  if item.kind() = 'instruction' then do
-    catalog = .llrxascatalog..catalog(); recipeordinal = catalog.recipeoperand(item.opcode())
-    if recipeordinal > 0 then do
-      recipeview = item.recipe()
-      names = .string[]
-      do i = 1 to recipeview.registers()
-        next = next + 1; replacement = replacements[next] as .operand
-        if replacement.kind() <> 'R' then call bad('LL_TARGET_RECIPE: replacement is not a register')
-        names[i] = replacement.bank() || replacement.index()
-      end
-      fields[recipeordinal] = .operand.string(recipeview.rewrite(names) as .binary) as .object
-    end
-  end
   return fields
 
 mappedidentity: procedure = .int
@@ -1077,7 +1081,7 @@ mappedidentity: procedure = .int
  * zero/negative native sentinels are preserved. Callable and opaque compiler
  * transport declarations are retained with their original procedure. */
 remapmetadata: procedure = .object[]
-  arg item = .lltarget..record, fields = .object[], scope = '', ?steps = .int[], ?clauses = .int[], ?frames = .int[], frameparent = 0
+  arg item = .lltarget..record, fields = .object[], scope = '', ?steps = .int[], ?clauses = .int[], ?frames = .int[], frameparent = 0, ?regions = .int[], regionparent = 0
   value = .operand; old = .operand
   if fields[0] <> item.operands() then call bad('LL_TARGET_METADATA: field remap arity')
   if item.kind() = '.srcstep' then do
@@ -1098,6 +1102,17 @@ remapmetadata: procedure = .object[]
     end
   end
   else if item.kind() = '.inlinemap' & ?frames then do; old = fields[3] as .operand; fields[3] = .operand.integer(mappedidentity(frames,old.index())) as .object; end
+  else if item.kind() = '.inlineregion' & ?regions then do
+    old = fields[1] as .operand; fields[1] = .operand.integer(mappedidentity(regions,old.index())) as .object
+    old = fields[2] as .operand
+    if old.index() = 0 then fields[2] = .operand.integer(regionparent) as .object
+    else fields[2] = .operand.integer(mappedidentity(regions,old.index())) as .object
+  end
+  else if (item.kind() = '.inlinerange' | item.kind() = '.inlineexit') & ?regions then do
+    ordinal = 1
+    if item.kind() = '.inlinerange' then ordinal = 3
+    old = fields[ordinal] as .operand; fields[ordinal] = .operand.integer(mappedidentity(regions,old.index())) as .object
+  end
   else if item.kind() = '.meta' & scope <> '' then do
     if fields[0] = 1 | fields[0] = 4 then do
       value = fields[1] as .operand
@@ -1359,6 +1374,17 @@ body: class
   locals: method = .int
     call require(); header = .record(_owner,_header); item = header.operand(2)
     return item.index()
+  ownedlocals: method = .int
+    call require()
+    if <refvalid>(_target) = 0 then do; call bad('LL_TARGET_OWNER: body has no checked ownership index'); return 0; end
+    checked = dereference _target; graph_ref = checked.ir()
+    if (_owner <refsame> graph_ref) = 0 then do; call bad('LL_TARGET_OWNER: replaced target ownership'); return 0; end
+    return checked.ownedlocals(_function)
+  privatebindings: method = .int
+    call require()
+    if <refvalid>(_target) = 0 then do; call bad('LL_TARGET_OWNER: body has no checked ownership index'); return 0; end
+    checked = dereference _target
+    return checked.privatebindings(_function)
   expose: method = .string
     call require(); header = .record(_owner,_header); item = header.operand(3)
     return item.text()
@@ -1436,6 +1462,17 @@ inlineindex: class
     arg owner = reference .llir..module, records_ref = reference .int[], work = .int
     _owner = owner; _recordsref = records_ref; _limit = work
     return
+  matches: method = .int
+    arg owner = reference .llir..module, records_ref = reference .int[]
+    if _prepared = 0 | <refvalid>(_owner) = 0 | <refvalid>(_recordsref) = 0 then return 0
+    graph = dereference owner
+    return _identity = graph.identity() & (_owner <refsame> owner) & (_recordsref <refsame> records_ref)
+  rebind: method = .int
+    arg owner = reference .llir..module, records_ref = reference .int[]
+    graph = dereference owner
+    if _prepared = 0 | _error <> '' | _identity <> graph.identity() then return 0
+    _owner = owner; _recordsref = records_ref
+    return 1
   prepare: method = .void
     if _prepared then return
     _prepared = 1
@@ -1445,7 +1482,7 @@ inlineindex: class
     item = .record; prior = .record; field = .operand; name = .operand
     i = .int; j = .int; n = .int; ordinal = .int; parent = .int; next = .int; state = .int[]; path = .int[]
     frames = .string[]; sources = .string[]; maps = .string[]; framefn = .int[]; parents = .int[]
-    maprecords = .int[]; first = .int; last = .int; row = .string; key = .string
+    maprecords = .int[]; coldrecords = .int[]; first = .int; last = .int; row = .string; key = .string
     previous = .int; id = .int; opid = .int; celladdress = .int; levels = .int; ignored = .int
     if spend(graph.operations() * 2 + records[0] * 2) = 0 then return
     celladdress = 0
@@ -1457,8 +1494,9 @@ inlineindex: class
         frames[n] = right(field.index() as .string,10,'0') || ':' || right(item.id() as .string,10,'0')
       end
       if item.kind() = '.inlinemap' then maprecords[maprecords[0] + 1] = item.id()
+      if item.kind() = '.inlinerange' | item.kind() = '.inlineexit' then coldrecords[coldrecords[0] + 1] = item.id()
     end
-    if frames[0] = 0 & maprecords[0] = 0 then return
+    if frames[0] = 0 & maprecords[0] = 0 & coldrecords[0] = 0 then return
     levels = 1; n = max(1,records[0]); do while n > 1; n = n <idiv> 2; levels = levels + 1; end
     if spend(records[0] * (levels * 4 + 12)) = 0 then return
     ignored = arraysort(frames)
@@ -1481,6 +1519,12 @@ inlineindex: class
         field = item.operand(1)
         if field.index() > 0 then sources[sources[0] + 1] = right(field.index() as .string,10,'0') || ':' || right(item.id() as .string,10,'0')
       end
+    end
+    do i = 1 to coldrecords[0]
+      item = .record(owner,coldrecords[i]); ordinal = 2
+      if item.kind() = '.inlinerange' then ordinal = 1
+      field = item.operand(ordinal + 1)
+      _endkeys[_endkeys[0] + 1] = right(item.procedureid() as .string,10,'0') || ':' || field.text()
     end
     ignored = arraysort(_labelkeys); ignored = arraysort(sources)
     previous = 0
@@ -1571,12 +1615,12 @@ inlineindex: class
     end
     return 1
   labelid: method = .int
-    arg functionid = .int, name = .string
+    arg functionid = .int, name = .string, charge = 1
     /* The index sorts key:id rows. Compare the same terminated key: bare
      * names order differently when one is a prefix of another (.1/.10). */
     key = right(functionid as .string,10,'0') || ':' || name || ':'; lower = 1; upper = _labelkeys[0]; less = .int
     do while lower <= upper
-      if spend(1) = 0 then return 0
+      if charge then do; if spend(1) = 0 then return 0; end
       middle = lower + ((upper - lower) <idiv> 2); row = _labelkeys[middle]; candidate = left(row,length(key))
       if key == candidate then return right(row,10) as .int
       assembler slt less,key,row
@@ -1584,6 +1628,12 @@ inlineindex: class
       else lower = middle + 1
     end
     return 0
+  labeladdress: method = .int
+    arg functionid = .int, name = .string
+    call prepare()
+    id = labelid(functionid,name,0)
+    if id = 0 then return -1
+    return addressat(id)
   sourceindex: method = .int
     arg id = .int
     call prepare()
@@ -1674,10 +1724,318 @@ inlineindex: class
     end
     return 0
 
+/** Checked executable region and borrowed-suffix metadata. Lexical addresses
+ * come from the single target address index, independently of executable CFG
+ * reachability and SIGNALORIGIN. This validates representation/ownership; it
+ * neither executes actions nor asserts producer save/value correctness. */
+coldindex: class
+  _owner = reference .llir..module
+  _recordsref = reference .int[]
+  _globals = .int
+  _prepared = .int
+  _identity = .int
+  _inline = .inlineindex
+  _error = .string
+  _limit = .int
+  _used = .int
+  _regionids = .int[]
+  _regionops = .int[]
+  _parents = .int[]
+  _depths = .int[]
+  _rangeops = .int[]
+  _rangeregions = .int[]
+  _rangeparents = .int[]
+  _lookupranges = .int[]
+  _starts = .int[]
+  _ends = .int[]
+  _actionops = .int[]
+  _actionregions = .int[]
+  _actionstarts = .int[]
+  _actionends = .int[]
+  _actionnext = .int[]
+  _actionheads = .int[]
+  _actioncounts = .int[]
+  _lookuplevels = .int
+  _ownedlocals = .int[]
+  _privatecounts = .int[]
+  *: factory
+    arg owner = reference .llir..module, records_ref = reference .int[], addresses = .inlineindex, globals = .int, work = .int
+    _owner = owner; _recordsref = records_ref; _inline = addresses; _globals = globals; _limit = work
+    return
+  matches: method = .int
+    arg owner = reference .llir..module, records_ref = reference .int[]
+    if _prepared = 0 | <refvalid>(_owner) = 0 | <refvalid>(_recordsref) = 0 then return 0
+    graph = dereference owner
+    return _identity = graph.identity() & (_owner <refsame> owner) & (_recordsref <refsame> records_ref) & _inline.matches(owner,records_ref)
+  rebind: method = .int
+    arg owner = reference .llir..module, records_ref = reference .int[], addresses = .inlineindex
+    graph = dereference owner
+    if _prepared = 0 | _error <> '' | _identity <> graph.identity() then return 0
+    _owner = owner; _recordsref = records_ref; _inline = addresses
+    return 1
+  prepare: method = .void
+    if _prepared then return
+    _prepared = 1
+    if <refvalid>(_owner) = 0 | <refvalid>(_recordsref) = 0 then do; _error = 'LL_TARGET_OWNER: expired cold metadata input'; return; end
+    owner = _owner; records_ref = _recordsref; addresses = _inline; globals = _globals
+    graph = dereference owner; records = dereference records_ref; _identity = graph.identity()
+    rows = .string[]; bindings = .string[]; ranges = .string[]; actionrows = .string[]; actiontails = .int[]
+    locals = .int[]; procstarts = .int[]; procends = .int[]; seen = .int[]
+    colors = .int[]; path = .int[]; stack = .int[]
+    item = .record; region = .record; value = .operand; prior = .record
+    i = .int; j = .int; f = .int; active = .int; at = .int; finish = .int
+    ordinal = .int; parent = .int; current = .int; first = .int; last = .int; found = .int
+    previous = .string; row = .string; ignored = .int; count = .int; top = .int; depth = .int
+    if spend(records[0] * 4 + graph.functions() * 8) = 0 then return
+    do i = 1 to records[0]
+      item = .record(owner,records[i]); f = item.procedureid(); at = addresses.addressat(item.id())
+      if item.kind() = 'procedure' then do
+        if active > 1 then procends[active] = at
+        active = f; value = item.operand(2); locals[f] = value.index(); _ownedlocals[f] = value.index()
+        _privatecounts[f] = 0; procstarts[f] = at; seen[f] = 0
+      end
+      if item.kind() = 'instruction' then do; seen[f] = 1; finish = at + 1 + item.operands(); end
+      if item.kind() = '.inlinedprivate' then do
+        if seen[f] then do; _error = 'LL_TARGET_PRIVATE: declaration follows executable code'; return; end
+        value = item.operand(1); _ownedlocals[f] = min(_ownedlocals[f],value.index())
+        _privatecounts[f] = _privatecounts[f] + 1
+        bindings[bindings[0] + 1] = right(f as .string,10,'0') || ':' || right(value.index() as .string,10,'0')
+      end
+      if item.kind() = '.inlineregion' then rows[rows[0] + 1] = right(item.regionid() as .string,10,'0') || ':' || right(item.id() as .string,10,'0')
+      if item.kind() = '.inlinerange' then _rangeops[_rangeops[0] + 1] = item.id()
+      if item.kind() = '.inlineexit' then _actionops[_actionops[0] + 1] = item.id()
+    end
+    if active > 1 then procends[active] = finish
+    do f = 2 to graph.functions()
+      if _privatecounts[f] <> locals[f] - _ownedlocals[f] then do; _error = 'LL_TARGET_PRIVATE: incomplete borrowed local suffix'; return; end
+    end
+    levels = 1; count = max(1,records[0]); do while count > 1; count = count <idiv> 2; levels = levels + 1; end
+    _lookuplevels = levels
+    if spend(records[0] * (levels * 4 + 4)) = 0 then return
+    ignored = arraysort(bindings); previous = ''
+    do i = 1 to bindings[0]
+      if bindings[i] = previous then do; _error = 'LL_TARGET_PRIVATE: duplicate borrowed local slot'; return; end
+      previous = bindings[i]
+    end
+    ignored = arraysort(rows)
+    do i = 1 to rows[0]
+      row = rows[i]; _regionids[i] = left(row,10) as .int; _regionops[i] = right(row,10) as .int
+      _parents[i] = 0; _depths[i] = 0; _actionheads[i] = 0; _actioncounts[i] = 0; actiontails[i] = 0; colors[i] = 0
+      if i > 1 then do; if _regionids[i] = _regionids[i - 1] then do; _error = 'LL_TARGET_REGION: duplicate identity'; return; end; end
+    end
+    do i = 1 to _regionids[0]
+      item = .record(owner,_regionops[i]); f = item.procedureid(); at = addresses.addressat(item.id())
+      if at < procstarts[f] | at >= procends[f] then do; _error = 'LL_TARGET_REGION: declaration outside owning procedure code'; return; end
+      parent = index(item.parentregion())
+      if item.parentregion() <> 0 & parent = 0 then do; _error = 'LL_TARGET_REGION: missing parent'; return; end
+      if parent > 0 then do
+        region = .record(owner,_regionops[parent])
+        if region.procedureid() <> f then do; _error = 'LL_TARGET_REGION: parent belongs to another procedure'; return; end
+      end
+      _parents[i] = parent
+    end
+    do i = 1 to _regionids[0]
+      if colors[i] = 2 then iterate
+      assembler setattrs path,0
+      current = i
+      do while current > 0
+        if spend(1) = 0 then return
+        if colors[current] = 1 then do; _error = 'LL_TARGET_REGION: parent cycle'; return; end
+        if colors[current] = 2 then leave
+        colors[current] = 1; path[path[0] + 1] = current; current = _parents[current]
+      end
+      depth = 0
+      if current > 0 then depth = _depths[current]
+      do j = path[0] to 1 by -1
+        depth = depth + 1; current = path[j]; colors[current] = 2; _depths[current] = depth
+      end
+    end
+    do i = 1 to _rangeops[0]
+      item = .record(owner,_rangeops[i]); ordinal = index(item.regionid())
+      if ordinal = 0 then do; _error = 'LL_TARGET_REGION: range names missing region'; return; end
+      region = .record(owner,_regionops[ordinal]); f = item.procedureid()
+      if region.procedureid() <> f then do; _error = 'LL_TARGET_REGION: range belongs to another procedure'; return; end
+      value = item.operand(1); first = addresses.labeladdress(f,value.text())
+      value = item.operand(2); last = addresses.labeladdress(f,value.text())
+      if first < procstarts[f] | first >= last | last > procends[f] then do; _error = 'LL_TARGET_REGION: unresolved, empty or foreign range'; return; end
+      _rangeregions[i] = ordinal; _starts[i] = first; _ends[i] = last
+      ranges[i] = right(first as .string,20,'0') || ':' || right(_depths[ordinal] as .string,10,'0') || ':' || right(i as .string,10,'0')
+    end
+    ignored = arraysort(ranges); top = 0
+    do i = 1 to ranges[0]
+      ordinal = right(ranges[i],10) as .int; current = _rangeregions[ordinal]; _lookupranges[i] = ordinal; _rangeparents[ordinal] = 0
+      do while top > 0
+        if spend(1) = 0 then return
+        if _ends[stack[top]] > _starts[ordinal] then leave
+        top = top - 1
+      end
+      if top > 0 then do
+        priorrange = stack[top]; _rangeparents[ordinal] = priorrange
+        if _parents[current] <> _rangeregions[priorrange] | _ends[ordinal] > _ends[priorrange] then do; _error = 'LL_TARGET_REGION: overlapping sibling or noncontained child range'; return; end
+      end
+      else if _parents[current] <> 0 then do; _error = 'LL_TARGET_REGION: child range lacks parent range'; return; end
+      top = top + 1; stack[top] = ordinal
+    end
+    do i = 1 to _regionops[0]
+      item = .record(owner,_regionops[i]); at = addresses.addressat(item.id()); found = 0
+      do j = 1 to _rangeops[0]
+        if spend(1) = 0 then return
+        if _rangeregions[j] = i & _starts[j] <= at & at < _ends[j] then found = 1
+      end
+      if found = 0 then do; _error = 'LL_TARGET_REGION: declaration is outside its ranges'; return; end
+    end
+    do i = 1 to _actionops[0]
+      item = .record(owner,_actionops[i]); ordinal = index(item.regionid())
+      if ordinal = 0 then do; _error = 'LL_TARGET_REGION: action names missing region'; return; end
+      region = .record(owner,_regionops[ordinal]); f = item.procedureid()
+      if region.procedureid() <> f then do; _error = 'LL_TARGET_REGION: action belongs to another procedure'; return; end
+      value = item.operand(2); first = addresses.labeladdress(f,value.text())
+      value = item.operand(3); last = addresses.labeladdress(f,value.text()); found = 0
+      if first < 0 | first >= last then do; _error = 'LL_TARGET_REGION: unresolved or empty action phase'; return; end
+      do j = 1 to _rangeops[0]
+        if spend(1) = 0 then return
+        if _rangeregions[j] = ordinal & _starts[j] <= first & last <= _ends[j] then found = 1
+      end
+      if found = 0 then do; _error = 'LL_TARGET_REGION: action phase is outside its range'; return; end
+      do j = 1 to item.registerrefs()
+        value = item.registerref(j)
+        if value.index() > 4294967295 then do; _error = 'LL_TARGET_REGION: cold register index exceeds u32'; return; end
+        if value.bank() = 'a' then do
+          if value.index() > 2147483647 - locals[f] - globals then do; _error = 'LL_TARGET_REGION: packed argument index exceeds VM range'; return; end
+        end
+        if (wordpos(item.action(),'digits fuzz form case standard endlife') > 0) & value.index() >= _ownedlocals[f] then do; _error = 'LL_TARGET_REGION: cold base is borrowed storage'; return; end
+      end
+      value = item.operand(4)
+      do j = 1 to i - 1
+        if spend(1) = 0 then return
+        if _actionregions[j] <> ordinal | last <= _actionstarts[j] | first >= _actionends[j] then iterate
+        prior = .record(owner,_actionops[j]); order = prior.operand(4)
+        if order.index() = value.index() then do; _error = 'LL_TARGET_REGION: overlapping action order'; return; end
+      end
+      _actionregions[i] = ordinal; _actionstarts[i] = first; _actionends[i] = last
+      actionrows[i] = right(ordinal as .string,10,'0') || ':' || right(value.index() as .string,10,'0') || ':' || right(first as .string,20,'0') || ':' || right(i as .string,10,'0')
+    end
+    ignored = arraysort(actionrows)
+    do i = 1 to actionrows[0]
+      current = right(actionrows[i],10) as .int; ordinal = _actionregions[current]; _actionnext[current] = 0
+      if actiontails[ordinal] > 0 then _actionnext[actiontails[ordinal]] = current
+      else _actionheads[ordinal] = current
+      actiontails[ordinal] = current; _actioncounts[ordinal] = _actioncounts[ordinal] + 1
+    end
+    return
+  spend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _limit - _used then do; _error = 'LL_RESOURCE_LIMIT: target.cold metadata work'; return 0; end
+    _used = _used + amount; return 1
+  index: method = .int
+    arg id = .int
+    lower = 1; upper = _regionids[0]
+    do while lower <= upper
+      middle = lower + (upper - lower) <idiv> 2
+      if _regionids[middle] = id then return middle
+      if id < _regionids[middle] then upper = middle - 1
+      else lower = middle + 1
+    end
+    return 0
+  error: method = .string
+    call prepare()
+    return _error
+  usedwork: method = .int
+    call prepare()
+    return _used
+  ownedlocals: method = .int
+    arg functionid = .int
+    call prepare()
+    return _ownedlocals[functionid]
+  privatebindings: method = .int
+    arg functionid = .int
+    call prepare()
+    return _privatecounts[functionid]
+  regions: method = .int
+    call prepare()
+    return _regionids[0]
+  regionid: method = .int
+    arg ordinal = .int
+    call prepare()
+    return _regionids[ordinal]
+  regionop: method = .int
+    arg id = .int
+    call prepare()
+    ordinal = index(id)
+    if ordinal = 0 then return 0
+    return _regionops[ordinal]
+  regionat: method = .int
+    arg operation = .int
+    call prepare()
+    at = _inline.addressat(operation)
+    if at < 0 then return -1
+    source = .record(_owner,operation)
+    if source.valid() = 0 then return -1
+    if source.procedureid() < 2 then return 0
+    lower = 1; upper = _lookupranges[0]; found = 0; range = .int
+    do while lower <= upper
+      middle = lower + (upper - lower) <idiv> 2; range = _lookupranges[middle]
+      if _starts[range] <= at then do; found = middle; lower = middle + 1; end
+      else upper = middle - 1
+    end
+    if found = 0 then return 0
+    range = _lookupranges[found]
+    do while range > 0
+      if _starts[range] <= at & at < _ends[range] then return _regionids[_rangeregions[range]]
+      range = _rangeparents[range]
+    end
+    return 0
+  actionwork: method = .int
+    arg id = .int
+    call prepare()
+    region = index(id)
+    if id = 0 then return _lookuplevels * 2 + 8
+    if region = 0 then do; call bad('LL_TARGET_REGION: invalid cold action region'); return 0; end
+    return _actioncounts[region] * 2 + _lookuplevels * 2 + 8
+  /** One owned ordered phase snapshot; reserve its whole possible append cost
+   * before retaining any result. An empty active phase is a valid empty array. */
+  actionids: method = .int[]
+    arg id = .int, operation = .int, work = .int, bytes = .int
+    call prepare()
+    result = .int[]; region = index(id); at = _inline.addressat(operation)
+    if at < 0 | (id <> 0 & region = 0) then do; call bad('LL_TARGET_REGION: invalid cold action phase'); return result; end
+    required = actionwork(id)
+    if work < required | bytes < 1 then do; call bad('LL_RESOURCE_LIMIT: target.cold query work/bytes'); return result; end
+    if id = 0 then return result
+    if _actioncounts[region] > bytes <idiv> 8 then do; call bad('LL_RESOURCE_LIMIT: target.cold query bytes'); return result; end
+    source = .record(_owner,operation); owner = .record(_owner,_regionops[region])
+    if source.valid() = 0 | source.procedureid() <> owner.procedureid() then do; call bad('LL_TARGET_REGION: foreign cold action phase'); return result; end
+    current = _actionheads[region]
+    do while current > 0
+      if _actionstarts[current] <= at & at < _actionends[current] then result[result[0] + 1] = _actionops[current]
+      current = _actionnext[current]
+    end
+    return result
+  activeactions: method = .int
+    arg id = .int, operation = .int, ordinal = 0
+    call prepare()
+    region = index(id); at = _inline.addressat(operation); count = 0
+    if at < 0 then return -1
+    if id = 0 then return 0
+    if region = 0 then return -1
+    source = .record(_owner,operation); owner = .record(_owner,_regionops[region])
+    if source.valid() = 0 | source.procedureid() <> owner.procedureid() then return -1
+    current = _actionheads[region]
+    do while current > 0
+      if _actionstarts[current] <= at & at < _actionends[current] then do
+        count = count + 1
+        if ordinal = count then return _actionops[current]
+      end
+      current = _actionnext[current]
+    end
+    if ordinal = 0 then return count
+    return 0
+
 module: class
   _graph = .llir..module
   _cfg = .cfgcheck
   _inline = .inlineindex
+  _cold = .coldindex
   _records = .int[]
   _headers = .int[]
   _error = .string
@@ -1685,9 +2043,28 @@ module: class
   _artifact = .string
   _globals = .int
   _validationwork = .int
+  _validationlimit = .int
+  _prepared = .int
+  _revision = .int
   *: factory
     arg graph = .llir..module, work = 1000000
-    initialwork = work; _validationwork = work
+    _graph = graph; _validationlimit = work; _validationwork = work
+    return
+  prepare: method = .void
+    if _prepared then do
+      if _revision = _graph.identity() then do
+        if _error <> '' then return
+        if _inline.matches(reference _graph,reference _records) & _cold.matches(reference _graph,reference _records) then return
+        if _inline.rebind(reference _graph,reference _records) then do
+          if _cold.rebind(reference _graph,reference _records,_inline) then return
+        end
+      end
+      assembler setattrs _records,0
+      assembler setattrs _headers,0
+      _error = ''
+    end
+    _prepared = 1; _revision = _graph.identity()
+    work = _validationlimit; initialwork = work; _validationwork = work
     i = .int; j = .int; k = .int; fn = .int; slot = .int
     found = .int; n = .int; size = .int; cost = .int; index = .int
     position = .int; payloadbytes = .int
@@ -1697,7 +2074,7 @@ module: class
     trace_source = .operand; trace_bank = .operand; trace_value = .operand
     encoding = .llsource..prepared
     do
-    _graph = graph; _error = graph.error(); catalog = .llrxascatalog..catalog()
+    _error = _graph.error(); catalog = .llrxascatalog..catalog()
     if _error <> '' then return
     store = dereference _graph.storage(); contract = dereference store.contract(); expected = schema()
     if contract.manifest() <> expected.manifest() then do
@@ -1898,6 +2275,9 @@ module: class
     _inline = .inlineindex(reference _graph,reference _records,work)
     if _inline.error() <> '' then do; _error = _inline.error(); return; end
     work = work - _inline.usedwork()
+    _cold = .coldindex(reference _graph,reference _records,_inline,_globals,work)
+    if _cold.error() <> '' then do; _error = _cold.error(); return; end
+    work = work - _cold.usedwork()
     _cfg = .cfgcheck(reference _graph,reference _records,work,_inline)
     if _cfg.error() <> '' then _error = _cfg.error()
     else _validationwork = initialwork - work + _cfg.usedwork()
@@ -1906,103 +2286,185 @@ module: class
     end
     return
   error: method = .string
+    call prepare()
     return _error
   valid: method = .int
+    call prepare()
     return _error = ''
   validationwork: method = .int
+    call prepare()
     return _validationwork
   identity: method = .int
+    call prepare()
     graph_ref = reference _graph; graph = dereference graph_ref
     return graph.identity()
   ir: method = reference .llir..module
+    call prepare()
     return reference _graph
   name: method = .string
+    call prepare()
     return _name
   artifact: method = .string
+    call prepare()
     return _artifact
   globals: method = .int
+    call prepare()
     return _globals
+  ownedlocals: method = .int
+    arg functionid = .int
+    call prepare()
+    if _error <> '' | functionid < 2 | functionid > _graph.functions() then do; call bad('LL_TARGET_OWNER: invalid owned-local query'); return 0; end
+    return _cold.ownedlocals(functionid)
+  privatebindings: method = .int
+    arg functionid = .int
+    call prepare()
+    if _error <> '' | functionid < 2 | functionid > _graph.functions() then return 0
+    return _cold.privatebindings(functionid)
+  regions: method = .int
+    call prepare()
+    if _error <> '' then return 0
+    return _cold.regions()
+  regionid: method = .int
+    arg ordinal = .int
+    call prepare()
+    if _error <> '' | ordinal < 1 | ordinal > _cold.regions() then do; call bad('LL_TARGET_REGION: invalid region ordinal'); return 0; end
+    return _cold.regionid(ordinal)
+  region: method = .lltarget..record
+    arg id = .int
+    call prepare()
+    operation = _cold.regionop(id)
+    if _error <> '' | operation = 0 then call bad('LL_TARGET_REGION: missing region identity')
+    return .record(reference _graph,operation)
+  regionat: method = .int
+    arg operation = .int
+    call prepare()
+    if _error <> '' then return -1
+    return _cold.regionat(operation)
+  exitactionwork: method = .int
+    arg regionid = .int
+    call prepare()
+    if _error <> '' then do; call bad('LL_TARGET_REGION: invalid target module'); return 0; end
+    return _cold.actionwork(regionid)
+  exitactionids: method = .int[]
+    arg regionid = .int, operation = .int, work = 1000000, bytes = 67108864
+    call prepare()
+    empty = .int[]
+    if _error <> '' then do; call bad('LL_TARGET_REGION: invalid target module'); return empty; end
+    return _cold.actionids(regionid,operation,work,bytes)
+  exitactions: method = .int
+    arg regionid = .int, operation = .int
+    call prepare()
+    if _error <> '' then do; call bad('LL_TARGET_REGION: invalid target module'); return 0; end
+    count = _cold.activeactions(regionid,operation)
+    if count < 0 then do; call bad('LL_TARGET_REGION: foreign or invalid phase query'); return 0; end
+    return count
+  exitaction: method = .lltarget..record
+    arg regionid = .int, operation = .int, ordinal = .int
+    call prepare()
+    selected = _cold.activeactions(regionid,operation,ordinal)
+    if _error <> '' | ordinal < 1 | selected = 0 then call bad('LL_TARGET_REGION: invalid active action ordinal')
+    return .record(reference _graph,selected)
   /** These are validated diagnostic labels only. Their presence grants no
    * executable selection, activation equivalence or optimizer permission. */
   inlineframes: method = .int
+    call prepare()
     if _error <> '' then return 0
     return _inline.frames()
   inlineframe: method = .lltarget..record
     arg ordinal = .int
+    call prepare()
     if _error <> '' | ordinal < 1 | ordinal > _inline.frames() then call bad('LL_TARGET_INLINE: invalid frame ordinal')
     return .record(reference _graph,_inline.frame(ordinal))
   inlineframeindex: method = .int
     arg id = .int
+    call prepare()
     if _error <> '' then return 0
     return _inline.frameindex(id)
   inlinemaps: method = .int
+    call prepare()
     if _error <> '' then return 0
     return _inline.maps()
   inlinemap: method = .lltarget..record
     arg ordinal = .int
+    call prepare()
     if _error <> '' | ordinal < 1 | ordinal > _inline.maps() then call bad('LL_TARGET_INLINE: invalid map ordinal')
     return .record(reference _graph,_inline.map(ordinal))
   inlinemapstart: method = .int
     arg ordinal = .int
+    call prepare()
     if _error <> '' | ordinal < 1 | ordinal > _inline.maps() then return -1
     return _inline.mapstart(ordinal)
   inlinemapend: method = .int
     arg ordinal = .int
+    call prepare()
     if _error <> '' | ordinal < 1 | ordinal > _inline.maps() then return -1
     return _inline.mapend(ordinal)
   inlineaddress: method = .int
     arg operation = .int
+    call prepare()
     if _error <> '' then return -1
     return _inline.addressat(operation)
   inlineframeat: method = .int
     arg operation = .int
+    call prepare()
     if _error <> '' then return -1
     return _inline.frameat(operation)
   inlinesourceid: method = .int
     arg step = .int
+    call prepare()
     if _error <> '' | step < 1 then return 0
     return _inline.sourcerecord(step)
   normalcfgcomplete: method = .int
     arg functionid = .int
+    call prepare()
     if _error <> '' then return 0
     graph_ref = reference _graph; graph = dereference graph_ref
     if _cfg.identity() <> graph.identity() then return 0
     return _cfg.complete(functionid)
   endobservations: method = .int
     arg functionid = .int
+    call prepare()
     if _error <> '' then return 1
     graph_ref = reference _graph; graph = dereference graph_ref
     if _cfg.identity() <> graph.identity() then return 1
     return _cfg.endobservations(functionid)
   labelblock: method = .int
     arg functionid = .int, name = .string
+    call prepare()
     if _error <> '' then do; call bad('LL_TARGET_CFG: invalid target module'); return 0; end
     graph_ref = reference _graph; graph = dereference graph_ref
     if _cfg.identity() <> graph.identity() then do; call bad('LL_TARGET_OWNER: replaced CFG evidence'); return 0; end
     return _cfg.labelblock(functionid,name)
   records: method = .int
+    call prepare()
     if _error <> '' then return 0
     return _records[0]
   record: method = .lltarget..record
     arg ordinal = .int
+    call prepare()
     if _error <> '' | ordinal < 1 | ordinal > _records[0] then call bad('LL_TARGET_RECORD: invalid module or ordinal')
     return .record(reference _graph,_records[ordinal])
   at: method = .lltarget..record
     arg id = .int
+    call prepare()
     return .record(reference _graph,id)
   procedures: method = .int
+    call prepare()
     if _error <> '' then return 0
     return _headers[0]
   procedure: method = .lltarget..body
     arg ordinal = .int
+    call prepare()
     if _error <> '' | ordinal < 1 | ordinal > _headers[0] then call bad('LL_TARGET_PROCEDURE: invalid module or ordinal')
     header = .record(reference _graph,_headers[ordinal])
     return .body(reference _graph,header.procedureid(),header.id(),reference self)
   procedureid: method = .int
     arg name = .string
+    call prepare()
     return findprocedure(reference _graph,reference _headers,name)
   body: method = .lltarget..body
     arg functionid = .int
+    call prepare()
     do i = 1 to _headers[0]
       header = .record(reference _graph,_headers[i])
       if header.procedureid() = functionid then return .body(reference _graph,functionid,header.id(),reference self)

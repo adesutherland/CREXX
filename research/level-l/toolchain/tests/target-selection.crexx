@@ -4,7 +4,6 @@ import rxfnsb
 import llir
 import lltarget
 import lltargettransfer
-import llinline
 import llrxascatalog
 
 check: procedure = .int
@@ -39,7 +38,7 @@ selector: procedure = .int
       end
       else if action.sourcekind() = 'captured' then failures = failures + check(action.sourceid() < action.id(),'resource callback consumes an earlier immutable capture')
     end
-    if wordpos(action.kind(),'call callcapture scope-enter') > 0 then calls = calls + 1
+    if wordpos(action.kind(),'call callcapture') > 0 then calls = calls + 1
     if action.kind() = 'observe' then do
       failures = failures + check(written = 0,'selector observations precede result writes')
       if action.subject() = windowref & action.domain() > 0 then do
@@ -59,7 +58,7 @@ selector: procedure = .int
     end
   end
   failures = failures + check(selected = 1 & calls = 0 & row.complete('calls'),'selected and unselected selectors never invoke a body')
-  failures = failures + check(callbackseen & conditions > 0,'selector result resource hooks have captured conditions and a final barrier')
+  failures = failures + check(conditions = 0 & callbackseen = (profile.callbackobligations(operation) > 0),'selector destination cleanup has no resource callback; resolver and unknown routes retain their barrier')
   if isfactory then do
     failures = failures + check(windowref > 0 & attributes = 1 & flags > 0,'factory symbolic actual window observes complete values including object type and flags')
     failures = failures + check(resolvercallbacks = 1,'factory match callback is an unconditional mutation boundary')
@@ -100,21 +99,9 @@ main: procedure = .int
   if profile.status() <> 'ok' then do; say profile.message(); return 1; end
   failures = failures + selector(profile,methodid,0) + selector(profile,unusedid,0) + selector(profile,factoryid,1)
   abiop = source.at(returnid).opcode()
-  failures = failures + check(catalog.abistate(abiop,'scoped-return') = 'known' & catalog.abisteps(abiop,'scoped-return') = 6,'generated ABI table exposes numeric result plus scope leave')
-  failures = failures + check(catalog.abioperation(abiop,'scoped-return',1) = 'return-integer' & catalog.abidestinationextent(abiop,'scoped-return',1) = 'none','immediate return uses direct fields without releasing the result payload')
-  failures = failures + check(catalog.abioperation(abiop,'scoped-return',2) = 'restore-policy' & catalog.abicheckpoint(abiop,'scoped-return',2) = 'leave-policy','generated leave restores signal policy before owned cleanup')
-  failures = failures + check(catalog.abirepeat(abiop,'scoped-return',3) = 'owned-begin' & catalog.abirepeat(abiop,'scoped-return',4) = 'owned-end' & catalog.abidestinationextent(abiop,'scoped-return',3) = 'full-capacity','owned clear/restore is a repeated per-slot pair over full backing capacity')
-  failures = failures + check(catalog.abioperation(abiop,'scoped-return',5) = 'restore-numeric' & catalog.abioperation(abiop,'scoped-return',6) = 'pop-scope','numeric restoration precedes final scope pop')
-  failures = failures + check(catalog.abistate(abiop,'frame-unwind') = 'unknown' & catalog.abisteps(abiop,'frame-unwind') = 0 & catalog.abistate(-1,'entry') = 'unknown' & catalog.abioperation(abiop,'scoped-return',7) = 'unknown','unmapped ABI modes and out-of-range rows never imply an empty proof')
-  request = llinline..bind(reference source,factoryid,reference source,source.procedureid('main'))
-  recipe = .llinline..callrecipe(request)
-  failures = failures + check(recipe.status() = 'keep' & recipe.reason() = 'call.contract.not.invocation','factory selection is never an inline invocation candidate')
-  request = llinline..bind(reference source,outputid,reference source,source.procedureid('main'))
-  recipe = .llinline..callrecipe(request)
-  failures = failures + check(recipe.status() = 'invalid' & recipe.reason() = 'call.contract.unavailable','a selected ordinary instruction without a call descriptor is an invalid binding')
-  request = llinline..bind(reference source,dynamicid,reference source,source.procedureid('main'))
-  recipe = .llinline..callrecipe(request)
-  failures = failures + check(recipe.status() = 'ok' & recipe.kind() = catalog.callkind(source.at(dynamicid).opcode()) & recipe.counted(),'a described dynamic invocation keeps its valid recipe independently of target proof')
+  failures = failures + check(catalog.abistate(abiop,'scoped-return') = 'none' & catalog.abisteps(abiop,'scoped-return') = 0,'retired scope return grants no active effects')
+  failures = failures + check(catalog.abistate(abiop,'physical-return') = 'known' & catalog.abioperation(abiop,'physical-return',1) = 'return-integer','ordinary integer return retains its canonical assignment surface')
+  failures = failures + check(catalog.abistate(abiop,'unsupported-test-mode') = 'unknown' & catalog.abisteps(abiop,'unsupported-test-mode') = 0,'unmapped ABI mode remains explicitly unknown')
   row = profile.instruction(dynamicid); targetref = 0
   do i = 1 to row.references()
     ref = row.ref(i)

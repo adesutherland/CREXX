@@ -1,7 +1,8 @@
 # Level L target-toolchain research
 
-**Status: phase 1 VM preparation is implemented and locally qualified; the
-shared Level L baseline and new inliner2 implementation/qualification remain open.** This is the single
+**Status: phase 1 VM preparation and phase 2 shared Level L foundation are
+implemented and locally qualified; new inliner2 implementation/qualification
+remains open.** This is the single
 authoritative plan. The [inlining architecture](doc/inlining.md) owns the detailed
 mapping and exit contracts; this file owns outcomes, steps and completion gates.
 
@@ -249,6 +250,18 @@ projection and all facts needed by the five duties/M1–M3, not an inliner-speci
 solver. Existing generic capabilities remain valuable; review them against this
 architecture and remove legacy restrictions rather than copy them forward.
 
+The phase-2 cleanup removes the abandoned inliner1 modules (`llinline`,
+`lltargetfacts`, `llcleanup`, `lltargetrecipe`), its receipt-driven CLI/stage,
+and their build/test registrations. Shared target model/remap/CFG/flow/summary
+owners lose the old fake-scope executor, activation/clone-permission theorems,
+recycler-history admission, destination-cleanup-based Rexx callback synthesis
+and candidate-clone certificate APIs. Preserve
+independent assertions in generic controls before removing obsolete fixtures.
+Generic same-activation correspondence and clear/warning validation remain
+where required for ordinary target transformations; they do not authorize
+CALL deletion. The final dependency/API audit checks that no retired machinery
+is imported, packaged, exported or required by the qualified foundation.
+
 | Shared capability | Required implementation and controls |
 |---|---|
 | Catalogue and machine CFG | Canonical typed operands/references and ordered effects, normal/table/call/return/signal/resume/unwind/terminal/unknown paths, exact owner validation, signal tags/actions/source-save ownership. Model terminal signal-instruction misuse separately from the requested catchable event; remove retired scope/SIGRET effects. |
@@ -259,6 +272,46 @@ architecture and remove legacy restrictions rather than copy them forward.
 | Calls and bindings | Exact actual/result capture phase, count distinct from presence, independently rebindable repeated aliases, private a0, source by-value copies, finite scattered block construction and affine preservation of original dynamic windows. Unknown count is not an invented absent tail or automatic rejection. |
 | Bottom-up and lifecycle | Exact dependency invalidation after rewriting; bounded monotone recursive summaries with explicit unknown/resource reason; owned immutable results, stale/foreign evidence rejection, cumulative work/bytes and atomic last-good publication. No repeated whole-caller charge for each small query. |
 
+Deferred handler value facts are part of the shared signal-edge model.
+On successful SIGBRV delivery, the resolved destination is defined as an
+initialized `runtime_signal`; its unknown contents are not dirty state. Model
+installation separately from the handler-entry edge: resolve the owning slot
+after cold cleanup, discard its prior value/origins, and publish the guaranteed
+type/layout/initialized postconditions. Keep actual payload COPY observations
+and callback effects separate, preserving only facts justified through them.
+Unknown alias/hook effects must not manufacture an old-destination dirty read
+or a blanket instruction rejection. Review normal-path preservation, then-active
+links, nested owners and payload hooks against the VM surface; strengthen the
+owning implementation only if a concrete legal counterexample breaks that
+surface. No new opcode or fake call context is selected.
+
+Stage 2 exposed an additional SIGBRV publication-order defect: a legal native
+COPY callback can follow an owned reference into the in-frame destination
+through a supported nested call. Completing the raw COPY in private storage
+before the final destination clear/type/layout/marker publication and MOVE is
+a prerequisite for the typed handler-entry postcondition. The permanent public
+embedding regression observes that handler entry, retains real COPY effects
+and covers raw/linked images. This bounded native repair has its own affected
+normal/maintained-sanitizer qualification; phase 1's earlier qualified baseline
+remains the recorded boundary, not a claim of broad VM requalification here.
+
+Shared target factories obey the COPY-equivalent return/lifetime contract:
+retain owned data in the result, and initialize handles into its interior on
+the persistent receiver. Self-derived caches must detect copies/replacement
+or expired/foreign backing and rebuild against that receiver. They must not
+extend the factory frame or silently retarget previously issued external facts.
+Independent factory-return and prepared-copy controls qualify this obligation.
+
+The native B factory emitter is a required correctness prerequisite exposed
+by this gate: each new factory receiver must be explicitly cleared before
+SETATTRS/SETOBJECTTYPE. SETATTRS preserves existing attributes, and a logical
+COPY return need not empty recycled private registers. A factory that assigns
+some fields and later leaves others at their defaults must still construct a
+fresh object. Repair this one common emission owner and retain a repeated,
+non-inlined constructor regression; do not clear classes individually, change
+SETATTRS, or restore destructive RETURN behavior. This does not change the
+native C frontend or add a language/API/ISA contract.
+
 The generic facts are available to independent target clients before adoption
 by inliner2. In particular, no old scopefree/directequivalence/bodyrelation,
 source/candidate receipt or hidden C-helper theorem is a mandatory part of this
@@ -268,20 +321,26 @@ effects; cleanup-only conforming finalizers do not acquire Rexx callback edges.
 Unknown facts reduce optional optimization or leave a specific semantic duty
 unproved; they do not authorize absent effects or broad callback vetoes.
 
+The separate native C assembler flow/proof implementation remains unqualified
+on pre-existing call, policy, register-window, attribute, numeric and alias
+cases. Its owner is native assembler flow/proof; closure requires independent
+VM/fixture classification of those cases and a green broad native flow graph
+suite. The shared Level L foundation does not confer that qualification.
+
 | Baseline criterion | Observable completion condition | State |
 |---|---|---|
-| **LLF-AC01 — target and flow contracts** | Documented catalogue, CFG, transfer, point/edge and signal policy APIs agree with independent constructed and ordinary RXAS controls, including all phase-1 changes. Invalid/stale/incomplete inputs yield explicit failure/unknown. | open |
-| **LLF-AC02 — identity and summaries** | Links/swaps/remaps preserve storage/component identities and exact module owners. Direct/transitive summaries propagate bottom-up, terminate in recursive groups and preserve uncertainty. Work/byte refusal is atomic. | open |
-| **LLF-AC03 — baseline qualification** | The complete selected one-VM target-foundation panel is green, independently covering positive/negative/state/resource cases. Owning API/consumer guides and exact limits are current, warning-free inputs reviewed, qualified foundation committed. | open |
-| **LLF-AC04 — native payload retirement** | Phase 1 proves once-only normal/nonlocal physical retirement, inactive owned backing, borrowed exclusions and repeated reuse/teardown; phase 2 faithfully projects the resulting entry/resource/ownership contract without declaring current-execution payloads absent. Native implementation stays wholly in phase 1. | native phase qualified; L projection open |
+| **LLF-AC01 — target and flow contracts** | Documented catalogue, CFG, transfer, point/edge and signal policy APIs agree with independent constructed and ordinary RXAS controls, including all phase-1 changes. Invalid/stale/incomplete inputs yield explicit failure/unknown. | done — locally qualified shared Level L contracts |
+| **LLF-AC02 — identity and summaries** | Links/swaps/remaps preserve storage/component identities and exact module owners. Direct/transitive summaries propagate bottom-up, terminate in recursive groups and preserve uncertainty. Work/byte refusal is atomic. | done — locally qualified identity, summary and bounded lifecycle controls |
+| **LLF-AC03 — baseline qualification** | The complete selected one-VM target-foundation panel is green, independently covering positive/negative/state/resource cases. Owning API/consumer guides and exact limits are current, warning-free inputs reviewed, qualified foundation committed. | done — selected local one-VM foundation and package boundary qualified |
+| **LLF-AC04 — native payload retirement** | Phase 1 proves once-only normal/nonlocal physical retirement, inactive owned backing, borrowed exclusions and repeated reuse/teardown; phase 2 faithfully projects the resulting entry/resource/ownership contract without declaring current-execution payloads absent. Native implementation stays wholly in phase 1. | done — native retirement baseline and shared L projection locally qualified |
 
 | Baseline step | State and dependency |
 |---|---|
-| **LLF-STEP01 — complete audit** | todo: reconcile documented APIs, canonical inventory and every included foundation control with this architecture, separating algorithm/database defects, stale tests and legacy inliner policy; after VM-STEP03. |
-| **LLF-STEP02 — coherent repair** | todo: repair the complete shared capability table, update projections and independent tests, review representative flow/remap/assignment output; after STEP01. |
-| **LLF-STEP03 — QA and commit** | todo: prepare changed owners once, freeze and run the complete selected foundation panel, repair/replay affected failures, publish current guides/limits and commit qualified L paths; after STEP02. Phase 3 starts only after this gate. |
+| **LLF-STEP01 — complete audit** | done: reconciled documented APIs, canonical inventory and every included foundation control with this architecture, separating algorithm/database defects, stale tests and legacy inliner policy; after VM-STEP03. |
+| **LLF-STEP02 — coherent repair** | done: shared contracts, projections and independent controls repaired and reviewed; obsolete modules/CLI/certificates removed from source, build and package surfaces. |
+| **LLF-STEP03 — QA and commit** | done: frozen reviewed inputs pass the complete selected local one-VM foundation panel and package audit; current guides/limits accompany the qualified commit. Phase 3 remains separate and open. |
 
-**Phase 2 QA gate (todo).** Use one normal configuration/VM and independent
+**Phase 2 QA gate (done — local qualification).** Use one normal configuration/VM and independent
 constructed plus ordinary RXAS consumers. Cover normal and signal CFGs; separate
 subvalues/flags and conversion validity; links/swaps/repeated aliases and active
 versus base cleanup; known/unknown numeric and signal-save state; logical returns,
@@ -289,9 +348,12 @@ references/finalizer ownership; exact globals/entry/initializers; lexical/source
 metadata; finite/dynamic windows and constrained assignment; dirty-read warning/
 clear without borrowed corruption; recursive/transitive invalidation; stale,
 foreign, repeated/interleaved and exhausted requests. Include the updated numeric
-site-facets controls not yet runtime-qualified. Retain useful structural assertions
+site-facets controls. Retain useful structural assertions
 and one independent non-inliner client. The guide must map APIs to maintained
 controls and state remaining unknown boundaries before “Level L ready” is claimed.
+This local gate covers the selected shared foundation and its affected native
+prerequisites; it does not qualify the separate native C assembler flow/proof
+implementation, phase 3, the wider inlining outcome, platforms or release delivery.
 
 Shared lexer/parser preparation is part of the foundation check, not a new
 performance initiative. Preserve exact DFA/order/UTF-8/source behavior and public
@@ -417,6 +479,40 @@ directives. Runtime-only opcodes are not admitted as source instructions.
 Nonoptimizing assembly resolves required symbols and constructs valid graph
 data, but performs no peepholes, instruction fusion, register reuse or inlining.
 External legacy text encodings and future syntax are separate scope decisions.
+
+### RXAS correctness checking roadmap
+
+**RXAS-CHECK-01 — correctness checks in the Level L/B assembler (todo).**
+Owner: the future B/L RXAS assembler, using the canonical instruction database
+and shared Level L analyses. This is future assembler integration, not another
+inliner proof engine or a new prerequisite added to phase 2.
+
+- Validate instruction/operand forms, register and call-window bounds,
+  labels/control entries, executable metadata and exact owners. Check normal,
+  handler/resume and nonlocal paths through the shared graph.
+- Diagnose proved reads of unwritten owned register components, individual
+  flags and addressed subvalues/lifetimes. Distinguish dirty state from a
+  defined value whose contents are unknown. A scalar write or SETATTRS does
+  not initialize unrelated components or all preserved attributes; recycled
+  frame contents are never an initialization guarantee. Preserve borrowed
+  arguments/globals and their published calling convention.
+- Check reference/owned-lifetime and initialization obligations where the
+  shared facts prove them. Unsupported precision, uncertain paths and exhausted
+  allowances must be reported separately from proved-invalid assembly; do not
+  invent absence or require proof of an entire language convention.
+- Run the checks on source before optimization and validate transformed RXAS
+  after rewriting/inlining and register assignment. Reuse the existing shared
+  clear/warning transaction for eligible proved dirty reads. Preserve truthful
+  source diagnostics and atomic publication on errors.
+
+Acceptance: independent valid/invalid handwritten and compiler-produced RXAS
+controls, including the missing fresh-factory receiver initialization exposed
+by the current compiler repair, partial register writes, preserved attributes,
+branches/signals, borrowed cells and reference expiry. A corrected producer
+must pass; the defective producer shape must yield an actionable diagnostic
+without depending on frame reuse to make the test fail. Qualify the eventual
+warning/error policy and coverage under TGT-AC04/08/11 and TGT-STEP04/08; this
+item remains open until that assembler capability is delivered and tested.
 
 RXBIN means current 007, not a new format: the fixed-width little-endian
 container and all six sections (modules, instructions, constants, metadata,

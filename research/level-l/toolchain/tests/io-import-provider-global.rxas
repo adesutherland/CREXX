@@ -1,4 +1,0 @@
-/* A referenced private foreign global still has no current-ISA binding. */
-.globals=1
-foreignstep() .locals=0 .expose=fixture.import.bump
-  ret g0

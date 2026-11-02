@@ -1,5 +1,6 @@
 /* cREXX License (MIT). Independent direct/transitive procedure summaries. */
 options levelb
+import rxfnsb
 import llir
 import lltarget
 import lltargettransfer
@@ -24,6 +25,13 @@ label: procedure = .int
   arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
   fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
   return body.record('label',fields,at)
+external: procedure = .int
+  arg expose profile = .lltargettransfer..profiledraft, operation = .int, key = .string, certainty = 'must'
+  return profile.event(operation,'external',0,0,'none',0,.lltarget..operand(),certainty,'normal','none',key)
+sameeffect: procedure = .int
+  arg left = .lltargetsummary..summary, right = .lltargetsummary..summary, key = .string
+  first = left.effect('effects','external',key); second = right.effect('effects','external',key)
+  return first.status() == second.status() & first.may() = second.may() & first.must() = second.must() & first.unknown() = second.unknown()
 stalequery: procedure = .int
   arg view = .lltargetsummary..summary
   do
@@ -34,8 +42,52 @@ stalequery: procedure = .int
   end
   return 0
 
+/** A precise installer does not prove its deferred raw-payload COPY empty. */
+eventdelivery: procedure = .int
+  failures = 0; ignored = .int; i = .int; fields = .object[]
+  edge = .lltargetcfg..edge; delivered = 0
+  draft = .lltarget..draft('summary.delivery','fixture:summary.delivery',0)
+  at = draft.synthetic('event binding has a known immediate and separate deferred footprint')
+  body = draft.procedure('main',1,at)
+  ignored = one(body,'null',body.reg('r',0),at)
+  fields[1] = .lltarget..operand.symbol('caught') as .object
+  fields[2] = body.reg('r',0) as .object
+  fields[3] = .lltarget..operand.string('ERROR' as .binary) as .object
+  installed = body.emit('sigbrv',fields,at)
+  raised = one(body,'signal',.lltarget..operand.string('ERROR' as .binary),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  ignored = label(body,'caught',at)
+  ignored = one(body,'sighalt',.lltarget..operand.string('ERROR' as .binary),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(1),at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'event delivery summary source validates')
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  /* Native deferred delivery belongs to the canonical profile. An
+   * independently described outward raise cannot stand in for that edge. */
+  profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  summaries = .lltargetsummary..analysis(reference flow)
+  failures = failures + check(summaries.status() = 'ok','event delivery shared summary builds')
+  if summaries.status() <> 'ok' then do; say summaries.reason(); return failures; end
+  do i = 1 to cfg.outedges(raised)
+    edge = cfg.outedge(raised,i)
+    if cfg.edgefeasible(edge.id()) = 0 | edge.asynchronous() then iterate
+    if edge.exposure() <> 'event-binding' then iterate
+    delivered = delivered + 1
+    copy = flow.deliverycallbackat(edge.id())
+    failures = failures + check(edge.policyinstallation() = installed & copy.status() = 'unknown' & copy.possible() & copy.reason() = 'target.flow.delivery.copy.hook.unproved','summary premise contains the actual unproved deferred native COPY edge')
+  end
+  failures = failures + check(delivered = 1,'one feasible synchronous bound-event delivery exists')
+  footprint = summaries.footprint(raised)
+  /* A canonical terminal alternative also has an ABI resource obligation.
+   * The footprint need not prioritize one valid unknown over the other. */
+  failures = failures + check(footprint.status() = 'unknown' & footprint.reason() <> '','known installer cannot publish an empty deferred native COPY footprint: ' || footprint.reason())
+  return failures
+
 main: procedure = .int
-  failures = 0; ignored = .int; i = .int; refid = .int
+  failures = eventdelivery(); ignored = .int; i = .int; refid = .int; query = .int; exhausted = .int
+  repeatedwork = .int; repeatedbytes = .int
   record = .lltarget..record; body = .lltarget..bodydraft
   draft = .lltarget..draft('target.summary','fixture:target.summary',0)
   at = draft.synthetic('independent procedure effect and return contracts')
@@ -70,16 +122,38 @@ main: procedure = .int
   contextret = one(body,'ret',.lltarget..operand.integer(7),at)
   body = draft.procedure('namedsignal',0,at)
   namedret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('duplicates',1,at)
+  duplicateop = two(body,'load',body.reg('r',0),.lltarget..operand.integer(1),at)
+  provenanceop = two(body,'load',body.reg('r',0),.lltarget..operand.integer(2),at)
+  duplicateret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('duplicateparent',1,at)
+  firstduplicatecall = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('duplicates'),at)
+  secondduplicatecall = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('duplicates'),at)
+  duplicateparentret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('duplicatetop',1,at)
+  duplicateparentcall = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('duplicateparent'),at)
+  duplicatetopret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('effectprovenance',1,at)
+  provenancebranch = two(body,'brt',.lltarget..operand.symbol('joined'),body.reg('r',0),at)
+  conditionalop = two(body,'load',body.reg('r',0),.lltarget..operand.integer(1),at)
+  ignored = label(body,'joined',at)
+  definiteop = two(body,'load',body.reg('r',0),.lltarget..operand.integer(2),at)
+  provenanceret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('literalpayload',0,at)
+  payload = .lltarget..operand.string(copies('abcdefgh',1024) as .binary)
+  payloadret = one(body,'ret',payload,at)
   target = draft.finish()
   failures = failures + check(target.valid(),'summary source owner')
   if target.valid() = 0 then do; say target.error(); say 'TARGET_SUMMARY|failures=' || failures; return failures; end
   premise = .lltargettransfer..profiledraft(reference target,'fixture.summary.v1')
   integer = premise.domain('component','fixture.integer')
   numericdomain = premise.domain('context','context.numeric')
+  stringdomain = premise.domain('component','fixture.string')
   do i = 1 to target.records()
     record = target.record(i)
     if record.procedureid() > 1 & record.kind() <> 'procedure' then ignored = premise.operation(record.id())
   end
+  ignored = premise.event(payloadret,'return',0,stringdomain,'literal',0,payload)
   refid = premise.ref(called,2,'procedure','symbolic')
   ignored = premise.event(called,'call',0,0,'reference',refid)
   refid = premise.ref(recursed,2,'procedure','symbolic')
@@ -106,6 +180,36 @@ main: procedure = .int
   ignored = premise.event(contextret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
   ignored = premise.event(namedret,'raise',0,0,'literal',0,.lltarget..operand.string('FIXTURE_SIGNAL' as .binary),'must','failure','before','unwind')
   ignored = premise.event(namedret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  /* Grow through several index capacities, then repeat exact tuples. */
+  do i = 1 to 96
+    ignored = external(premise,duplicateop,'effect.' || i)
+    ignored = external(premise,duplicateop,'effect.' || i)
+  end
+  ignored = external(premise,duplicateop,'effect.1','may')
+  ignored = external(premise,duplicateop,'certainty.effect','may')
+  ignored = external(premise,duplicateop,'certainty.effect')
+  ignored = external(premise,conditionalop,'provenance.effect')
+  ignored = external(premise,definiteop,'provenance.effect')
+  ignored = premise.event(provenanceret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = external(premise,provenanceop,'effect.1')
+  ignored = external(premise,duplicateop,'1')
+  ignored = external(premise,duplicateop,'01')
+  ignored = external(premise,duplicateop,'tail')
+  ignored = external(premise,duplicateop,'tail ')
+  /* These distinct equal-length strings collide under the bounded 131 hash. */
+  ignored = external(premise,duplicateop,'hash.1h3fj09tli')
+  ignored = external(premise,duplicateop,'hash.9529ju4urj')
+  ignored = external(premise,recursed,'recursive.effect')
+  ignored = external(premise,recursed,'recursive.effect')
+  refid = premise.ref(firstduplicatecall,2,'procedure','symbolic')
+  ignored = premise.event(firstduplicatecall,'call',0,0,'reference',refid)
+  refid = premise.ref(secondduplicatecall,2,'procedure','symbolic')
+  ignored = premise.event(secondduplicatecall,'call',0,0,'reference',refid)
+  refid = premise.ref(duplicateparentcall,2,'procedure','symbolic')
+  ignored = premise.event(duplicateparentcall,'call',0,0,'reference',refid)
+  ignored = premise.event(duplicateret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = premise.event(duplicateparentret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = premise.event(duplicatetopret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
   call premise.unknown(signalret,'signals','independent unknown delivered signal set')
   profile = premise.finish()
   failures = failures + check(profile.status() = 'ok','summary operational profile seals')
@@ -119,6 +223,62 @@ main: procedure = .int
   summaries = lltargetsummary..analyse(reference flow)
   failures = failures + check(summaries.status() = 'ok','procedure inference')
   if summaries.status() <> 'ok' then do; say summaries.message(); say 'TARGET_SUMMARY|failures=' || failures; return failures; end
+  duplicateview = summaries.procedure(target.procedureid('duplicates'),'direct')
+  claim = duplicateview.effect('effects','external','effect.1')
+  failures = failures + check(claim.may() & claim.must() & claim.unknown() = 0,'duplicate and may events cannot erase a definite original effect')
+  claim = duplicateview.effect('effects','external','certainty.effect')
+  failures = failures + check(claim.may() & claim.must() & claim.unknown() = 0,'later definite event remains distinct from the same-operation may tuple')
+  provenanceview = summaries.procedure(target.procedureid('effectprovenance'),'direct')
+  claim = provenanceview.effect('effects','external','provenance.effect')
+  failures = failures + check(claim.may() & claim.must() & claim.unknown() = 0,'later dominating event retains its source when an earlier equal effect is conditional')
+  claim = duplicateview.effect('effects','external','1')
+  failures = failures + check(claim.may() & claim.must(),'numeric-looking effect key is an exact identifier')
+  claim = duplicateview.effect('effects','external','01')
+  failures = failures + check(claim.may() & claim.must(),'leading-zero effect key remains separately present')
+  claim = duplicateview.effect('effects','external','001')
+  failures = failures + check(claim.may() = 0 & claim.must() = 0 & claim.unknown() = 0,'numeric equivalence cannot invent an effect key')
+  claim = duplicateview.effect('effects','external','tail ')
+  failures = failures + check(claim.may() & claim.must(),'authored trailing blank remains part of the effect key')
+  claim = duplicateview.effect('effects','external','tail  ')
+  failures = failures + check(claim.may() = 0 & claim.unknown() = 0,'padding equivalence cannot invent an effect key')
+  claim = duplicateview.effect('effects','external ','effect.1')
+  failures = failures + check(claim.may() = 0 & claim.unknown() = 0,'effect kind matching uses exact identifiers')
+  claim = duplicateview.effect('effects','external','hash.1h3fj09tli')
+  failures = failures + check(claim.may() & claim.must(),'first colliding exact key remains present')
+  claim = duplicateview.effect('effects','external','hash.9529ju4urj')
+  failures = failures + check(claim.may() & claim.must(),'second colliding exact key remains present')
+  parentview = summaries.procedure(target.procedureid('duplicateparent'),'transitive')
+  topview = summaries.procedure(target.procedureid('duplicatetop'),'transitive')
+  directparent = summaries.procedure(target.procedureid('duplicateparent'),'direct')
+  claim = directparent.effect('effects','external','effect.1')
+  failures = failures + check(claim.may() = 0 & claim.unknown() = 0,'mutating transitive copies cannot add a child effect to the direct row')
+  do i = 1 to 96
+    key = 'effect.' || i
+    failures = failures + check(sameeffect(duplicateview,parentview,key) & sameeffect(parentview,topview,key),'repeated child and multilevel closure retain equal independently known effect facts')
+  end
+  claim = topview.effect('effects','external','effect.96')
+  failures = failures + check(claim.may() & claim.must() & claim.unknown() = 0,'multilevel closure retains independently proved definite child effect')
+  recursiveview = summaries.procedure(target.procedureid('recursive'),'transitive')
+  claim = recursiveview.effect('effects','external','recursive.effect')
+  failures = failures + check(claim.may() & claim.must() = 0 & claim.unknown() = 0,'recursive duplicate closure terminates without inventing a must effect')
+  /* The first run may warm point-flow caches. Measure the later construction
+   * separately, leaving query headroom for the public effect comparisons. */
+  repeated = lltargetsummary..analyse(reference flow)
+  failures = failures + check(repeated.status() = 'ok','same source reconstructs after point-flow cache warmup')
+  if repeated.status() = 'ok' then do
+    repeatedwork = repeated.usedwork(); repeatedbytes = repeated.usedbytes()
+    repeatview = repeated.procedure(target.procedureid('duplicatetop'),'transitive')
+    do i = 1 to 96
+      failures = failures + check(sameeffect(topview,repeatview,'effect.' || i),'repeated summary retains equal public effect facts')
+    end
+    failures = failures + check(sameeffect(topview,repeatview,'01') & sameeffect(topview,repeatview,'tail '),'repeated closure retains exact authored effect identifiers')
+  end
+  /* Public queries can populate more flow caches, so a one-short work limit
+   * from the preceding construction is not a stable cross-run boundary. */
+  workfailed = lltargetsummary..analyse(reference flow,repeatedwork <idiv> 2,repeatedbytes)
+  failures = failures + check(workfailed.status() = 'limit' & workfailed.valid() = 0,'reduced work allowance cannot publish a partial summary')
+  bytefailed = lltargetsummary..analyse(reference flow,repeatedwork,repeatedbytes - 1)
+  failures = failures + check(bytefailed.status() = 'limit' & bytefailed.valid() = 0,'one-short byte allowance cannot publish a partial summary')
   leaf = summaries.procedure(target.procedureid('leaf'),'direct')
   claim = leaf.effect('numeric','write')
   failures = failures + check(claim.may() & claim.must() & claim.unknown() = 0,'direct definite numeric effect has positive must proof')
@@ -133,6 +293,23 @@ main: procedure = .int
   limitedclaim = caller.effect('numeric','write','*',1)
   failures = failures + check(limitedclaim.status() = 'limit' & limitedclaim.must() = 0 & limitedclaim.may(),'must-depth refusal cannot invent absence or a guarantee')
   failures = failures + check(summaries.valid(),'failed optional must query preserves frozen summary owner')
+  /* Repeating a small query must consume one request allowance rather
+   * than resetting it. Exhaustion leaves the immutable summary usable. */
+  querybase = lltargetsummary..analyse(reference flow)
+  failures = failures + check(querybase.status() = 'ok','cumulative-query baseline constructs')
+  if querybase.status() = 'ok' then do
+    querybounded = lltargetsummary..analyse(reference flow,querybase.usedwork() + 512,querybase.usedbytes() + 4096)
+    failures = failures + check(querybounded.status() = 'ok','bounded queries retain construction headroom')
+    if querybounded.status() = 'ok' then do
+      queryview = querybounded.procedure(target.procedureid('leaf'),'direct'); exhausted = 0
+      do query = 1 to 128
+        queryclaim = queryview.effect('numeric','write')
+        if query = 1 then failures = failures + check(queryclaim.must(),'first bounded query has its independent positive proof')
+        if queryclaim.status() = 'limit' then do; exhausted = 1; leave; end
+      end
+      failures = failures + check(exhausted & querybounded.valid(),'repeated optional queries exhaust cumulatively without replacing the frozen owner')
+    end
+  end
   functions = target.procedures() + 1
   bytebound = summaries.usedbytes() + functions * (functions + 2) * 8 - 1
   bytebounded = lltargetsummary..analyse(reference flow,1000000,bytebound)
@@ -143,6 +320,18 @@ main: procedure = .int
     failures = failures + check(byteclaim.status() = 'limit' & byteclaim.must() = 0 & byteclaim.may() & bytebounded.valid(),'outer and cutoff active vectors are included in must-query byte preflight')
   end
   failures = failures + check(caller.calls() = 1 & caller.calltarget(1) = target.procedureid('leaf'),'exact child dependency identity')
+  failures = failures + check(summaries.calls(0) = 0 & summaries.returns(0) = 0 & summaries.calltarget(0,1) = 0 & summaries.returnoperation(0,1) = 0,'invalid function zero cannot expose indexed array cardinalities')
+  payloadbase = lltargetsummary..analyse(reference flow)
+  failures = failures + check(payloadbase.status() = 'ok','literal-payload baseline constructs')
+  if payloadbase.status() = 'ok' then do
+    payloadbounded = lltargetsummary..analyse(reference flow,payloadbase.usedwork() + 512,payloadbase.usedbytes() + 4096)
+    failures = failures + check(payloadbounded.status() = 'ok','literal-payload request reserves construction and small-query headroom')
+    if payloadbounded.status() = 'ok' then do
+      payloadview = payloadbounded.procedure(target.procedureid('literalpayload'),'direct')
+      payloadclaim = payloadview.returnvalue(stringdomain)
+      failures = failures + check(payloadclaim.status() = 'limit' & payloadclaim.known() = 0 & payloadbounded.valid(),'one large literal cannot bypass the shared query allowance or publish a partial constant')
+    end
+  end
   conditional = summaries.procedure(target.procedureid('conditional'),'direct')
   claim = conditional.effect('numeric','write')
   failures = failures + check(claim.may() & claim.must() = 0,'one conditional write is not a must effect')

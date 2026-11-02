@@ -1,8 +1,0 @@
-/* A real foreign bytecode owner: no globals, private locals, calls or startup.
- * Numeric observation IDs deliberately collide with the caller's first IDs. */
-.globals=0
-foreignstep() .locals=0 .expose=fixture.import.bump
-  .srcstep 1 1 0 "io-import-provider.rxas" 7 3 14 "  iadd a1,a1,7"
-  .traceevent "V" 4 "R" "I" "a" 1 1 1 0 "import-actual" ""
-  iadd a1,a1,7
-  ret a2

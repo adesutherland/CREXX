@@ -4,7 +4,6 @@ import llir
 import lltarget
 import lltargettransfer
 import lltargetcfg
-import llinline
 
 check: procedure = .int
   arg value = .int, label = .string
@@ -60,25 +59,19 @@ main: procedure = .int
       expected = 'target.context.call.policy.unproved'
       if mode = 2 then expected = 'target.context.call.foreign.unproved'
       if mode = 3 then expected = 'target.context.call.recursion.unproved'
-      failures = failures + check(profile.defaulthalt(source.procedureid('main')) = 0 & profile.defaulthalt(source.procedureid('leaf')) = 0 & profile.executionreason() = expected,'incomplete closure supplies no stronger membership: ' || expected)
+      failures = failures + check(profile.defaulthalt(source.procedureid('main')) & profile.defaulthalt(source.procedureid('leaf')) = 0 & profile.executionreason() = expected,'incomplete closure keeps only the declared root membership: ' || expected)
     end
   end
   source = sample(0); copy = source
   profile = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
-  context = .llinline..context('assembler','all-legal')
-  failures = failures + check(context.useexecution(reference source,reference profile),'exact source can explicitly bind its checked witness')
-  failures = failures + check(context.executioncontext(reference copy) = '' & context.useexecution(reference copy,reference profile) = 0,'even a same-identity copy cannot borrow another owner reference')
-  mismatch = llinline..normalizewith(reference copy,reference profile)
-  failures = failures + check(mismatch.status() = 'invalid' & mismatch.reason() = 'normalization.execution.owner.mismatch','normalization also checks the exact execution owner')
+  failures = failures + check(profile.matches(reference copy) = 0,'same-identity copy cannot borrow another exact owner profile')
   wrongroot = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('leaf'),'closed-main-default-halt.v1')
   failures = failures + check(wrongroot.status() = 'invalid','another procedure cannot assert the main invocation contract')
   undeclared = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'canonical')
   failures = failures + check(undeclared.status() = 'invalid','ordinary canonical context cannot create execution membership')
   limited = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1',1,1)
   failures = failures + check(limited.status() = 'limit','tiny witness allowance cannot publish partial membership')
-  ordinary = .llinline..context('assembler','all-legal'); linker = .llinline..context('linker','all-legal')
-  failures = failures + check(ordinary.executioncontext(reference source) = '' & linker.useexecution(reference source,reference profile) = 0,'ordinary assembler/linker modes supply no inferred standalone witness')
   source = sample(1)
-  failures = failures + check(profile.valid() = 0 & context.executioncontext(reference source) = '','replacing the exact owner invalidates its bound execution witness')
+  failures = failures + check(profile.valid() = 0,'replacing the exact source invalidates its bound execution witness')
   say 'TARGET_EXECUTION_CONTEXT|failures=' || failures
   return failures

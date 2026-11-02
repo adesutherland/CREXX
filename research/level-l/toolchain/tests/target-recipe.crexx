@@ -1,9 +1,7 @@
-/* cREXX License (MIT). Typed implicit recipe references and source remapping. */
+/* cREXX License (MIT). Qualified procedure identity and explicit call remapping. */
 options levelb
 import rxfnsb
-import llir
 import lltarget
-import lltargetrecipe
 
 check: procedure = .int
   arg condition = .int, message = .string
@@ -12,85 +10,36 @@ check: procedure = .int
   return 1
 
 main: procedure = .int
-  fields = .object[]
+  fields = .object[]; replacements = .object[]
   failures = 0; i = .int; value = .lltarget..operand; original = .lltarget..record
-  spelling = 'count=r7;args=window(r8);a0=r20;proxies=(r21:1,r22:2);owned=(r20,r23);prep=settp(r4,5)+swap(r4,r6)'
-  draft = .lltarget..draft('recipe.source','fixture:recipe.source',0); at = draft.synthetic('independent recipe references')
-  body = draft.procedure('main',32,at); call objectarraydrop fields
-  fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('helper') as .object
-  fields[3] = .lltarget..operand.string(spelling as .binary) as .object; fields[4] = .lltarget..operand.symbol('after') as .object
-  instruction = body.emit('inlenter',fields,at)
-  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object; ignored = body.emit('ret',fields,at)
-  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('after') as .object; ignored = body.record('label',fields,at)
-  call objectarraydrop fields; fields[1] = body.reg('r',1) as .object; fields[2] = .lltarget..operand.procedure('@2::5') as .object; fields[3] = body.reg('r',2) as .object
+  draft = .lltarget..draft('recipe.source','fixture:recipe.source',0)
+  at = draft.synthetic('independent qualified call identity')
+  body = draft.procedure('main',3,at)
+  fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.procedure('@2::5') as .object
+  fields[3] = body.reg('r',2) as .object
   qualified = body.emit('call1',fields,at)
-  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object; ignored = body.emit('ret',fields,at)
-  body = draft.procedure('helper',0,at); ignored = body.emit('ret',fields,at)
-  source = draft.finish(); failures = failures + check(source.valid(),'source with typed recipe and qualified P validates')
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object
+  ignored = body.emit('ret',fields,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'source with qualified CALL1 validates')
   if source.valid() = 0 then do; say source.error(); say 'TARGET_RECIPE|failures=' || failures; return failures; end
-  original = source.at(instruction)
-  failures = failures + check(original.registerrefs() = 11,'explicit result plus ten ordered implicit references')
-  recipe = original.recipe()
-  failures = failures + check(recipe.countkind() = 'register' & recipe.countref() = 1 & recipe.argumentkind() = 'window' & recipe.windowref() = 2,'count and physical-window capture retain separate typed selectors')
-  failures = failures + check(recipe.a0ref() = 3 & recipe.proxies() = 2 & recipe.proxyref(2) = 5 & recipe.proxyargument(2) = 2 & recipe.owned() = 2 & recipe.ownedref(1) = 6,'a0, proxy argument ordinal and sparse owned slots stay distinct')
-  failures = failures + check(recipe.preparations() = 2 & recipe.preparationkind(1) = 'settp' & recipe.preparationmask(1) = 5 & recipe.preparationref(1,1) = 8 & recipe.preparationkind(2) = 'swap' & recipe.preparationref(2,2) = 10,'preparation retains order, status mask and both swap identities')
-  roles = 'explicit count-capture window-capture a0-destination proxy-destination proxy-destination owned-destination owned-destination prep-status prep-swap prep-swap'
-  do i = 1 to original.registerrefs()
-    failures = failures + check(original.registerrole(i) = word(roles,i),'semantic role aligns with register vector ' || i)
-  end
-  failures = failures + check(original.registerroleordinal(6) = 2 & original.registerroleordinal(11) = 2,'proxy argument and ordered preparation role ordinals are independent')
-  value = original.reciperef(recipe.proxyref(1))
-  failures = failures + check(value.index() = 21 & value.procedureid() = original.procedureid(),'typed recipe selectors resolve checked source-owner operands')
-  actuals = .string[]; actuals[1] = 'r6'; actuals[2] = 'r4'
-  materialized = recipe.explicitactuals(actuals)
-  materializedview = .lltargetrecipe..view(materialized)
-  failures = failures + check(materializedview.error() = '' & materializedview.argumentkind() = 'list' & materializedview.arguments() = 2,'proved scattered actuals can replace an implicit physical window')
-  value = .lltarget..operand.string(materialized as .binary)
-  failures = failures + check(materialized == 'count=r7;args=list(r6,r4);a0=r20;proxies=(r21:1,r22:2);owned=(r20,r23);prep=settp(r4,5)+swap(r4,r6)','actual-list materialization preserves every other operational field')
-  failures = failures + check(recipe.withoutswap() == 'count=r7;args=window(r8);a0=r20;proxies=(r21:1,r22:2);owned=(r20,r23);prep=settp(r4,5)','proved prep permutation removal preserves status preparation')
-  expected = '0 7 8 20 21 22 20 23 4 4 6'
-  do i = 1 to min(original.registerrefs(),words(expected))
-    value = original.registerref(i)
-    failures = failures + check(value.bank() = 'r' & value.index() = word(expected,i) as .int,'reference order ' || i)
-  end
-  output = .lltarget..draft('recipe.output','fixture:recipe.output',0); copiedat = output.synthetic('independent remap')
-  copiedbody = output.procedure('main',64,copiedat); replacements = .object[]
-  do i = 1 to original.registerrefs()
-    value = original.registerref(i); replacements[i] = copiedbody.reg('r',value.index() + 24) as .object
-  end
-  rewritten = lltarget..remapregisters(original,replacements); value = rewritten[3] as .lltarget..operand
-  wanted = 'count=r31;args=window(r32);a0=r44;proxies=(r45:1,r46:2);owned=(r44,r47);prep=settp(r28,5)+swap(r28,r30)'
-  failures = failures + check(value.text() == wanted,'remap changes every recipe register and preserves grammar/ordinals/mask')
-  value = rewritten[1] as .lltarget..operand; failures = failures + check(value.index() = 24,'explicit result remaps in the same vector')
   original = source.at(qualified); value = original.operand(2)
   failures = failures + check(value.kind() = 'P' & value.text() = '@2::5','qualified P keeps image and original procedure identity')
-  malformed = .lltargetrecipe..view('count=1;args=list(r1);a0=r2;proxies=(r3);owned=(r2,r3);prep=none')
-  failures = failures + check(malformed.error() <> '','malformed proxy tuple is rejected')
-  names = .string[]
-  do i = 1 to recipe.registers(); names[i] = recipe.bank(i) || recipe.index(i); end
-  names[4] = 'r20'; caught = 0
-  do
-    impossible = recipe.rewrite(names)
-    on signal as problem
-      caught = 1
+  failures = failures + check(original.registerrefs() = 2,'ordinary CALL1 enumerates its result and actual register')
+  output = .lltarget..draft('recipe.output','fixture:recipe.output',0)
+  copiedat = output.synthetic('independent explicit call remap')
+  copiedbody = output.procedure('main',32,copiedat)
+  do i = 1 to original.registerrefs()
+    value = original.registerref(i)
+    replacements[i] = copiedbody.reg('r',value.index() + 24) as .object
   end
-  failures = failures + check(caught,'placement cannot publish an introduced a0/proxy collision')
-  captures = .lltargetrecipe..view('count=2;args=list(r9,r9);a0=r20;proxies=(r21:0,r22:4);owned=(r20,r21,r22);prep=clear(r0);result=ignored')
-  failures = failures + check(captures.error() = '' & captures.resultmode() = 'ignored' & captures.countvalue() = 2 & captures.arguments() = 2 & captures.proxyargument(1) = 0 & captures.proxyargument(2) = 4,'duplicate actual borrows, a0 proxy and absent optional ordinal remain legal')
-  failures = failures + check(captures.index(captures.argumentref(1)) = 9 & captures.index(captures.argumentref(2)) = 9 & captures.preparationkind(1) = 'clear','ordered repeated actuals do not collapse into owned slot identities')
-  invalid = .string[]
-  invalid[1] = 'count=0;args=list();a0=r2;proxies=(r2:1);owned=(r2);prep=none'
-  invalid[2] = 'count=0;args=list();a0=r2;proxies=(r3:1,r3:2);owned=(r2,r3);prep=none'
-  invalid[3] = 'count=0;args=list();a0=r2;proxies=();owned=(r2,r2);prep=none'
-  invalid[4] = 'count=1;args=list();a0=r2;proxies=();owned=(r2);prep=none'
-  invalid[5] = 'count=0;args=list();a0=r2;proxies=();owned=(r2);prep=swap(r4,r5)+settp(r4,5)'
-  invalid[6] = 'count=0;args=list();a0=r2;proxies=();owned=(r2);prep=clear(r4)+swap(r4,r5)'
-  invalid[7] = 'count=0;args=list();a0=r2;proxies=();owned=(r2);prep=none;'
-  do i = 1 to invalid[0]
-    malformed = .lltargetrecipe..view(invalid[i])
-    failures = failures + check(malformed.error() <> '','typed role/order collision is refused ' || i)
-  end
-  limited = .lltargetrecipe..view(spelling,1,1)
-  failures = failures + check(pos('LL_RESOURCE_LIMIT:',limited.error()) = 1,'tiny source budget is distinct from malformed recipe')
+  rewritten = lltarget..remapregisters(original,replacements)
+  value = rewritten[1] as .lltarget..operand
+  failures = failures + check(value.bank() = 'r' & value.index() = 24,'ordinary CALL1 result remaps')
+  value = rewritten[3] as .lltarget..operand
+  failures = failures + check(value.bank() = 'r' & value.index() = 26,'ordinary CALL1 actual remaps independently')
+  value = rewritten[2] as .lltarget..operand
+  failures = failures + check(value.kind() = 'P' & value.text() = '@2::5','register remapping preserves the qualified provider identity')
   say 'TARGET_RECIPE|failures=' || failures
   return failures

@@ -65,118 +65,54 @@ premises: procedure = .lltargettransfer..profile
   if unknown then call builder.unknown(first,'signals','fixture.unknown.signal')
   return builder.finish()
 
-/** Implicit selectors keep their authored owner before any expansion can add
- * a scope. Physical LINKARG, call/selection windows and nested logical owners
- * are distinct independent expectations, with and without a packed rewrite. */
+/** Physical LINKARG and call/selection windows retain their authored owner,
+ * with and without a packed register rewrite. Retired logical-scope selectors
+ * have no normalization contract. */
 explicitforms: procedure = .int
-  failures = 0; mode = .int; i = .int; ignored = .int; packed = .int
-  outer = .int; inner = .int; outerlink = .int; innerlink = .int; resumedlink = .int
+  failures = 0; mode = .int; ignored = .int; packed = .int
   item = .lltarget..record; value = .lltarget..operand
-  do mode = 0 to 8
+  do mode = 0 to 1
     draft = .lltarget..draft('explicit.normalization.' || mode,'fixture:explicit.normalization',1)
     at = draft.synthetic('independent implicit reference ownership')
     root = draft.procedure('main',8,at); fields = .object[]; empty = .object[]
-    if mode = 1 | mode = 6 then do
+    if mode = 1 then do
       ignored = root.emit('inc0',empty,at)
       fields[1] = .lltarget..operand.integer(8) as .object; fields[2] = .lltarget..operand.integer(10) as .object
       packed = root.emit('load',fields,at)
     end
-    if mode < 2 then do
-      fields[1] = root.reg('r',2) as .object; fields[2] = .lltarget..operand.integer(1) as .object
-      ignored = root.emit('linkarg',fields,at)
-      fields[2] = root.reg('r',3) as .object; fields[3] = .lltarget..operand.integer(-1) as .object
-      ignored = root.emit('linkarg',fields,at)
-      fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
-      fields[3] = root.reg('r',6) as .object; ignored = root.emit('call',fields,at)
-      fields[2] = .lltarget..operand.string('fixture.new()' as .binary) as .object
-      ignored = root.emit('srcfprocsel',fields,at)
-    end
-    else if mode < 5 then do
-      fields[1] = root.reg('r',2) as .object
-      select mode
-        when 2 then do
-          fields[2] = root.reg('r',3) as .object; fields[3] = .lltarget..operand.integer(-1) as .object
-          ignored = root.emit('linkargv',fields,at)
-        end
-        when 3 then do
-          fields[2] = .lltarget..operand.integer(0) as .object; ignored = root.emit('linkargv',fields,at)
-        end
-        otherwise do
-          fields[2] = .lltarget..operand.string('self' as .binary) as .object; fields[3] = .lltarget..operand.integer(0) as .object
-          ignored = root.emit('qglobbind',fields,at)
-        end
-      end
-    end
-    else do
-      fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
-      fields[3] = .lltarget..operand.string('count=1;args=list(r7);a0=r1;proxies=();owned=(r1,r2,r3);prep=none' as .binary) as .object
-      fields[4] = .lltarget..operand.symbol('outer.after') as .object; outer = root.emit('inlenter',fields,at)
-      call objectarraydrop fields; fields[1] = root.reg('r',2) as .object; fields[2] = .lltarget..operand.integer(0) as .object
-      outerlink = root.emit('linkargv',fields,at)
-      fields[1] = root.reg('r',3) as .object; fields[2] = .lltarget..operand.string('self' as .binary) as .object
-      fields[3] = .lltarget..operand.integer(0) as .object; ignored = root.emit('qglobbind',fields,at)
-      fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
-      fields[3] = .lltarget..operand.string('count=1;args=list(r7);a0=r4;proxies=();owned=(r4,r5,r6);prep=none' as .binary) as .object
-      fields[4] = .lltarget..operand.symbol('inner.after') as .object; inner = root.emit('inlenter',fields,at)
-      call objectarraydrop fields; fields[1] = root.reg('r',5) as .object; fields[2] = root.reg('r',7) as .object
-      fields[3] = .lltarget..operand.integer(-1) as .object; innerlink = root.emit('linkargv',fields,at)
-      fields[1] = root.reg('r',6) as .object; fields[2] = .lltarget..operand.string('self' as .binary) as .object
-      fields[3] = .lltarget..operand.integer(0) as .object
-      ignored = root.emit('qglobbind',fields,at)
-      ignored = root.emit('ret',empty,at)
-      call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('inner.after') as .object
-      ignored = root.record('label',fields,at)
-      fields[1] = root.reg('r',2) as .object; fields[2] = .lltarget..operand.integer(0) as .object
-      resumedlink = root.emit('linkargv',fields,at)
-      ignored = root.emit('ret',empty,at)
-      call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('outer.after') as .object
-      ignored = root.record('label',fields,at)
-      if mode > 6 then do
-        fields[1] = root.reg('r',2) as .object; fields[2] = .lltarget..operand.integer(0) as .object
-        if mode = 7 then ignored = root.emit('linkargv',fields,at)
-        else do
-          fields[2] = .lltarget..operand.string('self' as .binary) as .object
-          fields[3] = .lltarget..operand.integer(0) as .object; ignored = root.emit('qglobbind',fields,at)
-        end
-      end
-    end
+    fields[1] = root.reg('r',2) as .object; fields[2] = .lltarget..operand.integer(1) as .object
+    ignored = root.emit('linkarg',fields,at)
+    fields[2] = root.reg('r',3) as .object; fields[3] = .lltarget..operand.integer(-1) as .object
+    ignored = root.emit('linkarg',fields,at)
+    fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+    fields[3] = root.reg('r',6) as .object; ignored = root.emit('call',fields,at)
+    fields[2] = .lltarget..operand.string('fixture.new()' as .binary) as .object
+    ignored = root.emit('srcfprocsel',fields,at)
     ignored = root.emit('ret',empty,at)
     leaf = draft.procedure('leaf',0,at); ignored = leaf.emit('ret',empty,at)
     source = draft.finish()
     failures = failures + check(source.valid(),'implicit normalization source validates ' || mode)
     if source.valid() = 0 then do; say source.error(); iterate; end
     graph = dereference source.ir(); saved = graph.binary()
-    if mode = 6 then do
+    if mode = 1 then do
       limited = lltargetnormalize..explicit(reference source,1)
       failures = failures + check(limited.status() = 'limit' & limited.result().identity() = source.identity(),'work limit publishes no partial explicit normalization')
       limited = lltargetnormalize..explicit(reference source,1000000,1)
       failures = failures + check(limited.status() = 'limit' & limited.result().identity() = source.identity(),'byte limit publishes no partial explicit normalization')
     end
     normalized = lltargetnormalize..explicit(reference source)
-    if mode = 2 | mode = 3 | mode = 4 | mode > 6 then do
-      reason = 'capturedargument'; if mode = 4 | mode = 8 then reason = 'qualifiedglobal'
-      failures = failures + check(normalized.status() = 'invalid' & normalized.message() = ('normalization.scope.owner.required.' || reason),'missing original scope is a normalization error ' || mode)
-      failures = failures + check(normalized.result().identity() = source.identity(),'invalid scope publishes the original owner ' || mode)
+    expected = 'keep'; if mode = 1 then expected = 'changed'
+    failures = failures + check(normalized.status() = expected,'typed implicit selectors normalize completely ' || mode)
+    if normalized.status() <> expected then do; say normalized.message(); iterate; end
+    result = normalized.result()
+    if mode = 1 then do
+      item = result.at(normalized.operation(packed)); value = item.operand(1)
+      failures = failures + check(item.mnemonic() = 'link' & value.bank() = 'g' & value.index() = 0,'packed destination uses the original global layout ' || mode)
+      value = item.operand(2)
+      failures = failures + check(value.bank() = 'a' & value.index() = 1,'packed source uses the original argument layout ' || mode)
     end
-    else do
-      expected = 'keep'; if mode = 1 | mode = 6 then expected = 'changed'
-      failures = failures + check(normalized.status() = expected,'typed implicit selectors normalize completely ' || mode)
-      if normalized.status() <> expected then do; say normalized.message(); iterate; end
-      result = normalized.result()
-      if mode = 1 | mode = 6 then do
-        item = result.at(normalized.operation(packed)); value = item.operand(1)
-        failures = failures + check(item.mnemonic() = 'link' & value.bank() = 'g' & value.index() = 0,'packed destination uses the original global layout ' || mode)
-        value = item.operand(2)
-        failures = failures + check(value.bank() = 'a' & value.index() = 1,'packed source uses the original argument layout ' || mode)
-      end
-      if mode >= 5 then do
-        profile = .lltargettransfer..profile(reference result); cfg = .lltargetcfg..graph(reference result,reference profile)
-        failures = failures + check(cfg.status() = 'ok','normalized nested ownership builds ' || mode)
-        if cfg.status() = 'ok' then failures = failures + check(cfg.scopeowner(normalized.operation(outerlink)) = normalized.operation(outer) & cfg.scopeowner(normalized.operation(innerlink)) = normalized.operation(inner) & cfg.scopeowner(normalized.operation(resumedlink)) = normalized.operation(outer),'nested and resumed selectors retain the exact original scope ' || mode)
-      end
-      repeated = lltargetnormalize..explicit(reference result)
-      failures = failures + check(repeated.status() = 'keep' & repeated.result().identity() = result.identity(),'explicit normalization is idempotent ' || mode)
-    end
+    repeated = lltargetnormalize..explicit(reference result)
+    failures = failures + check(repeated.status() = 'keep' & repeated.result().identity() = result.identity(),'explicit normalization is idempotent ' || mode)
     graph = dereference source.ir()
     failures = failures + check(graph.binary() = saved,'implicit normalization preserves immutable input ' || mode)
   end

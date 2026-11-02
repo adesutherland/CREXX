@@ -671,6 +671,29 @@ int main(int argc, char **argv) {
         else fprintf(out, "    value = field(opcode,%d)\n    if value = '-' then return ''\n"
                           "    return value\n", query->field);
     }
+    /* Additive direct queries preserve every existing row-column identity. */
+    fputs("  policybindingoperand: method = .int\n    arg opcode = .int\n", out);
+    for (entry = 0; entry < OP_MAX_INSTRUCTIONS; ++entry) {
+        unsigned int slot = rxop_policy_binding_operand((int)entry);
+        if (slot) fprintf(out, "    if opcode = %lu then return %u\n", (unsigned long)entry, slot);
+    }
+    fputs("    return 0\n  deliverytype: method = .string\n    arg opcode = .int\n", out);
+    for (entry = 0; entry < OP_MAX_INSTRUCTIONS; ++entry) {
+        const char *type = rxop_signal_delivery_type_name((int)entry);
+        if (!type) continue;
+        fprintf(out, "    if opcode = %lu then return ", (unsigned long)entry); quoted(out, type); fputc('\n', out);
+    }
+    fputs("    return ''\n  deliveryattributes: method = .int\n    arg opcode = .int\n", out);
+    for (entry = 0; entry < OP_MAX_INSTRUCTIONS; ++entry) {
+        unsigned int count = rxop_signal_delivery_attribute_count((int)entry);
+        if (count) fprintf(out, "    if opcode = %lu then return %u\n", (unsigned long)entry, count);
+    }
+    fputs("    return 0\n  deliveryinitializedflag: method = .int\n    arg opcode = .int\n", out);
+    for (entry = 0; entry < OP_MAX_INSTRUCTIONS; ++entry) {
+        uint32_t flag = rxop_signal_delivery_initialized_flag((int)entry);
+        if (flag) fprintf(out, "    if opcode = %lu then return %u\n", (unsigned long)entry, flag);
+    }
+    fputs("    return 0\n", out);
     fputs("  /* Entry fields require an exact ordinary-bytecode child premise. */\n"
           "  callframecontrolentry: method = .string\n    arg opcode = .int, name = .string\n"
           "    selected = 0\n", out);

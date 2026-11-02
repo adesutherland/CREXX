@@ -6,9 +6,7 @@ import lltargettransfer
 import lltargetcfg
 import lltargetflow
 import lltargetsummary
-import lltargetfacts
 import llrxascatalog
-import llcleanup
 
 check: procedure = .int
   arg condition = .int, message = .string
@@ -51,6 +49,7 @@ points: procedure = .int
   ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(9),at)
   ignored = two(root,'link',root.reg('r',1),root.reg('r',0),at)
   captured = two(root,'igetunlink',root.reg('r',2),root.reg('r',1),at)
+  ignored = one(root,'null',root.reg('r',3),at)
   loaded = two(root,'load',root.reg('r',3),.lltarget..operand.integer(17),at)
   ignored = label(root,'consumer',at)
   consumer = one(root,'itos',root.reg('r',3),at)
@@ -72,7 +71,6 @@ points: procedure = .int
   flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
   failures = failures + check(flow.status() = 'ok','canonical internal point flow builds')
   if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
-  failures = failures + check(flow.resourceclean(source.procedureid('leaf')) & flow.resourceclean(source.procedureid('main')) = 0,'internal point proof does not invent root resource freshness')
   catalog = .llrxascatalog..catalog()
   do i = 1 to profile.domains()
     domain = profile.domain(i)
@@ -99,8 +97,7 @@ points: procedure = .int
   output = summaries.discardability(visible)
   failures = failures + check(output.safeifdead() = 0,'literal external output is observable with zero scalar outputs')
   removable = summaries.discardability(loaded)
-  failures = failures + check(removable.safeifdead(),'labelled LOAD has an independent safe-if-dead output proof')
-  if removable.safeifdead() then failures = failures + check(removable.outputs() > 0,'safe labelled LOAD enumerates its written domains')
+  failures = failures + check(removable.status() = 'proved' & removable.safeifdead(),'labelled LOAD with an explicitly cleared destination is discardable when its result is dead')
   footprint = summaries.footprint(captured)
   failures = failures + check(footprint.status() = 'proved','ordered recipe references have a typed footprint')
   if footprint.status() = 'proved' then failures = failures + check(footprint.roles() >= 2,'ordered footprint includes both independent register roles')
@@ -108,12 +105,17 @@ points: procedure = .int
    * analyseoperational adapter installs closedmain at its selected root; it
    * cannot silently donate this helper's stronger execution premise. */
   access_ref = flow.projection(); access = dereference access_ref; integeroutput = 0
-  do i = 1 to removable.outputs()
-    outputdomain = removable.outputdomain(i)
-    do ordinal = 1 to cfg.outedges(consumer)
-      edge = cfg.outedge(consumer,ordinal)
-      if edge.successorordinal() = 0 then iterate
-      if access.edgehas(cfg.projectedop(consumer),edge.successorordinal(),outputdomain,1) then integeroutput = outputdomain
+  do i = 1 to cfg.outedges(loaded)
+    edge = cfg.outedge(loaded,i)
+    if edge.role() <> 'normal' | edge.successorordinal() = 0 then iterate
+    do writeordinal = 1 to access.edgeaccesses(cfg.projectedop(loaded),edge.successorordinal())
+      if access.edgeaccesskind(cfg.projectedop(loaded),edge.successorordinal(),writeordinal) <> 4 then iterate
+      outputdomain = access.edgeaccessdomain(cfg.projectedop(loaded),edge.successorordinal(),writeordinal)
+      do ordinal = 1 to cfg.outedges(consumer)
+        useedge = cfg.outedge(consumer,ordinal)
+        if useedge.successorordinal() = 0 then iterate
+        if access.edgehas(cfg.projectedop(consumer),useedge.successorordinal(),outputdomain,1) then integeroutput = outputdomain
+      end
     end
   end
   failures = failures + check(integeroutput > 0,'labelled consumer explicitly reads a produced LOAD domain')
@@ -123,13 +125,8 @@ points: procedure = .int
     if edge.role() = 'normal' & edge.targetblock() > 0 & integeroutput > 0 then demanded = live.domainin(edge.targetblock(),integeroutput)
   end
   failures = failures + check(live.status() = 'ok' & demanded,'edge-produced LOAD remains live at a labelled consuming successor')
-  facts = lltargetfacts..analyseoperational(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
-  failures = failures + check(facts.status() = 'ok','operational root fact adapter still builds independently')
-  if facts.status() = 'ok' then do
-    rootflow_ref = facts.siteflow(); rootflow = dereference rootflow_ref
-    rootprofile_ref = rootflow.transfers(); rootprofile = dereference rootprofile_ref
-    failures = failures + check(rootprofile.defaulthalt(source.procedureid('leaf')) = 0,'root-only operational adapter does not assert helper closed-call context')
-  end
+  rootprofile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(rootprofile.status() = 'ok' & rootprofile.defaulthalt(source.procedureid('leaf')) = 0,'root-only operational profile does not assert helper closed-call context')
   independent = .lltargettransfer..profiledraft(reference source,'unsupported.site.recipe')
   ignored = independent.binding(captured,'link:1:2;future:1')
   unsupported = independent.finish(); othercfg = .lltargetcfg..graph(reference source,reference unsupported)
@@ -163,13 +160,12 @@ rootresource: procedure = .int
   flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
   failures = failures + check(flow.status() = 'ok','root resource negative flow builds')
   if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
-  failures = failures + check(flow.resourceclean(source.procedureid('main')) = 0,'default HALT does not certify a first physical root')
   row = profile.instruction(first)
   do i = 1 to row.actions()
     action = row.action(i)
     if action.kind() = 'callback' then hooks = hooks + flow.callbackpossibleat(first,i)
   end
-  failures = failures + check(hooks > 0,'raw root first setter retains its old-resource hook obligation')
+  failures = failures + check(hooks = 0,'first root setter cannot run a finalizer from a retired frame')
   hooks = 0; row = profile.instruction(host)
   do i = 1 to row.actions()
     action = row.action(i)
@@ -193,7 +189,7 @@ retained: procedure = .int
   called = root.emit('call',fields,at)
   callerret = one(root,'ret',root.reg('r',7),at)
   leaf = draft.procedure('leaf',0,at); leafret = one(leaf,'ret',.lltarget..operand.integer(17),at)
-  source = draft.finish()
+  source = draft.finish(); catalog = .llrxascatalog..catalog(); row = source.at(called)
   failures = failures + check(source.valid(),'retained layout source validates ' || count)
   if source.valid() = 0 then do; say source.error(); return failures; end
   profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
@@ -206,13 +202,6 @@ retained: procedure = .int
     binding = layout.actual(i); captured = flow.captureat(called,'r',i)
     failures = failures + check(binding.active() > 0 & binding.active() = captured.active() & binding.slotidentity() = captured.slotidentity(),'local counted ingress preserves ordered actual pointer identity ' || count || ':' || i)
   end
-  changed = llcleanup..transport(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
-  failures = failures + check(changed.status() = 'keep' | changed.status() = 'changed','unproved canonical call layout retains a valid result ' || count)
-  if changed.status() <> 'changed' & changed.status() <> 'keep' then do; say changed.reason(); return failures; end
-  result = changed.result(); row = result.at(changed.operation(called)); catalog = .llrxascatalog..catalog()
-  failures = failures + check(row.opcode() = source.at(called).opcode(),'capture precision alone retains the counted invocation checkpoint ' || count)
-  counter = row.operand(catalog.callcount(row.opcode()))
-  failures = failures + check(counter.bank() = 'r' & counter.index() = 0,'captured root count keeps its original physical window ' || count)
   /* This independent operational client explicitly supplies exact scalar
    * definitions with no callbacks. It proves the generic layout algorithm,
    * and does not donate a freshness premise to the canonical RXAS owner. */
@@ -350,18 +339,25 @@ objecttype: procedure = .int
   source = draft.finish()
   failures = failures + check(source.valid(),'type liveness target model validates')
   if source.valid() = 0 then return failures
-  facts = lltargetfacts..analyseoperational(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
-  failures = failures + check(facts.status() = 'ok','type liveness operational owner builds')
-  if facts.status() = 'ok' then do
-    discard = facts.discardability(stamp)
+  profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference source,reference profile); flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  summaries = .lltargetsummary..analysis(reference flow)
+  failures = failures + check(summaries.status() = 'ok','type liveness direct shared owners build')
+  if summaries.status() = 'ok' then do
+    discard = summaries.discardability(stamp)
     failures = failures + check(discard.safeifdead(),'type assignment has an independent semantic dead-output permission')
     if discard.safeifdead() then failures = failures + check(discard.outputs() > 0,'type assignment enumerates its live written outputs')
-    flow_ref = facts.siteflow(); flow = dereference flow_ref
     access_ref = flow.projection(); access = dereference access_ref
-    cfg_ref = flow.cfg(); cfg = dereference cfg_ref
     failures = failures + check(access.known(cfg.projectedop(stamp)) & access.known(cfg.projectedop(copiedstatus)) & access.known(cfg.projectedop(checkedtype)),'type liveness uses complete assignment, status-copy and observation rows')
     failures = failures + check(access.complete(source.procedureid('main')) = 0,'known type opcode rows do not erase unknown continuation observations')
-    failures = failures + check(facts.deaddefinition(stamp) = 0,'a needed type stamp cannot be discarded across ACOPY')
+    live = flow.liveness(); needed = 0
+    do i = 1 to discard.outputs()
+      do j = 1 to cfg.outedges(stamp)
+        edge = cfg.outedge(stamp,j)
+        if edge.role() = 'normal' & edge.targetblock() > 0 then needed = needed | live.domainin(edge.targetblock(),discard.outputdomain(i))
+      end
+    end
+    failures = failures + check(needed,'type assignment remains live across ACOPY before ASSERTTYPE')
   end
   return failures
 
@@ -442,130 +438,8 @@ callback: procedure = .int
   end
   return failures
 
-/** A scope's finite pointer recipe is not the complete observation set of
- * native entry/departure hooks, even with an empty argument vector. */
-scopecallback: procedure = .int
-  failures = 0; ignored = .int; i = .int; hooks = .int
-  action = .lltargettransfer..action
-  draft = .lltarget..draft('site.scope.callback','fixture:site.scope.callback',0)
-  at = draft.synthetic('scope callback access is explicitly incomplete')
-  root = draft.procedure('main',2,at)
-  fields = .object[]; fields[1] = root.reg('r',0) as .object
-  fields[2] = .lltarget..operand.procedure('leaf') as .object
-  fields[3] = .lltarget..operand.string('count=0;args=list();a0=r1;proxies=();owned=(r1);prep=none' as .binary) as .object
-  fields[4] = .lltarget..operand.symbol('continued') as .object
-  entry = root.emit('inlenter',fields,at)
-  logical = one(root,'ret',.lltarget..operand.integer(0),at)
-  ignored = label(root,'continued',at)
-  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
-  leaf = draft.procedure('leaf',0,at)
-  ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
-  source = draft.finish()
-  failures = failures + check(source.valid(),'scope callback source validates')
-  if source.valid() = 0 then do; say source.error(); return failures; end
-  profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
-  cfg = .lltargetcfg..graph(reference source,reference profile)
-  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
-  failures = failures + check(flow.status() = 'ok','scope callback flow builds')
-  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
-  binding = flow.storageat(entry,'r',0)
-  failures = failures + check(binding.active() > 0,'scope entry begins with an exact physical result slot')
-  row = profile.instruction(entry); hooks = 0
-  do i = 1 to row.actions()
-    action = row.action(i)
-    if action.kind() = 'callback' then hooks = hooks + flow.callbackpossibleat(entry,i)
-  end
-  failures = failures + check(hooks > 0,'scope entry has an independently possible native hook')
-  row = profile.instruction(logical); hooks = 0
-  do i = 1 to row.actions()
-    action = row.action(i)
-    if action.kind() = 'callback' then hooks = hooks + flow.callbackpossibleat(logical,i)
-  end
-  failures = failures + check(cfg.logicalreturn(logical) & hooks > 0,'logical return retains a possible departure hook')
-  access_ref = flow.projection(); access = dereference access_ref
-  failures = failures + check(access.known(cfg.projectedop(entry)) = 0,'finite scope entry recipe cannot hide unknown callback observations')
-  failures = failures + check(access.known(cfg.projectedop(logical)) = 0,'logical return cannot hide unknown departure observations')
-  return failures
-
 /** Resource purity is an activation invariant, not defined scalar entry data.
  * Fixed borrowed scalar reads and resource-bearing borrows are independent. */
-resourceinduction: procedure = .int
-  arg mode = .int
-  failures = 0; ignored = .int; i = .int; integer = .int; payload = .int; first = .int
-  action = .lltargettransfer..action; domain = .lltargettransfer..domain
-  draft = .lltarget..draft('site.resource.' || mode,'fixture:site.resource',0)
-  at = draft.synthetic('owned resources stay empty across recycled activations')
-  root = draft.procedure('main',1,at)
-  fields = .object[]
-  if mode = 1 | mode = 2 then do
-    fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
-    fields[3] = root.reg('r',0) as .object; ignored = root.emit('call1',fields,at)
-  end
-  else ignored = one(root,'call',.lltarget..operand.procedure('leaf'),at)
-  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
-  leaf = draft.procedure('leaf',3,at)
-  if mode <> 8 then do
-    first = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(7),at)
-    if mode = 1 | mode = 6 then do
-      assembler setattrs fields,0
-      fields[1] = leaf.reg('r',2) as .object; fields[2] = leaf.reg('a',1) as .object
-      fields[3] = .lltarget..operand.integer(0) as .object; ignored = leaf.emit('iadd',fields,at)
-    end
-    else if mode = 2 then ignored = two(leaf,'copy',leaf.reg('r',0),leaf.reg('a',1),at)
-    else if mode = 3 then ignored = one(leaf,'sayx',.lltarget..operand.string('host' as .binary),at)
-    else if mode = 7 then ignored = two(leaf,'move',leaf.reg('r',0),leaf.reg('r',1),at)
-    else do
-      ignored = two(leaf,'load',leaf.reg('r',1),.lltarget..operand.integer(9),at)
-      ignored = two(leaf,'link',leaf.reg('r',1),leaf.reg('r',0),at)
-      ignored = two(leaf,'igetunlink',leaf.reg('r',2),leaf.reg('r',1),at)
-    end
-    if mode = 5 then ignored = one(leaf,'ret',leaf.reg('r',0),at)
-    else ignored = one(leaf,'ret',.lltarget..operand.integer(17),at)
-  end
-  source = draft.finish()
-  failures = failures + check(source.valid(),'resource induction source validates ' || mode)
-  if source.valid() = 0 then do; say source.error(); return failures; end
-  if mode = 4 then profile = .lltargettransfer..profile(reference source)
-  else profile = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
-  cfg = .lltargetcfg..graph(reference source,reference profile)
-  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
-  failures = failures + check(flow.status() = 'ok','resource induction flow builds ' || mode)
-  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
-  functionid = source.procedureid('leaf'); expected = mode = 0 | mode = 1 | mode = 5
-  failures = failures + check(flow.resourceclean(functionid) = expected,'resource theorem distinguishes scalar preservation and unknown resource effects ' || mode)
-  if expected = 0 then do
-    failures = failures + check(flow.resourcereason(functionid) <> '','resource refusal has an explicit reason ' || mode)
-    if mode = 7 then failures = failures + check(flow.resourcereason(functionid) = 'target.resource.write.projection.unproved','unknown component output projection never proves resource preservation')
-    if mode = 8 then failures = failures + check(flow.resourcereason(functionid) = 'target.resource.cfg.paths.unproved','empty body cannot vacuously prove complete resource paths')
-    return failures
-  end
-  catalog = .llrxascatalog..catalog()
-  do i = 1 to profile.domains()
-    domain = profile.domain(i)
-    if domain.kind() <> 'component' then iterate
-    if domain.nativebit() = catalog.componentmask('I') then integer = i
-    if domain.nativebit() = catalog.componentmask('native-payload') then payload = i
-  end
-  scalar = flow.componentat(first,'r',0,integer)
-  backing = flow.componentat(first,'r',0,payload)
-  failures = failures + check(scalar.availability() = 'entry' & scalar.known() = 0 & backing.presence() = 'absent','resource absence preserves dirty unknown scalar entry ' || mode)
-  row = profile.instruction(first)
-  do i = 1 to row.actions()
-    action = row.action(i)
-    if action.kind() = 'callback' then failures = failures + check(flow.callbackpossibleat(first,i) = 0,'shared hook condition consumes the inductive backing proof ' || mode)
-  end
-  summaries = .lltargetsummary..analysis(reference flow); footprint = summaries.footprint(first)
-  failures = failures + check(footprint.status() = 'proved','shared site footprint consumes the same resource proof ' || mode)
-  failures = failures + check(flow.resourceclean(source.procedureid('main')) = 0,'internal induction does not assert fresh root or external departure')
-  limited = .lltargetflow..analysis(reference source,reference profile,reference cfg,1)
-  failures = failures + check(limited.status() = 'limit','resource construction remains within the shared work allowance')
-  prior = backing; flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
-  ignoredstatus = flow.status()
-  failures = failures + check(prior.valid() = 0,'resource value views expire with their exact flow owner')
-  return failures
-
-/** Exact call contexts do not turn unrelated edges, recursion or raw external
- * return paths into resource proofs. The supplied profile is relative only. */
 abiqueries: procedure = .int
   arg recursive = 0
   failures = 0; ignored = .int; i = .int; foreignedge = .int; nestedcall = .int
@@ -612,16 +486,24 @@ abiqueries: procedure = .int
   failures = failures + check(context.status() = 'proved' & context.premise() = expectedpremise,'relative invocation retains its exact explicit operational premise')
   if recursive = 2 then do
     exact = flow.abicallbackat(returned,0,context)
-    failures = failures + check(exact.possible() & exact.status() = 'unknown','explicit host preeffect on a physical RET prevents contextual resource donation')
+    failures = failures + check(exact.status() = 'proved' & exact.possible() = 0,'cleanup-only physical ABI stays separate from an explicit host preeffect')
+    instruction = profile.instruction(returned); hostpossible = 0
+    do i = 1 to instruction.actions()
+      action = instruction.action(i)
+      if action.kind() = 'callback' & action.detail() = 'catalog.callback.host' then hostpossible = flow.callbackpossibleat(returned,i)
+    end
+    failures = failures + check(hostpossible,'explicit host callback retains its independent possible effect')
     return failures
   end
   raw = flow.abicallbackat(returned)
-  failures = failures + check(raw.possible() & raw.rows() = 0,'raw physical return has no invented ordinary parent')
+  failures = failures + check(raw.possible() & raw.reason() = 'target.abi.root.copyback.unproved','raw physical return retains unknown external root COPY-back')
   exact = flow.abicallbackat(returned,0,context)
-  failures = failures + check(exact.status() = 'proved' & exact.possible() = 0 & exact.rows() = 1,'sealed void return row is instantiated only by its checked caller')
-  if exact.status() = 'proved' then do
+  failures = failures + check(exact.status() = 'proved' & exact.possible() = 0 & exact.rows() = 10,'sealed void return rows are instantiated only by its checked caller')
+  if exact.status() = 'proved' & exact.rows() = 10 then do
     row = exact.row(1)
-    failures = failures + check(row.operation() = 'retire-frame' & row.checkpoint() = 'physical-retire','native retirement checkpoint survives caller instantiation')
+    failures = failures + check(row.mode() = 'physical-return' & row.operation() = 'restore-numeric' & row.checkpoint() = 'physical-numeric' & row.sourcerole() = 'parent-numeric' & row.destinationrole() = 'active-numeric' & row.sourceextent() = 'none' & row.destinationextent() = 'none','native parent numeric restoration precedes retirement after caller instantiation')
+    row = exact.row(2)
+    failures = failures + check(row.mode() = 'physical-return' & row.operation() = 'retire-frame' & row.checkpoint() = 'physical-retire' & row.sourcerole() = 'physical-frame' & row.destinationrole() = 'none','native retirement checkpoint survives caller instantiation')
   end
   unavailable = flow.abicallbackat(0)
   failures = failures + check(unavailable.possible() & unavailable.reason() = 'target.abi.source.unavailable','invalid source is a named refusal before record lookup')
@@ -643,42 +525,6 @@ abiqueries: procedure = .int
   failures = failures + check(saved.valid() = 0,'ABI row views expire with their exact analysis owner')
   return failures
 
-/** Async-after logical RETURN may still leave outer scopes and the physical
- * frame. Neither absent rows nor an already consumed inner exit prove none. */
-abiunwind: procedure = .int
-  failures = 0; ignored = .int; i = .int; terminal = .int
-  draft = .lltarget..draft('site.abi.unwind','fixture:site.abi.unwind',0)
-  at = draft.synthetic('nested async leave and physical cleanup remain represented')
-  root = draft.procedure('main',3,at)
-  fields = .object[]; fields[1] = root.reg('r',0) as .object
-  fields[2] = .lltarget..operand.procedure('leaf') as .object
-  fields[3] = .lltarget..operand.string('count=0;args=list();a0=r1;proxies=();owned=(r1);prep=none' as .binary) as .object
-  fields[4] = .lltarget..operand.symbol('outer_done') as .object
-  ignored = root.emit('inlenter',fields,at)
-  fields[3] = .lltarget..operand.string('count=0;args=list();a0=r2;proxies=();owned=(r2);prep=none' as .binary) as .object
-  fields[4] = .lltarget..operand.symbol('inner_done') as .object
-  ignored = root.emit('inlenter',fields,at)
-  empty = .object[]; returned = root.emit('ret',empty,at)
-  ignored = label(root,'inner_done',at); ignored = root.emit('ret',empty,at)
-  ignored = label(root,'outer_done',at); ignored = root.emit('ret',empty,at)
-  leaf = draft.procedure('leaf',0,at); ignored = leaf.emit('ret',empty,at)
-  source = draft.finish()
-  failures = failures + check(source.valid(),'nested ABI unwind source validates')
-  if source.valid() = 0 then do; say source.error(); return failures; end
-  profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
-  cfg = .lltargetcfg..graph(reference source,reference profile)
-  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
-  failures = failures + check(flow.status() = 'ok','nested ABI unwind flow builds')
-  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
-  do i = 1 to cfg.outedges(returned)
-    edge = cfg.outedge(returned,i)
-    if edge.targetblock() <> 0 | edge.exposure() <> 'inherited-async' then iterate
-    terminal = terminal + 1; fact = flow.abicallbackat(returned,edge.id())
-    failures = failures + check(fact.status() = 'unknown' & fact.possible() & fact.rows() = 0 & fact.reason() = 'target.abi.scope.unproved','async-after logical return retains its unresolved scope before physical cleanup')
-  end
-  failures = failures + check(cfg.logicalreturn(returned) & terminal > 0,'nested logical return has an independent async terminal alternative')
-  return failures
-
 /** Both paths use the same signal tag and AFTER phase. Only the canonical
  * async producer may classify its added cleanup as ambient. */
 abicauses: procedure = .int
@@ -688,7 +534,7 @@ abicauses: procedure = .int
   root = draft.procedure('main',1,at)
   ignored = one(root,'sighalt',.lltarget..operand.string('CONVERSION_ERROR' as .binary),at)
   converted = one(root,'ftoi',root.reg('r',0),at)
-  empty = .object[]; ignored = root.emit('ret',empty,at)
+  empty = .object[]; returned = root.emit('ret',empty,at)
   source = draft.finish()
   failures = failures + check(source.valid(),'ABI cause source validates')
   if source.valid() = 0 then do; say source.error(); return failures; end
@@ -701,21 +547,22 @@ abicauses: procedure = .int
     edge = cfg.outedge(converted,i)
     if edge.boundarykind() <> 'policy-halt' | edge.signalname() <> 'CONVERSION_ERROR' | edge.phase() <> 'after' then iterate
     fact = flow.abicallbackat(converted,edge.id())
-    failures = failures + check(fact.status() = 'unknown' & fact.possible() & fact.rows() = 0 & fact.reason() = 'target.abi.parent.unproved','raw-root cleanup cannot publish the conditional nested retirement row')
+    failures = failures + check(fact.status() = 'proved' & fact.possible() = 0 & fact.rows() = 10,'terminal retirement is cleanup-only even for a physical root')
     if edge.asynchronous() then do
       asynchronous = asynchronous + 1
       failures = failures + check(fact.intrinsicstatus() = 'proved' & fact.intrinsicpossible() = 0 & fact.intrinsicrows() = 0,'certified async suffix preserves independent intrinsic proof')
     end
     else do
       synchronous = synchronous + 1
-      failures = failures + check(fact.intrinsicstatus() = 'unknown' & fact.intrinsicpossible() & fact.intrinsicrows() = 0,'same-phase same-tag synchronous cleanup remains intrinsic')
+      failures = failures + check(fact.intrinsicstatus() = 'proved' & fact.intrinsicpossible() = 0 & fact.intrinsicrows() = 10,'same-phase same-tag synchronous cleanup remains intrinsic and non-reentrant')
     end
   end
   failures = failures + check(synchronous > 0 & asynchronous > 0,'control pairs canonical synchronous and asynchronous origins')
   access_ref = flow.projection(); access = dereference access_ref
-  failures = failures + check(access.known(cfg.projectedop(converted)) & access.complete(source.procedureid('main')) = 0,'known opcode access and unknown continuation completeness are separate')
+  failures = failures + check(access.known(cfg.projectedop(converted)),'known conversion and terminal cleanup retain complete operation-local component accesses')
+  rootreturn = flow.abicallbackat(returned)
   live = flow.liveness()
-  failures = failures + check(live.status() = 'ok' & live.complete(source.procedureid('main')) = 0,'unknown continuation pins full liveness after local row publication')
+  failures = failures + check(rootreturn.possible() & rootreturn.reason() = 'target.abi.root.copyback.unproved' & live.status() = 'ok' & live.complete(source.procedureid('main')) = 0,'separate physical-root COPY-back uncertainty pins whole-procedure liveness explicitly')
   return failures
 
 /** The native unwind descriptor is conditional nested retirement. A root
@@ -747,29 +594,23 @@ nestedunwind: procedure = .int
   failures = failures + check(flow.status() = 'ok','nested unwind flow builds ' || mode)
   if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
   expectedclean = mode = 0
-  failures = failures + check(flow.resourceclean(body.functionid()) = expectedclean,'nested retirement retains the separate resource-entry obligation ' || mode)
   do i = 1 to cfg.outedges(probe)
     edge = cfg.outedge(probe,i)
     if edge.boundarykind() <> 'closed-main-default-halt' | edge.signalname() <> 'OUT_OF_RANGE' | edge.asynchronous() then iterate
     matched = matched + 1; fact = flow.abicallbackat(probe,edge.id())
-    if mode = 0 then do
-      failures = failures + check(fact.status() = 'proved' & fact.possible() = 0 & fact.rows() = 1,'proved nested parent and empty resources publish one retirement checkpoint')
-      if fact.rows() <> 1 then iterate
-      row = fact.row(1)
-      failures = failures + check(row.mode() = 'frame-unwind' & row.operation() = 'retire-frame' & row.checkpoint() = 'physical-retire' & row.sourceextent() = 'none' & row.destinationextent() = 'none' & row.possible() = 0,'unwind has no ordinary result, numeric synchronization or full-capacity clear')
-    end
-    else do
-      reason = 'target.abi.parent.unproved'; if mode = 2 then reason = 'target.abi.frame.lifetime.unproved'
-      failures = failures + check(fact.status() = 'unknown' & fact.possible() & fact.rows() = 0 & fact.reason() = reason,'root or reference-bearing retirement preserves its exact refusal without publishing a row ' || mode)
-    end
+    failures = failures + check(fact.status() = 'proved' & fact.possible() = 0 & fact.rows() = 10,'physical retirement preserves cleanup-only behavior with borrowed/reference-bearing roots ' || mode)
+    if fact.rows() <> 10 then iterate
+    row = fact.row(1)
+    failures = failures + check(row.mode() = 'frame-unwind' & row.operation() = 'restore-numeric','abrupt physical exit restores the surviving numeric attachment before retirement')
+    row = fact.row(9)
+    failures = failures + check(row.mode() = 'frame-retire' & row.operation() = 'finalize-frame-payloads' & row.sourceextent() = 'full-capacity','native payload retirement retains the full owned-capacity obligation')
   end
   failures = failures + check(matched > 0,'independent synchronous signal departure is present ' || mode)
   return failures
 
 main: procedure = .int
   mode = .int
-  failures = points() + rootresource() + retained(0) + retained(4) + retained(5) + layoutrefusal() + authority() + objecttype() + callback() + callback(1) + scopecallback() + abiqueries() + abiqueries(1) + abiqueries(2) + abiunwind() + abicauses()
-  do mode = 0 to 8; failures = failures + resourceinduction(mode); end
+  failures = points() + rootresource() + retained(0) + retained(4) + retained(5) + layoutrefusal() + authority() + objecttype() + callback() + callback(1) + abiqueries() + abiqueries(1) + abiqueries(2) + abicauses()
   do mode = 0 to 2; failures = failures + nestedunwind(mode); end
   say 'TARGET_SITE_FACETS|failures=' || failures
   return failures

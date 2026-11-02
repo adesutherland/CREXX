@@ -148,18 +148,18 @@ callbackfreetransfer: procedure = .int
   else failures = failures + check(value.availability() = 'entry' & value.dirty(),'callback-free actual copy retains exact dirty origin')
   return failures
 
-/* A possible entry frame hook precedes the normal result, and can change
- * actual pointees. It cannot donate a pre-hook literal or a failure result. */
+/* The retired prior activation cannot contribute a finalizer callback to the
+ * child CALL. Result and exceptional projections still have distinct facts. */
 callhookreturn: procedure = .int
   arg recover = .int
   failures = 0; ignored = .int; i = .int; integer = .int; hook = .int; failureschecked = .int
   action = .lltargettransfer..action; edge = .lltargetcfg..edge
   draft = .lltarget..draft('flow.call.hook.return.' || recover,'fixture:flow.call.hook.return',0)
-  at = draft.synthetic('frame callback precedes normal result projection')
+  at = draft.synthetic('normal result projection after prior-frame retirement')
   body = draft.procedure('main',2,at)
   ignored = two(body,'load',body.reg('r',0),.lltarget..operand.integer(11),at)
-  /* Defining the actual before a possible frame hook does not constrain a
-   * later callback: it can copy a dirty component from another value. */
+  /* The actual is defined before the CALL; its result may still depend on the
+   * child's operation and the chosen return path. */
   if recover = 1 then ignored = one(body,'getnumdgts',body.reg('r',0),at)
   fields = .object[]; fields[1] = body.reg('r',1) as .object
   fields[2] = .lltarget..operand.procedure('leaf') as .object; fields[3] = body.reg('r',0) as .object
@@ -183,7 +183,7 @@ callhookreturn: procedure = .int
     action = instruction.action(i)
     if action.kind() = 'callback' & action.detail() = 'catalog.callback.call-frame' then hook = flow.callbackpossibleat(called,i)
   end
-  failures = failures + check(hook & flow.complete(target.procedureid('main'),'entry-observation') = 0,'normal result precision retains the real frame hook and raw observation veto')
+  failures = failures + check(hook = 0 & flow.complete(target.procedureid('main'),'entry-observation') = 0,'prior-frame finalizer hook is absent while raw entry observation remains incomplete: hook=' || hook || ' complete=' || flow.complete(target.procedureid('main'),'entry-observation'))
   value = flow.componentat(called,'r',1,integer,1)
   failures = failures + check(value.availability() = 'unknown' & value.known() = 0,'a possible frame hook can import dirty components despite earlier definition ' || recover || ': ' || value.availability() || ' / ' || value.reason())
   if redefined > 0 then do
@@ -507,7 +507,7 @@ privatecertificate: procedure = .int
   normalized = lltargetnormalize..normalize(reference target,reference flow)
   if incomplete then do
     failures = failures + check(normalized.complete(target.procedureid('main')) = 0 & normalized.complete(target.procedureid('leaf')) = 0,'incomplete provider cannot borrow a known dirty origin as a normalization certificate')
-    failures = failures + check(normalized.unknownreason(target.procedureid('main')) = 'target.flow.call.intrinsic.footprint.unproved','deliberate provider observation gap retains the earliest intrinsic-footprint refusal: ' || normalized.unknownreason(target.procedureid('main')))
+    failures = failures + check(normalized.unknownreason(target.procedureid('main')) = 'fixture.status.observation.unrepresented','provider observation gap retains its exact owning cause through the caller: ' || normalized.unknownreason(target.procedureid('main')))
   end
   else failures = failures + check(normalized.complete(target.procedureid('main')) & normalized.complete(target.procedureid('leaf')) & normalized.warnings() >= 2,'complete no-hook coverage normalizes and warns for both required owners')
   return failures
@@ -606,13 +606,13 @@ fullresetcount: procedure = .int
     action = instruction.action(i)
     if action.detail() = 'catalog.callback.capacity-or-checkpoint' then capacitypossible = capacitypossible | flow.callbackpossibleat(copied,i)
   end
-  failures = failures + check(capacitypossible,'dirty destination COPY retains its raw possible capacity hook')
+  failures = failures + check(capacitypossible = 0,'dirty destination COPY cleanup adds no Rexx capacity callback')
   instruction = profile.instruction(cleared)
   do i = 1 to instruction.actions()
     action = instruction.action(i)
     if action.kind() = 'callback' then possible = possible | flow.callbackpossibleat(cleared,i)
   end
-  failures = failures + check(possible,'dirty-entry reset retains its raw possible cleanup hook')
+  failures = failures + check(possible = 0,'dirty-entry reset cannot finalize a payload from a retired prior activation')
   return failures
 
 main: procedure = .int

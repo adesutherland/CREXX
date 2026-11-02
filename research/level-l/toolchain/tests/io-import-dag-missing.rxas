@@ -1,4 +1,0 @@
-.globals=0
-invalid() .locals=0 .expose=fixture.import.dag.first
-  br missing
-  ret 0

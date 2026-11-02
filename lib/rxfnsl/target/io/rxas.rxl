@@ -56,7 +56,7 @@ scan: lexer input utf8
 
 parse: parser semantics contextfree input tokens start module backend lr1
 module: rule = (record as item)* then tree Module(items = item*)
-record: rule = declaration | exposure | global.exposure | header | metadata | instruction | label.record | constant | source.step | trace.event | inline.frame | inline.map | blank
+record: rule = declaration | exposure | global.exposure | header | metadata | instruction | label.record | constant | source.step | trace.event | inline.frame | inline.map | inline.region | inline.exit | private.binding | blank
 declaration: rule = plain.declaration | exposed.declaration | exposed.entry.declaration
 /* Share the same capture reduction before '='; the following integer/name
  * distinguishes .locals declarations from .expose imports. Directive spelling
@@ -93,6 +93,14 @@ inline.frame: rule = directive as directive integer as step integer as clause st
   then tree InlineFrame(directive = text(directive), id = text(step), parent = text(clause), provider = text(provider), member = text(member), step = text(callsite))
 inline.map: rule = directive as directive identifier as first comma identifier as last comma integer as frame newline
   then tree InlineMap(directive = text(directive), first = text(first), last = text(last), frame = text(frame))
+/* Executable regions and cold phases are typed public metadata. The range
+ * spelling shares InlineMap's fields; the reader checks the directive kind. */
+inline.region: rule = directive as directive integer as step comma integer as clause newline
+  then tree InlineRegion(directive = text(directive), id = text(step), parent = text(clause))
+inline.exit: rule = directive as directive integer as step comma identifier as first comma identifier as last comma integer as order comma string as action comma operand as value (comma operand as value)* newline
+  then tree InlineExit(directive = text(directive), id = text(step), first = text(first), last = text(last), order = text(order), action = text(action), values = value*)
+private.binding: rule = directive as directive register as slot comma string as provider comma register as global newline
+  then tree PrivateBinding(directive = text(directive), local = text(slot), provider = text(provider), global = text(global))
 blank: rule = newline then tree Blank()
 operand: rule = register.operand | integer.operand | float.operand | decimal.operand | string.operand | char.operand | binary.operand | function.operand | symbol.operand
 meta.operand: rule = operand | directive.operand

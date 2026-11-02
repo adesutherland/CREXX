@@ -6,10 +6,6 @@ import lltarget
 import lltargettransfer
 import lltargetcfg
 import lltargetflow
-import lltargetsummary
-import lltargetremap
-import lltargetnormalize
-import llinline
 import llrxascatalog
 
 check: procedure = .int
@@ -124,7 +120,6 @@ run: procedure = .int
   sourceidentity = source.identity()
   profile = premises(reference source,mode); cfg = .lltargetcfg..graph(reference source,reference profile,4000000)
   flow = .lltargetflow..analysis(reference source,reference profile,reference cfg,4000000)
-  summaries = .lltargetsummary..analysis(reference flow,4000000)
   failures = failures + check(source.valid() & profile.status() = 'ok' & cfg.status() = 'ok' & flow.status() = 'ok','site source/operational owners build ' || mode)
   if failures > 0 then do; say profile.message(); say cfg.message(); say flow.reason(); return failures; end
   root = source.procedureid('main'); provider = source.procedureid('leaf')
@@ -139,46 +134,11 @@ run: procedure = .int
   end
   if mode = 8 then failures = failures + check(coverage.complete() = 0 & coverage.reason() = 'target.flow.site.call.callback.phase.unproved','an independently authored lookalike frame hook cannot borrow canonical pointer preservation')
   if mode = 9 then failures = failures + check(coverage.complete() = 0 & coverage.reason() = 'target.flow.site.call.callback.phase.unproved','a post-capture HOST hook cannot borrow a resource-only frame event')
-  receipt = .llinline..normalizationreceipt.borrowed(reference source,reference flow,reference summaries,4000000)
-  failures = failures + check(receipt.finish(reference source,reference flow),'unchanged candidate receipt completes ' || mode || ': ' || receipt.reason())
-  if receipt.status() <> 'ok' then return failures
-  normalized = receipt.result()
-  identity = receipt.identity(reference source,root)
-  failures = failures + check(identity.valid() & identity.unchanged() & identity.matchesresult(reference source,root),'no-clear identity is exact even when absolute entry coverage is unknown ' || mode || ': ' || identity.reason())
-  published = source
-  failures = failures + check(identity.matchesresult(reference published,root),'same frozen graph remains certified through a published module wrapper ' || mode)
-  if mode = 0 then do
-    foreigncalled = .int; foreign = sample(mode,foreigncalled)
-    failures = failures + check(identity.matchesresult(reference foreign,foreign.procedureid('main')) = 0,'same-shaped foreign graph cannot borrow a no-clear identity')
-  end
-  failures = failures + check(receipt.complete(reference source,root) = 0 & normalized.complete(provider),'site receipt leaves caller whole fact unknown and requires the normalized provider')
-  proof = receipt.site(reference source,called)
-  if mode = 0 | mode = 3 | mode = 5 | mode = 6 | mode = 7 then failures = failures + check(proof.covered() & proof.matchesresult(reference source,called),'unchanged-caller site certificate is owner/operation bound ' || mode || ': ' || proof.reason())
-  else failures = failures + check(proof.covered() = 0 & proof.reason() <> '', 'unresolved or dirty site cannot authorize caller normalization ' || mode || ': ' || proof.reason())
-  if mode = 4 then do
-    retained = normalized.result()
-    failures = failures + check(proof.reason() = 'target.flow.site.capture.unproved' & retained.identity() = sourceidentity & source.identity() = sourceidentity,'pre-cone refusal preserves its exact reason and original module')
-  end
-  failures = failures + check(receipt.complete(reference source,root) = 0 & cfg.normalizationcomplete(root) = 0,'site query never upgrades ordinary whole-function flags ' || mode)
   if mode = 5 then do
     replacement = .lltarget..draft('replacement','fixture:replacement',0); at = replacement.synthetic('replace source epoch')
     body = replacement.procedure('main',0,at); ignored = one(body,'ret',.lltarget..operand.integer(0),at)
     source = replacement.finish()
-    failures = failures + check(proof.valid() = 0 & coverage.valid() = 0,'replaced module epoch invalidates site and ingress facts')
-    failures = failures + check(identity.valid() = 0,'replaced source epoch invalidates the weaker no-clear identity too')
-  end
-  if mode = 6 | mode = 7 then do
-    mapping = .int[]
-    do i = 1 to source.records(); item = source.record(i); mapping[item.id()] = item.id(); end
-    correspondence = .lltargetremap..correspondence(reference source,reference source,reference profile,reference profile,reference cfg,reference cfg,mapping)
-    if mode = 6 then do
-      limited = .lltargetnormalize..sitecertificate(reference flow,reference flow,reference correspondence,called,called,source.identity(),1)
-      failures = failures + check(limited.covered() = 0 & limited.status() = 'limit','tiny site budget cannot publish a partial receipt')
-    end
-    else do
-      mismatched = .lltargetnormalize..sitecertificate(reference flow,reference flow,reference correspondence,called,called + 1,source.identity())
-      failures = failures + check(mismatched.status() = 'invalid' & mismatched.covered() = 0,'wrong operation correspondence cannot reuse a site certificate')
-    end
+    failures = failures + check(coverage.valid() = 0,'replaced module epoch invalidates site and ingress facts')
   end
   return failures
 
@@ -195,12 +155,11 @@ dirtybackedge: procedure = .int
   failures = failures + check(coverage.complete() & coverage.demands() > 0 & coverage.unresolved() = 0,'pre-CALL callback-free backedge retains the exact dirty witness: ' || coverage.status() || '/' || coverage.reason() || '/demands=' || coverage.demands())
   return failures
 
-/** A real canonical frame-resource event may change actual values before the
- * child reads them. It preserves pointer identity, never pre-hook literals or
- * dirty-entry absence. */
+/** A child CALL does not invent a retired frame-resource callback. Exact
+ * argument observations still distinguish defined and dirty owned entries. */
 callbackphase: procedure = .int
   arg dirty = .int
-  failures = 0; ignored = .int; i = .int; framehook = .int; preserved = .int
+  failures = 0; ignored = .int; i = .int; framehook = .int
   fields = .object[]; action = .lltargettransfer..action
   draft = .lltarget..draft('normalization.frame.' || dirty,'fixture:normalization.frame',0)
   at = draft.synthetic('captured fixed-call pointers survive a returning frame resource hook')
@@ -214,8 +173,8 @@ callbackphase: procedure = .int
   ignored = one(root,'sayx',.lltarget..operand.string('unchanged later host output' as .binary),at)
   ignored = one(root,'ret',.lltarget..operand.integer(0),at)
   body = draft.procedure('leaf',0,at)
-  /* A read/write through a borrowed argument prevents a clean-private-frame
-   * theorem. The callback remains possible even in the initialized control. */
+  /* The child may write the borrowed argument; this does not resurrect a
+   * finalizer in the already-retired prior activation. */
   call objectarraydrop fields; fields[1] = body.reg('a',1) as .object; fields[2] = body.reg('a',1) as .object
   fields[3] = .lltarget..operand.integer(0) as .object; ignored = body.emit('iadd',fields,at)
   ignored = one(body,'ret',.lltarget..operand.integer(0),at)
@@ -231,12 +190,13 @@ callbackphase: procedure = .int
     action = instruction.action(i)
     if action.kind() = 'callback' & action.detail() = 'catalog.callback.call-frame' then do
       framehook = flow.callbackpossibleat(called,i)
-      preserved = flow.callframebindings(instruction,action)
     end
   end
-  failures = failures + check(framehook & preserved & flow.complete(source.procedureid('main'),'entry-observation') = 0,'real frame hook remains possible and whole-caller observation unknown despite pointer preservation ' || dirty)
+  failures = failures + check(framehook = 0 & flow.complete(source.procedureid('main'),'entry-observation'),'retired prior frame contributes no hidden hook to the exact observation inventory ' || dirty || ': hook=' || framehook || ' complete=' || flow.complete(source.procedureid('main'),'entry-observation'))
   coverage = flow.entrycoverageat(called,1000000)
-  failures = failures + check(coverage.valid() & coverage.complete() = 0 & coverage.reason() = 'target.flow.site.call.callback.phase.unproved' & coverage.unresolved() > 0,'absolute normalization cannot infer defined entry contents through a possible frame hook ' || dirty)
+  failures = failures + check(coverage.valid() & coverage.complete() & coverage.reason() = '' & coverage.unresolved() = 0,'site coverage is complete without a prior-frame finalizer hook ' || dirty || ': valid=' || coverage.valid() || ' complete=' || coverage.complete() || ' reason=' || coverage.reason() || ' unresolved=' || coverage.unresolved())
+  if dirty = 0 then failures = failures + check(coverage.demands() = 0,'defined actual contributes no dirty-entry demand')
+  else failures = failures + check(coverage.demands() > 0,'borrowed child observation retains the dirty caller-owned entry demand')
   return failures
 
 /** Canonical bytes-output policy proof, separate from the independent
@@ -304,7 +264,7 @@ outputingress: procedure = .int
     failures = failures + check(backward,'authored POSIX_INT backward handler survives later bytes output')
     failures = failures + check(cone.complete() = 0 | cone.contains(printed),'a known or unresolved backward signal cannot be omitted from site ingress')
   end
-  if mode = 2 then failures = failures + check(cone.complete() = 0 & cone.reason() = 'target.cfg.ingress.local.destination.unproved' & profile.callbackpolicyunknown(called),'unenrolled provider remains an explicit policy/reentry frontier')
+  if mode = 2 then failures = failures + check(cone.complete() & cone.contains(printed) = 0 & profile.callbackpolicyunknown(called) = 0 & profile.defaulthalt(source.procedureid('leaf')) = 0,'an exact bytecode child preserves the suspended policy independently of closed-call membership')
   return failures
 
 main: procedure = .int

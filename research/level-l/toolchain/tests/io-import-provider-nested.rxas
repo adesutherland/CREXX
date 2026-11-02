@@ -1,7 +1,0 @@
-/* A retained foreign child needs its own target and ingress proof. */
-.globals=0
-foreignstep() .locals=0 .expose=fixture.import.bump
-  call1 a1,hidden(),a1
-  ret a2
-hidden() .locals=0
-  ret a1

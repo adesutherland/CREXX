@@ -1,4 +1,0 @@
-/* This export is deliberately not the caller's imported callable. */
-.globals=0
-foreignstep() .locals=0 .expose=fixture.import.other
-  ret a2

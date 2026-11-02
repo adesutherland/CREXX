@@ -7,7 +7,6 @@ import lltargettransfer
 import lltargetcfg
 import lltargetflow
 import lltargetsummary
-import lltargetremap
 import llrxascatalog
 
 check: procedure = .int
@@ -35,7 +34,7 @@ enumerable: procedure = .int
 
 run: procedure = .int
   arg mode = .int
-  failures = 0; ignored = .int; i = .int; seeded = .int; called = .int; mainret = .int; changed = .int; leafret = .int; destination = .int; expected = .string
+  failures = 0; ignored = .int; i = .int; field = .int; seeded = .int; called = .int; mainret = .int; changed = .int; leafret = .int; destination = .int; expected = .string
   draft = .lltarget..draft('context.restore.' || mode,'fixture:context.restore',0)
   at = draft.synthetic('context delta and all departures have independent evidence')
   root = draft.procedure('main',1,at)
@@ -59,7 +58,12 @@ run: procedure = .int
   integer = premise.domain('component','fixture.integer',catalog.componentmask('I'))
   nativebit = catalog.contextreadmask(getter)
   if mode = 2 then nativebit = 0
-  contextdomain = premise.domain('context','fixture.digits',nativebit)
+  contextdomain = 0
+  if mode <> 9 then contextdomain = premise.domain('context','fixture.digits',nativebit)
+  if mode = 4 then do field = 2 to 5
+    code = catalog.find(word('getnumdgts getnumfuz getnumfrm getnumcas getnumstd',field),'R')
+    extra = premise.domain('context','fixture.numeric.' || field,catalog.contextreadmask(code))
+  end
   do i = 1 to source.records()
     item = source.record(i)
     if item.kind() <> 'procedure' & item.procedureid() > 1 then ignored = premise.operation(item.id())
@@ -68,7 +72,7 @@ run: procedure = .int
     destination = premise.ref(seeded,1)
     ignored = premise.event(seeded,'write',destination,integer,'literal',0,.lltarget..operand.integer(0))
   end
-  if mode <> 6 then ignored = premise.event(seeded,'context',0,contextdomain,'literal',0,.lltarget..operand.integer(53))
+  if mode <> 6 & mode <> 9 then ignored = premise.event(seeded,'context',0,contextdomain,'literal',0,.lltarget..operand.integer(53))
   provider = premise.ref(called,2,'procedure','symbolic')
   ignored = premise.event(called,'call',0,0,'reference',provider)
   ignored = premise.event(mainret,'return',0,integer,'literal',0,.lltarget..operand.integer(0))
@@ -76,9 +80,9 @@ run: procedure = .int
     destination = premise.ref(changed,1)
     ignored = premise.event(changed,'write',destination,integer,'literal',0,.lltarget..operand.integer(1))
   end
-  if mode > 0 then ignored = premise.event(changed,'context',0,contextdomain,'literal',0,.lltarget..operand.integer(20))
+  if mode > 0 & mode <> 9 then ignored = premise.event(changed,'context',0,contextdomain,'literal',0,.lltarget..operand.integer(20))
   if mode = 3 then ignored = premise.event(changed,'edge',0,0,'none',0,.lltarget..operand(),'may','all','after','async')
-  if mode = 4 then ignored = premise.event(changed,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','fixture.observer')
+  if mode = 4 | mode = 8 | mode = 9 then ignored = premise.event(changed,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','fixture.observer')
   if mode = 5 then call premise.unknown(changed,'numeric','fixture missing context writer contract')
   if mode = 7 then ignored = premise.event(changed,'edge',0,0,'literal',0,.lltarget..operand.string('OTHER' as .binary),'may','failure','after','terminal')
   ignored = premise.event(leafret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
@@ -110,96 +114,30 @@ run: procedure = .int
       failures = failures + check(plan.getter(1) = 'getnumdgts' & plan.setter(1) = 'setnumdgts' & plan.exits() = 1 & plan.exit(1) = leafret,'restore is bound to the numeric field and original RET ' || mode)
       if mode = 1 then failures = failures + check(plan.literal(1).kind() = 'I' & plan.literal(1).index() = 53,'known caller digits restore the caller value')
       else failures = failures + check(plan.saveordinal(1) = 1,'unknown caller digits reserve one integer save cell')
-      sourceops = .int[]; candidateops = .int[]; counts = .int[]
-      candidate = numericcandidate(reference source,called,mainret,mode,0,sourceops,candidateops,counts)
-      failures = failures + check(candidate.valid(),'independent licensed numeric candidate validates ' || mode || ': ' || candidate.error())
-      if candidate.valid() then do
-        clone = .lltargetsummary..diagnosticclone(reference summaries,called,reference candidate,10,sourceops,candidateops,counts,4000000)
-        failures = failures + check(clone.status() = 'proved','typed checker certifies known/dynamic GET/SET restore shape ' || mode || ': ' || clone.reason())
-      end
-      /* Keep the source evidence and lowering shape fixed; change only the
-       * published restoration value or the captured save-cell reference. */
-      corrupted = numericcandidate(reference source,called,mainret,mode,1,sourceops,candidateops,counts)
-      failures = failures + check(corrupted.valid(),'corrupted numeric candidate remains structurally valid ' || mode || ': ' || corrupted.error())
-      if corrupted.valid() then do
-        rejected = .lltargetsummary..diagnosticclone(reference summaries,called,reference corrupted,10,sourceops,candidateops,counts,4000000)
-        expected = 'target.diagnostic.clone.return.context.literal.mismatch'
-        if mode = 6 then expected = 'target.diagnostic.clone.return.context.saved.slot.mismatch'
-        failures = failures + check(rejected.status() = 'unknown' & rejected.reason() = expected,'typed checker refuses wrong restore value/save cell ' || mode || ': ' || rejected.reason())
-      end
+
+    end
+  end
+  else if mode = 3 | mode = 4 | mode = 7 then do
+    failures = failures + check(plan.allowed(),'numeric restoration is independent of async, hook and terminal control ' || mode || ': ' || plan.reason())
+    if plan.allowed() then do
+      expectedfields = 1; if mode = 4 then expectedfields = 5
+      failures = failures + check(plan.fields() = expectedfields & plan.exits() = 1 & plan.exit(1) = leafret,'the complete numeric delta retains its ordinary return sites ' || mode)
+      failures = failures + check(plan.getter(1) = 'getnumdgts' & plan.setter(1) = 'setnumdgts','conservative hook/exit delta still uses canonical field lowering ' || mode)
+      if mode = 3 then failures = failures + check(plan.coldexits() > 0,'potential asynchronous outward exit is represented for cold restoration')
     end
   end
   else do
-    expected = 'target.context.restore.setter.callback.unproved'
-    if mode = 2 then expected = 'target.context.restore.domain.unrepresented'
-    else if mode = 3 then expected = 'target.context.restore.async.unproved'
-    else if mode = 4 then expected = 'target.context.restore.callback.unproved'
-    else if mode = 5 then expected = 'target.context.restore.effects.unproved'
-    else if mode = 7 then expected = 'target.context.restore.departure.unproved'
-    failures = failures + check(plan.allowed() = 0 & plan.status() = 'unknown' & plan.reason() = expected,'unproved context plan identifies its obligation ' || mode || ': ' || plan.reason())
-    failures = failures + check(enumerable(plan) = 0,'unproved plan cannot expose a partial restore list ' || mode)
+    expected = 'target.context.restore.domain.unrepresented'
+    if mode = 5 then expected = 'target.context.restore.effects.unproved'
+    failures = failures + check(plan.allowed() = 0 & plan.status() = 'unknown' & plan.reason() = expected,'unproved numeric contract identifies its exact missing fact ' || mode || ': ' || plan.reason())
+    failures = failures + check(enumerable(plan) = 0,'unknown delta cannot expose a partial restore list ' || mode)
   end
   return failures
-
-/** Construct the expected lowering independently of the inliner. These
- * synchronous operational facts license RET-only restoration; canonical
- * ambient asynchronous exits remain a separate admission obligation. */
-numericcandidate: procedure = .lltarget..module
-  arg owner = reference .lltarget..module, callid = .int, mainretid = .int, mode = .int, corrupt = .int, expose sourceops = .int[], expose candidateops = .int[], expose counts = .int[]
-  ignored = .int; i = .int
-  source = dereference owner; callitem = source.at(callid); provider = source.body(source.procedureid('leaf'))
-  graphref = source.ir(); sources = .object[]; origins = .object[]; fields = .object[]
-  draft = .lltarget..draft('numeric.candidate.' || mode,'fixture:numeric.candidate',0)
-  at = lltargetremap..copyorigin(graphref,callitem.origin(),reference draft,reference sources,reference origins)
-  body = draft.procedure('main',4,at)
-  if mode = 1 then ignored = one(body,'setnumdgts',.lltarget..operand.integer(53),at)
-  else ignored = two(body,'load',body.reg('r',0),.lltarget..operand.integer(0),at)
-  fields[1] = .lltarget..operand.integer(10) as .object; fields[2] = .lltarget..operand.integer(0) as .object
-  fields[3] = .lltarget..operand.string(source.name() as .binary) as .object; fields[4] = .lltarget..operand.string('leaf' as .binary) as .object; fields[5] = .lltarget..operand.integer(0) as .object
-  ignored = body.record('.inlineframe',fields,at); ordinal = 0
-  if mode = 6 then do
-    ordinal = 1; sourceops[ordinal] = 0; candidateops[ordinal] = one(body,'getnumdgts',body.reg('r',3),at); counts[ordinal] = 1
-  end
-  call objectarraydrop fields
-  do i = 1 to 8
-    if i = 4 | i = 8 then fields[i] = .lltarget..operand.string('' as .binary) as .object
-    else fields[i] = .lltarget..operand.integer(0) as .object
-  end
-  ignored = body.record('.srcstep',fields,at)
-  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('clone.begin') as .object; ignored = body.record('label',fields,at)
-  do i = 1 to provider.records()
-    child = provider.record(i)
-    if child.kind() <> 'instruction' then iterate
-    ordinal = ordinal + 1; sourceops[ordinal] = child.id()
-    childat = lltargetremap..copyorigin(graphref,child.origin(),reference draft,reference sources,reference origins)
-    if child.mnemonic() = 'setnumdgts' then do
-      candidateops[ordinal] = one(body,'setnumdgts',.lltarget..operand.integer(20),childat); counts[ordinal] = 1
-    end
-    else do
-      candidateops[ordinal] = two(body,'load',body.reg('r',2),.lltarget..operand.integer(7),childat); counts[ordinal] = 4
-      ignored = two(body,'icopy',body.reg('r',0),body.reg('r',2),childat)
-      if mode = 1 then do
-        restorevalue = 53; if corrupt then restorevalue = 54
-        ignored = one(body,'setnumdgts',.lltarget..operand.integer(restorevalue),childat)
-      end
-      else do
-        saveslot = 3; if corrupt then saveslot = 2
-        ignored = one(body,'setnumdgts',body.reg('r',saveslot),childat)
-      end
-      ignored = one(body,'br',.lltarget..operand.symbol('clone.after'),childat)
-    end
-  end
-  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('clone.after') as .object; ignored = body.record('label',fields,at)
-  mainret = source.at(mainretid); returnat = lltargetremap..copyorigin(graphref,mainret.origin(),reference draft,reference sources,reference origins)
-  ignored = one(body,'ret',.lltarget..operand.integer(0),returnat)
-  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('clone.begin') as .object; fields[2] = .lltarget..operand.symbol('clone.after') as .object; fields[3] = .lltarget..operand.integer(10) as .object
-  ignored = body.record('.inlinemap',fields,at)
-  return draft.finish()
 
 main: procedure = .int
   failures = 0
   empty = .lltargetsummary..restorationfact()
   failures = failures + check(empty.valid() = 0 & empty.status() = 'invalid' & enumerable(empty) = 0,'unbound plan supplies no restoration authority')
-  do mode = 0 to 7; failures = failures + run(mode); end
+  do mode = 0 to 9; failures = failures + run(mode); end
   say 'TARGET_CONTEXT_RESTORATION|failures=' || failures
   return failures

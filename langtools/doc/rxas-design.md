@@ -273,7 +273,7 @@ The named query surface is:
 | `readcomponents(op,i)`, `writecomponents(op,i)` | Native component masks; a scalar payload write is not a complete register-cell reset. |
 | `signalstate(op)`, `signalphase(op)`, `signalsource(op)`, `signalsourceoperand(op)`, `signalnames(op)` | Completeness, failure timing and signal identity source. Native source-operand indices are zero-based, with `-1` when absent. |
 | `failurewrites(op,i)`, `failurecomponents(op)`, `failurecontext(op)` | Writes potentially visible on a failure continuation. |
-| `signaldependencies(op)`, `continuations(op)`, `signalproperties(op)` | Numeric/plugin/policy dependencies and admitted failure outcomes/observations. Properties distinguish structural `POLICY_WRITE` (8) from `PENDING_WRITE` (32). |
+| `signaldependencies(op)`, `continuations(op)`, `signalproperties(op)` | Numeric/plugin/policy dependencies and admitted failure outcomes/observations. Properties distinguish structural `POLICY_WRITE` (8), `PENDING_WRITE` (32), and static signal-name validation failure `STATIC_NAMES_TERMINAL` (64); an explicitly requested valid signal remains catchable. |
 | `policyeffect(op)`, `policysource(op)`, `policysourceoperand(op)`, `policyname(op)` | Typed structural-policy or pending-delivery transfer, selected by `signalproperties`. `BPOFF` clears a pending BREAKPOINT bit and retains its typed name/effect; it does not remove an installed handler or establish IGNORE. |
 | `unbounded(op)` | Native indirect-write/branch or asynchronous-entry flags require conservative frame handling. |
 
@@ -282,6 +282,34 @@ does not assign another numbering. A proven value kill, a component write and
 a failure-visible write answer different questions. Missing or UNKNOWN signal
 knowledge must not become a non-failing assumption. `field(op,column)` exposes
 the versioned low-level catalogue row for tooling; prefer the named methods.
+
+## Shared typed target analysis
+
+`rxfnsl-target` is a separate optional research image, built explicitly with
+`cmake --build cmake-build-debug --target rxfnsl_target`. It contains `lltarget`,
+`lltargettransfer`, `lltargetcfg`, `lltargetremap`, `lltargetflow`,
+`lltargetbodyview`, `lltargetsummary` and `lltargetnormalize`. Its import/runtime
+closure includes the core, analysis and RXAS images plus `library.rxbin`.
+Enable `CREXX_BUILD_TARGET_IO=ON` and build `rxfnsl_target_io` for the prepared
+RXAS grammar and `llrxasinput`/`llrxasoutput` adapters. Parsing requests use the
+prepared grammar and never invoke a native assembler or source compiler.
+
+This shared layer is independent of an inliner. It owns module records and
+providers, typed relocation, graph/policy/exit analysis, storage and subvalue
+facts, bounded procedure summaries and ordinary dirty-read normalization.
+The [target-analysis consumer map](../../docs/ai-context/RXAS_ASSEMBLER.md#level-l-target-analysis-consumer-map)
+names APIs, maintained controls and uncertainty boundaries. The
+[authoritative plan](../../research/level-l/toolchain/PLAN.md#phase-2--complete-the-shared-level-l-foundation)
+owns qualification; completion of this foundation does not qualify inliner2
+or the future Level L assembler/linker.
+
+Use component/edge liveness from this layer when constructing assignment rows
+and constraints. Include cold saved-base observations, owned reference roots,
+borrowed private suffixes and whole packed windows. The allocation kernel above
+still checks the supplied rows; it does not invent a semantic no-alias or
+initialization proof. Fresh affine placement preserves a dynamic window without
+requiring its runtime length to be constant. Distinct placement is valid when
+optional lifetime sharing is unproved.
 
 ## Maintained checks and current boundary
 

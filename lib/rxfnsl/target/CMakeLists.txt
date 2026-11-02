@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 
 # Explicit optional target tools; core/bootstrap packages have no reverse edge.
-set(_modules lltargetrecipe lltarget lltargettransfer lltargetcfg lltargetremap
-  lltargetflow lltargetbodyview lltargetsummary lltargetnormalize lltargetfacts llinline llcleanup)
+set(_modules lltarget lltargettransfer lltargetcfg lltargetremap
+  lltargetflow lltargetbodyview lltargetsummary lltargetnormalize)
 set_property(GLOBAL PROPERTY RXFNSL_TARGET_SELECTORS "${_modules}")
 set(_imports "${CMAKE_CURRENT_BINARY_DIR}/imports")
 crexx_add_import_root(rxfnsl_target_imports DIRECTORY "${_imports}"
@@ -32,15 +32,12 @@ foreach(_module IN LISTS _modules)
   if(_previous_module)
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/${_previous_module}.rxbin")
   endif()
-  if(NOT _module STREQUAL "lltarget" AND NOT _module STREQUAL "lltargetrecipe")
+  if(NOT _module STREQUAL "lltarget")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltarget.rxbin")
   endif()
   if(_module STREQUAL "lltargettransfer")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/_rxlinkinline.rxbin")
     set(_native_imports "${CMAKE_CURRENT_BINARY_DIR}/_rxlinkinline.rxbin")
-  endif()
-  if(_module STREQUAL "lltarget")
-    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetrecipe.rxbin")
   endif()
   if(_module STREQUAL "lltargetcfg" OR _module STREQUAL "lltargetremap"
       OR _module STREQUAL "lltargetflow")
@@ -57,20 +54,6 @@ foreach(_module IN LISTS _modules)
   endif()
   if(_module STREQUAL "lltargetnormalize")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetremap.rxbin")
-  endif()
-  if(_module STREQUAL "llinline")
-    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetremap.rxbin"
-      "${CMAKE_CURRENT_BINARY_DIR}/lltargettransfer.rxbin"
-      "${CMAKE_CURRENT_BINARY_DIR}/lltargetcfg.rxbin"
-      "${CMAKE_CURRENT_BINARY_DIR}/lltargetflow.rxbin"
-      "${CMAKE_CURRENT_BINARY_DIR}/lltargetsummary.rxbin"
-      "${CMAKE_CURRENT_BINARY_DIR}/lltargetnormalize.rxbin")
-  endif()
-  if(_module STREQUAL "llinline" OR _module STREQUAL "llcleanup")
-    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetfacts.rxbin")
-  endif()
-  if(_module STREQUAL "llcleanup")
-    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/llinline.rxbin")
   endif()
   # The output directory also holds linked test consumers with embedded old
   # contracts. Import only current owning images, never that directory.
@@ -107,6 +90,8 @@ crexx_add_fixture_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl-target.rxbin"
   DEPENDS rxlink ${_bins} "${_control}" VERBATIM)
 add_custom_target(rxfnsl_target DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsl-target.rxbin")
 
+option(CREXX_BUILD_TARGET_IO "Build the optional Level L target RXAS adapters" OFF)
+
 if(BUILD_TESTING)
   set(_test_imports "${CMAKE_CURRENT_BINARY_DIR}/test-imports")
   set(_images "${CMAKE_BINARY_DIR}/bin/library.rxbin"
@@ -117,185 +102,18 @@ if(BUILD_TESTING)
   crexx_add_import_root(levell_target_test_imports DIRECTORY "${_test_imports}"
     OUTPUT_VARIABLE _test_files FILES ${_images}
     DEPENDS library rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_target)
-  set(_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/constructed-inline.crexx")
-  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/constructed-inline-linked.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
-      -o constructed-inline "${_fixture}"
-    COMMAND $<TARGET_FILE:rxas> constructed-inline
-    COMMAND $<TARGET_FILE:rxlink> -s -o constructed-inline-linked constructed-inline ${_images}
-    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_fixture}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-  add_custom_target(levell_constructed_inline
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/constructed-inline-linked.rxbin")
-  if(TARGET rxbvm)
-    add_test(NAME levell_constructed_inline_rxbvm
-      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/constructed-inline-linked.rxbin")
-    set_tests_properties(levell_constructed_inline_rxbvm PROPERTIES
-      PASS_REGULAR_EXPRESSION "CONSTRUCTED_INLINE[|]failures=0"
-      TIMEOUT 120 LABELS "level-l;research;inlining")
-    crexx_register_test_prep_targets(TESTS levell_constructed_inline_rxbvm
-      TARGETS levell_constructed_inline rxbvm)
-  endif()
 
-  set(_import_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/imported-inline.crexx")
-  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/imported-inline-linked.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
-      -o imported-inline "${_import_fixture}"
-    COMMAND $<TARGET_FILE:rxas> imported-inline
-    COMMAND $<TARGET_FILE:rxlink> -s -o imported-inline-linked imported-inline ${_images}
-    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_import_fixture}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-  add_custom_target(levell_imported_inline
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/imported-inline-linked.rxbin")
-  if(TARGET rxbvm)
-    add_test(NAME levell_imported_inline_rxbvm
-      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/imported-inline-linked.rxbin")
-    set_tests_properties(levell_imported_inline_rxbvm PROPERTIES
-      PASS_REGULAR_EXPRESSION "IMPORTED_INLINE[|]failures=0"
-      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-      TIMEOUT 120 LABELS "level-l;research;inlining")
-    crexx_register_test_prep_targets(TESTS levell_imported_inline_rxbvm
-      TARGETS levell_imported_inline rxbvm)
-  endif()
-
-  set(_import_dag_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/imported-dag.crexx")
-  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/imported-dag-linked.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
-      -o imported-dag "${_import_dag_fixture}"
-    COMMAND $<TARGET_FILE:rxas> imported-dag
-    COMMAND $<TARGET_FILE:rxlink> -s -o imported-dag-linked imported-dag ${_images}
-    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_import_dag_fixture}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-  add_custom_target(levell_imported_dag
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/imported-dag-linked.rxbin")
-  if(TARGET rxbvm)
-    add_test(NAME levell_imported_dag_rxbvm
-      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/imported-dag-linked.rxbin")
-    set_tests_properties(levell_imported_dag_rxbvm PROPERTIES
-      PASS_REGULAR_EXPRESSION "IMPORTED_DAG[|]failures=0"
-      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-      TIMEOUT 120 LABELS "level-l;research;inlining")
-    crexx_register_test_prep_targets(TESTS levell_imported_dag_rxbvm
-      TARGETS levell_imported_dag rxbvm)
-  endif()
-
-  set(_scalar_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/scalar-transport.crexx")
-  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/scalar-transport-linked.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
-      -o scalar-transport "${_scalar_fixture}"
-    COMMAND $<TARGET_FILE:rxas> scalar-transport
-    COMMAND $<TARGET_FILE:rxlink> -s -o scalar-transport-linked scalar-transport ${_images}
-    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_scalar_fixture}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-  add_custom_target(levell_scalar_transport
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/scalar-transport-linked.rxbin")
-  if(TARGET rxbvm)
-    add_test(NAME levell_scalar_transport_rxbvm
-      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/scalar-transport-linked.rxbin")
-    set_tests_properties(levell_scalar_transport_rxbvm PROPERTIES
-      PASS_REGULAR_EXPRESSION "SCALAR_TRANSPORT[|]failures=0"
-      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-      TIMEOUT 120 LABELS "level-l;research;inlining")
-    crexx_register_test_prep_targets(TESTS levell_scalar_transport_rxbvm
-      TARGETS levell_scalar_transport rxbvm)
-  endif()
-
-  set(_rebinding_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/rebinding-inline.crexx")
-  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/rebinding-inline-linked.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
-      -o rebinding-inline "${_rebinding_fixture}"
-    COMMAND $<TARGET_FILE:rxas> rebinding-inline
-    COMMAND $<TARGET_FILE:rxlink> -s -o rebinding-inline-linked rebinding-inline ${_images}
-    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_rebinding_fixture}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-  add_custom_target(levell_rebinding_inline
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/rebinding-inline-linked.rxbin")
-  if(TARGET rxbvm)
-    add_test(NAME levell_rebinding_inline_rxbvm
-      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/rebinding-inline-linked.rxbin")
-    set_tests_properties(levell_rebinding_inline_rxbvm PROPERTIES
-      PASS_REGULAR_EXPRESSION "REBINDING_INLINE[|]failures=0"
-      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-      TIMEOUT 120 LABELS "level-l;research;inlining")
-    crexx_register_test_prep_targets(TESTS levell_rebinding_inline_rxbvm
-      TARGETS levell_rebinding_inline rxbvm)
-  endif()
-
-  set(_storage_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/storage-inline.crexx")
-  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/storage-inline-linked.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
-      -o storage-inline "${_storage_fixture}"
-    COMMAND $<TARGET_FILE:rxas> storage-inline
-    COMMAND $<TARGET_FILE:rxlink> -s -o storage-inline-linked storage-inline ${_images}
-    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_storage_fixture}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-  add_custom_target(levell_storage_inline
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/storage-inline-linked.rxbin")
-  if(TARGET rxbvm)
-    add_test(NAME levell_storage_inline_rxbvm
-      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/storage-inline-linked.rxbin")
-    set_tests_properties(levell_storage_inline_rxbvm PROPERTIES
-      PASS_REGULAR_EXPRESSION "STORAGE_INLINE[|]failures=0"
-      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-      TIMEOUT 120 LABELS "level-l;research;inlining")
-    crexx_register_test_prep_targets(TESTS levell_storage_inline_rxbvm
-      TARGETS levell_storage_inline rxbvm)
-    add_test(NAME levell_storage_inline_scoped_rxbvm
-      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/storage-inline-linked.rxbin" -a scoped-cleanup)
-    set_tests_properties(levell_storage_inline_scoped_rxbvm PROPERTIES
-      PASS_REGULAR_EXPRESSION "SCOPED_CLEANUP[|]failures=0"
-      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-      TIMEOUT 120 LABELS "level-l;research;inlining")
-    crexx_register_test_prep_targets(TESTS levell_storage_inline_scoped_rxbvm
-      TARGETS levell_storage_inline rxbvm)
-  endif()
-
-  set(_nested_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/nested-inline.crexx")
-  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/nested-inline-linked.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
-      -o nested-inline "${_nested_fixture}"
-    COMMAND $<TARGET_FILE:rxas> nested-inline
-    COMMAND $<TARGET_FILE:rxlink> -s -o nested-inline-linked nested-inline ${_images}
-    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_nested_fixture}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-  add_custom_target(levell_nested_inline
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/nested-inline-linked.rxbin")
-  if(TARGET rxbvm)
-    add_test(NAME levell_nested_inline_rxbvm
-      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/nested-inline-linked.rxbin")
-    set_tests_properties(levell_nested_inline_rxbvm PROPERTIES
-      PASS_REGULAR_EXPRESSION "NESTED_INLINE[|]failures=0"
-      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-      TIMEOUT 120 LABELS "level-l;research;inlining")
-    crexx_register_test_prep_targets(TESTS levell_nested_inline_rxbvm
-      TARGETS levell_nested_inline rxbvm)
-  endif()
-
-  set(_cfg_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/target-cfg.crexx")
-  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/target-cfg-linked.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
-      -o target-cfg "${_cfg_fixture}"
-    COMMAND $<TARGET_FILE:rxas> target-cfg
-    COMMAND $<TARGET_FILE:rxlink> -s -o target-cfg-linked target-cfg ${_images}
-    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_cfg_fixture}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-  add_custom_target(levell_target_cfg
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/target-cfg-linked.rxbin")
-  if(TARGET rxbvm)
-    add_test(NAME levell_target_cfg_rxbvm
-      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/target-cfg-linked.rxbin")
-    set_tests_properties(levell_target_cfg_rxbvm PROPERTIES
-      PASS_REGULAR_EXPRESSION "TARGET_CFG[|]failures=0"
-      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-      TIMEOUT 120 LABELS "level-l;research;inlining")
-    crexx_register_test_prep_targets(TESTS levell_target_cfg_rxbvm
-      TARGETS levell_target_cfg rxbvm)
-  endif()
-
-  # One bounded owner panel for the shared Level L target foundation.
+  # Independent shared target clients, without an inliner or admission receipts.
   foreach(_foundation_case IN ITEMS
-      target-transfer-cfg target-binding-recipe target-selection target-bodyview target-program-defaults target-activation-abi target-scopefree-inline target-context-restoration target-retained-caller target-site-facets target-normalization-preservation target-normalization-receipt target-normalization-site target-expansion-remap target-expansion-relational target-backing-child target-draft-budget target-child-window target-execution-context target-signal-cfg target-signal-normalize target-canonical-flow target-scope-flow target-recipe target-recipe-banks target-module-remap target-flow target-summary foundation-normalize)
-    if((_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-recipe-banks" OR _foundation_case STREQUAL "target-retained-caller") AND NOT CREXX_BUILD_TARGET_IO)
+      target-cfg target-transfer-cfg target-binding-recipe target-selection
+      target-bodyview target-program-defaults target-activation-abi
+      target-context-restoration target-site-facets target-normalization-preservation
+      target-correspondence target-normalization-site
+      target-draft-budget target-execution-context target-signal-cfg
+      target-signal-normalize target-canonical-flow target-scope-flow
+      target-recipe target-module-remap target-flow target-summary
+      target-cold-metadata target-generic-flow foundation-normalize)
+    if((_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-generic-flow") AND NOT CREXX_BUILD_TARGET_IO)
       continue()
     endif()
     string(REPLACE "-" "_" _foundation_name "${_foundation_case}")
@@ -303,7 +121,7 @@ if(BUILD_TESTING)
     set(_foundation_images ${_images})
     set(_foundation_imports "${_test_imports}")
     set(_foundation_deps levell_target_test_imports ${_test_files})
-    if(_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-recipe-banks" OR _foundation_case STREQUAL "target-retained-caller")
+    if(_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-generic-flow")
       list(APPEND _foundation_images "${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io.rxbin")
       list(APPEND _foundation_images "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin")
       set(_foundation_imports "${CMAKE_CURRENT_BINARY_DIR}/${_foundation_case}-imports")
@@ -323,11 +141,9 @@ if(BUILD_TESTING)
       COMMAND $<TARGET_FILE:rxas> "${_foundation_case}"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_foundation_case}-linked"
         "${_foundation_case}" ${_foundation_images}
-      DEPENDS rxc rxas rxlink ${_foundation_deps}
-        "${_foundation_source}"
+      DEPENDS rxc rxas rxlink ${_foundation_deps} "${_foundation_source}"
       WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
-    add_custom_target(levell_${_foundation_name}
-      DEPENDS "${_foundation_output}")
+    add_custom_target(levell_${_foundation_name} DEPENDS "${_foundation_output}")
     if(TARGET rxbvm)
       add_test(NAME levell_${_foundation_name}_rxbvm
         COMMAND $<TARGET_FILE:rxbvm> "${_foundation_output}")
@@ -340,10 +156,8 @@ if(BUILD_TESTING)
       if(_foundation_case STREQUAL "foundation-normalize")
         add_test(NAME levell_foundation_normalize_native
           COMMAND ${CMAKE_COMMAND}
-            -DVM=$<TARGET_FILE:rxbvm>
-            -DASSEMBLER=$<TARGET_FILE:rxas>
-            -DLINKER=$<TARGET_FILE:rxlink>
-            -DCLIENT=${_foundation_output}
+            -DVM=$<TARGET_FILE:rxbvm> -DASSEMBLER=$<TARGET_FILE:rxas>
+            -DLINKER=$<TARGET_FILE:rxlink> -DCLIENT=${_foundation_output}
             -DWORK=${CMAKE_CURRENT_BINARY_DIR}/foundation-normalize-native-work
             -P ${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/run-foundation-normalize-native.cmake)
         set_tests_properties(levell_foundation_normalize_native PROPERTIES
@@ -352,30 +166,12 @@ if(BUILD_TESTING)
         crexx_register_test_prep_targets(TESTS levell_foundation_normalize_native
           TARGETS levell_foundation_normalize rxbvm rxas rxlink)
       endif()
-      if(_foundation_case STREQUAL "target-retained-caller")
-        add_test(NAME levell_target_retained_caller_native
-          COMMAND ${CMAKE_COMMAND}
-            -DVM=$<TARGET_FILE:rxbvm>
-            -DASSEMBLER=$<TARGET_FILE:rxas>
-            -DLINKER=$<TARGET_FILE:rxlink>
-            -DCLIENT=${_foundation_output}
-            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/retained-caller-native-work
-            -P ${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/run-retained-caller-native.cmake)
-        set_tests_properties(levell_target_retained_caller_native PROPERTIES
-          PASS_REGULAR_EXPRESSION "RETAINED_CALLER_NATIVE[|]failures=0"
-          TIMEOUT 120 LABELS "level-l;research;target-foundation")
-        crexx_register_test_prep_targets(TESTS levell_target_retained_caller_native
-          TARGETS levell_target_retained_caller rxbvm rxas rxlink)
-      endif()
     endif()
   endforeach()
 endif()
 
-option(CREXX_BUILD_TARGET_IO "Build the optional Level L target RXAS adapters" OFF)
 if(CREXX_BUILD_TARGET_IO)
   add_subdirectory(io)
-  add_subdirectory("${CMAKE_SOURCE_DIR}/research/level-l/toolchain/cli"
-    "${CMAKE_BINARY_DIR}/research/level-l/toolchain/cli")
   if(BUILD_TESTING)
     add_subdirectory("${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests"
       "${CMAKE_BINARY_DIR}/research/level-l/toolchain/tests")

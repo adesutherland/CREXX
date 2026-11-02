@@ -1,6 +1,6 @@
 /* cREXX License (MIT). One checked, split machine CFG over shared L IR. */
 options levelb
-namespace lltargetcfg expose graph edge ingresscone
+namespace lltargetcfg expose graph edge ingresscone policyfact
 import rxfnsb
 import llir
 import llirgraph
@@ -46,18 +46,21 @@ edge: class
   _reason = .string
   _exposure = .string
   _targetop = .int
-  _scopecomplete = .int
-  _scopeexits = .string
-  _scopeenters = .string
-  _scopereason = .string
   _asynchronous = .int
+  _regionexits = .string
+  _regioncomplete = .int
+  _regionreason = .string
+  _coldactions = .lltarget..record[]
+  _policyinstallation = .int
   *: factory
-    arg id = .int, source = .int, projected = .int, block = .int, functionid = .int, role = .string, ordinal = .int, target = .int, boundary = .string, boundaryid = .string, signalname = .string, phase = .string, complete = .int, reason = .string, exposure = 'local', targetop = 0, scopecomplete = 0, scopeexits = '', scopeenters = '', scopereason = 'scope.transition.unavailable', asynchronous = 0
+    arg id = .int, source = .int, projected = .int, block = .int, functionid = .int, role = .string, ordinal = .int, target = .int, boundary = .string, boundaryid = .string, signalname = .string, phase = .string, complete = .int, reason = .string, exposure = 'local', targetop = 0, asynchronous = 0, regionexits = '', regioncomplete = 1, regionreason = '', ?coldactions = .lltarget..record[], policyinstallation = 0
+    _policyinstallation = policyinstallation
     _id = id; _source = source; _projected = projected; _block = block; _function = functionid
     _role = role; _ordinal = ordinal; _target = target; _boundary = boundary; _boundaryid = boundaryid
     _signal = signalname; _phase = phase; _complete = complete; _reason = reason
-    _exposure = exposure; _targetop = targetop; _scopecomplete = scopecomplete
-    _scopeexits = scopeexits; _scopeenters = scopeenters; _scopereason = scopereason; _asynchronous = asynchronous
+    _exposure = exposure; _targetop = targetop; _asynchronous = asynchronous
+    _regionexits = regionexits; _regioncomplete = regioncomplete; _regionreason = regionreason
+    if ?coldactions then _coldactions = coldactions
     return
   id: method = .int
     return _id
@@ -94,26 +97,30 @@ edge: class
    * reachable storage before resumption. This is not an ordinary local edge. */
   exposure: method = .string
     return _exposure
+  /** Exact source installation owning this handler edge, zero if inherited. */
+  policyinstallation: method = .int
+    return _policyinstallation
   /** Destination source record, distinct from the projected block identity. */
   targetop: method = .int
     return _targetop
-  /** Zero means the transition cannot be treated as an empty scope effect. */
-  scopecomplete: method = .int
-    return _scopecomplete
-  scopeunknownreason: method = .string
-    return _scopereason
-  scopeexits: method = .int
-    return words(_scopeexits)
-  scopeexit: method = .int
+  /** Executable region transitions use checked lexical ancestry. Zero does
+   * not mean an empty cleanup set; the destination is then unproved. */
+  regioncomplete: method = .int
+    return _regioncomplete
+  regionreason: method = .string
+    return _regionreason
+  regionexits: method = .int
+    return words(_regionexits)
+  regionexit: method = .int
     arg ordinal = .int
-    if ordinal < 1 | ordinal > words(_scopeexits) then call bad('LL_TARGET_CFG: scope exit ordinal')
-    return word(_scopeexits,ordinal) as .int
-  scopeenters: method = .int
-    return words(_scopeenters)
-  scopeentry: method = .int
+    if ordinal < 1 | ordinal > words(_regionexits) then call bad('LL_TARGET_CFG: region exit ordinal')
+    return word(_regionexits,ordinal) as .int
+  coldactions: method = .int
+    return _coldactions[0]
+  coldaction: method = .lltarget..record
     arg ordinal = .int
-    if ordinal < 1 | ordinal > words(_scopeenters) then call bad('LL_TARGET_CFG: scope entry ordinal')
-    return word(_scopeenters,ordinal) as .int
+    if ordinal < 1 | ordinal > _coldactions[0] then call bad('LL_TARGET_CFG: cold action ordinal')
+    return _coldactions[ordinal]
 
 /** A backwards source-point cone, including every known local ingress.
  * Incomplete local destinations are not absent predecessors. Outward unwind
@@ -167,7 +174,7 @@ ingresscone: class
       if index.reachable(edge.sourceblock()) = 0 then iterate
       if edge.complete() = 0 then do
         outward = edge.targetblock() = 0 & edge.role() = 'terminal'
-        if edge.targetblock() = 0 & edge.role() = 'unwind' then outward = cfg.scopedepth(edge.sourceop()) = 0
+        if edge.targetblock() = 0 & edge.role() = 'unwind' then outward = 1
         if outward = 0 then do; ignored = fail('unknown','target.cfg.ingress.local.destination.unproved'); return; end
       end
       if edge.targetblock() = 0 then iterate
@@ -192,7 +199,6 @@ ingresscone: class
     do i = 1 to cfg.edges()
       edge = cfg.edge(i)
       if edge.function() <> _function | edge.targetblock() = 0 then iterate
-      if _members[edge.targetop()] & edge.scopecomplete() = 0 then do; ignored = fail('unknown','target.cfg.ingress.scope.unproved'); return; end
     end
     if spend(source.records()) = 0 then return
     do i = 1 to source.records()
@@ -237,6 +243,185 @@ ingresscone: class
   usedbytes: method = .int
     return _bytes
 
+/** One complete path's handler table and ordered source-owned named saves.
+ * Handler zero is an inherited parameter, not an absent/default handler. */
+policystate: class
+  _function = .int
+  _handlers = .int[]
+  _markers = .int[]
+  _savetags = .int[]
+  _saveops = .int[]
+  _savehandlers = .int[]
+  _savemarkers = .int[]
+  _depth = .int
+  _reason = .string
+  *: factory
+    arg functionid = 0, tags = 0
+    _function = functionid
+    do i = 1 to tags; _handlers[i] = 0; _markers[i] = 0; end
+    return
+  function: method = .int
+    return _function
+  reason: method = .string
+    return _reason
+  unknown: method = .void
+    arg reason = .string
+    _reason = reason
+    return
+  tags: method = .int
+    return _handlers[0]
+  installation: method = .int
+    arg tag = .int
+    return _handlers[tag]
+  marker: method = .int
+    arg tag = .int
+    return _markers[tag]
+  install: method = .void
+    arg tag = .int, operation = .int
+    _handlers[tag] = operation; _markers[tag] = _depth
+    return
+  saves: method = .int
+    return _depth
+  savetag: method = .int
+    arg ordinal = .int
+    return _savetags[ordinal]
+  saveop: method = .int
+    arg ordinal = .int
+    return _saveops[ordinal]
+  savedinstallation: method = .int
+    arg ordinal = .int
+    return _savehandlers[ordinal]
+  savedmarker: method = .int
+    arg ordinal = .int
+    return _savemarkers[ordinal]
+  push: method = .void
+    arg tag = .int, operation = .int
+    _depth = _depth + 1; _savetags[_depth] = tag; _saveops[_depth] = operation
+    _savehandlers[_depth] = _handlers[tag]; _savemarkers[_depth] = _markers[tag]
+    return
+  remove: method = .void
+    arg ordinal = .int
+    i = .int
+    tag = _savetags[ordinal]; _handlers[tag] = _savehandlers[ordinal]; _markers[tag] = _savemarkers[ordinal]
+    /* A marker names the newest still-live saved node. Removing a named save
+     * in the middle rebases current and saved entries to its older neighbour. */
+    do i = 1 to _handlers[0]
+      if _markers[i] >= ordinal then _markers[i] = _markers[i] - 1
+    end
+    do i = 1 to _depth
+      if _savemarkers[i] >= ordinal then _savemarkers[i] = _savemarkers[i] - 1
+    end
+    do i = ordinal to _depth - 1
+      _savetags[i] = _savetags[i + 1]; _saveops[i] = _saveops[i + 1]
+      _savehandlers[i] = _savehandlers[i + 1]; _savemarkers[i] = _savemarkers[i + 1]
+    end
+    _depth = _depth - 1
+    return
+  pop: method = .int
+    arg tag = .int
+    do i = _depth to 1 by -1
+      if _savetags[i] = tag then do; call remove(i); return 1; end
+    end
+    return 0
+  unwind: method = .void
+    arg marker = .int
+    do while _depth > marker; call remove(_depth); end
+    return
+  copy: method = .lltargetcfg..policystate
+    i = .int
+    result = .policystate(_function,_handlers[0])
+    do i = 1 to _handlers[0]; call result.setentry(i,_handlers[i],_markers[i]); end
+    do i = 1 to _depth; call result.addsave(_savetags[i],_saveops[i],_savehandlers[i],_savemarkers[i]); end
+    call result.unknown(_reason)
+    return result
+  setentry: method = .void
+    arg tag = .int, operation = .int, marker = .int
+    _handlers[tag] = operation; _markers[tag] = marker
+    return
+  addsave: method = .void
+    arg tag = .int, operation = .int, installation = .int, marker = .int
+    _depth = _depth + 1; _savetags[_depth] = tag; _saveops[_depth] = operation
+    _savehandlers[_depth] = installation; _savemarkers[_depth] = marker
+    return
+  bytes: method = .int
+    return 64 + _handlers[0] * 16 + _depth * 32 + length(_reason)
+  key: method = .string
+    if _reason <> '' then return '?' || _reason
+    i = .int
+    result = _function as .string
+    do i = 1 to _handlers[0]; result = result || ':' || _handlers[i] || '.' || _markers[i]; end
+    do i = 1 to _depth; result = result || '/' || _savetags[i] || '.' || _saveops[i] || '.' || _savehandlers[i] || '.' || _savemarkers[i]; end
+    return result
+
+/** Immutable owner-checked correlated policy alternative. Saves are oldest
+ * first. Each save belongs to this source procedure's initially empty stack;
+ * an unmatched POP cannot consume a caller's or a later consumer's saves. */
+policyfact: class
+  _owner = reference .lltargetcfg..graph
+  _identity = .int
+  _state = .policystate
+  *: factory
+    arg owner = reference .lltargetcfg..graph, state = .policystate
+    _owner = owner; _state = state; cfg = dereference owner; _identity = cfg.identity()
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    cfg = dereference _owner; return cfg.valid() & cfg.identity() = _identity
+  status: method = .string
+    if valid() = 0 then return 'invalid'
+    if _state.reason() <> '' then return 'unknown'
+    return 'proved'
+  reason: method = .string
+    if valid() = 0 then return 'target.cfg.policy.owner.expired.or.replaced'
+    return _state.reason()
+  require: method = .void
+    if valid() = 0 then call bad('LL_TARGET_CFG: expired policy fact')
+    return
+  function: method = .int
+    call require(); return _state.function()
+  tags: method = .int
+    call require(); return _state.tags()
+  tag: method = .string
+    arg ordinal = .int
+    call require(); cfg = dereference _owner; return cfg.policytag(ordinal)
+  installation: method = .int
+    arg tag = .string
+    call require(); cfg = dereference _owner; ordinal = cfg.policytagid(tag)
+    if ordinal = 0 | status() <> 'proved' then return 0
+    return _state.installation(ordinal)
+  action: method = .int
+    arg tag = .string
+    installedop = installation(tag)
+    if installedop = 0 then return 0
+    cfg = dereference _owner; return cfg.policyeffect(installedop,tag)
+  marker: method = .int
+    arg tag = .string
+    call require(); cfg = dereference _owner; ordinal = cfg.policytagid(tag)
+    if ordinal = 0 | status() <> 'proved' then return 0
+    return _state.marker(ordinal)
+  saves: method = .int
+    call require(); return _state.saves()
+  checksave: method = .void
+    arg ordinal = .int
+    call require()
+    if status() <> 'proved' | ordinal < 1 | ordinal > _state.saves() then call bad('LL_TARGET_CFG: policy save ordinal or unknown state')
+    return
+  saveop: method = .int
+    arg ordinal = .int
+    call checksave(ordinal); return _state.saveop(ordinal)
+  savetag: method = .string
+    arg ordinal = .int
+    call checksave(ordinal); cfg = dereference _owner; return cfg.policytag(_state.savetag(ordinal))
+  saveowner: method = .int
+    arg ordinal = .int
+    call checksave(ordinal); return _state.function()
+  savedinstallation: method = .int
+    arg ordinal = .int
+    call checksave(ordinal); return _state.savedinstallation(ordinal)
+  savedmarker: method = .int
+    arg ordinal = .int
+    call checksave(ordinal); return _state.savedmarker(ordinal)
+
 graph: class
   _owner = reference .lltarget..module
   _profile = reference .lltargettransfer..profile
@@ -262,10 +447,18 @@ graph: class
   _local = .int[]
   _localreason = .string[]
   _policyexact = .int[]
-  _scopeexit = .int[]
-  _scopeowner = .int[]
-  _scopeparent = .int[]
-  _scopecontinuation = .int[]
+  _tags = .string[]
+  _policystates = .policystate[]
+  _policypoints = .int[]
+  _policynext = .int[]
+  _policyheads = .int[]
+  _policylasts = .int[]
+  _edgepolicyheads = .int[]
+  _edgepolicylasts = .int[]
+  _edgepolicynext = .int[]
+  _edgepolicystates = .policystate[]
+  _edgeinstall = .int[]
+  _edgepossible = .int[]
   _policyops = .int[]
   _policyfunction = .int[]
   _policynames = .string[]
@@ -305,14 +498,14 @@ graph: class
     if _status = 'building' then do; _status = state; _message = message; end
     return
   stage: method = .void
-    arg source = .int, target = .int, role = .string, phase = 'none', boundary = '', boundaryid = '', signalname = '', complete = 1, reason = '', exposure = 'local', asynchronous = 0
+    arg source = .int, target = .int, role = .string, phase = 'none', boundary = '', boundaryid = '', signalname = '', complete = 1, reason = '', exposure = 'local', asynchronous = 0, policyinstallation = 0
     if wordpos(role,'normal table skip handler resumed async unwind terminal unknown') = 0 | wordpos(phase,'none before partial after unknown') = 0 | (target = 0 & boundary = '') | (target > 0 & boundary <> '') | (complete = 0 & reason = '') then do
       call reject('invalid','LL_TARGET_CFG: edge shape'); return
     end
     if reserve(168 + length(boundaryid) + length(signalname) + length(reason),1) = 0 then return
     id = _from[0] + 1; _from[id] = source; _to[id] = target; _roles[id] = role; _phases[id] = phase
     _bounds[id] = boundary; _boundids[id] = boundaryid; _signals[id] = signalname; _known[id] = complete; _reasons[id] = reason
-    _exposures[id] = exposure; _asynchronous[id] = asynchronous
+    _exposures[id] = exposure; _asynchronous[id] = asynchronous; _edgeinstall[id] = policyinstallation; _edgepossible[id] = 1; _edgepolicyheads[id] = 0; _edgepolicylasts[id] = 0
     _stagenext[id] = 0
     if _stagelast[source] > 0 then _stagenext[_stagelast[source]] = id
     else _stagefirst[source] = id
@@ -362,9 +555,11 @@ graph: class
       if index > 0 & index <= item.operands() then do
         value = item.operand(index)
         if value.kind() = 'S' then do
-          /* Operand-selected raises can also fail their own validation. The
-           * canonical static alternatives augment the requested name. */
-          names = upper(value.text()); alternatives = translate(catalog.signalnames(code),' ','|')
+          /* Terminal validation alternatives are separate from the requested
+           * event. Only nonterminal static alternatives share its policy. */
+          names = upper(value.text()); alternatives = ''
+          if wordpos(names,catalog.programdefaultsignals()) = 0 then return ''
+          if catalog.signalproperties(code) <idiv> 64 % 2 = 0 then alternatives = translate(catalog.signalnames(code),' ','|')
           do ordinal = 1 to words(alternatives)
             name = word(alternatives,ordinal)
             if wordpos(name,translate(names,' ','|')) = 0 then names = names || '|' || name
@@ -377,29 +572,6 @@ graph: class
   /** Committed receiver of a policy response. An asynchronous safe point is
    * after the instruction: entry has committed and a logical RET has already
    * left its innermost owner. Synchronous failure never commits a new entry. */
-  activeowner: method = .int
-    arg source = .int, asynchronous = .int
-    owner = _scopeowner[source]
-    if asynchronous then do
-      if _scopecontinuation[source] > 0 then owner = source
-      else if _scopeexit[source] > 0 then owner = _scopeowner[_scopeexit[source]]
-    end
-    return owner
-  /** Policy table changes are private to their logical owner. Its inherited
-   * table is restored on departure; inner installations cannot affect prior
-   * entry or a later outer source point. Timing within one owner is still a
-   * conservative union and is not an assertion of an active installation. */
-  policyvisible: method = .int
-    arg installation = .int, source = .int, asynchronous = .int
-    installedowner = _scopeowner[installation]
-    if installedowner = 0 then return 1
-    owner = activeowner(source,asynchronous)
-    do while owner > 0
-      if reserve(0,1) = 0 then return 0
-      if owner = installedowner then return 1
-      owner = _scopeparent[owner]
-    end
-    return 0
   signalpaths: method = .void
     arg item = .lltarget..record, phase = .string, names = .string, asynchronous = 0, callback = 0, policyunknown = 0, causeid = ''
     exposure = .string; localexposure = .string
@@ -436,30 +608,15 @@ graph: class
     do p = 1 to _policyops[0]
       if reserve(0,1) = 0 then return
       if _policyfunction[p] <> f then iterate
-      if policyvisible(_policyops[p],id,asynchronous) = 0 then iterate
       tag = _policynames[p]
       if tag <> '*' & names <> '*' & wordpos(tag,translate(names,' ','|')) = 0 then iterate
       installed = target.at(_policyops[p]); effect = catalog.policyeffect(installed.opcode())
       policyid = installed.id() || cause || '.sync.' || phase
       if asynchronous then policyid = installed.id() || cause || '.async.' || phase
       if effect = 4 then do
-        call resumepaths(id,'skip',phase,tag,'local',asynchronous)
+        call resumepaths(id,'skip',phase,tag,'local',asynchronous,installed.id())
       end
-      else if effect = 5 | effect = 6 then call stage(id,0,'terminal',phase,'policy-halt',policyid,tag,1,'',localexposure,asynchronous)
-      else if effect = 10 then do
-        if _scopecontinuation[id] > 0 & asynchronous = 0 then do
-          /* A failed/partial entry carries no newly committed logical scope.
-           * Keep the response explicit until incoming stack state proves the
-           * surviving owner, instead of treating it as a successful entry. */
-          call stage(id,0,'unknown',phase,'policy-return-entry',policyid,tag,0,'scope.entry.return.owner.unproved',localexposure,asynchronous)
-          _exceptional[f] = 0; _local[f] = 0
-        end
-        else do
-          owner = activeowner(id,asynchronous)
-          if owner > 0 then call stage(id,_scopecontinuation[owner],'unwind',phase,'','',tag,1,'',localexposure,asynchronous)
-          else call stage(id,0,'unwind',phase,'policy-return',policyid,tag,1,'',localexposure,asynchronous)
-        end
-      end
+      else if effect = 5 | effect = 6 then call stage(id,0,'terminal',phase,'policy-halt',policyid,tag,1,'',localexposure,asynchronous,installed.id())
       else if effect = 7 | effect = 9 | effect = 14 then do
         dest = 0
         do operand = 1 to installed.operands()
@@ -473,16 +630,16 @@ graph: class
           if effect = 9 then exposure = 'handler-call'
           if effect = 14 then exposure = 'event-binding'
           if asynchronous then exposure = exposure || '-async'
-          call stage(id,dest,'handler',phase,'','',tag,1,'',exposure,asynchronous)
+          call stage(id,dest,'handler',phase,'','',tag,1,'',exposure,asynchronous,installed.id())
         end
         else do
-          call stage(id,0,'unknown',phase,'local-policy',policyid,tag,0,'signal.local.target.unknown',localexposure,asynchronous)
+          call stage(id,0,'unknown',phase,'local-policy',policyid,tag,0,'signal.local.target.unknown',localexposure,asynchronous,installed.id())
           _local[f] = 0
         end
       end
       else if effect = 1 | effect = 2 | effect = 8 | effect = 11 then do
-        call resumepaths(id,'resumed',phase,tag,'handler-call',asynchronous)
-        if effect = 11 then call stage(id,0,'terminal',phase,'policy-action-fail',policyid,tag,1,'',localexposure,asynchronous)
+        call resumepaths(id,'resumed',phase,tag,'handler-call',asynchronous,installed.id())
+        if effect = 11 then call stage(id,0,'terminal',phase,'policy-action-fail',policyid,tag,1,'',localexposure,asynchronous,installed.id())
       end
     end
     return
@@ -536,12 +693,16 @@ graph: class
     end
     if catalog.signalstate(code) <> 0 then do
       phase = word('none before after partial unknown',catalog.signalphase(code) + 1)
-      call policygap(item,phase,raisednames(item),0,'.reachable-callback.intrinsic')
+      names = raisednames(item)
+      terminalstatic = catalog.signalproperties(code) <idiv> 64 % 2
+      if terminalstatic = 0 | catalog.signalsource(code) <> 1 then do
+        if names <> '' then call policygap(item,phase,names,0,'.reachable-callback.intrinsic')
+      end
     end
     /* A direct non-resource callback already has its own unknown-policy
      * alternatives. A resource-only callback needs the incoming policy gap. */
     if catalog.callbackobligations(code) <> 0 & owncallback = 0 then call policygap(item,'unknown','*',0,'.reachable-callback.callback')
-    if catalog.flow(code) <> 3 | _scopeexit[id] > 0 then do
+    if catalog.flow(code) <> 3 then do
       call policygap(item,'after','*',1,'.reachable-callback.ambient'); _async[f] = 0
     end
     return
@@ -591,7 +752,7 @@ graph: class
     end
     return
   resumepaths: method = .void
-    arg id = .int, role = .string, phase = .string, name = .string, exposure = .string, asynchronous = .int
+    arg id = .int, role = .string, phase = .string, name = .string, exposure = .string, asynchronous = .int, policyinstallation = 0
     if asynchronous then do
       exposure = exposure || '-async'
       /* An interrupt after a branch resumes its selected successor, not the
@@ -600,76 +761,212 @@ graph: class
       do while row > 0
         if reserve(0,1) = 0 then return
         following = _stagenext[row]
-        if _roles[row] = 'normal' & _to[row] > 0 then call stage(id,_to[row],role,phase,'','',name,1,'',exposure,asynchronous)
+        if _roles[row] = 'normal' & _to[row] > 0 then call stage(id,_to[row],role,phase,'','',name,1,'',exposure,asynchronous,policyinstallation)
         if row = stop then leave
         row = following
       end
     end
     else do
       successor = _next[id]
-      if _scopeexit[id] > 0 then successor = _scopeexit[id]
-      if successor > 0 then call stage(id,successor,role,phase,'','',name,1,'',exposure,asynchronous)
+      if successor > 0 then call stage(id,successor,role,phase,'','',name,1,'',exposure,asynchronous,policyinstallation)
     end
     return
-  /** Compute the committed logical stack transition, separately from signal
-   * destination completeness. A known target never proves successful entry
-   * on a before/partial failure, nor an unknown inherited policy departure. */
-  scopetransition: method = .lltargetcfg..edge
+  /** Project one canonical boundary and its lexical cold-region duties. */
+  edgerow: method = .lltargetcfg..edge
     arg row = .int, projected = .int, ordinal = .int, destblock = .int
-    depth = .int
-    target = dereference _owner; catalog = .llrxascatalog..catalog()
-    id = _from[row]; destination = _to[row]; item = target.at(id)
-    complete = _known[row]; reason = ''; exits = ''; enters = ''
-    fromstack = ''; cursor = _scopeowner[id]
-    do while cursor > 0
-      if reserve(0,1) = 0 then leave
-      fromstack = cursor || ' ' || fromstack; cursor = _scopeparent[cursor]
-    end
-    if item.kind() = 'instruction' & _phases[row] = 'after' & right(_exposures[row],6) = '-async' then do
-      if catalog.scopecontinuation(item.opcode()) > 0 then fromstack = fromstack || ' ' || id
-    end
-    tostack = ''; cursor = 0
-    if destination > 0 then cursor = _scopeowner[destination]
-    do while cursor > 0
-      if reserve(0,1) = 0 then leave
-      tostack = cursor || ' ' || tostack; cursor = _scopeparent[cursor]
-    end
-    if complete = 0 then reason = _reasons[row]
-    else if _scopecontinuation[id] > 0 & _phases[row] = 'unknown' & _asynchronous[row] = 0 then do
-      /* A callback during entry can precede or follow publication. The
-       * pre-entry lexical stack is not a committed departure witness. */
-      complete = 0; reason = 'scope.entry.commit.unproved'
-    end
-    else if destination = 0 & wordpos(_roles[row],'terminal unwind') = 0 then do
-      complete = 0; reason = 'scope.departure.destination.unproved'
-    end
-    else do
-      common = 0
-      do depth = 1 to min(words(fromstack),words(tostack))
-        if reserve(0,1) = 0 then leave
-        if word(fromstack,depth) <> word(tostack,depth) then leave
-        common = depth
-      end
-      do depth = words(fromstack) to common + 1 by -1
-        exits = exits || ' ' || word(fromstack,depth)
-      end
-      do depth = common + 1 to words(tostack)
-        enters = enters || ' ' || word(tostack,depth)
-      end
-      if words(enters) > 0 then do
-        if words(enters) <> 1 | word(enters,1) <> (id as .string) | catalog.scopecontinuation(item.opcode()) = 0 then do
-          complete = 0; reason = 'scope.entry.control.unproved'
+    target = dereference _owner; id = _from[row]; destination = _to[row]; item = target.at(id)
+    regionexits = ''; regionreason = ''; regioncomplete = 1; coldactions = .lltarget..record[]
+    fromregion = target.regionat(id); toregion = 0
+    if destination > 0 then toregion = target.regionat(destination)
+    if fromregion < 0 | toregion < 0 then do; regioncomplete = 0; regionreason = 'target.cfg.region.source.or.destination.invalid'; end
+    /* Returning handlers/IGNORE retain the suspended activation. Terminal
+     * cleanup belongs to physical retirement, with no per-clone finalizer. */
+    cold = _roles[row] = 'handler' | _roles[row] = 'unwind'
+    if cold & regioncomplete then do
+      cursor = fromregion
+      do while cursor > 0 & cursor <> toregion
+        if reserve(16,1) = 0 then leave
+        regionexits = regionexits || ' ' || cursor
+        actionwork = target.exitactionwork(cursor)
+        if actionwork > (_bytelimit - _bytes) <idiv> 8 then do; call reject('limit','LL_RESOURCE_LIMIT: target.cfg cold action bytes'); leave; end
+        if reserve(actionwork * 8,actionwork) = 0 then leave
+        actionids = target.exitactionids(cursor,id,actionwork,max(8,actionwork * 8))
+        do actionordinal = 1 to actionids[0]
+          action = target.at(actionids[actionordinal])
+          if reserve(16,1) = 0 then leave
+          coldactions[coldactions[0] + 1] = action
         end
-        else if _roles[row] <> 'normal' & _phases[row] <> 'after' then do
-          complete = 0; reason = 'scope.entry.commit.unproved'
-        end
+        region = target.region(cursor); cursor = region.parentregion()
       end
-      if _scopeexit[id] > 0 & words(exits) > 0 & _roles[row] <> 'normal' & _phases[row] <> 'after' then do
-        complete = 0; reason = 'scope.return.commit.unproved'
+      if cursor <> toregion then do
+        regioncomplete = 0; regionreason = 'target.cfg.region.destination.not.ancestor'
       end
     end
-    if complete = 0 then do; exits = ''; enters = ''; end
-    return .lltargetcfg..edge(row,id,projected,_block[id],item.procedureid(),_roles[row],ordinal,destblock,_bounds[row],_boundids[row],_signals[row],_phases[row],_known[row],_reasons[row],_exposures[row],destination,complete,strip(exits),strip(enters),reason,_asynchronous[row])
+    if _roles[row] = 'unknown' | (_roles[row] = 'async' & fromregion > 0) then do
+      regioncomplete = 0; regionreason = 'target.cfg.region.destination.unknown'
+    end
+    if regioncomplete = 0 then do; regionexits = ''; assembler setattrs coldactions,0; end
+    return .lltargetcfg..edge(row,id,projected,_block[id],item.procedureid(),_roles[row],ordinal,destblock,_bounds[row],_boundids[row],_signals[row],_phases[row],_known[row],_reasons[row],_exposures[row],destination,_asynchronous[row],strip(regionexits),regioncomplete,regionreason,coldactions,_edgeinstall[row])
+  /** Append each distinct whole path once. No tag-wise meet invents a
+   * handler/save combination, and every comparison/copy consumes this budget. */
+  addpolicypoint: method = .int
+    arg operation = .int, state = .policystate
+    cursor = _policyheads[operation]; key = state.key()
+    do while cursor > 0
+      previous = _policystates[cursor]
+      if reserve(0,previous.tags() + previous.saves() + 1) = 0 then return 0
+      if previous.key() == key then return cursor
+      cursor = _policynext[cursor]
+    end
+    if reserve(state.bytes() + length(key) + 32,state.tags() + state.saves() + 1) = 0 then return 0
+    cursor = _policystates[0] + 1; _policystates[cursor] = state; _policypoints[cursor] = operation; _policynext[cursor] = 0
+    if _policylasts[operation] > 0 then _policynext[_policylasts[operation]] = cursor
+    else _policyheads[operation] = cursor
+    _policylasts[operation] = cursor
+    if state.reason() <> '' then _policyexact[state.function()] = 0
+    return cursor
+  addedgepolicy: method = .int
+    arg edgeid = .int, state = .policystate
+    cursor = _edgepolicyheads[edgeid]; key = state.key()
+    do while cursor > 0
+      previous = _edgepolicystates[cursor]
+      if reserve(0,previous.tags() + previous.saves() + 1) = 0 then return 0
+      if previous.key() == key then return cursor
+      cursor = _edgepolicynext[cursor]
+    end
+    if reserve(state.bytes() + length(key) + 16,state.tags() + state.saves() + 1) = 0 then return 0
+    cursor = _edgepolicystates[0] + 1; _edgepolicystates[cursor] = state; _edgepolicynext[cursor] = 0
+    if _edgepolicylasts[edgeid] > 0 then _edgepolicynext[_edgepolicylasts[edgeid]] = cursor
+    else _edgepolicyheads[edgeid] = cursor
+    _edgepolicylasts[edgeid] = cursor; _edgepossible[edgeid] = 1
+    return cursor
+  tagindex: method = .int
+    arg name = .string
+    do i = 1 to _tags[0]
+      if reserve(0,1) = 0 then return 0
+      if _tags[i] == name then return i
+    end
+    return 0
+  policytransfer: method = .lltargetcfg..policystate
+    arg operation = .int, incoming = .policystate
+    result = incoming.copy(); source = dereference _owner; profile = dereference _profile
+    item = source.at(operation); catalog = .llrxascatalog..catalog()
+    if result.reason() <> '' | item.kind() <> 'instruction' then return result
+    if profile.premise() = 'canonical' then do
+      if profile.callbackpolicyunknown(operation) then call result.unknown('target.cfg.policy.callback.write.unknown')
+    end
+    view = profile.instruction(operation)
+    do ordinal = 1 to view.actions()
+      action = view.action(ordinal)
+      if action.kind() = 'callback' & profile.premise() <> 'canonical' then call result.unknown('target.cfg.policy.independent.callback.unknown')
+      if action.kind() <> 'policy' then iterate
+      effect = action.policyeffect(); name = '*'; value = action.literal()
+      if action.sourcekind() = 'literal' & value.kind() = 'S' then name = upper(value.text())
+      tag = tagindex(name)
+      if name <> '*' & (wordpos(name,catalog.programdefaultsignals()) = 0 | (name = 'KILL' & wordpos(effect as .string,'5 6') = 0)) then do
+        call result.unknown('target.cfg.policy.invalid.signal.instruction'); return result
+      end
+      if tag = 0 | name = '*' | effect = 0 | effect = 15 | action.certainty() <> 'must' | action.path() = 'failure' then do
+        call result.unknown('target.cfg.policy.dynamic.tag.or.effect'); return result
+      end
+      if effect = 12 then call result.push(tag,operation)
+      else if effect = 13 then do
+        if result.pop(tag) = 0 then do; call result.unknown('target.cfg.policy.pop.without.source.save'); return result; end
+      end
+      else call result.install(tag,operation)
+    end
+    return result
+  policyedgeaccepts: method = .int
+    arg row = .int, state = .policystate
+    i = .int
+    if state.reason() <> '' then return 1
+    if _roles[row] = 'normal' | _roles[row] = 'table' | _bounds[row] = 'instruction-self-error' then return 1
+    if _edgeinstall[row] = 0 & wordpos(_exposures[row],'inherited inherited-async') = 0 then return 1
+    names = translate(_signals[row],' ','|')
+    if _signals[row] = '*' then do
+      /* Unauthored names retain their inherited parameter. */
+      if _edgeinstall[row] = 0 then return 1
+      do i = 1 to state.tags()
+        if reserve(0,1) = 0 then return 0
+        if state.installation(i) = _edgeinstall[row] then return 1
+      end
+      return 0
+    end
+    do i = 1 to words(names)
+      tag = tagindex(word(names,i)); installation = 0
+      if tag > 0 then installation = state.installation(tag)
+      if installation = _edgeinstall[row] then return 1
+    end
+    return 0
+  correlatepolicy: method = .void
+    arg first = .int[]
+    source = dereference _owner; profile = dereference _profile; catalog = .llrxascatalog..catalog()
+    state = .policystate; incoming = .policystate; outgoing = .policystate; selected = .policystate
+    item = .lltarget..record; installed = .lltarget..record
+    ignored = .int; tag = .int; row = .int; head = .int; id = .int; f = .int; i = .int; ordinal = .int
+    name = .string; view = .lltargettransfer..instruction; action = .lltargettransfer..action; value = .lltarget..operand
+    /* Stable tag order is the first canonical policy-source occurrence. */
+    do i = 1 to _policynames[0]
+      name = _policynames[i]
+      if name = '*' | tagindex(name) > 0 then iterate
+      if reserve(length(name) + 16,1) = 0 then return
+      _tags[_tags[0] + 1] = name
+    end
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.kind() = 'procedure' then iterate
+      view = profile.instruction(item.id())
+      do ordinal = 1 to view.actions()
+        if reserve(0,1) = 0 then return
+        action = view.action(ordinal); value = action.literal()
+        if action.kind() <> 'policy' | action.sourcekind() <> 'literal' | value.kind() <> 'S' then iterate
+        name = upper(value.text())
+        if name = '*' | tagindex(name) > 0 then iterate
+        if reserve(length(name) + 16,1) = 0 then return
+        _tags[_tags[0] + 1] = name
+      end
+    end
+    if reserve(_from[0] * 8,_from[0]) = 0 then return
+    do row = 1 to _from[0]; _edgepossible[row] = 0; end
+    do f = 2 to first[0]
+      if first[f] = 0 then iterate
+      state = .policystate(f,_tags[0]); ignored = addpolicypoint(first[f],state)
+      if _status <> 'building' then return
+    end
+    head = 1
+    do while head <= _policystates[0]
+      id = _policypoints[head]; incoming = _policystates[head]; head = head + 1
+      if reserve(incoming.bytes(),incoming.tags() + incoming.saves() + 1) = 0 then return
+      outgoing = policytransfer(id,incoming); item = source.at(id); row = _stagefirst[id]
+      do while row > 0
+        if reserve(incoming.bytes(),incoming.tags() + incoming.saves() + 1) = 0 then return
+        selected = incoming.copy()
+        if _roles[row] = 'normal' | _roles[row] = 'table' | _asynchronous[row] | _phases[row] = 'after' then selected = outgoing.copy()
+        if _bounds[row] = 'instruction-self-error' then selected = incoming.copy()
+        if _phases[row] = 'partial' | _phases[row] = 'unknown' then do
+          if incoming.key() <> outgoing.key() then call selected.unknown('target.cfg.policy.failure.phase.unproved')
+        end
+        /* Source POP failure has no successful continuation. It never uses
+         * an inherited save stack even when inherited policy is unknown. */
+        feasible = 1
+        if wordpos(outgoing.reason(),'target.cfg.policy.pop.without.source.save target.cfg.policy.invalid.signal.instruction') > 0 & (_roles[row] = 'normal' | _asynchronous[row]) then feasible = 0
+        if feasible & policyedgeaccepts(row,selected) then do
+          if _edgeinstall[row] > 0 & selected.reason() = '' then do
+            installed = source.at(_edgeinstall[row]); effect = catalog.policyeffect(installed.opcode())
+            if wordpos(effect as .string,'7 9 14') > 0 then do
+              tag = tagindex(_signals[row])
+              if tag > 0 then call selected.unwind(selected.marker(tag))
+            end
+          end
+          ignored = addedgepolicy(row,selected)
+          if _status <> 'building' then return
+          if _to[row] > 0 then ignored = addpolicypoint(_to[row],selected)
+          if _status <> 'building' then return
+        end
+        row = _stagenext[row]
+      end
+    end
+    return
   run: method = .void
     if _status <> 'building' then return
     i = .int; j = .int; n = .int; id = .int; f = .int; row = .int; ordinal = .int; dest = .int; code = .int
@@ -689,8 +986,8 @@ graph: class
     if reserve(source.operations() * 512 + source.blocks() * 16 + source.functions() * 48,source.operations() + source.blocks() + source.functions()) = 0 then return
     if reserve(source.operations() * 8 + 64,source.operations()) = 0 then return
     do i = 1 to source.operations()
-      _projected[i] = 0; _block[i] = 0; _next[i] = 0; _scopeexit[i] = 0; _scopeowner[i] = 0; _scopeparent[i] = 0; _scopecontinuation[i] = 0; _stagefirst[i] = 0; _stagelast[i] = 0
-      policyseeds[i] = 0
+      _projected[i] = 0; _block[i] = 0; _next[i] = 0; _stagefirst[i] = 0; _stagelast[i] = 0
+      policyseeds[i] = 0; _policyheads[i] = 0; _policylasts[i] = 0
     end
     do i = 1 to source.operations() + 1; _outfirst[i] = 0; _outlast[i] = 0; _outcount[i] = 0; end
     do i = 1 to source.blocks(); _group[i] = 0; end
@@ -717,42 +1014,21 @@ graph: class
     end
     catalog = .llrxascatalog..catalog()
     do n = 1 to target.procedures()
-      body = target.procedure(n); f = body.functionid(); depth = 0; scope = .string[]; scopeowner = .int[]
+      body = target.procedure(n); f = body.functionid()
       do j = 1 to body.records()
         if reserve(0,1) = 0 then return
         item = body.record(j); id = item.id()
-        if item.kind() = 'label' & depth > 0 then do
-          field = item.operand(1)
-          if field.text() = scope[depth] then depth = depth - 1
-        end
-        if depth > 0 then _scopeowner[id] = scopeowner[depth]
         if item.kind() <> 'instruction' then iterate
         code = item.opcode()
-        if catalog.returnkind(code) > 0 & depth > 0 then do
-          _scopeexit[id] = resolveblock(target.labelblock(f,scope[depth]))
-          if _scopeexit[id] = 0 then do; call reject('invalid','LL_TARGET_CFG: unresolved inline continuation'); return; end
-        end
-        continuation = catalog.scopecontinuation(code)
-        if continuation > 0 then do
-          if continuation > item.operands() then do; call reject('invalid','LL_TARGET_CFG: missing inline continuation'); return; end
-          field = item.operand(continuation)
-          if field.kind() <> 'L' then do; call reject('invalid','LL_TARGET_CFG: inline continuation is not label'); return; end
-          _scopeparent[id] = _scopeowner[id]
-          _scopecontinuation[id] = resolveblock(target.labelblock(f,field.text()))
-          if _scopecontinuation[id] = 0 then do; call reject('invalid','LL_TARGET_CFG: unresolved inline continuation'); return; end
-          depth = depth + 1; scope[depth] = field.text(); scopeowner[depth] = id
-        end
         /* A typed effect can describe pending-bit control without changing
          * the structural handler table. Only POLICY_WRITE installs policy. */
         if (catalog.signalproperties(code) <idiv> 8) % 2 then do
-          if profile.premise() = 'canonical' then _policyexact[f] = 0
           name = policyname(item)
           if reserve(32 + length(name),1) = 0 then return
           p = _policyops[0] + 1; _policyops[p] = id; _policyfunction[p] = f; _policynames[p] = name
           if catalog.policyeffect(code) = 15 then _local[f] = 0
         end
       end
-      if depth <> 0 then do; call reject('invalid','LL_TARGET_CFG: unclosed inline continuation scope'); return; end
     end
     do n = 1 to target.records()
       if reserve(0,1) = 0 then return
@@ -764,14 +1040,7 @@ graph: class
         iterate
       end
       op = source.operation(id); code = item.opcode(); arity = lltarget..normalsuccessors(code)
-      if catalog.scopecontinuation(code) > 0 then do
-        /* Native FLOW_COND retains the continuation label for the assembler;
-         * execution enters the clone body. Only a scoped RET reaches after. */
-        if _next[id] = 0 then do; call reject('invalid','LL_TARGET_CFG: inline entry lacks body'); return; end
-        call stage(id,_next[id],'normal')
-      end
-      else if _scopeexit[id] > 0 then call stage(id,_scopeexit[id],'normal')
-      else if arity = -2 then do
+      if arity = -2 then do
         call stage(id,0,'unknown','unknown','normal-target',id as .string,'',0,'normal.successor.unknown'); _normal[f] = 0
       end
       else if op.successors() > 0 then do
@@ -796,7 +1065,14 @@ graph: class
         if catalog.callinvokes(code) then aggregate = profile.callcausescomplete(id) = 0
         if catalog.signalstate(code) <> 0 & aggregate then do
           phase = word('none before after partial unknown',catalog.signalphase(code) + 1)
-          call signalpaths(item,phase,raisednames(item))
+          if catalog.signalproperties(code) <idiv> 64 % 2 then do
+            call stage(id,0,'terminal',phase,'instruction-self-error',id as .string,catalog.signalnames(code))
+            if catalog.signalsource(code) <> 1 then do
+              names = raisednames(item)
+              if names <> '' then call signalpaths(item,phase,names)
+            end
+          end
+          else call signalpaths(item,phase,raisednames(item))
           if profile.defaulthalt(f) = 0 then _exceptional[f] = 0
         end
         /* A finalizer/native hook can queue a signal during this operation
@@ -810,7 +1086,7 @@ graph: class
           policyseeds[id] = profile.callbackpolicyunknown(id)
           call signalpaths(item,'unknown','*',0,1,policyseeds[id])
         end
-        if catalog.flow(code) <> 3 | _scopeexit[id] > 0 then call signalpaths(item,'after','*',1)
+        if catalog.flow(code) <> 3 then call signalpaths(item,'after','*',1)
         if profile.defaulthalt(f) = 0 then _async[f] = 0
       end
       else do
@@ -847,24 +1123,8 @@ graph: class
       call propagatepolicy(policyseeds,first)
       if _status <> 'building' then return
     end
-    /* Lexical scopes have a checked single entry and RET-only departure.
-     * Follow metadata to its next instruction before comparing owners, so a
-     * directive cannot hide a branch into or fallthrough out of a scope. */
-    do n = 1 to _from[0]
-      if reserve(0,1) = 0 then return
-      if _roles[n] <> 'normal' | _to[n] = 0 then iterate
-      id = _from[n]; dest = _to[n]; item = target.at(id)
-      if item.kind() <> 'instruction' then iterate
-      do steps = 1 to target.records() + 1
-        following = target.at(dest)
-        if following.kind() = 'instruction' | _next[dest] = 0 then leave
-        dest = _next[dest]
-        if reserve(0,1) = 0 then return
-      end
-      if _scopeowner[id] = _scopeowner[dest] | _scopeexit[id] = _to[n] then iterate
-      if catalog.scopecontinuation(item.opcode()) > 0 & _scopeowner[dest] = id then iterate
-      call reject('invalid','LL_TARGET_CFG: control crosses logical activation boundary'); return
-    end
+    call correlatepolicy(first)
+    if _status <> 'building' then return
     do n = 1 to target.records()
       item = target.record(n); id = item.id(); f = item.procedureid()
       if f < 2 | item.kind() = 'procedure' then iterate
@@ -892,7 +1152,7 @@ graph: class
       end
       else call _edges.boundary(projected,_roles[row],_phases[row],_bounds[row],_boundids[row],_signals[row],_known[row],_reasons[row])
       item = target.at(id)
-      _rows[row] = scopetransition(row,projected,ordinal,dest)
+      _rows[row] = edgerow(row,projected,ordinal,dest)
       if _status <> 'building' then return
       call indexrow(id,row)
     end
@@ -905,7 +1165,7 @@ graph: class
       if reserve(160,1) = 0 then return
       row = _rows[0] + 1; f = projectionstore.get(2,b,1)
       call _edges.boundary(lastop,'terminal','none','synthetic-end',b as .string)
-      _rows[row] = .lltargetcfg..edge(row,0,lastop,b,f,'terminal',0,0,'synthetic-end',b as .string,'','none',1,'','local',0,1,'','','')
+      _rows[row] = .lltargetcfg..edge(row,0,lastop,b,f,'terminal',0,0,'synthetic-end',b as .string,'','none',1,'','local',0)
       call indexrow(0,row)
     end
     if _edges.seal() = 0 then do; call reject(_edges.status(),_edges.message()); return; end
@@ -984,54 +1244,17 @@ graph: class
   checksource: method = .void
     arg source = .int
     call require()
-    if source < 0 | source > _scopeowner[0] then call bad('LL_TARGET_CFG: scope source identity')
+    if source < 0 | source > _projected[0] then call bad('LL_TARGET_CFG: source identity')
     if source > 0 then do
       if _projected[source] = 0 then call bad('LL_TARGET_CFG: source is not a projected record')
     end
     return
-  /** The stack immediately before this record; zero names the physical root. */
-  scopeowner: method = .int
-    arg source = .int
-    call checksource(source)
-    if source = 0 then return 0
-    return _scopeowner[source]
-  checkscope: method = .void
-    arg scope = .int
-    call checksource(scope)
-    if scope = 0 then call bad('LL_TARGET_CFG: physical root is not inline scope')
-    if _scopecontinuation[scope] = 0 then call bad('LL_TARGET_CFG: source is not a scope entry')
-    return
-  scopeparent: method = .int
-    arg scope = .int
-    call checkscope(scope); return _scopeparent[scope]
-  scopecontinuation: method = .int
-    arg scope = .int
-    call checkscope(scope); return _scopecontinuation[scope]
-  scopedepth: method = .int
-    arg source = .int
-    cursor = scopeowner(source); depth = 0
-    do while cursor > 0
-      depth = depth + 1; cursor = _scopeparent[cursor]
-    end
-    return depth
-  scopeat: method = .int
-    arg source = .int, depth = .int
-    count = scopedepth(source)
-    if depth < 1 | depth > count then call bad('LL_TARGET_CFG: scope stack ordinal')
-    cursor = _scopeowner[source]
-    do i = depth + 1 to count; cursor = _scopeparent[cursor]; end
-    return cursor
-  logicalreturn: method = .int
-    arg source = .int
-    call checksource(source)
-    if source = 0 then return 0
-    return _scopeexit[source] > 0
   physicaldeparture: method = .int
     arg source = .int
     call checksource(source)
     if source = 0 then return 0
     target = dereference _owner; item = target.at(source)
-    if item.kind() <> 'instruction' | _scopeexit[source] > 0 then return 0
+    if item.kind() <> 'instruction' then return 0
     catalog = .llrxascatalog..catalog(); return catalog.flow(item.opcode()) = 3
   normalcomplete: method = .int
     arg functionid = .int
@@ -1068,6 +1291,61 @@ graph: class
     end
     return ''
   /** Query completeness at a source point without upgrading function facts. */
+  /** Full correlated alternatives; zero alternatives denotes unreachable.
+   * Inherited handler entries are symbolic inputs even on proved paths. */
+  policyeffect: method = .int
+    arg operation = .int, tag = .string
+    call checksource(operation); profile = dereference _profile; view = profile.instruction(operation); result = 0
+    do i = 1 to view.actions()
+      action = view.action(i); value = action.literal()
+      if action.kind() <> 'policy' | action.sourcekind() <> 'literal' | value.kind() <> 'S' then iterate
+      if upper(value.text()) == upper(tag) then result = action.policyeffect()
+    end
+    return result
+  policytag: method = .string
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _tags[0] then call bad('LL_TARGET_CFG: policy tag ordinal')
+    return _tags[ordinal]
+  policytagid: method = .int
+    arg tag = .string
+    call require(); name = upper(tag)
+    do i = 1 to _tags[0]; if _tags[i] == name then return i; end
+    return 0
+  policiesat: method = .int
+    arg operation = .int
+    call checksource(operation)
+    if operation = 0 then call bad('LL_TARGET_CFG: policy point requires a source record')
+    cursor = _policyheads[operation]; count = 0
+    do while cursor > 0; count = count + 1; cursor = _policynext[cursor]; end
+    return count
+  policyat: method = .lltargetcfg..policyfact
+    arg operation = .int, ordinal = 1
+    call checksource(operation)
+    if operation = 0 then call bad('LL_TARGET_CFG: policy point requires a source record')
+    cursor = _policyheads[operation]
+    do i = 2 to ordinal; if cursor > 0 then cursor = _policynext[cursor]; end
+    if cursor = 0 | ordinal < 1 then call bad('LL_TARGET_CFG: policy point alternative')
+    return .policyfact(reference self,_policystates[cursor])
+  policieson: method = .int
+    arg edgeid = .int
+    checked = edge(edgeid); count = 0
+    if edgeid > _edgepolicyheads[0] then return 0
+    cursor = _edgepolicyheads[edgeid]
+    do while cursor > 0; count = count + 1; cursor = _edgepolicynext[cursor]; end
+    return count
+  policyon: method = .lltargetcfg..policyfact
+    arg edgeid = .int, ordinal = 1
+    checked = edge(edgeid); cursor = 0
+    if edgeid <= _edgepolicyheads[0] then cursor = _edgepolicyheads[edgeid]
+    do i = 2 to ordinal; if cursor > 0 then cursor = _edgepolicynext[cursor]; end
+    if cursor = 0 | ordinal < 1 then call bad('LL_TARGET_CFG: policy edge alternative')
+    return .policyfact(reference self,_edgepolicystates[cursor])
+  edgefeasible: method = .int
+    arg edgeid = .int
+    checked = edge(edgeid)
+    if edgeid > _edgepossible[0] then return 1
+    return _edgepossible[edgeid]
   ingressat: method = .lltargetcfg..ingresscone
     arg operation = .int, work = 1000000, bytes = 67108864
     return .ingresscone(reference self,operation,work,bytes)

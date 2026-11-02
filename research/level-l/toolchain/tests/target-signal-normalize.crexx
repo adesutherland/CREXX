@@ -58,9 +58,10 @@ sample: procedure = .int
     ignored = label(body,'handler',at)
     ignored = one(body,'sigpop',.lltarget..operand.string('OTHER' as .binary),at)
     if variant = 3 then do
-      /* A bound event carries foreign value uncertainty until its typed flow
-       * owner proves the fields. Structural control coverage cannot invent it. */
+      /* The delivered shell is initialized; its unknown fields and the
+       * separate precommit payload-hook observations remain distinct. */
       ignored = one(body,'sighalt',.lltarget..operand.string('OTHER' as .binary),at)
+      ignored = one(body,'null',body.reg('r',0),at)
       ignored = policyfixturestring(body,0,'payload',at)
       call objectarraydrop fields
       fields[1] = .lltarget..operand.string('OTHER' as .binary) as .object
@@ -86,44 +87,39 @@ sample: procedure = .int
   cfg = .lltargetcfg..graph(reference target,reference profile,10000000)
   failures = failures + check(cfg.status() = 'ok','policy CFG builds ' || variant)
   if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
-  failures = failures + check(cfg.normalizationcomplete(root) & cfg.policycorrelationcomplete(root) = 0,'local path coverage does not claim exact policy correlation ' || variant)
-  before = 0; inheritedhalt = 0; validationtags = 0
+  failures = failures + check(cfg.normalizationcomplete(root) & cfg.policycorrelationcomplete(root),'known named policy actions retain both local coverage and whole-path correlation ' || variant || ': normalization=' || cfg.normalizationcomplete(root) || ',correlation=' || cfg.policycorrelationcomplete(root))
+  before = 0; inheritedhalt = 0; validationtags = 0; requestedtag = 0
   do i = 1 to cfg.edges()
     edge = cfg.edge(i)
     if edge.phase() = 'before' then before = 1
     if edge.boundarykind() = 'closed-main-default-halt' then inheritedhalt = 1
     if edge.sourceop() = relay & relay > 0 & edge.phase() = 'before' then do
       names = translate(edge.signalname(),' ','|')
-      if wordpos('OTHER',names) > 0 & wordpos('INVALID_SIGNAL_CODE',names) > 0 & wordpos('INVALID_ARGUMENTS',names) > 0 then validationtags = 1
+      if wordpos('OTHER',names) > 0 & edge.boundarykind() <> 'instruction-self-error' then requestedtag = 1
+      if wordpos('INVALID_SIGNAL_CODE',names) > 0 & wordpos('INVALID_ARGUMENTS',names) > 0 & edge.boundarykind() = 'instruction-self-error' & edge.role() = 'terminal' then validationtags = 1
     end
   end
   failures = failures + check(before & inheritedhalt,'failure phases and terminal inherited alternatives are preserved ' || variant)
-  if relay > 0 then failures = failures + check(validationtags,'origin CFG preserves requested tag and both validation alternatives before input writes')
+  if relay > 0 then failures = failures + check(validationtags & requestedtag,'origin CFG separates requested event from terminal validation alternatives before input writes')
   flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
   failures = failures + check(flow.status() = 'ok','policy flow converges ' || variant)
   if flow.status() <> 'ok' then do; say flow.message(); return failures; end
   normalized = .lltargetnormalize..change(reference target,reference flow,10000000)
   select variant
     when 1 then do
-      failures = failures + check(normalized.status() = 'changed' & normalized.complete(root) & normalized.warnings() > 0,'genuine owned entry read is cleared under an ignored policy')
+      failures = failures + check(normalized.status() = 'changed' & normalized.complete(root) & normalized.warnings() > 0,'genuine owned entry read is cleared under an ignored policy: status=' || normalized.status() || ',complete=' || normalized.complete(root) || ',warnings=' || normalized.warnings() || ',reason=' || normalized.unknownreason(root))
       do i = 1 to normalized.warnings()
         warning = normalized.warning(i)
         failures = failures + check(warning.local() = 0 & warning.component() <> '' & warning.operation() = normalized.operation(observed),'warning retains the original owned read and mapped source point')
       end
     end
-    when 3 then do
-      /* Unknown event contents are still defined writes. The conservative
-       * future-policy paths can retain the old dirty r1 origin before its
-       * NULL; complete structural observation must preserve that may-read. */
-      passed = normalized.status() = 'changed' & normalized.complete(root) & normalized.warnings() > 0
-      failures = failures + check(passed,'complete origin observation retains conservative owned entry provenance')
-      if passed = 0 then say 'ORIGIN_NORMALIZE|status=' || normalized.status() || '|complete=' || normalized.complete(root) || '|warnings=' || normalized.warnings() || '|reason=' || normalized.unknownreason(root) || '|message=' || normalized.message()
-      do i = 1 to normalized.warnings()
-        warning = normalized.warning(i)
-        failures = failures + check(warning.local() = 1 & warning.component() <> '' & warning.operation() = normalized.operation(relay),'origin normalization clears only the proved owner entry read at the relay')
-      end
+    when 2 then do
+      failures = failures + check(normalized.status() = 'keep' & normalized.complete(root) = 0 & normalized.warnings() = 0 & normalized.unknownreason(root) = 'target.flow.delivery.copy.hook.unproved','ambient bound delivery retains its separate payload-hook observation obligation')
     end
-    otherwise failures = failures + check(normalized.status() = 'keep' & normalized.complete(root) & normalized.warnings() = 0,'G/C-shaped policy with no dirty observation needs no clear ' || variant)
+    when 3 then do
+      failures = failures + check(normalized.status() = 'keep' & normalized.complete(root) = 0 & normalized.warnings() = 0 & normalized.unknownreason(root) = 'target.flow.delivery.copy.hook.unproved','precommit payload-hook observations remain unknown without resurrecting old shell origins')
+    end
+    otherwise failures = failures + check(normalized.status() = 'keep' & normalized.complete(root) & normalized.warnings() = 0,'G/C-shaped policy with no dirty observation needs no clear ' || variant || ': status=' || normalized.status() || ',complete=' || normalized.complete(root) || ',warnings=' || normalized.warnings() || ',reason=' || normalized.unknownreason(root))
   end
   canonical = .lltargettransfer..profile(reference target)
   foreigncfg = .lltargetcfg..graph(reference target,reference canonical)
@@ -135,7 +131,7 @@ sample: procedure = .int
       if edge.boundarykind() = 'inherited-signal-policy' & edge.complete() = 0 then outward = 1
       if edge.role() = 'resumed' & edge.exposure() = 'inherited' then resumed = 1
     end
-    failures = failures + check(outward & resumed & foreigncfg.exceptionalcomplete(root) = 0 & foreigncfg.policycorrelationcomplete(root) = 0,'unknown foreign departure and resumption remain explicit ' || variant)
+    failures = failures + check(outward & resumed & foreigncfg.exceptionalcomplete(root) = 0 & foreigncfg.policycorrelationcomplete(root),'unknown inherited destinations remain explicit while named policy correlation stays exact ' || variant)
   end
   foreign = target
   failures = failures + check(cfg.matches(reference foreign,reference profile) = 0,'copied owner is not a normalization CFG owner')

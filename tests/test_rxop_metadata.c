@@ -1943,6 +1943,12 @@ int main(void) {
               !rxop_host_callbacks(OP_MKREF_REG_REG) &&
               rxop_signal_contract(OP_SAYX_STRING).state == RXOP_SIGNAL_STATE_UNKNOWN,
           "resolver and legacy host callback routes remain separate from inert opaque residuals", NULL);
+    check(rxop_effects(OP_MKREF_REG_REG).callback_inventory_complete &&
+              !rxop_callback_obligations(OP_MKREF_REG_REG) &&
+              (rxop_effects(OP_MKREF_REG_REG).semantics & RXOP_SEM_REFERENCE_CREATE) &&
+              rxop_effects(OP_MKREF_REG_REG).optimizer_barrier &&
+              rxop_signal_contract(OP_MKREF_REG_REG).state == RXOP_SIGNAL_STATE_UNKNOWN,
+          "MKREF creates a reference identity without a COPY hook while retaining unresolved intrinsic control", NULL);
     check((rxop_callback_inputs(OP_COPY_REG_REG, 1) & RXOP_COMPONENT_NATIVE_PAYLOAD) &&
               (rxop_callback_inputs(OP_BCOPY_REG_REG, 1) & RXOP_COMPONENT_NATIVE_PAYLOAD) &&
               !rxop_callback_inputs(OP_MOVE_REG_REG, 1) &&
@@ -2567,7 +2573,9 @@ int main(void) {
               rxop_observed_components(OP_RET_REG, 0) == RXOP_COMPONENT_NONE &&
               rxop_observation_is_known(OP_RET_REG, 0),
           "RET transports a complete register without reading unused components", NULL);
-    check(rxop_component_may_reads(OP_SIGBRV_ID_REG_STRING, 1) == RXOP_COMPONENT_ALL &&
+    check(rxop_component_may_reads(OP_SIGBRV_ID_REG_STRING, 1) == RXOP_COMPONENT_NONE &&
+              rxop_component_reads(OP_SIGBRV_ID_REG_STRING, 1) == RXOP_COMPONENT_NONE &&
+              rxop_effects(OP_SIGBRV_ID_REG_STRING).reads == RXOP_OP_NONE &&
               rxop_observed_components(OP_SIGBRV_ID_REG_STRING, 1) == RXOP_COMPONENT_NONE &&
               rxop_observed_flags(OP_SIGBRV_ID_REG_STRING, 1) == 0 &&
               rxop_observation_is_known(OP_SIGBRV_ID_REG_STRING, 1),
@@ -2581,6 +2589,16 @@ int main(void) {
               rxop_observed_components(OP_SIGNALORIGIN_STRING_REG_REG, 1) == RXOP_COMPONENT_NONE &&
               rxop_observation_is_known(OP_SIGNALORIGIN_STRING_REG_REG, 1),
           "SIGNALORIGIN transports a complete payload without inspecting unused scalar components", NULL);
+    check(rxop_policy_binding_operand(OP_SIGBRV_ID_REG_STRING) == 2u &&
+              rxop_format_operand_type(op_table[OP_SIGBRV_ID_REG_STRING].format, 1) == OP_REG &&
+              !strcmp(rxop_signal_delivery_type_name(OP_SIGBRV_ID_REG_STRING), RXVM_RUNTIME_SIGNAL_TYPE_NAME) &&
+              rxop_signal_delivery_attribute_count(OP_SIGBRV_ID_REG_STRING) == RXVM_RUNTIME_SIGNAL_ATTRIBUTE_COUNT &&
+              rxop_signal_delivery_initialized_flag(OP_SIGBRV_ID_REG_STRING) == RXFLAG_VM_OBJECT_UNINITIALIZED &&
+              !rxop_policy_binding_operand(OP_SIGBR_ID_STRING) &&
+              !rxop_signal_delivery_type_name(OP_SIGBR_ID_STRING) &&
+              !rxop_signal_delivery_attribute_count(-1) &&
+              !rxop_signal_delivery_initialized_flag(OP_MAX_INSTRUCTIONS),
+          "bound delivery names a saved slot and one shared initialized runtime-signal shell contract", NULL);
     signal = rxop_signal_contract(OP_SIGNALORIGIN_STRING_REG_REG);
     effects = rxop_effects(OP_SIGNALORIGIN_STRING_REG_REG);
     check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
@@ -2597,6 +2615,53 @@ int main(void) {
               (signal.properties & RXOP_SIGNAL_PROP_STATIC_NAMES_TERMINAL) &&
               signal.continuations == RXOP_SIGNAL_CONT_ALL,
           "SIGNALORIGIN preserves requested tag plus validation alternatives and pending context without input writes", NULL);
+    {
+        static const int direct_signal[] = {
+            OP_SIGNAL_STRING, OP_SIGNAL_REG, OP_SIGNAL_STRING_STRING,
+            OP_SIGNALT_STRING_REG, OP_SIGNALF_STRING_REG,
+            OP_SIGNALT_STRING_STRING_REG, OP_SIGNALF_STRING_STRING_REG,
+            OP_BPON_FUNC, OP_BPON, OP_BPOFF, OP_SIGIGNORE_STRING,
+            OP_SIGHALT_STRING, OP_SIGSHALT_STRING, OP_SIGBR_ID_STRING,
+            OP_SIGBRV_ID_REG_STRING, OP_SIGCALL_FUNC_STRING,
+            OP_SIGCALLA_FUNC_STRING, OP_SIGCALLBR_ID_FUNC_STRING,
+            OP_SIGPUSH_STRING, OP_SIGPOP_STRING
+        };
+        static const int payload_signal[] = {
+            OP_SIGNAL_STRING_REG, OP_SIGNAL_REG_REG,
+            OP_SIGNALORIGIN_STRING_REG_REG
+        };
+        size_t ordinal;
+        for (ordinal = 0; ordinal < sizeof(direct_signal) / sizeof(direct_signal[0]); ++ordinal) {
+            int code = direct_signal[ordinal];
+            RxOpEffects direct = rxop_effects(code);
+            check(direct.callback_inventory_complete && !rxop_callback_obligations(code) &&
+                      rxop_intrinsic_value_footprint_is_known(code) &&
+                      (direct.semantics & RXOP_SEM_OPAQUE) && direct.optimizer_barrier,
+                  "direct signal/policy footprint retains control barriers without a fabricated callback", &op_table[code]);
+        }
+        for (ordinal = 0; ordinal < sizeof(payload_signal) / sizeof(payload_signal[0]); ++ordinal) {
+            int code = payload_signal[ordinal];
+            RxOpEffects payload = rxop_effects(code);
+            check(payload.callback_inventory_complete &&
+                      rxop_callback_obligations(code) == RXOP_CALLBACK_INPUT &&
+                      rxop_callback_inputs(code, 1) == rxop_callback_inputs(OP_COPY_REG_REG, 1) &&
+                      !rxop_callback_inputs(code, 0) && !rxop_callback_outputs(code, 1) &&
+                      rxop_intrinsic_value_footprint_is_known(code) &&
+                      rxop_observed_components(code, 1) == RXOP_COMPONENT_NONE &&
+                      rxop_observation_is_known(code, 1) && payload.optimizer_barrier,
+                  "signal payload transports ordinary COPY hooks independently of cleanup and event validation", &op_table[code]);
+        }
+        check(rxop_observed_components(OP_SIGNAL_REG, 0) == RXOP_COMPONENT_STRING &&
+                  rxop_observed_components(OP_SIGNALT_STRING_REG, 1) == RXOP_COMPONENT_INTEGER &&
+                  rxop_observed_components(OP_SIGNALF_STRING_STRING_REG, 2) == RXOP_COMPONENT_INTEGER &&
+                  rxop_observed_components(OP_SIGNALORIGIN_STRING_REG_REG, 2) == RXOP_COMPONENT_ALL,
+              "signal names, conditions and origin structure retain distinct typed observations", NULL);
+        check(rxop_effects(OP_ITOF_REG).callback_inventory_complete &&
+                  rxop_value_writer(OP_ITOF_REG, 0) == RXOP_VALUE_WRITER_FIELD &&
+                  !rxop_callback_obligations(OP_ITOF_REG) &&
+                  !rxop_component_clears(OP_ITOF_REG, 0),
+              "unary ITOF is a direct field write without a native hook or release", &op_table[OP_ITOF_REG]);
+    }
     /* Bitwise and logical operations are a single typed integer family even
      * when a source is immediate. Every register read must be observable as
      * integer-only; the result must define the integer component. */

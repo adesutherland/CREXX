@@ -133,6 +133,16 @@ marker and retires D,C,B; a target in C retires only D. A returning handler keep
 its suspended region. There is no new signal-stack marker or atomic multi-tag
 restore. Native support is locally qualified; shared L policy facts and generated clone emission remain open.
 
+`SIGBRV` is an ordinary required use case, not an unused exotic form.
+The native signal-block/frame emitter uses it when a handler binds an event;
+the research C emitter uses it in ordinary procedure error wrappers and host/
+child failure layers. Classic recording consumes the event for SIGL, SYNTAX RC,
+origin, message and payload. Handler installation is common even when delivery
+is exceptional. Installation reads no old destination value; successful delivery
+writes an initialized `runtime_signal` on its handler edge. Shared facts must
+separate that known definition/type from unknown fields and genuine payload
+COPY effects. Do not reject whole procedures merely for containing SIGBRV.
+
 ### Duty 2 — numeric and provider context
 
 Five independent fields are DIGITS, FUZZ, FORM, CASE and STANDARD. Decimal and
@@ -148,9 +158,12 @@ published per-clone provider switch or provider allocation is required.
 | **N5 — provider identity** | Preserve selected worker providers and authored operations. Defensive legacy loaded-here flags do not imply a frame-owned provider. Only a real published switch would add a new duty. |
 | **N6 — errors/timing** | Ordinary invalid numeric setters retain catchable program errors. Only signal-instruction self-errors use S1. External snapshots during successive restores use the approved timing SHRUG; once outward delivery is selected, N3 still restores before owner handler entry. |
 
-Shared contextrestoration already offers literal-versus-save choices; remove its
-blanket asynchronous-departure refusal and support the approved cold exit at
-that shared owner. Do not add a new inliner exception or numeric scope.
+Shared `contextrestoration` reports literal-versus-save choices, ordinary
+return sites and potential cold exits independently of CALL removal. Hooks
+conservatively include their represented numeric fields; asynchronous and
+terminal paths are not blanket refusals. Cold actions use the shared edge
+projection. Incomplete numeric contracts remain explicit unknowns. There is
+no inliner-specific numeric solver or numeric scope.
 
 Decimal ABI 3's `value-only-nonreentrant.v1` synchronization contract is approved:
 for a valid context, syncNumericContext is total, non-signalling, non-reentrant

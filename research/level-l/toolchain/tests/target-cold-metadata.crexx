@@ -1,0 +1,208 @@
+/* cREXX License (MIT). Independent generic cold-storage/remap client. */
+options levelb
+import rxfnsb
+import llir
+import llrxas
+import lltarget
+import lltargettransfer
+import lltargetremap
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+
+/** A prepared mutable owner returned after both original wrappers retire.
+ * Its cached catalogue/cursors must bind the receiving draft's own arena. */
+returneddraft: procedure = .lltarget..draft
+  original = .lltarget..draft('returned.draft','fixture:returned.draft',0)
+  at = original.synthetic('prepared draft value copy')
+  first = original.procedure('first',0,at); fields = .object[]
+  fields[1] = .lltarget..operand.integer(0) as .object; ignored = first.emit('ret',fields,at)
+  copied = original
+  at = copied.synthetic('copied prepared draft')
+  second = copied.procedure('second',0,at); ignored = second.emit('ret',fields,at)
+  return copied
+
+/** The returned module has already prepared all private indexes in another
+ * activation. Its old borrowed record must expire while copied facts rebind. */
+returnedmodule: procedure = .lltarget..module
+  arg expose expired = .lltarget..record
+  draft = .lltarget..draft('returned.module','fixture:returned.module',0)
+  at = draft.synthetic('prepared module value copy')
+  body = draft.procedure('main',1,at); fields = .object[]
+  fields[1] = .lltarget..operand.symbol('begin') as .object; ignored = body.record('label',fields,at)
+  fields[1] = .lltarget..operand.integer(17) as .object; fields[2] = .lltarget..operand.integer(0) as .object
+  ignored = body.record('.inlineregion',fields,at)
+  fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(18) as .object
+  loaded = body.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('saved') as .object; ignored = body.record('label',fields,at)
+  fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(19) as .object
+  observed = body.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('end') as .object; ignored = body.record('label',fields,at)
+  fields[1] = .lltarget..operand.integer(0) as .object; ignored = body.emit('ret',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('begin') as .object; fields[2] = .lltarget..operand.symbol('end') as .object; fields[3] = .lltarget..operand.integer(17) as .object
+  ignored = body.record('.inlinerange',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(17) as .object; fields[2] = .lltarget..operand.symbol('saved') as .object; fields[3] = .lltarget..operand.symbol('end') as .object
+  fields[4] = .lltarget..operand.integer(0) as .object; fields[5] = .lltarget..operand.string('digits' as .binary) as .object; fields[6] = body.reg('r',0) as .object
+  ignored = body.record('.inlineexit',fields,at)
+  original = draft.finish(); ignored = original.valid(); expired = original.at(loaded)
+  copied = original; ignored = copied.valid()
+  return copied
+
+ownerreturns: procedure = .int
+  failures = 0; expired = .lltarget..record; observed = .int
+  draft = returneddraft(); at = draft.synthetic('stable returned owner')
+  third = draft.procedure('third',0,at); fields = .object[]; fields[1] = .lltarget..operand.integer(0) as .object
+  ignored = third.emit('ret',fields,at); first = draft.finish()
+  failures = failures + check(first.valid() & first.procedures() = 3,'prepared draft copy/return rebuilds receiving catalogue and cursors')
+  source = returnedmodule(expired)
+  failures = failures + check(source.valid() & source.regions() = 1 & expired.valid() = 0,'prepared module copy survives original retirement while old external view expires')
+  if source.valid() = 0 then return failures
+  body = source.body(source.procedureid('main')); loads = 0
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'instruction' & item.mnemonic() = 'load' then do
+      loads = loads + 1
+      failures = failures + check(source.regionat(item.id()) = 17,'copied module region facts rebind current graph')
+      if loads = 2 then observed = item.id()
+    end
+  end
+  budget = source.exitactionwork(17); ids = source.exitactionids(17,observed,budget,budget * 8)
+  failures = failures + check(ids[0] = 1,'copied cold phase index and nested address index bind current graph')
+  old = source.at(observed); source = first
+  failures = failures + check(old.valid() = 0 & source.regions() = 0,'replacing receiving module expires its external view and uses new revision facts')
+  return failures
+
+main: procedure = .int
+  failures = ownerreturns(); i = .int; fields = .object[]; item = .lltarget..record; value = .lltarget..operand
+  draft = .lltarget..draft('cold.model','fixture:cold.model',1)
+  at = draft.synthetic('independent exact phase and private ownership')
+  fields[1] = .lltarget..operand.procedure('worker') as .object; fields[2] = .lltarget..operand.symbol('worker') as .object
+  ignored = draft.record('.import',fields,at)
+  root = draft.procedure('main',4,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('begin') as .object
+  firstlabel = root.record('label',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',3) as .object; fields[2] = .lltarget..operand.string('self' as .binary) as .object
+  fields[3] = .lltarget..operand.integer(0) as .object; privateop = root.record('.inlinedprivate',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(7) as .object; fields[2] = .lltarget..operand.integer(0) as .object
+  ignored = root.record('.inlineregion',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.integer(18) as .object
+  loaded = root.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('saved') as .object; ignored = root.record('label',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('worker') as .object; fields[3] = root.reg('r',1) as .object
+  called = root.emit('call',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('end') as .object; ignored = root.record('label',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object; ignored = root.emit('ret',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('begin') as .object; fields[2] = .lltarget..operand.symbol('end') as .object; fields[3] = .lltarget..operand.integer(7) as .object
+  ignored = root.record('.inlinerange',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(7) as .object; fields[2] = .lltarget..operand.symbol('saved') as .object; fields[3] = .lltarget..operand.symbol('end') as .object
+  fields[4] = .lltarget..operand.integer(1) as .object; fields[5] = .lltarget..operand.string('digits' as .binary) as .object; fields[6] = root.reg('r',1) as .object
+  cold = root.record('.inlineexit',fields,at)
+  fields[4] = .lltarget..operand.integer(2) as .object; fields[5] = .lltarget..operand.string('endlife' as .binary) as .object; fields[6] = root.reg('r',2) as .object
+  ignored = root.record('.inlineexit',fields,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'constructed metadata owner validates: ' || source.error())
+  if source.valid() = 0 then return failures
+  functionid = source.procedureid('main'); body = source.body(functionid)
+  failures = failures + check(body.ownedlocals() = 3 & source.regionat(loaded) = 7 & source.exitactions(7,loaded) = 0 & source.exitactions(7,called) = 2,'saved phase starts after its definition, with exact owned prefix')
+  profile = .lltargettransfer..profile(reference source)
+  failures = failures + check(profile.status() = 'ok','canonical transfer profile seals once for all generic clients')
+
+  /* Clear an owned entry cell before its first label. The global suffix must
+   * remain a declaration at entry, and the backedge label remains after clear. */
+  loadedrecord = source.at(loaded); owned = loadedrecord.operand(1)
+  change = .lltargetremap..change(reference source); ignored = change.useprofile(reference profile)
+  ignored = change.insertnullbefore(firstlabel,owned,loaded); call change.run()
+  failures = failures + check(change.status() = 'changed','owned entry insertion preserves private declarations: ' || change.message())
+  if change.status() = 'changed' then do
+    result = change.result(); firstcode = 0; movedlabel = change.operation(firstlabel); movedprivate = change.operation(privateop)
+    do i = 1 to result.records()
+      item = result.record(i)
+      if item.kind() = 'instruction' & firstcode = 0 then firstcode = item.id()
+    end
+    item = result.at(firstcode)
+    failures = failures + check(item.mnemonic() = 'null' & movedprivate < firstcode & firstcode < movedlabel,'borrowed declarations precede one-time prelude and original entry label')
+    failures = failures + check(result.regionat(firstcode) = 0 & result.regionat(change.operation(called)) = 7,'prelude is outside the original executable region')
+  end
+  privateitem = source.at(privateop); borrowed = privateitem.operand(1)
+  rejected = .lltargetremap..change(reference source)
+  ignored = rejected.insertnullbefore(firstlabel,borrowed)
+  failures = failures + check(rejected.status() = 'invalid','generic insertion cannot clear a borrowed suffix')
+
+  /* Shift the complete packed vector by two. No actual-count proof licenses
+   * this: the original contiguous r/g/a tail itself is preserved. */
+  targetdraft = .lltarget..draft(source.name(),source.artifact(),source.globals())
+  targetat = targetdraft.synthetic('relocated ordinary body')
+  call objectarraydrop fields; fields[1] = .lltarget..operand.procedure('worker') as .object; fields[2] = .lltarget..operand.symbol('worker') as .object
+  ignored = targetdraft.record('.import',fields,targetat)
+  target = targetdraft.procedure('main',6,targetat)
+  mapper = .lltargetremap..mapping(reference source,reference target)
+  ignored = mapper.useprofile(reference profile); ignored = mapper.affine(functionid,2)
+  ignored = mapper.label('begin','relocated.begin'); ignored = mapper.label('saved','relocated.saved'); ignored = mapper.label('end','relocated.end')
+  ignored = mapper.procedure('worker','worker'); ignored = mapper.regionid(7,70)
+  graphref = source.ir(); sources = .object[]; origins = .object[]
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.procedureid() <> functionid | item.kind() = 'procedure' then iterate
+    copiedat = lltargetremap..copyorigin(graphref,item.origin(),reference targetdraft,reference sources,reference origins)
+    ignored = mapper.origin(item.origin(),copiedat)
+    rewritten = mapper.rewrite(item.id())
+    failures = failures + check(rewritten.status() = 'ok','typed whole-vector relocation: ' || item.kind() || ': ' || rewritten.message())
+    if rewritten.status() <> 'ok' then leave
+    fields = rewritten.fields()
+    if item.kind() = 'instruction' then ignored = target.emit(item.mnemonic(),fields,rewritten.origin())
+    else ignored = target.record(item.kind(),fields,rewritten.origin())
+  end
+  if mapper.status() = 'ok' then do
+    relocated = targetdraft.finish()
+    failures = failures + check(relocated.valid(),'shifted metadata resolves all new labels/IDs: ' || relocated.error())
+    if relocated.valid() then do
+      movedbody = relocated.body(relocated.procedureid('main')); region = relocated.region(70)
+      failures = failures + check(movedbody.ownedlocals() = 5 & region.parentregion() = 0,'fresh prefix grows owned storage and preserves borrowed suffix')
+      movedprivateoperand = .lltarget..operand
+      do i = 1 to relocated.records()
+        item = relocated.record(i)
+        if item.kind() = '.inlineexit' & item.action() = 'digits' then do
+          value = item.registerref(1)
+          failures = failures + check(value.index() = 3 & value.owner() = relocated.identity(),'cold saved local relocates with its ordinary defining register')
+        end
+        if item.kind() = '.inlinedprivate' then do
+          value = item.operand(1); movedprivateoperand = value; provider = item.operand(2); foreign = item.operand(3)
+          failures = failures + check(value.index() = 5 & provider.text() = 'self' & foreign.index() = 0,'borrowed binding keeps exact provider/global while moving its carrier')
+        end
+      end
+      selectedmap = .lltargetremap..modulemap(reference relocated)
+      ignored = selectedmap.selectmodule(reference relocated,9); ignored = selectedmap.selectmodule(reference source,3)
+      ignored = selectedmap.bind(borrowed,movedprivateoperand); ignored = selectedmap.seal()
+      foreignprivate = selectedmap.rewrite(reference source,privateop)
+      failures = failures + check(foreignprivate.status() = 'ok' & foreignprivate.renderable() = 0 & foreignprivate.renderreason() = 'remap.private.provider.image.sealing.required','foreign private provider remains exact selected data until image sealing')
+      if foreignprivate.status() = 'ok' then do
+        selectedprovider = foreignprivate.provider(2); privatefields = foreignprivate.fields(); selector = privatefields[2] as .lltarget..operand
+        failures = failures + check(selectedprovider.matches(reference source) & selector.text() = '@3','self selector relocates to original exact provider rather than receiving globals')
+      end
+    end
+  end
+
+  /* Cold consumers and borrowed carriers are ordinary constrained assignment
+   * uses. The independent checker must reject omission, even in dense mode. */
+  ids = .int[]; ids[1] = 101; ids[2] = 9; ids[3] = 55
+  empty = .int[]; refs = .int[]; refs[1] = 1
+  assignment = .llrxas..assignment(5,reference ids,5)
+  do i = 0 to 4; call assignment.retain(i,0); end
+  call assignment.row(1,reference refs,reference empty,reference refs,reference refs,reference empty)
+  refs[1] = 2; call assignment.row(2,reference refs,reference refs,reference empty,reference empty,reference refs)
+  refs[1] = 3; call assignment.row(3,reference refs,reference empty,reference empty,reference empty,reference refs)
+  call assignment.pin(2); call assignment.fixed(3); call assignment.window(1,3)
+  allocated = assignment.finish('dense')
+  failures = failures + check(allocated.valid(),'cold-window assignment remains a generic kernel client: ' || allocated.error())
+  if allocated.valid() then do
+    failures = failures + check(allocated.assigned(2) = 2 & allocated.assigned(3) = 3 & allocated.assigned(4) = -1 & allocated.resets() = 0,'cold owned base and borrowed suffix survive; unused cell disappears without reset')
+    mapping = .int[]; resets = .object[]
+    do i = 0 to 4; mapping[i + 1] = allocated.assigned(i); end
+    mapping[3] = -1
+    failures = failures + check(assignment.validate(reference mapping,allocated.locals(),reference resets) <> '','independent assignment checker rejects missing cold consumer storage')
+  end
+  say 'TARGET_COLD_METADATA|failures=' || failures
+  return failures

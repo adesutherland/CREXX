@@ -1,0 +1,413 @@
+/* cREXX License (MIT). Independent shared policy, conversion and cold clients. */
+options levelb
+import llrxascatalog
+import llrxasinput
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+findop: procedure = .int
+  arg source = .lltarget..module, mnemonic = .string, occurrence = 1
+  i = .int
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() <> mnemonic then iterate
+    occurrence = occurrence - 1
+    if occurrence = 0 then return item.id()
+  end
+  return 0
+
+policy: procedure = .int
+  i = .int; edge = .lltargetcfg..edge; after = .lltargetcfg..policyfact
+  failures = 0; nl = '0a'x
+  reader = .llrxasinput..reader()
+  text = 'main() .locals=0' || nl || 'sigpush "ERROR"' || nl || 'sigbr caught,"ERROR"' || nl || 'sigpush "FAILURE"' || nl || 'signal "ERROR"' || nl || 'ret 0' || nl || 'caught:' || nl || 'sigpop "ERROR"' || nl || 'ret 1' || nl
+  parsed = reader.parse(text as .binary,'policy.rxas','fixture:generic-policy')
+  failures = failures + check(parsed.status() = 0,'ordinary named-save RXAS parses')
+  if parsed.status() <> 0 then do; say parsed.error(); return failures; end
+  source = parsed.result(); profile = .lltargettransfer..profile(reference source)
+  cfg = .lltargetcfg..graph(reference source,reference profile,10000000)
+  failures = failures + check(cfg.status() = 'ok','named policy worklist completes')
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  raised = findop(source,'signal'); installed = findop(source,'sigbr'); pushed = findop(source,'sigpush'); popped = findop(source,'sigpop')
+  failures = failures + check(cfg.policiesat(raised) = 1,'ordinary path retains one complete correlated handler/save state')
+  incoming = cfg.policyat(raised)
+  failures = failures + check(incoming.status() = 'proved' & incoming.action('ERROR') = 7 & incoming.installation('ERROR') = installed & incoming.saves() = 2,'requested ERROR sees its branch and both ordered source saves')
+  failures = failures + check(incoming.saveop(1) = pushed & incoming.savetag(1) = 'ERROR' & incoming.saveowner(1) = source.procedureid('main'),'source save retains exact PUSH and procedure ownership')
+  branch = 0; terminal = 0
+  do i = 1 to cfg.outedges(raised)
+    edge = cfg.outedge(raised,i)
+    if cfg.edgefeasible(edge.id()) = 0 | edge.asynchronous() then iterate
+    if edge.boundarykind() = 'instruction-self-error' then do
+      terminal = terminal + 1
+      failures = failures + check(edge.role() = 'terminal' & edge.signalname() <> 'ERROR','static self-errors bypass the requested handler')
+    end
+    if edge.role() = 'handler' & edge.signalname() = 'ERROR' then do
+      branch = branch + 1; after = cfg.policyon(edge.id())
+      failures = failures + check(after.status() = 'proved' & after.saves() = 1 & after.savetag(1) = 'ERROR','branch marker discards younger FAILURE save and retains handler-owned ERROR save')
+    end
+  end
+  failures = failures + check(branch = 1 & terminal = 1,'requested event and terminal validation alternatives stay separate')
+  normalpop = 0
+  do i = 1 to cfg.outedges(popped)
+    edge = cfg.outedge(popped,i)
+    if edge.role() <> 'normal' | cfg.edgefeasible(edge.id()) = 0 then iterate
+    after = cfg.policyon(edge.id()); normalpop = 1
+    failures = failures + check(after.saves() = 0 & after.installation('ERROR') = 0,'authored named POP restores inherited policy and drains only its own save')
+  end
+  failures = failures + check(normalpop,'matching source POP has a successful normal continuation')
+  limited = .lltargetcfg..graph(reference source,reference profile,1,1)
+  failures = failures + check(limited.status() = 'limit' & cfg.valid(),'exhausted request publishes no replacement facts')
+  text = 'main() .locals=0' || nl || 'sigpop "ERROR"' || nl || 'ret 0' || nl
+  badparse = reader.parse(text as .binary,'bad-pop.rxas','fixture:bad-pop'); badsource = badparse.result()
+  badprofile = .lltargettransfer..profile(reference badsource); badcfg = .lltargetcfg..graph(reference badsource,reference badprofile)
+  failures = failures + check(badcfg.status() = 'ok' & badcfg.policiesat(findop(badsource,'ret')) = 0,'unmatched POP cannot consume an inherited or protective save')
+  old = incoming; source = badsource
+  failures = failures + check(old.valid() = 0 & old.status() = 'invalid','replacing source expires borrowed policy alternatives')
+  return failures
+
+/** This non-inliner operational client supplies field semantics independently
+ * of native instruction implementations. The RXAS only provides checked slots. */
+constructedpolicy: procedure = .int
+  arg unknown = 0
+  i = .int
+  failures = 0; nl = '0a'x; reader = .llrxasinput..reader()
+  text = 'main() .locals=1' || nl || 'getnumdgts r0' || nl || 'getnumdgts r0' || nl || 'getnumdgts r0' || nl || 'ret 0' || nl
+  parsed = reader.parse(text as .binary,'policy-carrier.rxas','fixture:constructed-policy'); source = parsed.result()
+  draft = .lltargettransfer..profiledraft(reference source,'independent.named.policy.' || unknown)
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = draft.operation(item.id()); ignored = draft.relocation(item.id(),'none')
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'getnumdgts' then do
+      effect = 12
+      if item.id() = findop(source,'getnumdgts',2) then effect = 4
+      if item.id() = findop(source,'getnumdgts',3) then effect = 13
+      detail = 'policy.' || effect
+      if unknown & effect = 13 then detail = 'unclassified'
+      ignored = draft.event(item.id(),'policy',0,0,'literal',0,.lltarget..operand.string('ERROR' as .binary),'must','normal','after',detail)
+    end
+    else ignored = draft.event(item.id(),'return',0,0)
+  end
+  profile = draft.finish(); cfg = .lltargetcfg..graph(reference source,reference profile)
+  failures = failures + check(cfg.status() = 'ok','constructed policy client uses generic ordered actions ' || unknown)
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  fact = cfg.policyat(findop(source,'ret'))
+  if unknown then failures = failures + check(fact.status() = 'unknown' & fact.reason() = 'target.cfg.policy.dynamic.tag.or.effect','missing policy effect remains explicit unknown')
+  else failures = failures + check(fact.status() = 'proved' & fact.saves() = 0 & fact.action('ERROR') = 0 & cfg.policycorrelationcomplete(source.procedureid('main')),'constructed named PUSH/IGNORE/POP restores the inherited parameter')
+  return failures
+
+policybounds: procedure = .int
+  i = .int
+  failures = 0; nl = '0a'x; reader = .llrxasinput..reader()
+  text = 'main() .locals=0' || nl || 'again:' || nl || 'sigpush "ERROR"' || nl || 'br again' || nl
+  parsed = reader.parse(text as .binary,'growing-saves.rxas','fixture:growing-saves'); source = parsed.result()
+  profile = .lltargettransfer..profile(reference source); cfg = .lltargetcfg..graph(reference source,reference profile,30000,1048576)
+  failures = failures + check(cfg.status() = 'limit','unbounded source save growth terminates at cumulative work or bytes')
+  text = 'main() .locals=0' || nl || 'again:' || nl || 'sigpush "ERROR"' || nl || 'sigpop "ERROR"' || nl || 'br again' || nl
+  parsed = reader.parse(text as .binary,'balanced-saves.rxas','fixture:balanced-saves'); balanced = parsed.result()
+  balancedprofile = .lltargettransfer..profile(reference balanced); balancedcfg = .lltargetcfg..graph(reference balanced,reference balancedprofile)
+  failures = failures + check(balancedcfg.status() = 'ok','balanced policy loop converges after an exhausted request')
+  text = 'main() .locals=0' || nl || 'sigignore "ERROR"' || nl || 'call leaf()' || nl || 'ret 0' || nl || 'leaf() .locals=0' || nl || 'sigignore "FAILURE"' || nl || 'call main()' || nl || 'ret 0' || nl
+  parsed = reader.parse(text as .binary,'recursive-policy.rxas','fixture:recursive-policy'); recursive = parsed.result()
+  recursiveprofile = .lltargettransfer..profile(reference recursive); recursivecfg = .lltargetcfg..graph(reference recursive,reference recursiveprofile)
+  failures = failures + check(recursivecfg.status() = 'ok','real-child recursion does not recursively evaluate policy bodies')
+  if recursivecfg.status() = 'ok' then do
+    fact = recursivecfg.policyat(findop(recursive,'ret'))
+    failures = failures + check(fact.status() = 'proved' & fact.action('ERROR') = 4 & fact.action('FAILURE') = 0,'real child policy and source saves cannot change the suspended caller table')
+  end
+  return failures
+
+conversion: procedure = .int
+  arg missingcontext = 0
+  i = .int; ignored = .int; captured = .int
+  failures = 0; nl = '0a'x; reader = .llrxasinput..reader(); catalog = .llrxascatalog..catalog()
+  text = 'main() .locals=3' || nl || 'load r0,7' || nl || 'itos r0' || nl || 'fcopy r0,r1' || nl || 'settp r0,1' || nl || 'link r2,r0' || nl || 'load r0,9' || nl || 'ret 0' || nl
+  parsed = reader.parse(text as .binary,'conversion.rxas','fixture:constructed-conversion')
+  failures = failures + check(parsed.status() = 0,'constructed conversion carrier parses')
+  if parsed.status() <> 0 then do; say parsed.error(); return failures; end
+  source = parsed.result(); draft = .lltargettransfer..profiledraft(reference source,'independent.component.conversion.v1')
+  integer = draft.domain('component','fixture.integer',catalog.componentmask('I'))
+  floating = draft.domain('component','fixture.float',catalog.componentmask('F'))
+  string = draft.domain('component','fixture.string',catalog.componentmask('S'))
+  flag = draft.domain('flag','fixture.flag',1)
+  converted = findop(source,'itos'); unrelated = findop(source,'fcopy'); flags = findop(source,'settp'); linked = findop(source,'link'); changed = findop(source,'load',2)
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = draft.operation(item.id()); ignored = draft.relocation(item.id(),'none')
+    if item.kind() <> 'instruction' then iterate
+    subject = 0; operand = item.operand(1)
+    if operand.kind() = 'R' then subject = draft.ref(item.id(),1)
+    select item.mnemonic()
+      when 'load' then ignored = draft.event(item.id(),'write',subject,integer,'literal',0,item.operand(2))
+      when 'itos' then do
+        captured = draft.event(item.id(),'capture',0,integer,'reference',subject,.lltarget..operand(),'must','all','before')
+        ignored = draft.event(item.id(),'derive',subject,string,'captured',captured,.lltarget..operand(),'must','normal','none','fixture.integer.to.string',0,'unknown',0,integer,2,missingcontext)
+      end
+      when 'fcopy' then do
+        other = draft.ref(item.id(),2)
+        ignored = draft.event(item.id(),'transport',subject,floating,'reference',other)
+      end
+      when 'settp' then ignored = draft.event(item.id(),'flagwrite',subject,flag,'literal',0,.lltarget..operand.integer(1))
+      when 'link' then do
+        other = draft.ref(item.id(),2); ignored = draft.event(item.id(),'link',subject,0,'reference',other)
+      end
+      when 'ret' then ignored = draft.event(item.id(),'return',0,0)
+    end
+  end
+  profile = draft.finish(); cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','independent conversion flow completes')
+  if flow.status() <> 'ok' then do; say flow.message(); return failures; end
+  first = flow.conversionat(converted,'r',0,string,1)
+  if missingcontext then do
+    failures = failures + check(first.current() = 0 & first.status() = 'unknown','an unrepresented context dependency cannot become a current source-only conversion')
+    return failures
+  end
+  retained = flow.conversionat(flags,'r',0,string,1)
+  alias = flow.conversionat(linked,'r',2,string,1)
+  stale = flow.conversionat(changed,'r',0,string,1)
+  failures = failures + check(first.current() & first.kind() = 2 & first.dependencies() = 1,'conversion records the exact integer component identity')
+  failures = failures + check(retained.current() & alias.current(),'independent float and individual flag writes and LINK retain the integer-derived string relation')
+  failures = failures + check(stale.current() = 0 & stale.reason() = 'target.flow.conversion.dependency.changed.or.unknown','later integer write invalidates the conversion without deleting its string bytes')
+  active = flow.storageat(linked,'r',2,1); original = flow.storageat(linked,'r',0,1)
+  failures = failures + check(active.active() = original.active() & active.slotidentity() <> original.slotidentity() & active.base() <> original.base(),'aliasing active values preserve independently rebindable slot and base identities')
+  text = 'main() .locals=1' || nl || 'getnumdgts r0' || nl || 'itos r0' || nl || 'ret 0' || nl
+  ordinaryparse = reader.parse(text as .binary,'ordinary-conversion.rxas','fixture:ordinary-conversion'); ordinary = ordinaryparse.result()
+  ordinaryprofile = .lltargettransfer..profile.closedmain(reference ordinary,ordinary.procedureid('main'),'closed-main-default-halt.v1')
+  ordinarycfg = .lltargetcfg..graph(reference ordinary,reference ordinaryprofile); ordinaryflow = .lltargetflow..analysis(reference ordinary,reference ordinaryprofile,reference ordinarycfg)
+  failures = failures + check(ordinaryflow.status() = 'ok','ordinary catalogue conversion uses the shared algorithm')
+  stringdomain = 0
+  do i = 1 to ordinaryprofile.domains()
+    domain = ordinaryprofile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('S') then stringdomain = i
+  end
+  if ordinaryflow.status() = 'ok' then do
+    actual = ordinaryflow.conversionat(findop(ordinary,'itos'),'r',0,stringdomain,1)
+    failures = failures + check(actual.current(),'native catalogue source/component selectors project integer-to-string dependency')
+  end
+  invaliddraft = .lltargettransfer..profiledraft(reference source,'invalid.conversion.component')
+  invalidinteger = invaliddraft.domain('component','invalid.integer',catalog.componentmask('I'))
+  invalidfloat = invaliddraft.domain('component','invalid.float',catalog.componentmask('F'))
+  invalidstring = invaliddraft.domain('component','invalid.string',catalog.componentmask('S'))
+  ignored = invaliddraft.operation(converted); invalidref = invaliddraft.ref(converted,1)
+  captured = invaliddraft.event(converted,'capture',0,invalidinteger,'reference',invalidref,.lltarget..operand(),'must','all','before')
+  ignored = invaliddraft.event(converted,'derive',invalidref,invalidstring,'captured',captured,.lltarget..operand(),'must','normal','none','invalid.source.component',0,'unknown',0,invalidfloat,2)
+  failures = failures + check(invaliddraft.status() = 'invalid' & flow.valid(),'mismatched captured source component is rejected without disturbing valid facts')
+  limited = .lltargetflow..analysis(reference source,reference profile,reference cfg,1,1)
+  failures = failures + check(limited.status() = 'limit' & flow.valid(),'exhausted flow leaves the independent last-good facts valid')
+  return failures
+
+floatconversion: procedure = .int
+  i = .int; failures = 0; nl = '0a'x; reader = .llrxasinput..reader(); catalog = .llrxascatalog..catalog()
+  text = 'main() .locals=1' || nl || 'getnumdgts r0' || nl || 'itof r0' || nl || 'ftos r0' || nl || 'setnumdgts 5' || nl || 'ret 0' || nl
+  parsed = reader.parse(text as .binary,'float-conversion.rxas','fixture:float-conversion')
+  failures = failures + check(parsed.status() = 0,'ordinary float conversion source parses')
+  if parsed.status() <> 0 then do; say parsed.error(); return failures; end
+  source = parsed.result(); profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference source,reference profile); flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','ordinary float/context relation completes')
+  if flow.status() <> 'ok' then do; say flow.message(); return failures; end
+  stringdomain = 0
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('S') then stringdomain = i
+  end
+  before = flow.conversionat(findop(source,'ftos'),'r',0,stringdomain,1)
+  after = flow.conversionat(findop(source,'setnumdgts'),'r',0,stringdomain,1)
+  failures = failures + check(before.current() & before.kind() = 3 & before.dependencies() > 1,'float-to-string records numeric-field dependencies without evaluating formatting')
+  failures = failures + check(after.current() = 0 & after.reason() = 'target.flow.conversion.dependency.changed.or.unknown','numeric-field write invalidates float-to-string currentness')
+  saved = before; replacement = reader.parse(text as .binary,'float-replacement.rxas','fixture:float-replacement'); source = replacement.result()
+  failures = failures + check(saved.valid() = 0,'conversion query expires when its source owner receives another revision')
+  return failures
+
+sourcehooks: procedure = .int
+  arg cleared = 0
+  i = .int; failures = 0; nl = '0a'x; reader = .llrxasinput..reader(); catalog = .llrxascatalog..catalog()
+  text = 'main() .locals=2' || nl
+  if cleared then text = text || 'null r0' || nl
+  text = text || 'getnumdgts r0' || nl || 'copy r1,r0' || nl || 'ret 0' || nl
+  parsed = reader.parse(text as .binary,'source-hooks.rxas','fixture:source-hooks.' || cleared)
+  failures = failures + check(parsed.status() = 0,'ordinary source COPY-hook carrier parses ' || cleared)
+  if parsed.status() <> 0 then do; say parsed.error(); return failures; end
+  source = parsed.result(); profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference source,reference profile); flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','source COPY-hook flow completes ' || cleared)
+  if flow.status() <> 'ok' then do; say flow.message(); return failures; end
+  copied = findop(source,'copy'); instruction = profile.instruction(copied); found = 0
+  do i = 1 to instruction.actions()
+    action = instruction.action(i)
+    if action.kind() <> 'callback' | action.detail() <> 'catalog.callback.payload' | action.domain() = 0 then iterate
+    domain = profile.domain(action.domain())
+    if domain.nativebit() <> catalog.componentmask('native-payload') then iterate
+    found = found + 1; possible = flow.callbackpossibleat(copied,i)
+    failures = failures + check(possible = (cleared = 0),'dirty native source retains real COPY hook; explicit clear supplies absence ' || cleared)
+    component = flow.componentat(copied,'r',0,action.domain())
+    if cleared then failures = failures + check(component.presence() = 'absent','executed clear establishes native absence')
+    else failures = failures + check(component.availability() = 'entry' & component.presence() = 'unknown','prior retirement does not declare non-finalizing native payload absent')
+  end
+  failures = failures + check(found > 0,'source COPY hook is represented independently of cleanup-only finalizers')
+  return failures
+
+/** Delivery facts are conditional on the precise edge and saved slot.
+ * Ordinary ingress to the same label supplies no event type declaration. */
+delivery: procedure = .int
+  arg mode = 0
+  failures = 0; nl = '0a'x; i = .int; typeid = .int; attrsid = .int; stringid = .int; initid = .int
+  reader = .llrxasinput..reader(); catalog = .llrxascatalog..catalog()
+  edge = .lltargetcfg..edge; item = .lltarget..record; value = .lltarget..operand; literal = .lltarget..operand
+  old = .lltargetflow..valuefact; copy = .lltargetflow..callbackfact; target = .lltargetflow..storagefact; alias = .lltargetflow..storagefact
+  text = 'main() .locals=5' || nl || 'null r1' || nl || 'load r1,"old"' || nl || 'null r2' || nl || 'load r2,"alias"' || nl || 'getnumdgts r4' || nl
+  if mode = 4 then text = text || 'brt second,r4' || nl
+  text = text || 'sigbrv caught,r1,"ERROR"' || nl || 'installed:' || nl
+  if mode = 1 | mode = 2 then text = text || 'link r3,r1' || nl || 'link r1,r2' || nl
+  if mode = 3 then text = text || 'brt caught,r4' || nl
+  if mode = 2 then text = text || 'outer.begin:' || nl || '.inlineregion 11,0' || nl || '.inlinerange outer.begin,outer.end,11' || nl || 'getnumdgts r0' || nl || 'inner.begin:' || nl || '.inlineregion 12,11' || nl || '.inlinerange inner.begin,inner.end,12' || nl || '.inlineexit 12,inner.begin,inner.end,0,"swap",r1,r4' || nl || '.inlineexit 11,outer.begin,outer.end,0,"unlink",r1' || nl
+  text = text || 'signal "ERROR"' || nl
+  if mode = 2 then text = text || 'inner.end:' || nl || 'getnumdgts r0' || nl || 'outer.end:' || nl
+  text = text || 'ret 0' || nl
+  if mode = 4 then text = text || 'second:' || nl || 'sigbrv caught,r2,"ERROR"' || nl || 'signal "ERROR"' || nl || 'ret 0' || nl
+  text = text || 'caught:' || nl || 'getnumdgts r0' || nl || 'ret 0' || nl
+  parsed = reader.parse(text as .binary,'delivery.rxas','fixture:delivery.' || mode)
+  failures = failures + check(parsed.status() = 0,'bound delivery source parses ' || mode)
+  if parsed.status() <> 0 then do; say parsed.error(); return failures; end
+  source = parsed.result(); profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference source,reference profile,10000000); flow = .lltargetflow..analysis(reference source,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','bound delivery uses shared edge state ' || mode)
+  if flow.status() <> 'ok' then do; say flow.message(); return failures; end
+  installed = findop(source,'sigbrv'); item = source.at(installed); initmask = catalog.deliveryinitializedflag(item.opcode())
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' then do
+      if domain.nativebit() = catalog.componentmask('object-type') then typeid = i
+      if domain.nativebit() = catalog.componentmask('attribute-count') then attrsid = i
+      if domain.nativebit() = catalog.componentmask('S') then stringid = i
+    end
+    if domain.kind() = 'flag' & domain.nativebit() = initmask then initid = i
+  end
+  failures = failures + check(typeid > 0 & attrsid > 0 & stringid > 0 & initid > 0,'native shell contract registers public type/layout/initialization domains')
+  if typeid = 0 | attrsid = 0 | stringid = 0 | initid = 0 then return failures
+  normal = 0; delivered = 0; caught = 0
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'label' then do
+      value = item.operand(1)
+      if value.text() = 'caught' then caught = item.id()
+    end
+  end
+  do i = 1 to cfg.outedges(installed)
+    edge = cfg.outedge(installed,i)
+    if edge.role() <> 'normal' | cfg.edgefeasible(edge.id()) = 0 then iterate
+    normal = normal + 1; old = flow.componenton(edge.id(),'r',1,stringid); literal = old.literal()
+    copy = flow.deliverycallbackat(edge.id())
+    failures = failures + check(old.known() & literal.text() = 'old' & copy.status() = 'proved' & copy.possible() = 0,'normal installation preserves the old value and performs no event COPY ' || mode)
+  end
+  do i = 1 to cfg.edges()
+    edge = cfg.edge(i)
+    if edge.asynchronous() | edge.role() <> 'handler' | cfg.edgefeasible(edge.id()) = 0 then iterate
+    item = source.at(edge.sourceop())
+    if item.kind() <> 'instruction' | item.mnemonic() <> 'signal' then iterate
+    if edge.exposure() <> 'event-binding' then iterate
+    delivered = delivered + 1; installation = source.at(edge.policyinstallation()); selected = installation.operand(2)
+    failures = failures + check(installation.procedureid() = edge.function() & selected.kind() = 'R','edge retains exact owning installation and saved slot ' || mode)
+    shell = flow.componenton(edge.id(),selected.bank(),selected.index(),typeid); literal = shell.literal()
+    layout = flow.componenton(edge.id(),selected.bank(),selected.index(),attrsid); count = layout.literal()
+    init = flow.flagon(edge.id(),selected.bank(),selected.index(),initid); flag = init.literal()
+    contents = flow.componenton(edge.id(),selected.bank(),selected.index(),stringid)
+    failures = failures + check(shell.known() & literal.kind() = 'S' & literal.text() = 'rxfnsb.runtime_signal' & layout.known() & count.index() = 6 & init.known() & flag.index() = 0,'delivered shell has exact initialized type and layout ' || mode)
+    failures = failures + check(contents.availability() = 'defined' & contents.dirty() = 0 & contents.entrydependent() = 0 & contents.known() = 0,'delivery defines unknown contents and kills old entry origins ' || mode)
+    copy = flow.deliverycallbackat(edge.id())
+    failures = failures + check(copy.status() = 'unknown' & copy.possible() & copy.reason() = 'target.flow.delivery.copy.hook.unproved','real event-tree COPY obligation remains separate from guaranteed shell ' || mode)
+    if mode = 1 then do
+      target = flow.storageon(edge.id(),'r',1); alias = flow.storageon(edge.id(),'r',2)
+      old = flow.componenton(edge.id(),'r',3,typeid)
+      failures = failures + check(target.active() = alias.active() & old.known() = 0,'saved slot resolves its then-active alias rather than installation-time storage')
+    end
+    if mode = 2 then do
+      target = flow.storageon(edge.id(),'r',1); alias = flow.storageon(edge.id(),'r',3)
+      old = flow.componenton(edge.id(),'r',2,typeid)
+      failures = failures + check(edge.regionexits() = 2 & edge.regionexit(1) = 12 & edge.regionexit(2) = 11 & target.active() = target.base() & target.active() = alias.active() & old.known() = 0,'nested cold SWAP/UNLINK precedes saved-slot resolution and shell assignment')
+    end
+  end
+  expected = 1; if mode = 4 then expected = 2
+  failures = failures + check(normal > 0 & delivered = expected,'each requested delivery retains its own installer identity ' || mode)
+  if mode = 3 | mode = 4 then do
+    joined = flow.componentat(caught,'r',1,typeid)
+    failures = failures + check(joined.known() = 0,'mixed handler ingress never becomes an unconditional event declaration ' || mode)
+  end
+  return failures
+
+/** Delivery observations affect only sites whose incoming cone crosses it. */
+deliverycoverage: procedure = .int
+  arg incallee = 0
+  failures = 0; nl = '0a'x; reader = .llrxasinput..reader()
+  text = 'main() .locals=2' || nl || 'call leaf()' || nl
+  if incallee then text = text || 'call wrapper()' || nl || 'call leaf()' || nl || 'ret 0' || nl || 'wrapper() .locals=2' || nl
+  text = text || 'sigbrv caught,r1,"ERROR"' || nl || 'signal "ERROR"' || nl || 'ret 0' || nl || 'caught:' || nl
+  if incallee = 0 then text = text || 'call leaf()' || nl
+  text = text || 'ret 0' || nl || 'leaf() .locals=0' || nl || 'ret 0' || nl
+  parsed = reader.parse(text as .binary,'delivery-coverage.rxas','fixture:delivery-coverage')
+  failures = failures + check(parsed.status() = 0,'delivery observation coverage source parses')
+  if parsed.status() <> 0 then do; say parsed.error(); return failures; end
+  source = parsed.result(); root = source.procedureid('main')
+  profile = .lltargettransfer..profile.closedmain(reference source,root,'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference source,reference profile,10000000); flow = .lltargetflow..analysis(reference source,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','delivery observation coverage flow completes')
+  if flow.status() <> 'ok' then do; say flow.message(); return failures; end
+  before = flow.entrycoverageat(findop(source,'call',1),1000000)
+  aftercall = 2; if incallee then aftercall = 3
+  after = flow.entrycoverageat(findop(source,'call',aftercall),1000000)
+  failures = failures + check(before.status() = 'proved','site preceding installation retains exact observation coverage')
+  failures = failures + check(after.status() = 'unknown' & after.reason() = 'target.flow.delivery.copy.hook.unproved','site reached through delivery retains the separate precommit COPY observation obligation')
+  failures = failures + check(flow.complete(root,'entry-normalization') = 0 & flow.unknownreason(root,'entry-normalization') = 'target.flow.delivery.copy.hook.unproved','function normalization does not claim a complete inventory across unknown payload hooks ' || incallee)
+  return failures
+
+cold: procedure = .int
+  arg inheritedunknown = 0
+  i = .int
+  failures = 0; nl = '0a'x; reader = .llrxasinput..reader()
+  text = 'main() .locals=3' || nl || 'getnumdgts r0' || nl || 'sigbr caught,"ERROR"' || nl || 'begin:' || nl || '.inlineregion 1,0' || nl || '.inlinerange begin,done,1' || nl || 'setnumdgts 5' || nl || 'saved:' || nl || '.inlineexit 1,saved,done,0,"digits",r0' || nl || '.inlineexit 1,saved,done,1,"endlife",r1' || nl || '.inlineexit 1,saved,done,2,"unlink",r2' || nl || 'signal "ERROR"' || nl || 'done:' || nl || 'ret 0' || nl || 'caught:' || nl || 'ret 1' || nl
+  parsed = reader.parse(text as .binary,'cold.rxas','fixture:generic-cold')
+  failures = failures + check(parsed.status() = 0,'ordinary executable-region source parses')
+  if parsed.status() <> 0 then do; say parsed.error(); return failures; end
+  source = parsed.result(); profile = .lltargettransfer..profile
+  if inheritedunknown then profile = .lltargettransfer..profile(reference source)
+  else profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference source,reference profile,10000000)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','cold numeric/reference/binding flow completes')
+  if flow.status() <> 'ok' then do; say flow.message(); return failures; end
+  raised = findop(source,'signal'); matched = 0; numericdomain = 0
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'context' & domain.nativebit() = 1 then numericdomain = i
+  end
+  do i = 1 to cfg.outedges(raised)
+    edge = cfg.outedge(raised,i)
+    if edge.role() <> 'handler' | edge.asynchronous() | cfg.edgefeasible(edge.id()) = 0 then iterate
+    matched = matched + 1
+    failures = failures + check(edge.regioncomplete() & edge.regionexits() = 1 & edge.regionexit(1) = 1 & edge.coldactions() = 3,'cold edge records crossed lexical region and ordered active duties')
+    expiry = flow.lifetimeon(edge.id(),'r',1)
+    failures = failures + check(expiry.state() = 'ended','cold ENDLIFE ends the owned root without a finalizer callback')
+    bound = flow.storageon(edge.id(),'r',2)
+    failures = failures + check(bound.active() = bound.base(),'cold UNLINK restores only its introduced slot binding')
+    contextvalue = flow.componenton(edge.id(),'context',0,numericdomain)
+    if inheritedunknown then failures = failures + check(contextvalue.valueid() = 0 & contextvalue.availability() = 'unknown','raw inherited handler can invalidate a saved numeric value before the restore phase')
+    else failures = failures + check(contextvalue.valueid() > 0,'cold numeric restoration reads the saved owned base under the exact entry policy')
+  end
+  failures = failures + check(matched = 1,'one feasible synchronous owner-directed cold edge exists')
+  return failures
+
+main: procedure = .int
+  failures = policy() + constructedpolicy() + constructedpolicy(1) + policybounds() + conversion() + conversion(1) + floatconversion() + sourcehooks() + sourcehooks(1) + delivery() + delivery(1) + delivery(2) + delivery(3) + delivery(4) + deliverycoverage() + deliverycoverage(1) + cold() + cold(1)
+  say 'TARGET_GENERIC_FLOW|failures=' || failures
+  return failures

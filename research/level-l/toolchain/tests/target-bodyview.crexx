@@ -7,7 +7,6 @@ import lltargettransfer
 import lltargetcfg
 import lltargetflow
 import lltargetbodyview
-import lltargetsummary
 
 check: procedure = .int
   arg condition = .int, message = .string
@@ -87,9 +86,8 @@ run: procedure = .int
   alternatepoints = .lltargetflow..analysis(reference caller,reference alternateprofile,reference alternatecfg)
   wrongprofile = .lltargetbodyview..view(reference points,operation,reference alternatepoints)
   failures = failures + check(wrongprofile.status() = 'unknown' & wrongprofile.reason() = 'target.bodyview.provider.profile.mismatch','same module with a different profile cannot donate provider facts')
-  summaries = .lltargetsummary..analysis(reference points)
-  selected = summaries.bodyview(operation)
-  failures = failures + check(selected.valid(),'summary exposes the same checked bodyview')
+  selected = .lltargetbodyview..view(reference points,operation,reference points)
+  failures = failures + check(selected.valid(),'repeated query retains the same checked body owners')
   failures = failures + check(profile.callinitializerfree(operation),'local call preserves its separate no-user-code ingress fact')
   limited = .lltargettransfer..profile(reference caller,1)
   failures = failures + check(limited.initializerfree() = 0 & limited.status() = 'limit','startup scan cannot bypass preparation budget')

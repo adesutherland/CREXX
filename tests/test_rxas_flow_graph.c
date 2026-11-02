@@ -618,7 +618,7 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
     RxasFlowPolicyFact fact;
     size_t sigbr_block;
     size_t sigbr_normal_edge;
-    size_t sigbr_skip_edge;
+    size_t sigbr_failure_edge;
     size_t inc_handler_edge;
     size_t sigbr_instruction;
     size_t inc_instruction;
@@ -681,7 +681,7 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
               "handler and asynchronous roots do not reach the handler");
         metrics = rxas_flow_procedure_metrics(first, 7);
         check(metrics && metrics->complete_control_flow &&
-              metrics->signal_skip_edges >= 2,
+              metrics->signal_skip_edges >= 1,
               "signal graph metrics are incomplete");
         check(first_analysis &&
               rxas_flow_structural_predecessor_count(
@@ -704,26 +704,30 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
               "SIGBR normal transfer did not install an exact policy");
         sigbr_normal_edge = fixture_edge_id(
                 first, 7, sigbr_block, inc_block, RXAS_FLOW_EDGE_NORMAL);
-        sigbr_skip_edge = fixture_edge_id(
-                first, 7, sigbr_block, inc_block,
-                RXAS_FLOW_EDGE_SIGNAL_SKIP);
+        sigbr_failure_edge = fixture_edge_id(
+                first, 7, sigbr_block,
+                rxas_flow_procedure_terminal_exit(first, 7),
+                RXAS_FLOW_EDGE_TERMINAL);
         check(sigbr_normal_edge != RXAS_FLOW_ID_NONE && first_signal &&
               rxas_flow_policy_on_edge(
                     first_signal, 7, sigbr_normal_edge,
                     "OVERFLOW_UNDERFLOW", &fact) &&
               fact.state == RXAS_FLOW_POLICY_EXACT,
               "SIGBR normal edge lost its successful policy write");
-        check(sigbr_skip_edge != RXAS_FLOW_ID_NONE && first_signal &&
+        check(sigbr_failure_edge != RXAS_FLOW_ID_NONE &&
+              !fixture_has_edge(first, 7, sigbr_block, inc_block,
+                                RXAS_FLOW_EDGE_SIGNAL_SKIP) && first_signal &&
               rxas_flow_policy_on_edge(
-                    first_signal, 7, sigbr_skip_edge,
+                    first_signal, 7, sigbr_failure_edge,
                     "OVERFLOW_UNDERFLOW", &fact) &&
               fact.state == RXAS_FLOW_POLICY_INHERITED_UNKNOWN,
-              "SIGBR failure edge incorrectly observed a policy write");
+              "SIGBR terminal install failure observed a policy write or resumed");
         check(first_signal && rxas_flow_policy_at_instruction(
                     first_signal, 7, inc_instruction, 0,
                     "OVERFLOW_UNDERFLOW", &fact) &&
-              fact.state == RXAS_FLOW_POLICY_MERGED_UNKNOWN,
-              "parallel success/skip edges did not retain distinct policy states");
+              fact.state == RXAS_FLOW_POLICY_EXACT &&
+              fact.effect == RXOP_POLICY_EFFECT_BRANCH,
+              "terminal install failure polluted the successful SIGBR successor");
         inc_handler_edge = fixture_edge_id(
                 first, 7, inc_block, handler_root,
                 RXAS_FLOW_EDGE_HANDLER);
@@ -731,8 +735,9 @@ static void test_signal_roots_and_determinism(Assembler_Context *context) {
               rxas_flow_policy_on_edge(
                     first_signal, 7, inc_handler_edge,
                     "OVERFLOW_UNDERFLOW", &fact) &&
-              fact.state == RXAS_FLOW_POLICY_MERGED_UNKNOWN,
-              "handler edge did not preserve the incoming policy merge");
+              fact.state == RXAS_FLOW_POLICY_EXACT &&
+              fact.effect == RXOP_POLICY_EFFECT_BRANCH,
+              "handler edge lost the successfully installed SIGBR policy");
         trace_before = first_signal ? rxas_flow_effect_at_instruction(
                 first_signal, 7, inc_instruction, 1,
                 RXAS_FLOW_EFFECT_TRACE) : RXAS_FLOW_ID_NONE;
@@ -3681,8 +3686,7 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
     fixture_destroy(&growth_fixture);
 }
 
-/* Independent phase-A control: raw field/formatting operations remain exact;
- * an intrinsic-NONE setter must not donate post-hook current-register facts. */
+/* Real source COPY hooks remain distinct from retired cleanup finalizers. */
 static void test_callback_execution_control(Assembler_Context *context) {
     FlowFixture fixture;
     Assembler_Token *operands[2];
@@ -3696,14 +3700,14 @@ static void test_callback_execution_control(Assembler_Context *context) {
     RxasFlowPolicyFact policy, policy_before;
     RxasFlowProofResult proved;
     RxasFlowRegister reg;
-    size_t load, itos, edge, effect_before, effect_after;
+    size_t copy, itos, edge, effect_before, effect_after;
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_register(&fixture, 0);
     fixture_op(&fixture, "getnumdgts", operands, 1);
     fixture_op(&fixture, "itos", operands, 1);
     operands[0] = fixture_register(&fixture, 1);
-    operands[1] = fixture_integer(&fixture, 17);
-    fixture_op(&fixture, "load", operands, 2);
+    operands[1] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "copy", operands, 2);
     operands[0] = fixture_register(&fixture, 2);
     operands[1] = fixture_register(&fixture, 0);
     fixture_op(&fixture, "icopy", operands, 2);
@@ -3712,12 +3716,12 @@ static void test_callback_execution_control(Assembler_Context *context) {
     check(procedure != NULL, "callback execution fixture did not build");
     if (!procedure) { fixture_destroy(&fixture); return; }
     itos = rxas_flow_procedure_record(procedure, 91, 1)->instruction_id;
-    load = rxas_flow_procedure_record(procedure, 91, 2)->instruction_id;
-    setter = rxas_flow_procedure_instruction(procedure, 91, load);
+    copy = rxas_flow_procedure_record(procedure, 91, 2)->instruction_id;
+    setter = rxas_flow_procedure_instruction(procedure, 91, copy);
     check(setter && setter->intrinsic_signal.state == RXOP_SIGNAL_STATE_NONE &&
-              setter->callback_obligations == RXOP_CALLBACK_OUTPUT &&
+              (setter->callback_obligations & RXOP_CALLBACK_INPUT) &&
               setter->signal.state == RXOP_SIGNAL_STATE_UNKNOWN,
-          "setter snapshot conflates intrinsic signal absence and hook control");
+          "COPY snapshot conflates intrinsic signal absence and source hook control");
     check(fixture_has_edge(procedure, 91, setter->block_id,
               rxas_flow_procedure_handler_root(procedure, 91), RXAS_FLOW_EDGE_HANDLER) &&
               fixture_has_edge(procedure, 91, setter->block_id,
@@ -3729,23 +3733,23 @@ static void test_callback_execution_control(Assembler_Context *context) {
     signals = rxas_flow_require_signal_analysis(procedure, 91, 0);
     proof = rxas_flow_require_proof_service(procedure, 91, 0);
     reg.register_class = RXAS_FLOW_REGISTER_LOCAL; reg.number = 0;
-    check(ssa && rxas_flow_storage_at_instruction(ssa, 91, load, 0, reg, &before) &&
+    check(ssa && rxas_flow_storage_at_instruction(ssa, 91, copy, 0, reg, &before) &&
               before.storage_id &&
-              rxas_flow_storage_at_instruction(ssa, 91, load, 1, reg, &after) &&
+              rxas_flow_storage_at_instruction(ssa, 91, copy, 1, reg, &after) &&
               after.storage_id == before.storage_id,
           "resource-only normal callback did not preserve suspended pointer coordinates");
     reg.number = 1;
-    check(ssa && rxas_flow_component_at_instruction(ssa, 91, load, 0, reg,
+    check(ssa && rxas_flow_component_at_instruction(ssa, 91, copy, 0, reg,
               RXOP_COMPONENT_NATIVE_PAYLOAD, &entry) &&
               entry.kind == RXAS_FLOW_VALUE_ENTRY &&
               entry.presence == RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN,
           "raw local entry was treated as absent native backing");
-    check(rxas_flow_component_at_instruction(ssa, 91, load, 1, reg,
-              RXOP_COMPONENT_INTEGER, &result) && result.kind == RXAS_FLOW_VALUE_CONSTANT &&
-              result.constant_token && result.constant_token->token_value.integer == 17,
-          "ordered normal setter lost its captured computed value");
+    check(rxas_flow_component_at_instruction(ssa, 91, copy, 1, reg,
+              RXOP_COMPONENT_INTEGER, &result) &&
+              result.kind != RXAS_FLOW_VALUE_CONSTANT && !result.constant_token,
+          "COPY from an unknown source invented a literal result");
     reg.number = 0;
-    check(rxas_flow_component_at_instruction(ssa, 91, load, 1, reg,
+    check(rxas_flow_component_at_instruction(ssa, 91, copy, 1, reg,
               RXOP_COMPONENT_INTEGER, &result) && result.kind == RXAS_FLOW_VALUE_UNKNOWN,
           "normal coordinate preservation incorrectly preserved an unrelated pointee");
     reg.number = 1;
@@ -3753,21 +3757,21 @@ static void test_callback_execution_control(Assembler_Context *context) {
               rxas_flow_procedure_handler_root(procedure, 91), RXAS_FLOW_EDGE_HANDLER);
     check(rxas_flow_storage_on_edge(ssa, 91, edge, reg, &after) && !after.storage_id,
           "callback failure restored pre-hook current binding");
-    effect_before = rxas_flow_effect_at_instruction(signals, 91, load, 0, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT);
-    effect_after = rxas_flow_effect_at_instruction(signals, 91, load, 1, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT);
+    effect_before = rxas_flow_effect_at_instruction(signals, 91, copy, 0, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT);
+    effect_after = rxas_flow_effect_at_instruction(signals, 91, copy, 1, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT);
     check(effect_before != RXAS_FLOW_ID_NONE && effect_after != effect_before &&
               rxas_flow_effect_on_edge(signals, 91, edge, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT) != effect_before,
           "callback normal/failure effects reused incoming numeric context");
-    check(rxas_flow_policy_at_instruction(signals, 91, load, 0, "ERROR", &policy_before) &&
-              rxas_flow_policy_at_instruction(signals, 91, load, 1, "ERROR", &policy) &&
+    check(rxas_flow_policy_at_instruction(signals, 91, copy, 0, "ERROR", &policy_before) &&
+              rxas_flow_policy_at_instruction(signals, 91, copy, 1, "ERROR", &policy) &&
               policy.state == policy_before.state && policy.version_id == policy_before.version_id,
           "resource-only normal return did not preserve suspended structural policy");
     check(rxas_flow_policy_on_edge(signals, 91, edge, "ERROR", &policy) &&
               policy.state == RXAS_FLOW_POLICY_CLOBBERED,
           "normal structural-policy premise leaked into delivered callback control");
-    check(proof && rxas_flow_prove_instruction_speculatable(proof, 91, load, &proved) &&
+    check(proof && rxas_flow_prove_instruction_speculatable(proof, 91, copy, &proved) &&
               !proved.proved && proved.reason == RXAS_FLOW_PROOF_NOT_SPECULATABLE,
-          "callback-capable intrinsic-NONE setter was speculatable");
+          "callback-capable intrinsic-NONE COPY was speculatable");
     check(rxas_flow_prove_instruction_speculatable(proof, 91, itos, &proved) && proved.proved,
           "reviewed callback-free ITOS lost its speculation control");
     rxas_flow_procedure_destroy(procedure);
@@ -3798,8 +3802,9 @@ static void test_callback_captured_resources(Assembler_Context *context) {
     check(ssa && rxas_flow_storage_at_instruction(ssa, 93, setter, 0,
               fixture_local_register(0), &receiver) && receiver.storage_id &&
               rxas_flow_callback_resources_at_instruction(ssa, 93, setter, 0, &resources) &&
-              !resources.proved && resources.reason == RXAS_FLOW_CALLBACK_RESOURCE_VALUE_UNPROVED,
-          "dirty incoming receiver circularly borrowed postsetter absence");
+              resources.proved && resources.obligations == 0 &&
+              resources.checked_resources == 0,
+          "scalar LOAD invented a cleanup callback on a dirty receiver");
     check(rxas_flow_component_for_storage_at_instruction(ssa, 93, setter, 1,
               receiver.storage_id, RXOP_COMPONENT_INTEGER, &component) &&
               component.kind == RXAS_FLOW_VALUE_CONSTANT && component.constant_token &&
@@ -3812,12 +3817,14 @@ static void test_callback_captured_resources(Assembler_Context *context) {
           "normal final native reset was not attributed through the aliased receiver");
     check(rxas_flow_component_at_instruction(ssa, 93, setter, 1,
               fixture_local_register(1), RXOP_COMPONENT_REFERENCE, &component) &&
-              component.kind == RXAS_FLOW_VALUE_UNKNOWN,
-          "earlier reference release was falsely promoted past a possible native hook");
+              component.kind == RXAS_FLOW_VALUE_ABSENT &&
+              component.presence == RXAS_FLOW_COMPONENT_ABSENT,
+          "callback-free LOAD did not reset the aliased reference component");
     check(rxas_flow_callback_resources_at_instruction(ssa, 93, setter, 1, &resources) &&
               resources.proved && resources.owner == ssa && resources.epoch == 93 &&
-              resources.after_instruction == 1 && resources.checked_resources == 1,
-          "exact normal checkpoint did not prove the receiver's native condition absent");
+              resources.after_instruction == 1 && resources.obligations == 0 &&
+              resources.checked_resources == 0,
+          "scalar LOAD reported a nonexistent receiver callback condition");
     check(!rxas_flow_callback_resources_at_instruction(ssa, 94, setter, 0, &resources) &&
               resources.reason == RXAS_FLOW_CALLBACK_RESOURCE_STALE,
           "resource condition fact borrowed a different epoch");
@@ -3829,13 +3836,15 @@ static void test_callback_captured_resources(Assembler_Context *context) {
     fixture_op(&fixture, "copy", operands, 2);
     fixture_op(&fixture, "ret", NULL, 0);
     procedure = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 95);
-    check(procedure != NULL, "retained capacity resource fixture did not build");
+    check(procedure != NULL, "source COPY resource fixture did not build");
     if (procedure) {
         setter = rxas_flow_procedure_record(procedure, 95, 0)->instruction_id;
         ssa = rxas_flow_require_ssa_analysis(procedure, 95, 0);
         check(rxas_flow_callback_resources_at_instruction(ssa, 95, setter, 0, &resources) &&
-                  !resources.proved && (resources.unresolved_obligations & RXOP_CALLBACK_CAPACITY),
-              "input/output resource checking waived retained physical capacity");
+                  !resources.proved &&
+                  (resources.unresolved_obligations & RXOP_CALLBACK_INPUT) &&
+                  !(resources.obligations & (RXOP_CALLBACK_OUTPUT | RXOP_CALLBACK_CAPACITY)),
+              "COPY lost its real source hook or invented a cleanup/capacity callback");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -3900,8 +3909,8 @@ static void test_callback_fused_invocation(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
-/* Re-express the existing LINK/ITOS source-identity positive under a declared
- * entry premise. Raw entry remains unknown; this is not a main/default guess. */
+/* Callback-free scalar initialization preserves LINK/ITOS in both raw and
+ * explicitly profiled graphs. Entry policy does not create value precision. */
 static void test_entry_policy_posthook(Assembler_Context *context) {
     int mode;
     for (mode = 0; mode < 2; mode++) {
@@ -3934,8 +3943,10 @@ static void test_entry_policy_posthook(Assembler_Context *context) {
         raw_ssa = rxas_flow_require_ssa_analysis(raw, epoch, 0);
         check(raw_ssa && rxas_flow_component_at_instruction(raw_ssa, epoch, 2, 0,
                     fixture_local_register(1), RXOP_COMPONENT_INTEGER, &raw_integer) &&
-                  raw_integer.kind != RXAS_FLOW_VALUE_CONSTANT,
-              "unprofiled raw graph borrowed the exact entry-policy positive");
+                  raw_integer.kind == RXAS_FLOW_VALUE_CONSTANT &&
+                  raw_integer.constant_token &&
+                  raw_integer.constant_token->token_value.integer == 7,
+              "callback-free LOAD/LINK lost the raw source-identity positive");
         profile = rxas_flow_entry_profile_create(raw, epoch,
                 mode ? RXAS_FLOW_ENTRY_POLICY_IGNORE : RXAS_FLOW_ENTRY_POLICY_HALT, 1);
         check(profile != NULL, "ordinary exact entry-policy profile did not seal");
@@ -3964,11 +3975,12 @@ static void test_entry_policy_posthook(Assembler_Context *context) {
                       native.presence == RXAS_FLOW_COMPONENT_ABSENT &&
                       rxas_flow_component_at_instruction(ssa, view_epoch, 1, 0,
                         fixture_local_register(1), RXOP_COMPONENT_INTEGER, &other) &&
-                      other.kind == RXAS_FLOW_VALUE_UNKNOWN,
-                  "posthook native absence incorrectly preserved another pointee");
+                      other.kind == RXAS_FLOW_VALUE_ENTRY,
+                  "callback-free LOAD changed an unrelated entry pointee");
             check(rxas_flow_callback_resources_at_instruction(ssa, view_epoch, 0, 0, &resources) &&
-                      !resources.proved,
-                  "exact policy profile invented recycled-entry resource absence");
+                      resources.proved && resources.obligations == 0 &&
+                      resources.checked_resources == 0,
+                  "entry policy invented a scalar LOAD callback route");
             check(signals && rxas_flow_policy_at_instruction(signals, view_epoch, 1, 0,
                         "UNKNOWN_FUTURE_SIGNAL", &policy) && policy.state == RXAS_FLOW_POLICY_EXACT &&
                       policy.effect == (mode ? RXOP_POLICY_EFFECT_IGNORE : RXOP_POLICY_EFFECT_HALT),
@@ -3978,22 +3990,11 @@ static void test_entry_policy_posthook(Assembler_Context *context) {
                 const RxasFlowEdge *edge = rxas_flow_procedure_edge(view, view_epoch, edge_id);
                 if (edge->producer_instruction != 0 || edge->cause != RXAS_FLOW_CAUSE_CALLBACK) continue;
                 callbacks++;
-                check(edge->checkpoint == RXOP_SIGNAL_PHASE_AFTER_WRITES,
-                      "resource callback lost its after-completion producer checkpoint");
-                if (edge->kind == RXAS_FLOW_EDGE_SIGNAL_SKIP) {
-                    skips++;
-                    check(edge->response == RXAS_FLOW_RESPONSE_IGNORE &&
-                              rxas_flow_component_on_edge(ssa, view_epoch, edge_id,
-                                fixture_local_register(0), RXOP_COMPONENT_INTEGER, &integer) &&
-                              integer.kind == RXAS_FLOW_VALUE_CONSTANT,
-                          "IGNORE callback resume did not carry producer poststate");
-                }
+                if (edge->kind == RXAS_FLOW_EDGE_SIGNAL_SKIP) skips++;
                 if (edge->kind == RXAS_FLOW_EDGE_TERMINAL) terminals++;
-                check(edge->response != RXAS_FLOW_RESPONSE_HANDLED,
-                      "HALT/IGNORE-only policy invented a resumable handler");
             }
-            check(callbacks == 1 && skips == (size_t)mode && terminals == (size_t)!mode,
-                  "callback feasibility did not distinguish terminal HALT and posthook IGNORE");
+            check(callbacks == 0 && skips == 0 && terminals == 0,
+                  "HALT/IGNORE policy invented a scalar LOAD callback");
             check(rxas_flow_entry_profile_create(view, view_epoch, RXAS_FLOW_ENTRY_POLICY_HALT, 1) == NULL,
                   "a filtered graph was resealed as an unfiltered source");
             rxas_flow_procedure_destroy(view);
@@ -4058,15 +4059,10 @@ static void test_entry_policy_causes(Assembler_Context *context) {
             }
             if (edge->cause == RXAS_FLOW_CAUSE_CALLBACK) {
                 callback++;
-                check(edge->checkpoint == RXOP_SIGNAL_PHASE_AFTER_WRITES &&
-                          rxas_flow_component_on_edge(ssa, 202, edge_id, fixture_local_register(1),
-                            RXOP_COMPONENT_INTEGER, &value) && value.kind == RXAS_FLOW_VALUE_WRITE &&
-                          after_effect != before_effect &&
-                          rxas_flow_effect_on_edge(signals, 202, edge_id, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT) == after_effect,
-                      "callback edge lost completed setter or posthook effect state");
             }
         }
-        check(intrinsic == 1 && callback == 1, "intrinsic and callback causes were conflated");
+        check(intrinsic == 1 && callback == 0 && after_effect == before_effect,
+              "IADD invented a cleanup callback or lost its intrinsic overflow cause");
         rxas_flow_procedure_destroy(view);
     }
     rxas_flow_entry_profile_destroy(profile); rxas_flow_procedure_destroy(raw); fixture_destroy(&fixture);
@@ -4121,9 +4117,11 @@ static void test_entry_policy_growth(Assembler_Context *context) {
         RxasFlowPolicyViewStatus status;
         const RxasFlowMetrics *metrics;
         const RxasFlowSsaAnalysis *ssa;
+        const RxasFlowProofService *proof;
         RxasFlowComponentFact value;
         RxasFlowPolicyFact policy;
-        size_t load, edge_id, ignore = 0, handled = 0;
+        RxasFlowProofResult proved;
+        size_t copy, edge_id, ignore = 0, handled = 0, terminals = 0;
         memset(&fixture, 0, sizeof(fixture));
         if (mode == 0 || mode == 3) {
             operands[0] = fixture_text_token(&fixture, FUNC, "handler");
@@ -4135,9 +4133,9 @@ static void test_entry_policy_growth(Assembler_Context *context) {
             operands[0] = fixture_string(&fixture, "external"); fixture_op(&fixture, "sayx", operands, 1);
         }
         if (mode == 2) fixture_label(&fixture, "again");
-        operands[0] = fixture_register(&fixture, 0); operands[1] = fixture_integer(&fixture, 7);
-        fixture_op(&fixture, "load", operands, 2);
-        load = fixture.item_count - 1;
+        operands[0] = fixture_register(&fixture, 0); operands[1] = fixture_register(&fixture, 2);
+        fixture_op(&fixture, "copy", operands, 2);
+        copy = fixture.item_count - 1;
         if (mode == 2) {
             operands[0] = fixture_string(&fixture, "error"); fixture_op(&fixture, "sigignore", operands, 1);
             operands[0] = fixture_label_ref(&fixture, "again"); fixture_op(&fixture, "br", operands, 1);
@@ -4152,18 +4150,33 @@ static void test_entry_policy_growth(Assembler_Context *context) {
         check(view && status == RXAS_FLOW_POLICY_VIEW_OK, "policy-growth fixture did not freeze");
         if (view) {
             unsigned long epoch = 203 + (unsigned long)mode;
-            size_t load_instruction = rxas_flow_procedure_record(view, epoch, load)->instruction_id;
+            size_t copy_instruction = rxas_flow_procedure_record(view, epoch, copy)->instruction_id;
             metrics = rxas_flow_procedure_metrics(view, epoch);
             ssa = rxas_flow_require_ssa_analysis(view, epoch, 0);
             if (mode == 3)
                 check(rxas_flow_policy_at_instruction(rxas_flow_require_signal_analysis(view, epoch, 0),
-                            epoch, load_instruction, 0, "BREAKPOINT", &policy) &&
+                            epoch, copy_instruction, 0, "BREAKPOINT", &policy) &&
                           policy.state == RXAS_FLOW_POLICY_EXACT && policy.effect == RXOP_POLICY_EFFECT_CALL_ACTION,
                       "BPOFF replaced an installed handler instead of clearing a pending bit");
+            if (mode == 1) {
+                const RxasFlowInstruction *output = rxas_flow_procedure_instruction(view, epoch, 0);
+                proof = rxas_flow_require_proof_service(view, epoch, 0);
+                check(output && proof && (output->callback_obligations & RXOP_CALLBACK_HOST) &&
+                          output->signal.state == RXOP_SIGNAL_STATE_UNKNOWN &&
+                          rxas_flow_prove_instruction_speculatable(proof, epoch, 0, &proved) &&
+                          !proved.proved,
+                      "bytes output lost its real HOST/control/speculation boundary");
+                check(rxas_flow_policy_at_instruction(rxas_flow_require_signal_analysis(view, epoch, 0),
+                            epoch, copy_instruction, 0, "ERROR", &policy) &&
+                          policy.state == RXAS_FLOW_POLICY_EXACT &&
+                          policy.effect == RXOP_POLICY_EFFECT_HALT,
+                      "returning bytes-output callback changed the suspended signal policy");
+            }
             for (edge_id = 0; edge_id < metrics->edges; edge_id++) {
                 const RxasFlowEdge *edge = rxas_flow_procedure_edge(view, epoch, edge_id);
-                if (edge->cause != RXAS_FLOW_CAUSE_CALLBACK || edge->producer_instruction != load_instruction ||
-                    edge->kind != RXAS_FLOW_EDGE_SIGNAL_SKIP) continue;
+                if (edge->cause != RXAS_FLOW_CAUSE_CALLBACK || edge->producer_instruction != copy_instruction) continue;
+                if (edge->kind == RXAS_FLOW_EDGE_TERMINAL) terminals++;
+                if (edge->kind != RXAS_FLOW_EDGE_SIGNAL_SKIP) continue;
                 if (edge->response == RXAS_FLOW_RESPONSE_IGNORE) ignore++;
                 if (edge->response == RXAS_FLOW_RESPONSE_HANDLED) {
                     handled++;
@@ -4175,7 +4188,8 @@ static void test_entry_policy_growth(Assembler_Context *context) {
                           "after-completion checkpoint bypassed delivered handler havoc");
                 }
             }
-            check(mode == 2 ? ignore == 1 : handled == 1,
+            check(mode == 1 ? terminals > 0 && ignore == 0 && handled == 0 :
+                    mode == 2 ? ignore == 1 : handled == 1,
                   "policy worklist lost handler/host uncertainty or a later backedge override");
             rxas_flow_procedure_destroy(view);
         }

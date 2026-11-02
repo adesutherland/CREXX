@@ -36,7 +36,7 @@ now has an approved VM → shared Level L → fresh inliner2 delivery sequence,
 independently of complete assembler/codec/linker delivery. The initial IN2
 proof, wider INL outcomes and all TGT criteria remain open. This neither closes
 this programme's criteria nor changes the separate C delivery or develop
-QA/publication scope.
+QA/publication scope. The assembler's [RXAS-CHECK-01 correctness-checking roadmap](toolchain/PLAN.md#rxas-correctness-checking-roadmap) explicitly includes component-level initialization, control/lifetime checks and post-transformation validation.
 
 <a id="current-action-ir-schema-reads"></a>
 

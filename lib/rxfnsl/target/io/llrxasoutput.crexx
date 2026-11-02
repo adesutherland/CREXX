@@ -39,19 +39,7 @@ render: procedure = .llrxasoutput..emission
     do i = 1 to module.records()
       item = module.record(i); kind = item.kind(); work = work - 1 - item.operands()
       if work < 0 then return failed(module,'LL_RESOURCE_LIMIT: RXAS rendering work')
-      recipeordinal = 0; encoded = .lltarget..operand
-      if kind = 'instruction' then recipeordinal = catalog.recipeoperand(item.opcode())
-      if recipeordinal > 0 then do
-        recipe = item.recipe(); body = module.body(item.procedureid())
-        original = item.operand(recipeordinal)
-        cost = original.length() * 4 + recipe.registers() * 16 + 1
-        if cost > work then return failed(module,'LL_RESOURCE_LIMIT: RXAS recipe rendering work')
-        work = work - cost
-        amount = recipe.physicalsize(body.locals(),module.globals())
-        if amount > bytes - used - 2 then return failed(module,'LL_RESOURCE_LIMIT: output.bytes')
-        encoded = .lltarget..operand.string(recipe.physical(body.locals(),module.globals()) as .binary)
-      end
-      size = recordbytes(item,work,bytes - used,recipeordinal,encoded)
+      size = recordbytes(item,work,bytes - used)
       if size < 0 then return failed(module,'LL_RESOURCE_LIMIT: output.bytes')
       at = item.origin(); text = ''
       select
@@ -74,8 +62,7 @@ render: procedure = .llrxasoutput..emission
           do j = 1 to item.operands()
             if j = 1 then text = text || ' '
             else text = text || ','
-            if j = recipeordinal then text = text || operandtext(encoded)
-            else text = text || operandtext(item.operand(j))
+            text = text || operandtext(item.operand(j))
           end
         end
         when kind = 'label' then do
@@ -98,6 +85,17 @@ render: procedure = .llrxasoutput..emission
           do j = 1 to item.operands()
             if kind = '.traceevent' & wordpos(j as .string,'1 3 4 5') > 0 then text = text || ' ' || codetext(item.operand(j))
             else text = text || ' ' || operandtext(item.operand(j))
+          end
+        end
+        when kind = '.inlinedprivate' then do
+          foreign = item.operand(3)
+          text = kind || ' ' || operandtext(item.operand(1)) || ',' || operandtext(item.operand(2)) || ',g' || foreign.index()
+        end
+        when kind = '.inlineregion' | kind = '.inlinerange' | kind = '.inlineexit' then do
+          text = kind || ' '
+          do j = 1 to item.operands()
+            if j > 1 then text = text || ','
+            text = text || operandtext(item.operand(j))
           end
         end
         when kind = '.inlinemap' then text = kind || ' ' || operandtext(item.operand(1)) || ',' || operandtext(item.operand(2)) || ',' || operandtext(item.operand(3))
@@ -144,7 +142,7 @@ failed: procedure = .llrxasoutput..emission
  * Subtraction checks avoid overflowing accumulated growth. Charge payload scans
  * and final rendering before either pass can create an oversized temporary. */
 recordbytes: procedure = .int
-  arg item = .lltarget..record, expose work = .int, limit = .int, recipeordinal = 0, ?encoded = .lltarget..operand
+  arg item = .lltarget..record, expose work = .int, limit = .int
   kind = item.kind(); count = item.operands()
   select
     when kind = 'procedure' then do
@@ -161,14 +159,14 @@ recordbytes: procedure = .int
       if count > 1 then size = size + 1 + max(0,count - 2)
     end
     when kind = '.const' then size = 10
-    when kind = '.srcstep' | kind = '.traceevent' | kind = '.inlineframe' | kind = '.inlinemap' then size = 1 + <blen>(kind as .binary) + count
+    when kind = '.srcstep' | kind = '.traceevent' | kind = '.inlineframe' | kind = '.inlinemap' | kind = '.inlineregion' | kind = '.inlinerange' | kind = '.inlineexit' then size = 1 + <blen>(kind as .binary) + count
+    when kind = '.inlinedprivate' then size = 2 + <blen>(kind as .binary) + count
     otherwise assembler signal "ERROR","LL_RXAS_PROFILE: unsupported rendered record"
   end
   if size > limit then return -1
   do i = 1 to count
     if kind = 'procedure' & i = 4 then iterate
-    if i = recipeordinal & ?encoded then amount = fieldbytes(encoded,work,limit - size)
-    else if kind = '.traceevent' & wordpos(i as .string,'1 3 4 5') > 0 then amount = codebytes(item.operand(i),work,limit - size)
+    if kind = '.traceevent' & wordpos(i as .string,'1 3 4 5') > 0 then amount = codebytes(item.operand(i),work,limit - size)
     else amount = fieldbytes(item.operand(i),work,limit - size)
     if amount < 0 | amount > limit - size then return -1
     size = size + amount
