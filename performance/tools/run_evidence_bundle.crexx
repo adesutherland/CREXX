@@ -1163,7 +1163,7 @@ write_call_census_markdown: procedure = .int
   fresh_frames = aggregate_count("census|frame_disposition|fresh", keys, counts)
   reused_frames = aggregate_count("census|frame_disposition|reused", keys, counts)
   moved_returns = aggregate_count("return|placement|ret_reg_move_local", keys, counts)
-  copied_returns = aggregate_count("return|placement|ret_reg_copy_nonlocal", keys, counts)
+  copied_returns = aggregate_count("return|placement|ret_reg_copy", keys, counts)
   dynamic_selections = aggregate_count("dynamic|srcmethodsel|attempt", keys, counts) + ,
       aggregate_count("dynamic|srcfprocsel|attempt", keys, counts)
   unwind_events = aggregate_count("unwind|signal|events", keys, counts)
@@ -1238,7 +1238,7 @@ write_call_census_markdown: procedure = .int
   output[output[0] + 1] = "|---|---:|"
   call append_census_row output, "void", "return|placement|void", keys, counts
   call append_census_row output, "RET_REG local move", "return|placement|ret_reg_move_local", keys, counts
-  call append_census_row output, "RET_REG non-local copy", "return|placement|ret_reg_copy_nonlocal", keys, counts
+  call append_census_row output, "RET_REG value copy", "return|placement|ret_reg_copy", keys, counts
   call append_census_row output, "ignored value", "return|placement|value_ignored", keys, counts
   call append_census_row output, "immediate", "return|placement|immediate", keys, counts
   call append_census_row output, "terminal/external", "return|placement|terminal_external", keys, counts
@@ -1265,7 +1265,7 @@ write_call_census_markdown: procedure = .int
   output[output[0] + 1] = ""
   output[output[0] + 1] = "- NR-06 call-window work should use the path and exact-arity distributions above, together with " || setup_swaps || " setup and " || restoration_swaps || " restoration swaps (" || ratio_text(setup_swaps + restoration_swaps, instruction_calls) || " combined per instruction call across this portfolio run)."
   output[output[0] + 1] = "- Frame recycling supplied " || reused_frames || " of " || fresh_frames + reused_frames || " observed bytecode activations; preserve the per-workload rows before generalising from the aggregate."
-  output[output[0] + 1] = "- NR-12 should distinguish " || defensive_copies || " attributable argument-copy instructions from the unclassified copy population, and should treat " || copied_returns || " measured non-local RET_REG copies separately from " || moved_returns || " local moves."
+  output[output[0] + 1] = "- NR-12 should distinguish " || defensive_copies || " attributable argument-copy instructions from the unclassified copy population, and should treat " || copied_returns || " measured COPY-equivalent RET_REG assignments separately from " || moved_returns || " legacy local-move counts."
   output[output[0] + 1] = "- Dynamic selection occurred " || dynamic_selections || " times and signal unwind occurred " || unwind_events || " times. Zero values mean unobserved in these bounded portfolio cells, not unreachable VM paths; focused semantic fixtures cover the cold paths."
   output[output[0] + 1] = "- These aggregate conclusions are portfolio-wide for the exact " || entry_count || "-image set. Workload-specific conclusions must be drawn from call-census.csv and the retained raw profile for that entry."
   return write_lines(path, output)

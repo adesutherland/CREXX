@@ -190,6 +190,7 @@ struct backpatching {
 
 struct rxas_inline_map_patch {
     size_t offset;
+    enum const_pool_type type;
     Assembler_Token *begin;
     Assembler_Token *end;
     struct rxas_inline_map_patch *next;
@@ -466,57 +467,6 @@ static void backpatch_labels(Assembler_Context *context) {
 static void backpatch_jump_tables(Assembler_Context *context);
 static void backpatch_inline_maps(Assembler_Context *context);
 
-static void seal_local_inline_recipes(Assembler_Context *context) {
-    size_t index = 0u;
-    while (index < context->binary.inst_size) {
-        bin_code *instruction = &context->binary.binary[index];
-        size_t width = (size_t)instruction->instruction.no_ops + 1u;
-        if (width > context->binary.inst_size - index) {
-            rxaserrf(context, 0, 0, 1, "malformed inline instruction during sealing");
-            return;
-        }
-        if (instruction->instruction.opcode == OP_INLENTER_REG_FUNC_STRING_ID) {
-            size_t proc_offset = context->binary.binary[index + 2u].index;
-            size_t recipe_offset = context->binary.binary[index + 3u].index;
-            if (proc_offset < context->binary.const_size &&
-                recipe_offset < context->binary.const_size) {
-                proc_constant *proc = (proc_constant *)(context->binary.const_pool + proc_offset);
-                string_constant *recipe = (string_constant *)(context->binary.const_pool + recipe_offset);
-                if (proc->base.type == PROC_CONST && proc->start != SIZE_MAX &&
-                    recipe->base.type == BINARY_CONST) {
-                    int offset = context->proc_head;
-                    uint32_t ordinal = 0u;
-                    while (offset != -1 && (size_t)offset != proc_offset) {
-                        proc_constant *next = (proc_constant *)(context->binary.const_pool +
-                                                                (size_t)offset);
-                        offset = next->next;
-                        ordinal++;
-                    }
-                    if (offset == -1 ||
-                        !rxinl_recipe_seal(recipe->string, recipe->string_len,
-                                           0u, ordinal))
-                        rxaserrf(context, 0, 0, 1, "cannot seal local inline provider");
-                } else if (proc->base.type == BINARY_CONST &&
-                           recipe->base.type == BINARY_CONST) {
-                    rxinl_qualified_proc_view qualified;
-                    string_constant *qualified_entry = (string_constant *)proc;
-                    if (!rxinl_qualified_proc_decode(qualified_entry->string,
-                                                    qualified_entry->string_len,
-                                                    &qualified))
-                        rxaserrf(context, 0, 0, 1,
-                                 "invalid qualified inline provider");
-                } else if (recipe->base.type != BINARY_CONST ||
-                           proc->base.type != PROC_CONST) {
-                    rxaserrf(context, 0, 0, 1, "invalid inline provider or recipe constant");
-                }
-            } else {
-                rxaserrf(context, 0, 0, 1, "inline provider or recipe constant out of range");
-            }
-        }
-        index += width;
-    }
-}
-
 static void validate_program_entry_calls(Assembler_Context *context) {
     size_t entry_procedure = SIZE_MAX, at = 0u;
     int metadata = context->meta_head;
@@ -544,8 +494,8 @@ static void validate_program_entry_calls(Assembler_Context *context) {
         size_t width = rxop_format_operand_count(format), operand;
         if (width >= context->binary.inst_size - at) return; /* Existing structural validation owns malformed code. */
         /* P is the executable procedure-target role, including signal and
-         * breakpoint handlers and logical activation. Metadata references are
-         * separate typed records; there is no program-root instruction. */
+         * breakpoint handlers. Metadata references are separate typed records;
+         * there is no program-root instruction. */
         for (operand = 0u; operand < width; operand++) {
             if (rxop_format_operand_type(format,operand) == OP_FUNC &&
                 code[at + operand + 1u].index == entry_procedure) {
@@ -564,7 +514,6 @@ void backptch(Assembler_Context *context) {
     backpatch_jump_tables(context);
     backpatch_inline_maps(context);
     backpatch_labels(context);
-    seal_local_inline_recipes(context);
     validate_program_entry_calls(context);
 }
 
@@ -2559,82 +2508,6 @@ void rxasgenv(Assembler_Context *context, Assembler_Token *instrToken,
             free(operandTypes);
             return;
         }
-        if (inst->opcode == OP_INLENTER_REG_FUNC_STRING_ID ||
-            inst->opcode == OP_QGLOBBIND_REG_STRING_INT) {
-            unsigned char *typed = NULL;
-            unsigned char *qualified = NULL;
-            char *source_text = NULL;
-            size_t typed_length = 0u;
-            size_t qualified_length = 0u;
-            int valid;
-            size_t special_operand = inst->opcode == OP_INLENTER_REG_FUNC_STRING_ID
-                ? 2u : 1u;
-            Assembler_Token *special_token = operandTokens[special_operand];
-            /* STRING token length includes delimiters; unescape the exact token
-             * bytes so an embedded NUL cannot hide trailing recipe fields. */
-            source_text = malloc(special_token->length + 1u);
-            if (!source_text) RXAS_PANIC_OOM(context, "malloc inline source text",
-                                            special_token->length + 1u, 0);
-            {
-                size_t source_length = unescape_string(
-                    source_text, (char *)special_token->token_value.string);
-                source_text[source_length] = 0;
-                if (memchr(source_text, 0, source_length)) {
-                    rxaserat(context, special_token,
-                             "inline recipe or module selector contains NUL");
-                    free(source_text);
-                    free(operandTypes);
-                    return;
-                }
-            }
-            if (inst->opcode == OP_INLENTER_REG_FUNC_STRING_ID) {
-                char recipe_error[160];
-                valid = rxinl_recipe_from_text(
-                    source_text,
-                    &typed, &typed_length, recipe_error, sizeof(recipe_error));
-                if (!valid) rxaserat(context, operandTokens[special_operand], recipe_error);
-            } else {
-                valid = rxinl_module_ref_from_text(
-                    source_text,
-                    &typed, &typed_length);
-                if (!valid) rxaserat(context, operandTokens[special_operand],
-                                     "invalid qualified module selector");
-            }
-            if (!valid) {
-                free(typed);
-                free(source_text);
-                free(operandTypes);
-                return;
-            }
-            if (inst->opcode == OP_INLENTER_REG_FUNC_STRING_ID &&
-                operandTokens[1]->token_type == FUNC &&
-                operandTokens[1]->token_value.string[0] == '@' &&
-                !rxinl_qualified_proc_from_text(
-                    (const char *)operandTokens[1]->token_value.string,
-                    &qualified, &qualified_length)) {
-                rxaserat(context, operandTokens[1],
-                         "invalid qualified procedure ordinal");
-                free(typed);
-                free(qualified);
-                free(source_text);
-                free(operandTypes);
-                return;
-            }
-            gen_instr(context, inst->opcode, (int)operandCount);
-            for (i = 0; i < operandCount; i++) {
-                if (i == special_operand)
-                    append_inline_binary_operand(context, typed, typed_length);
-                else if (i == 1u && qualified)
-                    append_inline_binary_operand(context, qualified, qualified_length);
-                else
-                    gen_operand(context, operandTokens[i]);
-            }
-            free(typed);
-            free(qualified);
-            free(source_text);
-            free(operandTypes);
-            return;
-        }
         {
             unsigned char *qualified = NULL;
             size_t qualified_length = 0u;
@@ -2759,6 +2632,7 @@ void rxasproc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
     context->current_locals = (int)localsToken->token_value.integer;
     context->current_owned_locals = context->current_locals;
     context->current_has_private = 0;
+    context->current_has_inline_exits = 0;
     context->current_proc_has_code = 0;
     context->current_proc_name = (char *)funcToken->token_value.string;
 }
@@ -2840,6 +2714,7 @@ void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
     context->current_locals = (int)localsToken->token_value.integer;
     context->current_owned_locals = context->current_locals;
     context->current_has_private = 0;
+    context->current_has_inline_exits = 0;
     context->current_proc_has_code = 0;
     context->current_proc_name = (char *)funcToken->token_value.string;
 
@@ -2987,12 +2862,19 @@ static void backpatch_inline_maps(Assembler_Context *context) {
     for (map = context->inline_maps; map; map = map->next) {
         struct backpatching *begin = inline_map_label(context,map->begin);
         struct backpatching *end = inline_map_label(context,map->end);
-        meta_inline_map_constant *entry;
         if (!begin->defined) { rxaserat(context,map->begin,"unknown inline map begin label"); continue; }
         if (!end->defined) { rxaserat(context,map->end,"unknown inline map end label"); continue; }
         if (begin->index >= end->index) { rxaserat(context,map->begin,"inline map range must be nonempty"); continue; }
-        entry = (meta_inline_map_constant *)(context->binary.const_pool + map->offset);
-        entry->start = begin->index; entry->end = end->index;
+        if (map->type == META_INLINE_EXIT) {
+            meta_inline_exit_constant *entry = (meta_inline_exit_constant *)(context->binary.const_pool + map->offset);
+            entry->start = begin->index; entry->end = end->index;
+        } else if (map->type == META_INLINE_RANGE) {
+            meta_inline_range_constant *entry = (meta_inline_range_constant *)(context->binary.const_pool + map->offset);
+            entry->start = begin->index; entry->end = end->index;
+        } else {
+            meta_inline_map_constant *entry = (meta_inline_map_constant *)(context->binary.const_pool + map->offset);
+            entry->start = begin->index; entry->end = end->index;
+        }
     }
 }
 
@@ -3030,8 +2912,91 @@ void rxasmeimp(Assembler_Context *context, Assembler_Token *begin, Assembler_Tok
     entry->frame_id = (uint32_t)id->token_value.integer; entry->start = 0u; entry->end = 0u;
     patch = malloc(sizeof(*patch));
     if (!patch) RXAS_PANIC_OOM(context,"malloc inline map fixup",sizeof(*patch),0);
-    patch->offset = offset; patch->begin = begin; patch->end = end;
+    patch->offset = offset; patch->type = META_INLINE_MAP; patch->begin = begin; patch->end = end;
     patch->next = context->inline_maps; context->inline_maps = patch;
+}
+
+static void inline_exit_patch(Assembler_Context *context, size_t offset, enum const_pool_type type,
+                              Assembler_Token *begin, Assembler_Token *end) {
+    struct rxas_inline_map_patch *patch = malloc(sizeof(*patch));
+    if (!patch) RXAS_PANIC_OOM(context,"malloc inline exit fixup",sizeof(*patch),0);
+    (void)inline_map_label(context,begin); (void)inline_map_label(context,end);
+    patch->offset = offset; patch->type = type; patch->begin = begin; patch->end = end;
+    patch->next = context->inline_maps; context->inline_maps = patch;
+}
+
+void rxasmeirg(Assembler_Context *context, Assembler_Token *id, Assembler_Token *parent) {
+    size_t reference, offset;
+    meta_inline_region_constant *entry;
+    if (!inline_meta_u32(context,id,1) || !inline_meta_u32(context,parent,0)) return;
+    if (!context->current_proc_name || !src_node(context->proc_constants_tree,context->current_proc_name,&reference)) {
+        rxaserat(context,id,"inline region requires a local owning procedure"); return;
+    }
+    reference = ((struct backpatching *)reference)->index;
+    offset = add_meta_entry(context,sizeof(*entry),META_INLINE_REGION);
+    entry = (meta_inline_region_constant *)(context->binary.const_pool + offset);
+    entry->procedure = reference; entry->version = RXBIN_INLINE_EXIT_VERSION;
+    entry->region_id = (uint32_t)id->token_value.integer; entry->parent_id = (uint32_t)parent->token_value.integer;
+}
+
+void rxasmeira(Assembler_Context *context, Assembler_Token *begin, Assembler_Token *end, Assembler_Token *id) {
+    size_t offset;
+    meta_inline_range_constant *entry;
+    if (!inline_meta_u32(context,id,1)) return;
+    offset = add_meta_entry(context,sizeof(*entry),META_INLINE_RANGE);
+    entry = (meta_inline_range_constant *)(context->binary.const_pool + offset);
+    entry->region_id = (uint32_t)id->token_value.integer; entry->start = entry->end = 0u;
+    inline_exit_patch(context,offset,META_INLINE_RANGE,begin,end);
+}
+
+static int inline_exit_register(Assembler_Context *context, Assembler_Token *token, uint32_t *bank, uint32_t *index) {
+    if (!token || (token->token_type != RREG && token->token_type != GREG && token->token_type != AREG) ||
+        !inline_meta_u32(context,token,0)) return 0;
+    *bank = token->token_type == RREG ? RXBIN_INLINE_BANK_R :
+            token->token_type == GREG ? RXBIN_INLINE_BANK_G : RXBIN_INLINE_BANK_A;
+    *index = (uint32_t)token->token_value.integer; return 1;
+}
+
+void rxasmeiext(Assembler_Context *context, Assembler_Token *id, Assembler_Token *begin,
+                 Assembler_Token *end, Assembler_Token *order, Assembler_Token *kind,
+                 Assembler_Token *first, Assembler_Token *second) {
+    meta_inline_exit_constant action, *entry;
+    const char *name = (const char *)kind->token_value.string;
+    size_t offset;
+    memset(&action,0,sizeof(action));
+    if (!inline_meta_u32(context,id,1) || !inline_meta_u32(context,order,0)) return;
+    action.region_id = (uint32_t)id->token_value.integer; action.order = (uint32_t)order->token_value.integer;
+    if (!strcmp(name,"digits")) action.field = RXOP_CONTEXT_DIGITS;
+    else if (!strcmp(name,"fuzz")) action.field = RXOP_CONTEXT_FUZZ;
+    else if (!strcmp(name,"form")) action.field = RXOP_CONTEXT_FORM;
+    else if (!strcmp(name,"case")) action.field = RXOP_CONTEXT_CASE;
+    else if (!strcmp(name,"standard")) action.field = RXOP_CONTEXT_STANDARD;
+    if (action.field) {
+        action.kind = RXBIN_INLINE_ACTION_NUMERIC;
+        if (second) goto invalid;
+        if (first->token_type == INT) {
+            action.source = RXBIN_INLINE_SOURCE_LITERAL; action.literal = first->token_value.integer;
+        } else {
+            action.source = RXBIN_INLINE_SOURCE_OWNED_BASE;
+            if (!inline_exit_register(context,first,&action.bank1,&action.index1) || action.bank1 != RXBIN_INLINE_BANK_R) goto invalid;
+        }
+    } else {
+        if (!strcmp(name,"endlife")) action.kind = RXBIN_INLINE_ACTION_ENDLIFE;
+        else if (!strcmp(name,"unlink")) action.kind = RXBIN_INLINE_ACTION_UNLINK;
+        else if (!strcmp(name,"swap")) action.kind = RXBIN_INLINE_ACTION_SWAP;
+        else if (!strcmp(name,"link")) action.kind = RXBIN_INLINE_ACTION_LINK;
+        else goto invalid;
+        if (!inline_exit_register(context,first,&action.bank1,&action.index1)) goto invalid;
+        if (action.kind == RXBIN_INLINE_ACTION_SWAP || action.kind == RXBIN_INLINE_ACTION_LINK) {
+            if (!inline_exit_register(context,second,&action.bank2,&action.index2)) goto invalid;
+        } else if (second || (action.kind == RXBIN_INLINE_ACTION_ENDLIFE && action.bank1 != RXBIN_INLINE_BANK_R)) goto invalid;
+    }
+    offset = add_meta_entry(context,sizeof(*entry),META_INLINE_EXIT);
+    entry = (meta_inline_exit_constant *)(context->binary.const_pool + offset);
+    memcpy((unsigned char *)entry + sizeof(meta_entry),(const unsigned char *)&action + sizeof(meta_entry),sizeof(action) - sizeof(meta_entry));
+    inline_exit_patch(context,offset,META_INLINE_EXIT,begin,end); return;
+invalid:
+    rxaserat(context,kind,"invalid executable inline-exit action or operands");
 }
 
 void rxasmeinp(Assembler_Context *context, Assembler_Token *local,

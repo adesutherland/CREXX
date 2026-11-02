@@ -1,7 +1,7 @@
 # Level L target-toolchain research
 
-**Status: design consolidation complete; VM preparation, shared Level L baseline
-and new inliner2 implementation/qualification remain open.** This is the single
+**Status: phase 1 VM preparation is implemented and locally qualified; the
+shared Level L baseline and new inliner2 implementation/qualification remain open.** This is the single
 authoritative plan. The [inlining architecture](doc/inlining.md) owns the detailed
 mapping and exit contracts; this file owns outcomes, steps and completion gates.
 
@@ -142,15 +142,30 @@ inliner2. Shared Level L algorithms and clone emission wait for phases 2 and 3.
 
 | ID | Complete native capability and closure | State |
 |---|---|---|
-| **VMIP-01** | Retire SIGRET / signal RETURN; reserve opcode 502; reject source/stale binaries; remove root-SIGRETURN and active catalogue/handler contracts. Preserve SIGCALLBR. Complete INLENTER/LINKARGV/QGLOBBIND retirement and reserved identities without reviving INLENTER2. | todo; partial worktree retirement exists |
-| **VMIP-02** | Implement checked executable inline-region/continuation metadata and cold crossed-region cleanup. Copy selected handler first; unwind real children, restore its existing save marker, then retire crossed logical regions inside out before owner handler entry. Internal/resuming paths stay active. Include numeric, owned-reference and introduced-binding actions; no per-clone finalizer action or entry allocation. | todo |
-| **VMIP-03** | Make signal-instruction self-failures uncatchable current-VM-run errors with embedding cleanup. Invalid tag/target/origin, unmatched POP and allocation failure cannot silently continue, publish partial policy or raise catchable secondary signals. A valid SIGNAL's requested event remains catchable. | todo |
-| **VMIP-04** | Complete native support for the approved S1–S8 policy design, verify existing named save/marker semantics and real-child behavior. Shared named-save facts and inliner PUSH/POP emission are explicit later-phase dependencies, not additional VM scope operations. | native verification todo; full design open through phases 2/3 |
-| **VMIP-05** | Resolve ordinary return conformance against logical COPY-equivalent assignment and reference owner bookkeeping. Cover source/destination identity, linked/inactive attributes, borrowed sources, returned descriptors and required native-copy effects. Fix the shared runtime/catalogue surface; do not prescribe universal COPY or copy internal MOVE branches into inliner2. | todo |
-| **VMIP-06** | Complete once-only native-payload retirement in owned local/a0/inactive attribute backing on every physical normal/unwind exit; exclude borrowed storage; preserve other dirty values. Reconcile native retirement inventory and audit first-party finalizers against the no-Rexx-reentry/no-catchable-signal convention. | scan implemented in worktree; real-frame qualification todo |
-| **VMIP-07** | Correct ENDLIFE's canonical synchronous-signal row to its nonallocating, non-callback, non-signalling contract. Reconcile result/retirement/provider contracts in the canonical inventory once with the native fixes. | todo |
-| **VMIP-08** | Reproduce suspected native-mode leakage after an unsaved real-child SIGIGNORE; repair at VM owner if confirmed, with an independent real-child regression. | defect check todo |
-| **VMIP-09** | Preserve the numeric provider reattachment repair across void/value returns, returning signal handlers and owner-directed unwind. Rebind even when numeric values match; reuse unaffected completed checks. | implemented; bounded native checks passed; phase integration open |
+| **VMIP-01** | Retire SIGRET / signal RETURN; reserve opcode 502; reject source/stale binaries; remove root-SIGRETURN and active catalogue/handler contracts. Preserve SIGCALLBR. Complete INLENTER/LINKARGV/QGLOBBIND retirement and reserved identities without reviving INLENTER2. | done — reserved source/binary identities and active contracts retired |
+| **VMIP-02** | Implement checked executable inline-region/continuation metadata and cold crossed-region cleanup. Copy selected handler first; unwind real children, restore its existing save marker, then retire crossed logical regions inside out before owner handler entry. Internal/resuming paths stay active. Include numeric, owned-reference and introduced-binding actions; no per-clone finalizer action or entry allocation. | done — typed format, native integration and handwritten boundary controls |
+| **VMIP-03** | Make signal-instruction self-failures uncatchable current-VM-run errors with embedding cleanup. Invalid tag/target/origin, unmatched POP and allocation failure cannot silently continue, publish partial policy or raise catchable secondary signals. A valid SIGNAL's requested event remains catchable. | done — terminal self-errors, atomic allocation failures and reusable embedding |
+| **VMIP-04** | Complete native support for the approved S1–S8 policy design, verify existing named save/marker semantics and real-child behavior. Shared named-save facts and inliner PUSH/POP emission are explicit later-phase dependencies, not additional VM scope operations. | native support/QA done; shared L facts and clone emission remain phases 2/3 |
+| **VMIP-05** | Resolve ordinary return conformance against logical COPY-equivalent assignment and reference owner bookkeeping. Cover source/destination identity, linked/inactive attributes, borrowed sources, returned descriptors and required native-copy effects. Fix the shared runtime/catalogue surface; do not prescribe universal COPY or copy internal MOVE branches into inliner2. | done — COPY-equivalent runtime and surviving-owner reference controls |
+| **VMIP-06** | Complete once-only native-payload retirement in owned local/a0/inactive attribute backing on every physical normal/unwind exit; exclude borrowed storage; preserve other dirty values. Reconcile native retirement inventory and audit first-party finalizers against the no-Rexx-reentry/no-catchable-signal convention. | done — physical normal/unwind/terminal retirement and provider controls |
+| **VMIP-07** | Correct ENDLIFE's canonical synchronous-signal row to its nonallocating, non-callback, non-signalling contract. Reconcile result/retirement/provider contracts in the canonical inventory once with the native fixes. | done — non-signalling complete ENDLIFE and reconciled native inventory |
+| **VMIP-08** | Reproduce suspected native-mode leakage after an unsaved real-child SIGIGNORE; repair at VM owner if confirmed, with an independent real-child regression. | done — parent native-mode recovery and original host disposition preserved |
+| **VMIP-09** | Preserve the numeric provider reattachment repair across void/value returns, returning signal handlers and owner-directed unwind. Rebind even when numeric values match; reuse unaffected completed checks. | done — provider attachment and affected return/unwind controls |
+
+VMIP-05/06 implementation uses COPY assignment for the ordinary register result,
+then expires the retiring frame's owned reference backing and scans that same
+owned local/a0 backing, including inactive attributes, for native finalizers.
+Result copies that may carry reference state mark surviving ancestors for their
+own later retirement; ordinary scalar returns need no ancestor walk. Genuine
+MOVE remains storage relocation. Native-policy restoration after discarding a
+child's private table belongs to the shared frame-retirement path.
+
+The native callback inventory separates resource release from Rexx callbacks:
+conforming finalizers, retained-capacity cleanup, result preclear and ABI-3
+numeric synchronization add no callback edge. Their value/ownership/context
+effects remain. Source COPY hooks, explicit host/provider/selection calls and
+physical-root external argument copyback retain their real callback routes;
+incomplete intrinsic inventories remain unknown.
 
 VMIP-03 covers SIGIGNORE, SIGHALT, SIGSHALT, SIGBR, SIGBRV, SIGCALL, SIGCALLA,
 SIGCALLBR, SIGPUSH, SIGPOP, handler-installing BPON, SIGNALORIGIN and invalid
@@ -159,9 +174,34 @@ Bare BPON/BPOFF pending-bit behavior remains distinct. Ordinary invalid numeric
 settings and other program errors retain their own catchable semantics. A
 terminal VM error is not a host-process abort.
 
-VMIP-02's executable layout is not yet frozen. First record and source-review
-the smallest typed, handwritable region/action encoding, version/feature rules,
-loader validation and relocation contract under the approved design. Diagnostic
+The native catalogue records self-errors with
+`RXOP_SIGNAL_PROP_STATIC_NAMES_TERMINAL` (bit 64): `static_names` identifies
+uncatchable validation/allocation errors. Pure policy setters have normal and
+terminal continuations; SIGNAL keeps its requested literal/register event's
+ordinary catchable continuations separately from those terminal alternatives.
+This extends the existing canonical row rather than adding a second database
+or instruction evaluator.
+Reserved opcode 502 uses the same reserved-effect/unknown-signal sentinel as
+the retired inline opcodes: it grants no executable or analysis authority.
+
+VMIP-02 uses RXBIN 007 feature 12 and three typed records: version-1 REGION
+defines a module-local ID, parent and owning PROC; RANGE associates a half-open
+instruction range with that region; EXIT associates an ordered numeric,
+owned-base ENDLIFE or introduced UNLINK/SWAP/LINK action with a source-PC phase.
+RXAS writes `.inlineregion id,parent`, `.inlinerange begin,end,id` and
+`.inlineexit id,begin,end,order,"action",operands`. Fragmented regions are
+allowed; each child range is contained in a parent range, and unrelated regions
+cannot overlap. Numeric sources are checked literals or saved owned local base
+registers; ENDLIFE addresses owned local bases. Binding operands name typed
+r/g/a slots, with static local/global bounds and checked active argument bounds.
+Action phases begin only after their saved values/binding deltas exist and end
+when ordinary cleanup discharges them; they are not per-instruction state maps.
+The codec validates identities, ownership, ancestry, phases, ordering and
+instruction boundaries before publication. Relocation preserves executable
+records through stripping and updates PROC/code/register references together;
+native optimization conservatively protects affected storage/ranges where its
+facts do not yet describe cold consumers. This is executable metadata, not an
+inliner proof payload or normal-return interpreter. Diagnostic
 inline maps alone grant no executable cleanup authority. Determine source
 ownership from actual interrupted/dispatch PC; retained children need a checked
 saved callsite because their return PC can equal a region endpoint. Destinations
@@ -179,11 +219,14 @@ controls rather than recommissioning a new design for each interface.
 
 | Phase step | Gate |
 |---|---|
-| **VM-STEP01 — freeze coherent native contracts** | Review complete source inventory and independently expected handwritten fixtures against VMIP-01–09 and approved metadata. Set the concrete cold-exit representation and affected QA panel before implementation. |
-| **VM-STEP02 — implement together** | Complete native changes and canonical rows; review early representative RXAS and ownership/control paths; batch material repairs. No tactical inliner exception. Depends on STEP01. |
-| **VM-STEP03 — QA and commit** | Freeze inputs, run the panel below, repair/replay affected failures, update owning guides and commit only reviewed native/supporting paths. Depends on STEP02; phase 2 starts after this gate. |
+| **VM-STEP01 — freeze coherent native contracts** | **done.** Review complete source inventory and independently expected handwritten fixtures against VMIP-01–09 and approved metadata. Set the concrete cold-exit representation and affected QA panel before implementation. |
+| **VM-STEP02 — implement together** | **done.** Complete native changes and canonical rows; review early representative RXAS and ownership/control paths; batch material repairs. No tactical inliner exception. Depends on STEP01. |
+| **VM-STEP03 — QA and commit** | **done.** Freeze inputs, run the panel below, repair/replay affected failures, update owning guides and commit only reviewed native/supporting paths. Depends on STEP02; phase 2 starts after this gate. |
 
-**Phase 1 QA gate (todo).** Reuse prepared normal Debug tools, primarily rxbvm.
+**Phase 1 QA gate (done for the selected local component scope).** Normal Debug
+uses rxbvm with a small rxtvm contrast; focused maintained Apple ASan covers
+changed native ownership. Apple LSan is unavailable. This does not establish
+other platforms, full initiative acceptance or release/SAN closure. The gate is:
 Cover retired source/binary rejection; terminal self-errors despite installed
 handlers and allocation-failure atomicity; named saves/markers and native-mode
 recovery; handwritten nested region exits to different ancestors, retained-child
@@ -230,7 +273,7 @@ unproved; they do not authorize absent effects or broad callback vetoes.
 | **LLF-AC01 — target and flow contracts** | Documented catalogue, CFG, transfer, point/edge and signal policy APIs agree with independent constructed and ordinary RXAS controls, including all phase-1 changes. Invalid/stale/incomplete inputs yield explicit failure/unknown. | open |
 | **LLF-AC02 — identity and summaries** | Links/swaps/remaps preserve storage/component identities and exact module owners. Direct/transitive summaries propagate bottom-up, terminate in recursive groups and preserve uncertainty. Work/byte refusal is atomic. | open |
 | **LLF-AC03 — baseline qualification** | The complete selected one-VM target-foundation panel is green, independently covering positive/negative/state/resource cases. Owning API/consumer guides and exact limits are current, warning-free inputs reviewed, qualified foundation committed. | open |
-| **LLF-AC04 — native payload retirement** | Phase 1 proves once-only normal/nonlocal physical retirement, inactive owned backing, borrowed exclusions and repeated reuse/teardown; phase 2 faithfully projects the resulting entry/resource/ownership contract without declaring current-execution payloads absent. Native implementation stays wholly in phase 1. | open across phase boundary |
+| **LLF-AC04 — native payload retirement** | Phase 1 proves once-only normal/nonlocal physical retirement, inactive owned backing, borrowed exclusions and repeated reuse/teardown; phase 2 faithfully projects the resulting entry/resource/ownership contract without declaring current-execution payloads absent. Native implementation stays wholly in phase 1. | native phase qualified; L projection open |
 
 | Baseline step | State and dependency |
 |---|---|

@@ -105,7 +105,7 @@ static int normal_policy(PolicyViewWork *work, const RxasFlowInstruction *instru
         case RXOP_POLICY_EFFECT_IGNORE: effect = POLICY_IGNORE; break;
         case RXOP_POLICY_EFFECT_BRANCH: case RXOP_POLICY_EFFECT_BRANCH_VALUE:
         case RXOP_POLICY_EFFECT_CALL: case RXOP_POLICY_EFFECT_CALL_ACTION:
-        case RXOP_POLICY_EFFECT_CALL_BRANCH: case RXOP_POLICY_EFFECT_RETURN: effect = POLICY_OTHER; break;
+        case RXOP_POLICY_EFFECT_CALL_BRANCH: effect = POLICY_OTHER; break;
         default: effect = POLICY_TOP; break;
     }
     state[index] = effect;
@@ -162,6 +162,12 @@ static int add_cause(PolicyViewWork *work, const RxasFlowInstruction *instructio
     size_t source = instruction->block_id;
     size_t next = source + 1 < view->metrics.code_blocks ? source + 1 : view->normal_exit;
     size_t id = instruction->id;
+    if (cause == RXAS_FLOW_CAUSE_INTRINSIC &&
+        (instruction->intrinsic_signal.properties & RXOP_SIGNAL_PROP_STATIC_NAMES_TERMINAL) &&
+        instruction->intrinsic_signal.source == RXOP_SIGNAL_SOURCE_STATIC_NAMES)
+        return append_edge(work, source, view->terminal_exit,
+                RXAS_FLOW_EDGE_TERMINAL, cause, checkpoint,
+                RXAS_FLOW_RESPONSE_TERMINAL, id);
     if (continuations & RXOP_SIGNAL_CONT_SKIP) {
         size_t cursor;
         int lexical = cause != RXAS_FLOW_CAUSE_CALLBACK || checkpoint != RXOP_SIGNAL_PHASE_AFTER_WRITES;
@@ -396,7 +402,12 @@ RxasFlowProcedure *rxas_flow_procedure_entry_view(const RxasFlowProcedure *owner
                     memset(out, POLICY_TOP, work.names_count);
                 if (!raised_policy(&work, instruction, edge->cause, out, &response)) goto done;
                 if (edge->response == RXAS_FLOW_RESPONSE_IGNORE) feasible = (response & POLICY_IGNORE) != 0;
-                else if (edge->response == RXAS_FLOW_RESPONSE_TERMINAL) feasible = (response & POLICY_HALT) != 0;
+                else if (edge->response == RXAS_FLOW_RESPONSE_TERMINAL) {
+                    /* Self-errors bypass every installed signal policy. */
+                    feasible = (edge->cause == RXAS_FLOW_CAUSE_INTRINSIC &&
+                            (instruction->intrinsic_signal.properties & RXOP_SIGNAL_PROP_STATIC_NAMES_TERMINAL)) ||
+                            (response & POLICY_HALT) != 0;
+                }
                 else feasible = (response & POLICY_OTHER) != 0;
                 if (edge->response == RXAS_FLOW_RESPONSE_HANDLED) memset(out, POLICY_TOP, work.names_count);
             }

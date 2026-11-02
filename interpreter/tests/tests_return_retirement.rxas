@@ -1,0 +1,117 @@
+/* Handwritten RETURN identity, descriptor and real-frame retirement oracles. */
+.globals=10
+
+seed() .expose=returnretirement.seed
+  .meta "returnretirement.seed"="b" ".void" seed() ""
+
+identity() .locals=0 .expose=returnretirement.identity
+  load g1,9
+  mkref g3,g1
+  call g1,identityvalue()
+  refvalid g4,g2
+  refvalid g5,g3
+  deref g8,g3
+  ret 0
+
+identityvalue() .locals=1
+  load r0,41
+  mkref g2,r0
+  ret r0
+
+localref() .locals=1 .expose=returnretirement.localref
+  call r0,localrefvalue()
+  refvalid g4,r0
+  ret 0
+
+localrefvalue() .locals=2
+  load r0,19
+  mkref r1,r0
+  ret r1
+
+globalref() .locals=1 .expose=returnretirement.globalref
+  call r0,globalrefvalue()
+  refvalid g4,r0
+  ret 0
+
+globalrefvalue() .locals=1
+  mkref r0,g8
+  ret r0
+
+/* The descriptor first enters a frame that never executed MKREF itself. */
+relayref() .locals=1 .expose=returnretirement.relayref
+  call r0,relayvalue()
+  ret 0
+
+relayvalue() .locals=1
+  call r0,globalrefvalue()
+  ret r0
+
+/* Borrowed aggregate descriptors need owner marking even without a callee MKREF. */
+nestedref() .locals=1 .expose=returnretirement.nestedref
+  call r0,nestedrefvalue()
+  ret 0
+
+nestedrefvalue() .locals=0
+  ret g0
+
+hookref() .locals=1 .expose=returnretirement.hookref
+  call r0,nestedrefvalue()
+  ret 0
+
+borrowed() .locals=0 .expose=returnretirement.borrowed
+  call1 g1,borrowedvalue(),g0
+  ret 0
+
+borrowedvalue() .locals=1
+  /* The encoded owned local has a borrowed active binding. */
+  link r0,a1
+  ret r0
+
+normal() .locals=0 .expose=returnretirement.normal
+  call1 g1,target(),g0
+  sayx "retired"
+  null g1
+  call1 g1,target(),g0
+  sayx "retired"
+  null g1
+  ret 0
+
+unwind() .locals=2 .expose=returnretirement.unwind
+  load r0,0
+again:
+  sigbr caught,"OTHER"
+  call1 g1,target(),g0
+  ret 1
+caught:
+  sayx "retired"
+  iadd r0,r0,1
+  ilt r1,r0,2
+  brt again,r1
+  ret 0
+
+terminal() .locals=0 .expose=returnretirement.terminal
+  load g6,3
+  call1 g1,target(),g0
+  load g8,999
+  ret 1
+
+target() .locals=9
+  /* Borrowed suffix storage must not become a native-payload owner. */
+  .inlinedprivate r8,"tests_return_retirement.rxas",g9
+  call r7,seed()
+  ieq r6,g6,3
+  brt stop,r6
+  ieq r6,g6,2
+  brt linked,r6
+  brt outward,g6
+  ret r0
+linked:
+  link r0,a1
+  ret r0
+outward:
+  signal "OTHER","retire owned backing"
+  ret 1
+stop:
+  sigshalt "OTHER"
+  signal "OTHER","terminal owned backing"
+  ret 1

@@ -24,14 +24,14 @@ hidden() .locals=0
   ret 888
 ]=])
 file(WRITE "${WORK}/root.rxas" [=[.globals=1
-main() .locals=7
+main() .locals=4
+  .inlinedprivate r3,"@1",g0
   load g0,100
-  inlenter r0,@1::0(),"count=0;args=list();a0=r4;proxies=();owned=(r4,r5);prep=none",after
-  qglobbind r5,"@1",0
-  load r5,7
-  ret 12
-after:
+  load r3,5
+  call r0,@1::0()
   ieq r2,r0,12
+  brf failed,r2
+  ieq r2,r3,7
   brf failed,r2
   call r1,@1::0()
   ieq r2,r1,12
@@ -69,16 +69,16 @@ if(NOT _stdout STREQUAL "PASS: private sealed relink")
   message(FATAL_ERROR "relink rebound a private target/global: ${_stdout}")
 endif()
 run_checked("relinked structural oracle" "${DISASSEMBLER}" "${WORK}/relinked.rxbin")
-if(NOT _stdout MATCHES "inlenter [^\n]*@2::0\\(\\)" OR
-   NOT _stdout MATCHES "call [^\n]*@2::0\\(\\)" OR
-   NOT _stdout MATCHES "qglobbind[^\n]*@2" OR
-   _stdout MATCHES "@1::0\\(\\)")
+if(NOT _stdout MATCHES "call [^\n]*@2::0\\(\\)" OR
+   NOT _stdout MATCHES "[.]inlinedprivate r3,\"@2\",g0" OR
+   _stdout MATCHES "@1::0\\(\\)" OR
+   _stdout MATCHES "[ \t](inlenter2?|linkargv|qglobbind)[ \t]")
   message(FATAL_ERROR "typed references were not all rebased to exact provider two\n${_stdout}")
 endif()
 
 # Every malformed old identity is rejected before the last-good output opens.
 file(SHA256 "${WORK}/relinked.rxbin" _before)
-foreach(_mutation feature qproc-module qproc-procedure qproc-unsealed qglob-unsealed recipe-mismatch)
+foreach(_mutation feature qproc-module qproc-procedure qproc-unsealed private-unsealed private-global)
   run_checked("mutate ${_mutation}" "${MUTATOR}" "${_mutation}"
     "${WORK}/old.rxbin" "${WORK}/${_mutation}.rxbin")
   execute_process(COMMAND "${LINKER}" -r anchor -r root -o "${WORK}/relinked"
@@ -107,8 +107,8 @@ if(NOT _old_hash STREQUAL _after)
   message(FATAL_ERROR "relink modified the input image")
 endif()
 
-# Two standalone images both use sealed member zero. Their local recipes and
-# self-relative globals must retain separate original graph identities.
+# Two standalone images both use sealed member zero. Their qualified CALLs
+# and self-relative private bindings retain separate original graph identities.
 foreach(_letter a b)
   if(_letter STREQUAL "a")
     set(_value 11)
@@ -116,8 +116,10 @@ foreach(_letter a b)
     set(_value 22)
   endif()
   file(WRITE "${WORK}/${_letter}.rxas"
-    ".globals=1\nentry${_letter}() .locals=4 .expose=relink.${_letter}\n  inlenter r0,hidden(),\"count=0;args=list();a0=r2;proxies=();owned=(r2,r3);prep=none\",after\n  qglobbind r3,\"self\",0\n  load r3,${_value}\n  ret ${_value}\nafter:\n  ieq r1,g0,${_value}\n  brf failed,r1\n  ret r0\nfailed:\n  ret -100\nhidden() .locals=0\n  load g0,${_value}\n  ret ${_value}\n")
+    ".globals=1\nentry${_letter}() .locals=3 .expose=relink.${_letter}\n  .inlinedprivate r2,\"self\",g0\n  call r0,@0::1()\n  ieq r1,r2,${_value}\n  brf failed,r1\n  ret r0\nfailed:\n  ret -100\nhidden() .locals=0\n  load g0,${_value}\n  ret ${_value}\n")
   run_checked("assemble independent image ${_letter}" "${ASSEMBLER}" -n "${WORK}/${_letter}.rxas")
+  run_checked("seal independent image ${_letter}" "${MUTATOR}" join-seal
+    "${WORK}/${_letter}-sealed.rxbin" "${WORK}/${_letter}.rxbin")
 endforeach()
 file(WRITE "${WORK}/collision.rxas" [=[.globals=1
 entrya() .expose=relink.a
@@ -140,7 +142,7 @@ hidden() .locals=0
 ]=])
 run_checked("assemble collision root" "${ASSEMBLER}" -n "${WORK}/collision.rxas")
 run_checked("relink colliding source ordinals" "${LINKER}" -r collision -o "${WORK}/collision-linked"
-  "${WORK}/collision.rxbin" "${WORK}/a.rxbin" "${WORK}/b.rxbin")
+  "${WORK}/collision.rxbin" "${WORK}/a-sealed.rxbin" "${WORK}/b-sealed.rxbin")
 run_checked("independent original graphs" "${VM}" "${WORK}/collision-linked.rxbin")
 if(NOT _stdout STREQUAL "PASS: independent old ordinal zero")
   message(FATAL_ERROR "equal old ordinals collapsed original image identity: ${_stdout}")

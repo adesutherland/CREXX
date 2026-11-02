@@ -41,7 +41,7 @@ inner() .locals=0
 ]=])
   run_checked("assemble ${_case} provider" "${ASSEMBLER}" -n "${_case_dir}/provider.rxas")
   set(_baseline_sources "")
-  foreach(_lane baseline expanded static)
+  foreach(_lane baseline static)
     if(_case STREQUAL "failed" AND _lane STREQUAL "static")
       continue()
     endif()
@@ -90,23 +90,6 @@ inner() .locals=0
         file(APPEND "${_dir}/root.rxas"
           "  .srcstep 4 4 17 \"helper-inner.rexx\" 32 1 10 \"call inner\"\n  .inlineframe 2 1 \"${_case_dir}/provider.rxas\" \"inner\" 4\nstatic_inner_begin:\n  .srcstep 5 5 17 \"inner-child.rexx\" 42 1 10 \"call child\"\n  call @1::2()\n  br after_inner\nafter_inner:\n  br after_helper\nafter_helper:\n  .inlinemap static_inner_begin,after_inner,2\n  .inlinemap after_inner,after_helper,1\n")
       endif()
-    else()
-      set(_recipe "count=0;args=list();a0=r4;proxies=();owned=(r4,r5);prep=none")
-      if(_case STREQUAL "failed")
-        set(_recipe "count=r1;args=window(r2);a0=r4;proxies=();owned=(r4,r5);prep=none")
-      endif()
-      file(APPEND "${_dir}/root.rxas"
-        "  inlenter r0,@1::1(),\"${_recipe}\",after_helper\n")
-      if(_case STREQUAL "direct")
-        file(APPEND "${_dir}/root.rxas"
-          "  .srcstep 4 4 17 \"helper-cause.rexx\" 31 1 12 \"raise helper\"\n  signal \"OTHER\",\"inline diagnostic fault\"\n  ret\n")
-      elseif(_case STREQUAL "failed")
-        file(APPEND "${_dir}/root.rxas" "  sayx \"FAIL: rejected clone executed\"\n  ret 97\n")
-      else()
-        file(APPEND "${_dir}/root.rxas"
-          "  .srcstep 4 4 17 \"helper-inner.rexx\" 32 1 10 \"call inner\"\n  inlenter r0,@1::3(),\"count=0;args=list();a0=r8;proxies=();owned=(r8,r9);prep=none\",after_inner\n  .srcstep 5 5 17 \"inner-child.rexx\" 42 1 10 \"call child\"\n  call @1::2()\n  ret\nafter_inner:\n  ret\n")
-      endif()
-      file(APPEND "${_dir}/root.rxas" "after_helper:\n")
     endif()
     if(_case STREQUAL "failed")
       file(APPEND "${_dir}/root.rxas"
@@ -154,6 +137,10 @@ inner() .locals=0
       endif()
       math(EXPR _index "${_index} + 1")
     endforeach()
+    if(_case STREQUAL "failed" AND
+       _diagnostic MATCHES "logical origin: helper|logical caller: helper")
+      message(FATAL_ERROR "failed ordinary entry invented a logical frame\n${_diagnostic}")
+    endif()
     if(_lane STREQUAL "baseline")
       set(_baseline_sources "${_sources}")
     else()
@@ -170,8 +157,6 @@ inner() .locals=0
            NOT _diagnostic MATCHES "logical caller: helper [(]module [^\n]*provider[.]rxas[)]")
           message(FATAL_ERROR "${_case} lost detached logical provider labels\n${_diagnostic}")
         endif()
-      elseif(_diagnostic MATCHES "logical origin: helper|logical caller: helper")
-        message(FATAL_ERROR "failed entry invented a logical frame\n${_diagnostic}")
       endif()
     endif()
   endforeach()

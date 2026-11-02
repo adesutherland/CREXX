@@ -45,6 +45,77 @@ if native_payload_finalizers() < 2 then do
     return 1
 end
 
+call native_payload_reset
+if retire_private_payload() \= 7 then do
+    say 'retired private payload call returned an unexpected value'
+    return 1
+end
+if native_payload_finalizers() \= 1 then do
+    say 'retired private payload was not finalized at return'
+    return 1
+end
+if retire_private_payload() \= 7 | native_payload_finalizers() \= 2 then do
+    say 'reused private frame did not finalize its payload once'
+    return 1
+end
+
+returned = return_private_payload()
+if native_payload_id(returned) \= 103 then do
+    say 'returned local payload did not reach the caller'
+    return 1
+end
+finalizers_before = native_payload_finalizers()
+call native_payload_clear returned
+if native_payload_finalizers() <= finalizers_before then do
+    say 'returned local payload was not finalized by its new owner'
+    return 1
+end
+
+borrowed = native_payload_make(105)
+returned_borrowed = return_borrowed_payload(borrowed)
+if native_payload_id(borrowed) \= 105 | native_payload_id(returned_borrowed) \= 105 then do
+    say 'borrowed return did not preserve both owners'
+    return 1
+end
+call native_payload_clear returned_borrowed
+if native_payload_id(borrowed) \= 105 then do
+    say 'clearing borrowed return damaged original owner'
+    return 1
+end
+call native_payload_clear borrowed
+
+call native_payload_reset
+caught = 0
+do
+    call unwind_private_payload
+    say 'private payload signal unexpectedly resumed'
+    return 1
+on signal error
+    caught = 1
+end
+if caught \= 1 | native_payload_finalizers() \= 1 then do
+    say 'signal unwind did not finalize private payload once'
+    return 1
+end
+
 say "OK"
 
 return 0
+
+retire_private_payload: procedure = .int
+    private_payload = native_payload_make(101)
+    if native_payload_id(private_payload) \= 101 then return 0
+    return 7
+
+return_private_payload: procedure = .binary
+    private_payload = native_payload_make(103)
+    return private_payload
+
+return_borrowed_payload: procedure = .binary
+    arg borrowed_payload = .binary
+    return borrowed_payload
+
+unwind_private_payload: procedure = .void
+    private_payload = native_payload_make(107)
+    call throw_signal
+    return

@@ -1575,6 +1575,16 @@ such as a registry handle or refcounted pointer. Use
 `RXVM_NATIVE_PAYLOAD_FLAG_BITCOPY_SAFE` to document that intent on such
 payloads.
 
+The finalizer is a last-resort native cleanup hook, not a Rexx callback. It
+may run at an unspecified point, including retirement of an enclosing frame,
+with no defined Rexx execution context. It must not reenter Rexx, rely on the
+current signal/numeric context, or raise a catchable or resumable Rexx signal.
+If cleanup cannot complete, the finalizer may log to a host diagnostic channel
+and continue, or use an unconditional terminal host path. Neither path selects
+a Rexx handler; timing and diagnostic frame are unspecified. Use explicit
+close/dispose methods for ordered release and recoverable errors. A provider
+must tolerate native resource release being delayed until ownership ends.
+
 ## Classic Unicode and streams (2026-10-09)
 
 Compiled Level C rxfnsc now provides all 70 catalogued Classic names and 23

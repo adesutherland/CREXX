@@ -876,19 +876,11 @@ static int enable_interrupt_unlocked(int vm_signal) {
     /* --- POSIX: Use sigaction --- */
     struct sigaction sa_old;
 
-    if (g_handler_active[vm_signal] == -1) {
-        /* Already set to ignore by us, so don't save original */
-
-        /* Query and store the original action *before* setting the new one */
-        if (sigaction(os_signal, NULL, &sa_old) == 0) {
-            memcpy(&g_original_os_actions[os_signal], &sa_old, sizeof(struct sigaction));
-        } else {
-            /* perror("Warning: sigaction query failed"); */
-            /* Initialize original to SIG_DFL equivalent */
-            memset(&g_original_os_actions[os_signal], 0, sizeof(struct sigaction));
-            g_original_os_actions[os_signal].sa_handler = SIG_DFL;
-            sigemptyset(&g_original_os_actions[os_signal].sa_mask);
-        }
+    if (g_handler_active[vm_signal] == 0) {
+        /* Capture the host action once. VM enable/ignore transitions must
+         * never replace it with one of our intermediate dispositions. */
+        if (sigaction(os_signal, NULL, &sa_old) == -1) return -1;
+        memcpy(&g_original_os_actions[os_signal], &sa_old, sizeof(sa_old));
     }
 
     /* Set up our new action */
@@ -945,19 +937,11 @@ static int ignore_interrupt_unlocked(int vm_signal) {
     /* --- POSIX: Use sigaction --- */
     struct sigaction sa_old;
 
-    if (g_handler_active[vm_signal] == 1) {
-        /* Already set to active by us, so don't save original */
-
-        /* Query and store the original action *before* setting the new one */
-        if (sigaction(os_signal, NULL, &sa_old) == 0) {
-            memcpy(&g_original_os_actions[os_signal], &sa_old, sizeof(struct sigaction));
-        } else {
-            /* perror("Warning: sigaction query failed"); */
-            /* Initialize original to SIG_DFL equivalent */
-            memset(&g_original_os_actions[os_signal], 0, sizeof(struct sigaction));
-            g_original_os_actions[os_signal].sa_handler = SIG_DFL;
-            sigemptyset(&g_original_os_actions[os_signal].sa_mask);
-        }
+    if (g_handler_active[vm_signal] == 0) {
+        /* Capture the host action once. VM enable/ignore transitions must
+         * never replace it with one of our intermediate dispositions. */
+        if (sigaction(os_signal, NULL, &sa_old) == -1) return -1;
+        memcpy(&g_original_os_actions[os_signal], &sa_old, sizeof(sa_old));
     }
 
     /* Set up our new action to ignore */

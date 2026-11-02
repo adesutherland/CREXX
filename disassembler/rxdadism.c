@@ -319,6 +319,37 @@ static void output_inline_diagnostic_line(FILE *stream, bin_space *pgm, const me
     }
 }
 
+static char inline_exit_bank(uint32_t bank) {
+    return bank == RXBIN_INLINE_BANK_R ? 'r' : bank == RXBIN_INLINE_BANK_G ? 'g' : 'a';
+}
+static void output_inline_exit_line(FILE *stream, const meta_entry *entry) {
+    if (entry->base.type == META_INLINE_REGION) {
+        const meta_inline_region_constant *region = (const meta_inline_region_constant *)entry;
+        fprintf(stream,"                .inlineregion %u,%u\n",region->region_id,region->parent_id);
+    } else if (entry->base.type == META_INLINE_RANGE) {
+        const meta_inline_range_constant *range = (const meta_inline_range_constant *)entry;
+        fprintf(stream,"                .inlinerange lb_%lx,lb_%lx,%u\n",(unsigned long)range->start,(unsigned long)range->end,range->region_id);
+    } else {
+        const meta_inline_exit_constant *action = (const meta_inline_exit_constant *)entry;
+        const char *name = action->kind == RXBIN_INLINE_ACTION_ENDLIFE ? "endlife" :
+                           action->kind == RXBIN_INLINE_ACTION_UNLINK ? "unlink" :
+                           action->kind == RXBIN_INLINE_ACTION_SWAP ? "swap" :
+                           action->kind == RXBIN_INLINE_ACTION_LINK ? "link" :
+                           action->field == RXOP_CONTEXT_DIGITS ? "digits" :
+                           action->field == RXOP_CONTEXT_FUZZ ? "fuzz" :
+                           action->field == RXOP_CONTEXT_FORM ? "form" :
+                           action->field == RXOP_CONTEXT_CASE ? "case" : "standard";
+        fprintf(stream,"                .inlineexit %u,lb_%lx,lb_%lx,%u,\"%s\",",action->region_id,
+                (unsigned long)action->start,(unsigned long)action->end,action->order,name);
+        if (action->kind == RXBIN_INLINE_ACTION_NUMERIC && action->source == RXBIN_INLINE_SOURCE_LITERAL)
+            fprintf(stream,"%lld",(long long)action->literal);
+        else fprintf(stream,"%c%u",inline_exit_bank(action->bank1),action->index1);
+        if (action->kind == RXBIN_INLINE_ACTION_SWAP || action->kind == RXBIN_INLINE_ACTION_LINK)
+            fprintf(stream,",%c%u",inline_exit_bank(action->bank2),action->index2);
+        fputc('\n',stream);
+    }
+}
+
 static void trace_code_string(uint8_t code, char *buffer, size_t buffer_len) {
     if (!buffer || buffer_len == 0) return;
     if (!code) {
@@ -602,39 +633,6 @@ static size_t disassemble_operand(bin_space *pgm,
                                     qualified.provider_procedure);
         }
     }
-    if ((opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u) ||
-        (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u)) {
-        string_constant *constant;
-        char *recipe_text = NULL;
-        const char *source_text;
-        size_t source_length;
-        size_t pool_offset = pgm->binary[index].index;
-        if (pool_offset >= pgm->const_size)
-            return (size_t)snprintf(buffer, buffer_len, "*INVALID_INLINE_CONSTANT*");
-        constant = (string_constant *)(pgm->const_pool + pool_offset);
-        if (constant->base.type != BINARY_CONST)
-            return (size_t)snprintf(buffer, buffer_len, "*INVALID_INLINE_CONSTANT*");
-        if (opcode == OP_INLENTER_REG_FUNC_STRING_ID) {
-            rxinl_recipe_view view;
-            if (!rxinl_recipe_decode(constant->string, constant->string_len, &view))
-                return (size_t)snprintf(buffer, buffer_len, "*INVALID_INLINE_RECIPE*");
-            recipe_text = rxinl_recipe_to_text(&view);
-            if (!recipe_text)
-                return (size_t)snprintf(buffer, buffer_len, "*INVALID_INLINE_RECIPE*");
-            source_text = recipe_text;
-            source_length = strlen(recipe_text);
-        } else {
-            rxinl_module_ref_view view;
-            if (!rxinl_module_ref_decode(constant->string, constant->string_len, &view))
-                return (size_t)snprintf(buffer, buffer_len, "*INVALID_MODULE_REFERENCE*");
-            source_text = view.selector;
-            source_length = view.selector_length;
-        }
-        out_len = rxda_quote_text(buffer, buffer_len, source_text, source_length);
-        free(recipe_text);
-        return out_len;
-    }
-
     if (module && module->graph_operands &&
         rx_graph_operand_kind(opcode, operand_index) != RX_GRAPH_OPERAND_NONE) {
         char *text;
@@ -1483,6 +1481,11 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
             case META_INLINE_MAP:
                 output_inline_diagnostic_line(stream,pgm,(const meta_entry *)(module->constant + m));
                 break;
+            case META_INLINE_REGION:
+            case META_INLINE_RANGE:
+            case META_INLINE_EXIT:
+                output_inline_exit_line(stream,(const meta_entry *)(module->constant + m));
+                break;
 
             case META_SOURCE_STEP: {
                 meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
@@ -1615,6 +1618,11 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
             case META_INLINE_FRAME:
             case META_INLINE_MAP:
                 output_inline_diagnostic_line(stream,pgm,(const meta_entry *)(module->constant + m));
+                break;
+            case META_INLINE_REGION:
+            case META_INLINE_RANGE:
+            case META_INLINE_EXIT:
+                output_inline_exit_line(stream,(const meta_entry *)(module->constant + m));
                 break;
 
             case META_SOURCE_STEP: {
@@ -1831,6 +1839,14 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     source[map->start].flags = show_label; source[map->end].flags = show_label;
                 }
             }
+            if (meta->base.type == META_INLINE_RANGE || meta->base.type == META_INLINE_EXIT) {
+                size_t start = meta->base.type == META_INLINE_RANGE ? ((const meta_inline_range_constant *)meta)->start : ((const meta_inline_exit_constant *)meta)->start;
+                size_t end = meta->base.type == META_INLINE_RANGE ? ((const meta_inline_range_constant *)meta)->end : ((const meta_inline_exit_constant *)meta)->end;
+                if (start <= pgm->inst_size && end <= pgm->inst_size) {
+                    inline_labels[start] = inline_labels[end] = 1u;
+                    source[start].flags = source[end].flags = show_label;
+                }
+            }
             metadata = meta->next;
         }
     }
@@ -1987,6 +2003,15 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     break;
                 case META_ENTRY_STATE:
                     fprintf(stream,"* 0x%.6lx META-ENTRY-STATE\n",(unsigned long)i);
+                    break;
+                case META_INLINE_REGION:
+                    fprintf(stream,"* 0x%.6lx META-INLINE-REGION\n",(unsigned long)i);
+                    break;
+                case META_INLINE_RANGE:
+                    fprintf(stream,"* 0x%.6lx META-INLINE-RANGE\n",(unsigned long)i);
+                    break;
+                case META_INLINE_EXIT:
+                    fprintf(stream,"* 0x%.6lx META-INLINE-EXIT\n",(unsigned long)i);
                     break;
 
                 case META_FUNC:

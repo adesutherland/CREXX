@@ -17,19 +17,15 @@ endfunction()
 
 # A root initializer enters its provider before that provider's initializer.
 # The provider changes the caller-owned exposed count and actual. Counted CALL
-# observes the new count; fixed CALL and INLENTER retain their prior capture.
-foreach(_mode counted fixed inline)
+# observes the new count; fixed CALL retains its prior capture.
+foreach(_mode counted fixed)
   set(_dir "${WORK}/${_mode}")
   file(MAKE_DIRECTORY "${_dir}")
   if(_mode STREQUAL "counted")
     set(_entry "  call r0,@1::0(),g0\n")
     set(_expected 0)
-  elseif(_mode STREQUAL "fixed")
-    set(_entry "  call1 r0,@1::0(),g1\n")
-    set(_expected 1)
   else()
-    # Recipe spelling uses packed physical registers: six locals then g0/g1.
-    set(_entry "  inlenter r0,@1::0(),\"count=r6;args=window(r7);a0=r4;proxies=(r5:1);owned=(r4,r5);prep=none\",after\n  ret r4\nafter:\n")
+    set(_entry "  call1 r0,@1::0(),g1\n")
     set(_expected 1)
   endif()
   file(WRITE "${_dir}/root.rxas"
@@ -59,16 +55,24 @@ boot() .locals=0
 endforeach()
 
 # A failing provider initializer is entered once and poisons its overlay.
-# IGNORE applies to the caller's resulting FAILURE, so both rejected entries
-# must resume after the clone while keeping preparation and caller backing.
-set(_dir "${WORK}/failure")
-file(MAKE_DIRECTORY "${_dir}")
-file(WRITE "${_dir}/root.rxas" [=[.globals=1
+# IGNORE applies to the caller's resulting FAILURE. Both ordinary call forms
+# resume after each rejected call, retaining explicit caller preparation and
+# leaving the result and unrelated backing unchanged without a provider retry.
+foreach(_mode counted fixed)
+  set(_dir "${WORK}/failure-${_mode}")
+  file(MAKE_DIRECTORY "${_dir}")
+  if(_mode STREQUAL "counted")
+    set(_failure_call "  call r0,@1::0(),r1")
+  else()
+    set(_failure_call "  call1 r0,@1::0(),r2")
+  endif()
+  set(_root [=[.globals=1
 g0 .expose=inlineinit.attempts
 boot() .locals=8
   .meta "inlineinit.root.boot"="b" ".void" boot() ""
   .meta "inlineinit.root.boot"=".initializer" ".void" boot() ""
   load r0,77
+  load r1,0
   load r2,100
   load r3,200
   load r4,44
@@ -76,10 +80,9 @@ boot() .locals=8
   settp r2,0
   settp r3,0
   sigignore "FAILURE"
-  inlenter r0,@1::0(),"count=0;args=list();a0=r4;proxies=();owned=(r4,r5);prep=settp(r2,256)+swap(r2,r3)",first
-  sayx "FAIL: first unentered initializer clone"
-  ret 91
-first:
+  settp r2,256
+  swap r2,r3
+@FAILURE_CALL@
   ieq r6,r0,77
   brf failed,r6
   ieq r6,r2,200
@@ -93,10 +96,7 @@ first:
   brf failed,r6
   ieq r6,r5,55
   brf failed,r6
-  inlenter r0,@1::0(),"count=0;args=list();a0=r4;proxies=();owned=(r4,r5);prep=none",second
-  sayx "FAIL: second unentered initializer clone"
-  ret 92
-second:
+@FAILURE_CALL@
   ieq r6,r0,77
   brf failed,r6
   ieq r6,r4,44
@@ -105,11 +105,7 @@ second:
   brf failed,r6
   ieq r6,g0,1
   brf failed,r6
-  sigbr inactive,"OUT_OF_RANGE"
-  linkargv r6,1
-  br failed
-inactive:
-  sayx "PASS: ignored initializer failure resumes without scope or retry"
+  sayx "PASS: ignored initializer failure resumes without retry"
   ret
 failed:
   signal "OTHER","initializer departure oracle"
@@ -118,7 +114,9 @@ main() .locals=0
   sayx "FAIL: poisoned initializer reached main"
   ret 93
 ]=])
-file(WRITE "${_dir}/provider.rxas" [=[.globals=1
+  string(REPLACE "@FAILURE_CALL@" "${_failure_call}" _root "${_root}")
+  file(WRITE "${_dir}/root.rxas" "${_root}")
+  file(WRITE "${_dir}/provider.rxas" [=[.globals=1
 g0 .expose=inlineinit.attempts
 hidden() .locals=0
   ret 12
@@ -129,16 +127,17 @@ boot() .locals=0
   signal "OTHER","provider initializer fails"
   ret
 ]=])
-run_checked("assemble failing ingress root" "${ASSEMBLER}" -n "${_dir}/root.rxas")
-run_checked("assemble failing ingress provider" "${ASSEMBLER}" -n "${_dir}/provider.rxas")
-run_checked("seal failing ingress image" "${MUTATOR}" join-seal "${_dir}/image.rxbin"
-  "${_dir}/root.rxbin" "${_dir}/provider.rxbin")
-execute_process(COMMAND "${VM}" "${_dir}/image.rxbin"
-  RESULT_VARIABLE _rejected OUTPUT_VARIABLE _stdout ERROR_VARIABLE _stderr TIMEOUT 30)
-if(NOT "${_rejected}" MATCHES "^-?[0-9]+$" OR _rejected EQUAL 0 OR
-   NOT _stdout STREQUAL "PASS: ignored initializer failure resumes without scope or retry" OR
-   NOT _stderr MATCHES "initialization previously failed")
-  message(FATAL_ERROR "initializer failure did not preserve resume/poison/preparation: ${_rejected}\n${_stdout}${_stderr}")
-endif()
+  run_checked("assemble failing ${_mode} ingress root" "${ASSEMBLER}" -n "${_dir}/root.rxas")
+  run_checked("assemble failing ${_mode} ingress provider" "${ASSEMBLER}" -n "${_dir}/provider.rxas")
+  run_checked("seal failing ${_mode} ingress image" "${MUTATOR}" join-seal "${_dir}/image.rxbin"
+    "${_dir}/root.rxbin" "${_dir}/provider.rxbin")
+  execute_process(COMMAND "${VM}" "${_dir}/image.rxbin"
+    RESULT_VARIABLE _rejected OUTPUT_VARIABLE _stdout ERROR_VARIABLE _stderr TIMEOUT 30)
+  if(NOT "${_rejected}" MATCHES "^-?[0-9]+$" OR _rejected EQUAL 0 OR
+     NOT _stdout STREQUAL "PASS: ignored initializer failure resumes without retry" OR
+     NOT _stderr MATCHES "initialization previously failed")
+    message(FATAL_ERROR "${_mode} initializer failure did not preserve resume/poison/preparation: ${_rejected}\n${_stdout}${_stderr}")
+  endif()
+endforeach()
 file(REMOVE_RECURSE "${WORK}")
 message("INLINE_INITIALIZER_CONTRACT|failures=0")

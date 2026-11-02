@@ -425,6 +425,23 @@ RX_INLINE void clear_binary_payload(value *v) {
     v->native_payload_flags = 0;
 }
 
+/* Retired frame backing stays dirty and reusable, but cannot keep ownership of
+ * a native payload with a finalizer. Visit owned attribute storage rather than
+ * active attribute links, which may refer to another frame or a global. */
+RX_MOSTLYINLINE void finalize_retired_native_payloads(value *v) {
+    size_t i;
+    const rxvm_native_payload_ops *ops;
+
+    if (!v) return;
+    if (v->unlinked_attributes) {
+        for (i = 0; i < v->max_num_attributes; i++) {
+            finalize_retired_native_payloads(v->unlinked_attributes[i]);
+        }
+    }
+    ops = rxvm_value_native_ops(v);
+    if (ops && ops->finalize) clear_binary_payload(v);
+}
+
 /* Zeros a register value */
 RX_INLINE void value_zero(value *v) {
     size_t i;

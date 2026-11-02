@@ -30,6 +30,13 @@ target_include_directories(rxbin
 set_target_properties(rxbin PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(BUILD_TESTING)
+    add_executable(test_inline_exits tests/test_inline_exits.c)
+    target_link_libraries(test_inline_exits PRIVATE rxbin)
+    add_test(NAME inline_exit_records COMMAND test_inline_exits)
+    set_tests_properties(inline_exit_records PROPERTIES
+        LABELS "unit;binutils;metadata;inline;regression" TIMEOUT 30
+        CREXX_PREP_TARGETS test_inline_exits)
+
     add_executable(test_entry_state tests/test_entry_state.c)
     target_link_libraries(test_entry_state PRIVATE rxbin)
     add_test(NAME program_entry_records COMMAND test_entry_state)

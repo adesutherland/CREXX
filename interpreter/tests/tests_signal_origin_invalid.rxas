@@ -1,0 +1,11 @@
+/* Invalid signal operands cannot be recovered through an installed policy. */
+.globals=0
+main() .locals=2
+    sigbr caught,"INVALID_ARGUMENTS"
+    load r1,"not an event"
+    signalorigin "OTHER",r0,r1
+    say "FAIL: invalid origin resumed"
+    ret 1
+caught:
+    say "FAIL: invalid origin was caught"
+    ret 0

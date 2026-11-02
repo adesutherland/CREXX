@@ -3453,6 +3453,9 @@ static size_t rx_graph_crexx_meta_size(enum const_pool_type type) {
         case META_INLINE_MAP: return sizeof(meta_inline_map_constant);
         case META_INLINED_PRIVATE: return sizeof(meta_inlined_private_constant);
         case META_ENTRY_STATE: return sizeof(meta_entry_state_constant);
+        case META_INLINE_REGION: return sizeof(meta_inline_region_constant);
+        case META_INLINE_RANGE: return sizeof(meta_inline_range_constant);
+        case META_INLINE_EXIT: return sizeof(meta_inline_exit_constant);
         default: return 0u;
     }
 }

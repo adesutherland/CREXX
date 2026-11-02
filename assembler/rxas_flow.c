@@ -301,6 +301,10 @@ static void flow_collect_registers(flow_graph *graph) {
         else if (item->instrType == REG_META) {
             flow_add_register(graph, item->operand3Token);
         }
+        else if (item->instrType == INLINE_EXIT_META) {
+            flow_add_register(graph,item->operand5Token);
+            flow_add_register(graph,item->operand6Token);
+        }
         else if (item->instrType == TRACE_EVENT &&
                  flow_token_is_string(item->operand2Token, "R") &&
                  item->operand4Token && item->operand4Token->token_type == STRING &&
@@ -387,7 +391,7 @@ static size_t flow_remove_unreachable(flow_graph *graph, flow_stats *stats) {
     for (index = 0; index < graph->item_count; index++) {
         if (!rxas_flow_procedure_record_reachable(
                     graph->procedure, graph->epoch, index)) {
-            if (graph->items[index].instrType == OP_CODE) {
+            if (graph->items[index].instrType == OP_CODE && !graph->items[index].borrowed_private_boundary) {
                 graph->items[index].instrType = EMPTY;
                 removed++;
                 stats->unreachable_removed++;
@@ -2939,6 +2943,13 @@ static int flow_build_local_register_summary(
                 flow_local_summary_mark(
                         summary,
                         (size_t)item->operand5Token->token_value.integer);
+            continue;
+        }
+        if (item->instrType == INLINE_EXIT_META) {
+            if (item->operand5Token && item->operand5Token->token_type == RREG && item->operand5Token->token_value.integer >= 0)
+                flow_local_summary_mark(summary,(size_t)item->operand5Token->token_value.integer);
+            if (item->operand6Token && item->operand6Token->token_type == RREG && item->operand6Token->token_value.integer >= 0)
+                flow_local_summary_mark(summary,(size_t)item->operand6Token->token_value.integer);
             continue;
         }
         if (item->instrType != OP_CODE) continue;

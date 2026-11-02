@@ -2562,13 +2562,12 @@ typedef struct rxvm_diagnostic_site {
 
 typedef int (*diagnostic_visitor)(const rxvm_diagnostic_site *, void *);
 
-/* The private scope definition is below. Keep one walker/count/build path,
- * without moving runtime scope layout into a public header. */
-static const proc_runtime *diagnostic_frame_procedure(const stack_frame *frame);
-static const rxvm_inline_diagnostic_frame *diagnostic_effective_inline(
+/* Keep one walker/count/build path for static inline metadata and ordinary
+ * physical frames. */
+static const rxvm_inline_diagnostic_frame *diagnostic_inline_at(
         const stack_frame *frame, size_t address);
-static int diagnostic_visit_scopes(const stack_frame *frame, size_t address,
-                                    diagnostic_visitor visit, void *state);
+static int diagnostic_visit_static_inline(const stack_frame *frame, size_t address,
+                                          diagnostic_visitor visit, void *state);
 static int diagnostic_visit_origin(const stack_frame *frame, size_t address,
                                     diagnostic_visitor visit, void *state);
 
@@ -2578,7 +2577,7 @@ static int diagnostic_visit_chain(const stack_frame *frame, size_t live_address,
         module *mod;
         size_t address;
         rxvm_diagnostic_site site;
-        if (!diagnostic_visit_scopes(frame, live_address, visit, state)) return 0;
+        if (!diagnostic_visit_static_inline(frame, live_address, visit, state)) return 0;
         if (!runtime_caller_address(frame, &mod, &address)) {
             live_address = SIZE_MAX;
             continue;
@@ -2586,8 +2585,8 @@ static int diagnostic_visit_chain(const stack_frame *frame, size_t live_address,
         memset(&site, 0, sizeof(site));
         site.physical_module = mod;
         site.physical_procedure = frame->parent->procedure;
-        site.logical_procedure = diagnostic_frame_procedure(frame->parent);
-        site.logical_inline = diagnostic_effective_inline(frame->parent, address);
+        site.logical_procedure = frame->parent->procedure;
+        site.logical_inline = diagnostic_inline_at(frame->parent, address);
         site.address = address;
         if (!visit(&site, state)) return 0;
         live_address = address;
@@ -2623,8 +2622,8 @@ static int diagnostic_walk(rxvm_context *context, const stack_frame *frame, size
                 memset(&site, 0, sizeof(site));
                 site.physical_module = mod;
                 site.physical_procedure = scope->frame->procedure;
-                site.logical_procedure = diagnostic_frame_procedure(scope->frame);
-                site.logical_inline = diagnostic_effective_inline(scope->frame, (size_t)scope->address);
+                site.logical_procedure = scope->frame->procedure;
+                site.logical_inline = diagnostic_inline_at(scope->frame, (size_t)scope->address);
                 site.address = (size_t)scope->address;
                 if (!visit(&site, state)) return 0;
             }
@@ -4459,6 +4458,22 @@ typedef enum rxsignal_handler_action {
     RXSIGNAL_HANDLER_ACTION_FAIL
 } rxsignal_handler_action;
 
+/* Signal operands are byte strings: an embedded NUL never truncates a tag. */
+static unsigned char rxsignal_operand_code(const char *name, size_t length) {
+    unsigned char sig;
+    if (!name) return RXSIGNAL_MAX;
+    for (sig = 1; sig < RXSIGNAL_MAX; ++sig) {
+        const char *known = interrupt_to_string(sig);
+        if (strlen(known) == length && !memcmp(known, name, length)) return sig;
+    }
+    return RXSIGNAL_MAX;
+}
+
+static int rxsignal_valid_handler(const proc_runtime *procedure) {
+    return procedure && procedure->start != SIZE_MAX &&
+           procedure->entry_state_kind != RXBIN_ENTRY_PROGRAM_DEFAULT;
+}
+
 static rxsignal_handler_action rxsignal_read_handler_action(value *action) {
     if (!action || action->string_length <= 0) return RXSIGNAL_HANDLER_ACTION_NONE;
 
@@ -4480,16 +4495,74 @@ static value *rxsignal_handler_payload(stack_frame *handler_frame) {
     return arg->attributes[4];
 }
 
-static void rxsignal_apply_native_interrupt_mode(unsigned char sig, interrupt_entry *entry) {
-    if (!entry || sig == 0 || sig >= RXSIGNAL_MAX) return;
+static int rxsignal_apply_native_interrupt_mode(unsigned char sig, interrupt_entry *entry) {
+    if (!entry || sig == 0 || sig >= RXSIGNAL_MAX) return -1;
     if (entry->response == RXSIGNAL_RESPONSE_IGNORE) {
-        if (sig != RXSIGNAL_KILL) ignore_interrupt((int)sig);
+        return sig != RXSIGNAL_KILL ? ignore_interrupt((int)sig) : 0;
     } else {
-        enable_interrupt((int)sig);
+        return enable_interrupt((int)sig);
     }
 }
 
-static void rxvm_inline_mark_policy_changed(stack_frame *frame);
+/* Native dispositions follow the surviving real frame after a child discards
+ * its private policy. This is a cold retirement operation, never a dispatch
+ * check. Unsaved child setters have no stack node to restore their mode. */
+static void rxsignal_restore_native_interrupt_modes(stack_frame *frame) {
+    unsigned char sig;
+    if (!frame || !frame->interrupt_table) return;
+    for (sig = 1; sig < RXSIGNAL_MAX; ++sig)
+        rxsignal_apply_native_interrupt_mode(sig, &frame->interrupt_table[sig - 1]);
+}
+
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXVM_SIGNAL_TEST_LOCAL
+#elif defined(_MSC_VER)
+#define RXVM_SIGNAL_TEST_LOCAL __declspec(thread)
+#else
+#define RXVM_SIGNAL_TEST_LOCAL __thread
+#endif
+static RXVM_SIGNAL_TEST_LOCAL size_t signal_allocation_failure_after = SIZE_MAX;
+static RXVM_SIGNAL_TEST_LOCAL void (*signal_failure_observer)(const stack_frame *, void *);
+static RXVM_SIGNAL_TEST_LOCAL void *signal_failure_userdata;
+#undef RXVM_SIGNAL_TEST_LOCAL
+void rxvm_signal_instruction_test_fail_after(size_t allocations) {
+    signal_allocation_failure_after = allocations;
+}
+void rxvm_signal_instruction_test_reset(void) {
+    signal_allocation_failure_after = SIZE_MAX;
+    signal_failure_observer = NULL;
+    signal_failure_userdata = NULL;
+}
+void rxvm_signal_instruction_test_observe(
+        void (*observer)(const stack_frame *, void *), void *userdata) {
+    signal_failure_observer = observer;
+    signal_failure_userdata = userdata;
+}
+#endif
+
+static void rxsignal_observe_instruction_failure(const stack_frame *frame) {
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+    if (signal_failure_observer) signal_failure_observer(frame, signal_failure_userdata);
+#else
+    (void)frame;
+#endif
+}
+
+static void *rxsignal_allocate_policy(stack_frame *frame, size_t size) {
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+    if (signal_allocation_failure_after != SIZE_MAX) {
+        if (!signal_allocation_failure_after) {
+            rxsignal_observe_instruction_failure(frame);
+            return NULL;
+        }
+        --signal_allocation_failure_after;
+    }
+#else
+    (void)frame;
+#endif
+    return rxvm_memory_alloc_bytes(0, size);
+}
 
 static RXVM_LABEL_OWNER_NOINLINE int rxsignal_ensure_private_interrupt_table(stack_frame *frame) {
     interrupt_entry *private_table;
@@ -4497,14 +4570,12 @@ static RXVM_LABEL_OWNER_NOINLINE int rxsignal_ensure_private_interrupt_table(sta
     if (!frame || !frame->interrupt_table) return 0;
     if (frame->interrupt_table_owned) return 1;
 
-    private_table = rxvm_memory_alloc_bytes(
-            0, sizeof(interrupt_entry) * RXSIGNAL_MAX);
+    private_table = rxsignal_allocate_policy(frame, sizeof(interrupt_entry) * RXSIGNAL_MAX);
     if (!private_table) return 0;
     memcpy(private_table, frame->interrupt_table,
            sizeof(interrupt_entry) * RXSIGNAL_MAX);
     frame->interrupt_table = private_table;
     frame->interrupt_table_owned = 1;
-    rxvm_inline_mark_policy_changed(frame);
     return 1;
 }
 
@@ -4516,23 +4587,25 @@ static void rxsignal_release_private_interrupt_table(stack_frame *frame) {
     frame->interrupt_table_owned = 0;
 }
 
-static void rxsignal_push_handler(stack_frame *frame, unsigned char sig) {
+static int rxsignal_push_handler(stack_frame *frame, unsigned char sig) {
     interrupt_saved_entry *saved;
 
-    if (!frame || sig == 0 || sig >= RXSIGNAL_MAX) return;
+    if (!frame || sig == 0 || sig >= RXSIGNAL_MAX) return 0;
 
-    saved = rxvm_memory_alloc_bytes(0, sizeof(interrupt_saved_entry));
-    if (!saved) return;
+    saved = rxsignal_allocate_policy(frame, sizeof(interrupt_saved_entry));
+    if (!saved) return 0;
     saved->signal = sig;
     saved->entry = frame->interrupt_table[sig - 1];
     saved->next = frame->interrupt_stack;
     frame->interrupt_stack = saved;
+    return 1;
 }
 
 typedef enum rxsignal_pop_result {
     RXSIGNAL_POP_NOT_FOUND = 0,
     RXSIGNAL_POP_RESTORED = 1,
-    RXSIGNAL_POP_NO_MEMORY = -1
+    RXSIGNAL_POP_NO_MEMORY = -1,
+    RXSIGNAL_POP_NATIVE_ERROR = -2
 } rxsignal_pop_result;
 
 /* A removed saved entry no longer names a live stack boundary. Move all
@@ -4571,8 +4644,9 @@ static rxsignal_pop_result rxsignal_pop_handler(stack_frame *frame, unsigned cha
     while (saved) {
         if (saved->signal == sig) {
             if (!rxsignal_ensure_private_interrupt_table(frame)) return RXSIGNAL_POP_NO_MEMORY;
+            if (rxsignal_apply_native_interrupt_mode(sig, &saved->entry) != 0)
+                return RXSIGNAL_POP_NATIVE_ERROR;
             frame->interrupt_table[sig - 1] = saved->entry;
-            rxsignal_apply_native_interrupt_mode(sig, &frame->interrupt_table[sig - 1]);
             if (previous) previous->next = saved->next;
             else frame->interrupt_stack = saved->next;
             rxsignal_rebase_handler_stack_markers(frame, saved);
@@ -4598,10 +4672,9 @@ static int rxsignal_unwind_handler_stack_to(
         saved = frame->interrupt_stack;
         if (!saved) return 0;
         if (!rxsignal_ensure_private_interrupt_table(frame)) return 0;
+        if (rxsignal_apply_native_interrupt_mode(saved->signal, &saved->entry) != 0) return 0;
         frame->interrupt_stack = saved->next;
         frame->interrupt_table[saved->signal - 1] = saved->entry;
-        rxsignal_apply_native_interrupt_mode(
-                saved->signal, &frame->interrupt_table[saved->signal - 1]);
         rxsignal_rebase_handler_stack_markers(frame, saved);
         (void)rxvm_memory_release(saved);
     }
@@ -4618,36 +4691,6 @@ static void rxsignal_clear_handler_stack(stack_frame *frame) {
         rxsignal_apply_native_interrupt_mode(saved->signal, &saved->entry);
         (void)rxvm_memory_release(saved);
     }
-}
-
-typedef struct rxvm_inline_slot {
-    uint32_t index;
-    value *active;
-    value *base;
-    uint32_t identity;
-} rxvm_inline_slot;
-
-typedef struct rxvm_inline_scope {
-    struct rxvm_inline_scope *previous;
-    proc_runtime *provider;
-    value *result;
-    size_t continuation;
-    size_t entry_address; /* Physical INLENTER source; never a provider PC. */
-    size_t argument_count;
-    value **arguments;
-    rxvm_inline_slot *slots;
-    uint32_t owned_count;
-    rxinl_recipe_view recipe;
-    numeric_context saved_numeric;
-    interrupt_entry *saved_interrupt_table;
-    unsigned char saved_interrupt_table_owned;
-    unsigned char signal_policy_changed;
-    interrupt_saved_entry *saved_interrupt_stack;
-} rxvm_inline_scope;
-
-static const proc_runtime *diagnostic_frame_procedure(const stack_frame *frame) {
-    if (frame->inline_scope) return frame->inline_scope->provider;
-    return frame->procedure;
 }
 
 static const rxvm_inline_diagnostic_frame *diagnostic_inline_at(
@@ -4668,291 +4711,36 @@ static const rxvm_inline_diagnostic_frame *diagnostic_inline_at(
     return NULL;
 }
 
-static const rxvm_inline_diagnostic_frame *diagnostic_effective_inline(
-        const stack_frame *frame, size_t address) {
-    const rxvm_inline_diagnostic_frame *logical = diagnostic_inline_at(frame, address);
-    /* A runtime scope entered within this same static activation is deeper.
-     * A new static descendant inside that scope is deeper again. */
-    if (frame && frame->inline_scope &&
-            logical == diagnostic_inline_at(frame, frame->inline_scope->entry_address))
-        return NULL;
-    return logical;
-}
-
 static int diagnostic_visit_origin(const stack_frame *frame, size_t address,
                                     diagnostic_visitor visit, void *state) {
     rxvm_diagnostic_site site;
     if (!frame) return 1;
     memset(&site, 0, sizeof(site));
-    site.logical_inline = diagnostic_effective_inline(frame, address);
-    if (!site.logical_inline && !frame->inline_scope) return 1;
-    site.logical_procedure = diagnostic_frame_procedure(frame);
+    site.logical_inline = diagnostic_inline_at(frame, address);
+    if (!site.logical_inline) return 1;
+    site.logical_procedure = frame->procedure;
     if (!site.logical_procedure || !site.logical_procedure->binarySpace ||
         !site.logical_procedure->binarySpace->module) return 0;
     site.origin = 1;
     return visit(&site, state);
 }
 
-static int diagnostic_visit_static_segment(const stack_frame *frame,
-        const rxvm_inline_diagnostic_frame *logical,
-        const rxvm_inline_diagnostic_frame *boundary,
-        const proc_runtime *outer_procedure, diagnostic_visitor visit, void *state) {
-    for (; logical && logical != boundary; logical = logical->parent) {
+static int diagnostic_visit_static_inline(const stack_frame *frame, size_t address,
+                                          diagnostic_visitor visit, void *state) {
+    const rxvm_inline_diagnostic_frame *logical = diagnostic_inline_at(frame, address);
+    for (; logical; logical = logical->parent) {
         rxvm_diagnostic_site site;
         memset(&site, 0, sizeof(site));
         site.physical_module = frame->procedure->binarySpace->module;
         site.physical_procedure = frame->procedure;
-        site.logical_procedure = outer_procedure;
-        site.logical_inline = logical->parent != boundary ? logical->parent : NULL;
+        site.logical_procedure = frame->procedure;
+        site.logical_inline = logical->parent;
         site.address = logical->definition->base.address;
         site.source_step = logical->callsite;
         site.exact_source = 1;
         if (!runtime_procedure_contains(site.physical_module, site.physical_procedure, site.address) ||
                 !visit(&site, state)) return 0;
     }
-    return 1;
-}
-
-static int diagnostic_visit_scopes(const stack_frame *frame, size_t address,
-                                    diagnostic_visitor visit, void *state) {
-    const rxvm_inline_scope *scope;
-    const rxvm_inline_diagnostic_frame *logical = diagnostic_inline_at(frame, address);
-    rxvm_diagnostic_site site;
-    for (scope = frame->inline_scope; scope; scope = scope->previous) {
-        const rxvm_inline_diagnostic_frame *boundary = diagnostic_inline_at(frame, scope->entry_address);
-        if (!diagnostic_visit_static_segment(frame, logical, boundary, scope->provider, visit, state)) return 0;
-        memset(&site, 0, sizeof(site));
-        if (!frame->procedure || !frame->procedure->binarySpace) return 0;
-        site.physical_module = frame->procedure->binarySpace->module;
-        site.physical_procedure = frame->procedure;
-        site.logical_procedure = scope->previous ? scope->previous->provider : frame->procedure;
-        site.logical_inline = boundary;
-        site.address = scope->entry_address;
-        if (!site.physical_module || !site.logical_procedure ||
-            !runtime_procedure_contains(site.physical_module, site.physical_procedure, site.address) ||
-            !visit(&site, state)) return 0;
-        logical = boundary;
-    }
-    return diagnostic_visit_static_segment(frame, logical, NULL, frame->procedure, visit, state);
-}
-
-static void rxvm_inline_mark_policy_changed(stack_frame *frame) {
-    if (frame && frame->inline_scope)
-        frame->inline_scope->signal_policy_changed = 1;
-}
-
-static int rxvm_inline_scope_owns(const rxvm_inline_scope *scope, size_t index) {
-    uint32_t i;
-    if (!scope) return 0;
-    for (i = 0u; i < scope->owned_count; ++i)
-        if (scope->slots[i].index == index) return 1;
-    return 0;
-}
-
-static void rxvm_inline_scope_discard(rxvm_inline_scope *scope) {
-    if (!scope) return;
-    free(scope);
-}
-
-static value *rxvm_inline_scope_backing(const rxvm_inline_scope *scope,
-                                        size_t index) {
-    uint32_t i;
-    if (!scope) return NULL;
-    for (i = 0u; i < scope->owned_count; ++i)
-        if (scope->slots[i].index == index) return scope->slots[i].base;
-    return NULL;
-}
-
-/* Entry captures remain immutable. Dynamic argument selection observes the
- * original argument slot's current binding, just like LINKARG in a real frame.
- * Generic LINK/UNLINK/SWAP already own those changes in frame->locals. A tail
- * ordinal without a projected slot cannot have been rebound explicitly. */
-static value *rxvm_inline_scope_argument(stack_frame *frame,
-                                          const rxvm_inline_scope *scope,
-                                          size_t ordinal) {
-    uint32_t i;
-    if (ordinal == 0u) return frame->locals[scope->recipe.a0_register];
-    for (i = 0u; i < scope->recipe.proxy_count; ++i)
-        if (rxinl_recipe_proxy_argument(&scope->recipe, i) == ordinal)
-            return frame->locals[rxinl_recipe_proxy_register(&scope->recipe, i)];
-    return scope->arguments[ordinal - 1u];
-}
-
-/* Stage all validation and pointer capture before module initialization. No
- * frame mapping or logical context is changed until commit. */
-static rxvm_inline_scope *rxvm_inline_scope_stage(
-        stack_frame *frame, proc_runtime *provider,
-        const rxinl_recipe_view *recipe, size_t result_index,
-        size_t continuation, int *fault) {
-    rxvm_inline_scope *scope = NULL;
-    size_t argument_count;
-    size_t i;
-    rxinteger count;
-    if (fault) *fault = RXSIGNAL_RXBIN_CORRUPTION;
-    if (!frame || !provider || !provider->binarySpace || !recipe ||
-        continuation >= frame->procedure->binarySpace->inst_size ||
-        result_index >= frame->number_locals ||
-        recipe->a0_register >= (uint32_t)frame->procedure->locals)
-        return NULL;
-    for (i = 0u; i < recipe->proxy_count; ++i) {
-        size_t j;
-        uint32_t ordinal = rxinl_recipe_proxy_argument(recipe, (uint32_t)i);
-        /* One active slot owns each nonzero argument identity. Repeated actual
-         * pointers across distinct ordinals are legal. Ordinal-zero proxies
-         * borrow the count cell; a0_register remains its canonical slot. */
-        if (ordinal == 0u) continue;
-        for (j = 0u; j < i; ++j)
-            if (rxinl_recipe_proxy_argument(recipe, (uint32_t)j) == ordinal)
-                return NULL;
-    }
-    for (i = 0u; i < recipe->owned_count; ++i) {
-        size_t index = rxinl_recipe_owned_register(recipe, (uint32_t)i);
-        if (index >= (size_t)frame->procedure->locals ||
-            (index == result_index &&
-             !(recipe->flags & RXINL_RESULT_IGNORED)))
-            return NULL;
-        if (index >= (size_t)rxvm_owned_local_count(frame->procedure) ||
-            frame->locals[index] != frame->baselocals[index] ||
-            frame->local_identity[index] != (uint32_t)index)
-            return NULL;
-        {
-            rxvm_inline_scope *outer;
-            for (outer = frame->inline_scope; outer; outer = outer->previous)
-                if (rxvm_inline_scope_owns(outer, index)) return NULL;
-        }
-    }
-    count = (recipe->flags & RXINL_COUNT_REGISTER)
-        ? (recipe->count_source < frame->number_locals
-           ? frame->locals[recipe->count_source]->int_value : -1)
-        : (rxinteger)recipe->count_source;
-    if (fault) *fault = RXSIGNAL_OUT_OF_RANGE;
-    if (count < 0 || (uint64_t)count > SIZE_MAX) return NULL;
-    argument_count = (size_t)count;
-    if (!(recipe->flags & RXINL_ARGS_WINDOW) &&
-        argument_count != recipe->argument_count) return NULL;
-    if (recipe->flags & RXINL_ARGS_WINDOW) {
-        if (recipe->argument_base >= frame->number_locals ||
-            argument_count > frame->number_locals - recipe->argument_base)
-            return NULL;
-    } else {
-        for (i = 0u; i < argument_count; ++i)
-            if (rxinl_recipe_argument(recipe, (uint32_t)i) >= frame->number_locals)
-                return NULL;
-    }
-    if (argument_count > (SIZE_MAX - sizeof(*scope)) / sizeof(value *))
-        return NULL;
-    {
-        size_t bytes = sizeof(*scope) + argument_count * sizeof(value *);
-        if (recipe->owned_count > (SIZE_MAX - bytes) / sizeof(rxvm_inline_slot))
-            return NULL;
-        bytes += (size_t)recipe->owned_count * sizeof(rxvm_inline_slot);
-        scope = (rxvm_inline_scope *)calloc(1u, bytes);
-    }
-    if (!scope) goto no_memory;
-    scope->arguments = (value **)(scope + 1);
-    scope->slots = (rxvm_inline_slot *)(scope->arguments + argument_count);
-    scope->argument_count = argument_count;
-    scope->provider = provider;
-    scope->result = (recipe->flags & RXINL_RESULT_IGNORED)
-        ? NULL : frame->locals[result_index];
-    scope->continuation = continuation;
-    scope->recipe = *recipe;
-    scope->owned_count = recipe->owned_count;
-    for (i = 0u; i < recipe->owned_count; ++i) {
-        rxvm_inline_slot *slot = &scope->slots[i];
-        slot->index = rxinl_recipe_owned_register(recipe, (uint32_t)i);
-        slot->active = frame->locals[slot->index];
-        slot->base = frame->baselocals[slot->index];
-        slot->identity = frame->local_identity[slot->index];
-        if (scope->result == slot->base) goto invalid;
-    }
-    if (!rxvm_inline_scope_owns(scope, recipe->a0_register)) goto invalid;
-    for (i = 0u; i < recipe->proxy_count; ++i) {
-        uint32_t register_index = rxinl_recipe_proxy_register(recipe, (uint32_t)i);
-        if (!rxvm_inline_scope_owns(scope, register_index)) goto invalid;
-    }
-    for (i = 0u; i < argument_count; ++i) {
-        size_t source = (recipe->flags & RXINL_ARGS_WINDOW)
-            ? (size_t)recipe->argument_base + i
-            : rxinl_recipe_argument(recipe, (uint32_t)i);
-        scope->arguments[i] = frame->locals[source];
-    }
-    scope->saved_numeric = frame->num_context;
-    scope->saved_interrupt_table = frame->interrupt_table;
-    scope->saved_interrupt_table_owned = frame->interrupt_table_owned;
-    scope->saved_interrupt_stack = frame->interrupt_stack;
-    return scope;
-invalid:
-    rxvm_inline_scope_discard(scope);
-    if (fault) *fault = RXSIGNAL_RXBIN_CORRUPTION;
-    return NULL;
-no_memory:
-    rxvm_inline_scope_discard(scope);
-    if (fault) *fault = RXSIGNAL_FAILURE;
-    return NULL;
-}
-
-static void rxvm_inline_scope_commit(stack_frame *frame, rxvm_inline_scope *scope) {
-    uint32_t i;
-    const rxinl_recipe_view *recipe = &scope->recipe;
-    value *a0_backing = rxvm_inline_scope_backing(scope, recipe->a0_register);
-    for (i = 0u; i < scope->owned_count; ++i)
-        clear_value(scope->slots[i].base);
-    scope->previous = frame->inline_scope;
-    frame->inline_scope = scope;
-    frame->interrupt_table_owned = 0;
-    frame->interrupt_stack = NULL;
-    set_int(a0_backing, (rxinteger)scope->argument_count);
-    for (i = 0u; i < recipe->proxy_count; ++i) {
-        uint32_t reg = rxinl_recipe_proxy_register(recipe, i);
-        uint32_t arg = rxinl_recipe_proxy_argument(recipe, i);
-        value *pointer;
-        if (arg > scope->argument_count) continue;
-        pointer = arg == 0u ? a0_backing : scope->arguments[arg - 1u];
-        frame->baselocals[reg] = pointer;
-        frame->locals[reg] = pointer;
-    }
-}
-
-static void rxvm_inline_scope_leave(stack_frame *frame) {
-    rxvm_inline_scope *scope;
-    uint32_t i;
-    if (!frame || !(scope = frame->inline_scope)) return;
-    rxsignal_clear_handler_stack(frame);
-    rxsignal_release_private_interrupt_table(frame);
-    frame->interrupt_table = scope->saved_interrupt_table;
-    frame->interrupt_table_owned = scope->saved_interrupt_table_owned;
-    frame->interrupt_stack = scope->saved_interrupt_stack;
-    if (scope->signal_policy_changed)
-        for (i = 1u; i < RXSIGNAL_MAX; ++i)
-            rxsignal_apply_native_interrupt_mode((unsigned char)i,
-                                                 &frame->interrupt_table[i - 1u]);
-    for (i = 0u; i < scope->owned_count; ++i) {
-        const rxvm_inline_slot *slot = &scope->slots[i];
-        value *backing = slot->base;
-        release_value_reference_lifetime(backing);
-        clear_value(backing);
-        frame->locals[slot->index] = slot->active;
-        frame->baselocals[slot->index] = slot->base;
-        frame->local_identity[slot->index] = slot->identity;
-    }
-    frame->num_context = scope->saved_numeric;
-    if (frame->decimal) {
-        frame->decimal->num_context = &frame->num_context;
-        frame->decimal->syncNumericContext(frame->decimal);
-    }
-    frame->inline_scope = scope->previous;
-    rxvm_inline_scope_discard(scope);
-}
-
-static int rxvm_inline_scope_unwind_to(stack_frame *frame,
-                                       rxvm_inline_scope *target) {
-    rxvm_inline_scope *check;
-    if (!frame) return target == NULL;
-    for (check = frame->inline_scope; check && check != target;
-         check = check->previous) {}
-    if (target && check != target) return 0;
-    while (frame->inline_scope != target) rxvm_inline_scope_leave(frame);
     return 1;
 }
 
@@ -4965,6 +4753,16 @@ RX_INLINE int rxvm_call_count_fits(const stack_frame *caller,
     return caller && count >= 0 && count <= INT_MAX &&
             argument_base <= (size_t)caller->number_locals &&
             (size_t)count <= (size_t)caller->number_locals - argument_base;
+}
+
+/* A borrowed decimal instance follows the live frame, even when its effective
+ * settings match the departing child's. Later setters and decimal operations
+ * read num_context directly, so equal settings never justify a stale pointer. */
+RX_INLINE void rxvm_restore_frame_numeric_context(stack_frame *frame) {
+    if (frame && frame->decimal) {
+        frame->decimal->num_context = &frame->num_context;
+        frame->decimal->syncNumericContext(frame->decimal);
+    }
 }
 
 RX_INLINE stack_frame *frame_f(
@@ -5216,7 +5014,6 @@ RX_INLINE stack_frame *frame_f(
             this->interrupt_table[i].frame = 0;
             this->interrupt_table[i].value_register = 0;
             this->interrupt_table[i].stack_marker = 0;
-            this->interrupt_table[i].inline_scope = NULL;
         }
 
         /* Every valid response comes from the VM-owned entry inventory.
@@ -5247,6 +5044,7 @@ RX_INLINE stack_frame *frame_f(
 #endif
     this->invocation = 0;
     this->interrupt_stack = 0;
+    this->signal_parent_address = SIZE_MAX;
     this->decimal_loaded_here = 0;
     this->unicode_loaded_here = 0;
     this->return_pc = return_pc;
@@ -5257,7 +5055,6 @@ RX_INLINE stack_frame *frame_f(
     this->has_reference_lifetimes = 0;
     this->is_interrupt_action = 0;
     this->caller_arg_base = UINT32_MAX;
-    this->inline_scope = NULL;
     /* Both complete frame extents were checked against INT_MAX above. Reset
      * every active slot on reuse, including globals, a0 and incoming aliases. */
     for (i = 0; i < num_locals; i++) this->local_identity[i] = (uint32_t)i;
@@ -5278,7 +5075,6 @@ RX_INLINE void clear_frame(stack_frame *frame) {
         rxvm_invoke_abandon(frame->invocation); rxvm_invoke_unpin(frame->invocation);
         frame->invocation = NULL;
     }
-    while (frame->inline_scope) rxvm_inline_scope_leave(frame);
     rxsignal_clear_handler_stack(frame);
     rxsignal_release_private_interrupt_table(frame);
     /* Reset Local Registers and a0 */
@@ -5300,18 +5096,33 @@ RX_INLINE void clear_frame(stack_frame *frame) {
 
 /* Free Stack Frame */
 RX_INLINE void free_frame(stack_frame *frame) {
+    size_t i;
+    size_t a0_index;
+    int restore_native_modes = frame->parent && frame->interrupt_table_owned;
 #ifdef CREXX_VM_PROFILING
     rxvm_profile_record_frame_release();
 #endif
-    while (frame->inline_scope) rxvm_inline_scope_leave(frame);
     rxsignal_clear_handler_stack(frame);
     rxsignal_release_private_interrupt_table(frame);
+    /* Saved entries can restore intermediate child policy. Reapply the full
+     * surviving policy after releasing an unsaved child-private table too. */
+    if (restore_native_modes) rxsignal_restore_native_interrupt_modes(frame->parent);
     rxvm_release_frame_reference_lifetimes(frame);
     if (frame->invocation) {
         rxvm_invoke_abandon(frame->invocation);
         rxvm_invoke_unpin(frame->invocation);
         frame->invocation = 0;
     }
+    /* Return results have already been assigned to their destination.
+     * Only the frame's own backing is retired here; globals, foreign private
+     * bindings and incoming argument pointers remain with their owners. */
+    for (i = 0; i < (size_t)rxvm_owned_local_count(frame->procedure); i++) {
+        finalize_retired_native_payloads(frame->baselocals[i]);
+    }
+    a0_index = (size_t)frame->procedure->locals +
+               (frame->procedure->binarySpace ?
+                (size_t)frame->procedure->binarySpace->globals : 0);
+    finalize_retired_native_payloads(frame->baselocals[a0_index]);
     /* Add to free list */
     frame->prev_free = *(frame->procedure->frame_free_list);
     *(frame->procedure->frame_free_list) = frame;
@@ -5466,7 +5277,7 @@ static int rxvm_restore_caller_call_argument_mapping(stack_frame *callee
 #endif
 }
 
-static void rxsignal_restore_branch_call_argument_mapping(
+static int rxsignal_restore_branch_call_argument_mapping(
         stack_frame *current, const interrupt_entry *handler,
         rxinteger interrupted_module, rxinteger interrupted_address
 #ifdef CREXX_VM_PROFILING
@@ -5479,7 +5290,7 @@ static void rxsignal_restore_branch_call_argument_mapping(
     size_t restored_slots = 0;
 #endif
 
-    if (!current || !handler || current != handler->frame) return;
+    if (!current || !handler || current != handler->frame) return 1;
     mapping_restored = rxsignal_restore_interrupted_call_argument_mapping(
             current, interrupted_module, interrupted_address
 #ifdef CREXX_VM_PROFILING
@@ -5494,11 +5305,12 @@ static void rxsignal_restore_branch_call_argument_mapping(
                 profile, window_observed, (uint64_t)restored_slots,
                 !mapping_restored);
 #endif
-    assert(mapping_restored);
-    (void)mapping_restored;
+    return mapping_restored;
 }
 
 static void rxvm_checked_frame_fault(stack_frame *, unsigned char, rxinteger, rxinteger, value *, const value *);
+
+#include "rxvmregions.inc"
 
 static stack_frame *rxsignal_unwind_to_frame(
         stack_frame *current, stack_frame *target,
@@ -5547,6 +5359,7 @@ static stack_frame *rxsignal_unwind_to_frame(
         }
 #endif
         rxvm_checked_frame_fault(discard, fault, fault_module, fault_address, fault_payload, diagnostic);
+        rxvm_restore_frame_numeric_context(current);
         free_frame(discard);
     }
 
@@ -5745,21 +5558,18 @@ void clear_signal(unsigned char signal) {
     rxvm_signal_clear_process_main(signal);
 }
 
-static RXVM_LABEL_OWNER_NOINLINE void rxsignal_raise_private_table_oom(
-        volatile sig_atomic_t *pending_interrupts,
-        stack_frame *frame,
-        bin_code **interrupted_pc,
-        bin_code *pc,
-        value **interrupt_object,
-        value diagnostic_owners[RXSIGNAL_MAX]) {
-    if (!frame->is_interrupt) *interrupted_pc = pc;
-    rxvm_signal_pending_or(pending_interrupts,
-                           rxsignal_mask(RXSIGNAL_FAILURE));
-    value_zero(&diagnostic_owners[RXSIGNAL_FAILURE]);
-    value_zero(interrupt_object[RXSIGNAL_FAILURE]);
-    set_null_string(interrupt_object[RXSIGNAL_FAILURE],
-                    "Unable to allocate private interrupt table");
-}
+/* Instruction misuse cannot be handled by the policy it was trying to change.
+ * Finish through the ordinary run cleanup, including nested embedding state. */
+#define RXVM_SIGNAL_INSTRUCTION_ERROR(code_, message_)                        \
+    do {                                                                     \
+        rc = (code_);                                                        \
+        rxsignal_observe_instruction_failure(current_frame);                 \
+        fprintf(stderr, "VM ERROR: %s (%s)\n", (message_),                   \
+                interrupt_to_string((unsigned char)rc));                     \
+        print_runtime_panic_location(context, current_module->module_number, \
+                                     (rxinteger)VM_CANONICAL_INDEX(pc));      \
+        RXVM_HANDLER_FINISH();                                               \
+    } while (0)
 
 // Macro to detect and throw a signal if a RXVM plugin-raised error is present
 #define RXSIGNAL_IF_RXVM_PLUGIN_ERROR(signal) \
@@ -5794,19 +5604,19 @@ rxvm_signal_pending_or(&pending_interrupts, rxsignal_mask(signal)); \
 value_zero(&diagnostic_owners[(signal)]); \
 copy_value(interrupt_object[(signal)], (payload));}
 
-#define SET_SIGNAL_FROM_NAME(name) \
-{ unsigned char signal__ = string_to_interrupt((name)); \
-if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
+#define SET_SIGNAL_FROM_NAME(name, length) \
+{ unsigned char signal__ = rxsignal_operand_code((name), (length)); \
+if (signal__ == RXSIGNAL_MAX) { RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid SIGNAL name"); } \
 else { SET_SIGNAL(signal__); } }
 
-#define SET_SIGNAL_MSG_FROM_NAME(name, message) \
-{ unsigned char signal__ = string_to_interrupt((name)); \
-if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
+#define SET_SIGNAL_MSG_FROM_NAME(name, length, message) \
+{ unsigned char signal__ = rxsignal_operand_code((name), (length)); \
+if (signal__ == RXSIGNAL_MAX) { RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid SIGNAL name"); } \
 else { SET_SIGNAL_MSG(signal__, (message)); } }
 
-#define SET_SIGNAL_PAYLOAD_FROM_NAME(name, payload) \
-{ unsigned char signal__ = string_to_interrupt((name)); \
-if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
+#define SET_SIGNAL_PAYLOAD_FROM_NAME(name, length, payload) \
+{ unsigned char signal__ = rxsignal_operand_code((name), (length)); \
+if (signal__ == RXSIGNAL_MAX) { RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid SIGNAL name"); } \
 else { SET_SIGNAL_PAYLOAD(signal__, (payload)); } }
 
 #ifndef NUTF8
@@ -7341,6 +7151,33 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     /* CALL handlers can retain their raw argument and relay it later, just as
      * BRV handlers retain the wrapper. Capture before either can publish it. */
     diagnostic_capture(context, current_frame, diagnostic_address, &diagnostic_owners[last_interrupt]);
+    if (signal_handler.response == RXSIGNAL_RESPONSE_BRANCH ||
+        signal_handler.response == RXSIGNAL_RESPONSE_BRANCH_VALUE ||
+        signal_handler.response == RXSIGNAL_RESPONSE_CALL_BRANCH) {
+        rxvm_region_departure departure;
+        if (!rxvm_region_departure_prepare(current_frame, signal_handler.frame,
+                current_module->module_number, diagnostic_address,
+                signal_handler.jump, &departure)) {
+            RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_RXBIN_CORRUPTION,
+                                          "Invalid inline signal departure");
+        }
+        if (!rxsignal_restore_branch_call_argument_mapping(
+                current_frame, &signal_handler, (rxinteger)current_module->module_number,
+                (rxinteger)diagnostic_address RXVM_PROFILE_UNWIND_STATE)) {
+            RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_RXBIN_CORRUPTION,
+                                          "Invalid interrupted call mapping");
+        }
+        VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame,
+                last_interrupt, last_interrupted_module[last_interrupt],
+                last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
+                &diagnostic_owners[last_interrupt] RXVM_PROFILE_UNWIND_STATE),
+                          RXVM_TRANSITION_INTERRUPT_ENTRY);
+        if (!rxsignal_unwind_handler_stack_to(current_frame, signal_handler.stack_marker)) {
+            RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_RXBIN_CORRUPTION,
+                                          "Invalid signal save marker");
+        }
+        rxvm_region_departure_apply(current_frame, &departure);
+    }
     switch (signal_handler.response) {
 
         case RXSIGNAL_RESPONSE_HALT:
@@ -7387,28 +7224,6 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
 
         case RXSIGNAL_RESPONSE_CALL_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> SET BRANCH FOR CALL RETURN ");
-            rxsignal_restore_branch_call_argument_mapping(
-                    current_frame, &signal_handler,
-                    last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt]
-                    RXVM_PROFILE_UNWIND_STATE);
-            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame,
-                    last_interrupt, last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
-                    &diagnostic_owners[last_interrupt]
-                                                       RXVM_PROFILE_UNWIND_STATE),
-                              RXVM_TRANSITION_INTERRUPT_ENTRY);
-            if (!rxvm_inline_scope_unwind_to(current_frame,
-                                              signal_handler.inline_scope)) {
-                rc = RXSIGNAL_RXBIN_CORRUPTION;
-                goto interprt_finished;
-            }
-            {
-                int stack_restored = rxsignal_unwind_handler_stack_to(
-                        current_frame, signal_handler.stack_marker);
-                assert(stack_restored);
-                (void)stack_restored;
-            }
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             pc = next_pc;
             // Fall through to CALL
@@ -7509,6 +7324,9 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                 /* Interrupt being handled */
                 current_frame->is_interrupt = last_interrupt;
                 current_frame->is_interrupt_action = action_aware;
+                current_frame->signal_parent_address =
+                        signal_handler.response == RXSIGNAL_RESPONSE_CALL_BRANCH
+                        ? signal_handler.jump : diagnostic_address;
 
                 /* Argument */
                 size_t arg_index = intr_function->binarySpace->globals + intr_function->locals + 1;
@@ -7521,56 +7339,12 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
 
         case RXSIGNAL_RESPONSE_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> BRANCH %s\n", interrupt_to_string(last_interrupt));
-            rxsignal_restore_branch_call_argument_mapping(
-                    current_frame, &signal_handler,
-                    last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt]
-                    RXVM_PROFILE_UNWIND_STATE);
-            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame,
-                    last_interrupt, last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
-                    &diagnostic_owners[last_interrupt]
-                                                       RXVM_PROFILE_UNWIND_STATE),
-                              RXVM_TRANSITION_INTERRUPT_ENTRY);
-            if (!rxvm_inline_scope_unwind_to(current_frame,
-                                              signal_handler.inline_scope)) {
-                rc = RXSIGNAL_RXBIN_CORRUPTION;
-                goto interprt_finished;
-            }
-            {
-                int stack_restored = rxsignal_unwind_handler_stack_to(
-                        current_frame, signal_handler.stack_marker);
-                assert(stack_restored);
-                (void)stack_restored;
-            }
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             value_zero(&diagnostic_owners[last_interrupt]);
             RXVM_SELECTED_DISPATCH();
 
         case RXSIGNAL_RESPONSE_BRANCH_VALUE:
             DEBUG("TRACE - INTR HANDLER -> BRANCH VALUE %s\n", interrupt_to_string(last_interrupt));
-            rxsignal_restore_branch_call_argument_mapping(
-                    current_frame, &signal_handler,
-                    last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt]
-                    RXVM_PROFILE_UNWIND_STATE);
-            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame,
-                    last_interrupt, last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
-                    &diagnostic_owners[last_interrupt]
-                                                       RXVM_PROFILE_UNWIND_STATE),
-                              RXVM_TRANSITION_INTERRUPT_ENTRY);
-            if (!rxvm_inline_scope_unwind_to(current_frame,
-                                              signal_handler.inline_scope)) {
-                rc = RXSIGNAL_RXBIN_CORRUPTION;
-                goto interprt_finished;
-            }
-            {
-                int stack_restored = rxsignal_unwind_handler_stack_to(
-                        current_frame, signal_handler.stack_marker);
-                assert(stack_restored);
-                (void)stack_restored;
-            }
             rxsignal_populate_raw_interrupt(interrupt_arg,
                                             last_interrupt,
                                             last_interrupted_module[last_interrupt],
@@ -7581,54 +7355,6 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
             value_zero(&diagnostic_owners[last_interrupt]);
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             RXVM_SELECTED_DISPATCH();
-
-        case RXSIGNAL_RESPONSE_RETURN:
-            if (!current_frame->inline_scope)
-                rxvm_checked_frame_fault(current_frame, last_interrupt,
-                        last_interrupted_module[last_interrupt],
-                        last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
-                        &diagnostic_owners[last_interrupt]);
-            value_zero(&diagnostic_owners[last_interrupt]);
-            DEBUG("TRACE - INTR HANDLER -> RET %s\n", interrupt_to_string(last_interrupt));
-            if (current_frame->inline_scope) {
-                size_t continuation = current_frame->inline_scope->continuation;
-                rxvm_inline_scope_leave(current_frame);
-                VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
-                RXVM_SELECTED_DISPATCH();
-            }
-            {
-                /* Where we return to */
-                next_pc = current_frame->return_pc;
-                // Note that current_frame->is_interrupt cannot be set as a signal triggers us
-                /* back to the parent's stack frame */
-                temp_frame = current_frame;
-                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
-                if (!current_frame) {
-                    DEBUG("TRACE - INTR RETURNING FROM MAIN()\n");
-                    /* Free Argument Values a1... */
-                    int i, j;
-                    /* a0 is the number of args */
-                    int num_args = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
-                                                               temp_frame->procedure->locals]->int_value;
-                    for (i = 0, j = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
-                         i < num_args;
-                         i++, j++) {
-                        value_free(temp_frame->baselocals[j]);
-                         }
-                    rc = 0;
-                    free_frame(temp_frame);
-                    arguments_array = 0; /* We have freed it in the loop above */
-                    RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(
-                            last_interrupt,
-                            current_module ? current_module->module_number : 0,
-                            (current_execution_base && pc)
-                                ? VM_CANONICAL_INDEX(pc) : 0);
-                    goto interprt_finished;
-                }
-                free_frame(temp_frame);
-                VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
-                RXVM_SELECTED_DISPATCH();
-            }
 
         case RXSIGNAL_RESPONSE_IGNORE:
             /* Ignore - Should never get here */
@@ -7976,9 +7702,8 @@ START_OF_INSTRUCTIONS
         abort();
 
     interrupt_table_oom:
-        rxsignal_raise_private_table_oom(&pending_interrupts, current_frame, &interrupted_pc, pc,
-                                         interrupt_object, diagnostic_owners);
-        RXVM_SELECTED_DISPATCH();
+        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE,
+                                      "Unable to allocate signal policy or save");
 
     interprt_finished:
 

@@ -305,6 +305,14 @@ static int flow_graph_mark_leaders(RxasFlowProcedure *procedure,
             flow_graph_mark_target_leader(procedure,leaders,item->instrToken);
             flow_graph_mark_target_leader(procedure,leaders,item->operand1Token);
         }
+        if (record->type == INLINE_REGION_META || record->type == INLINE_RANGE_META || record->type == INLINE_EXIT_META)
+            leaders[index] = 1;
+        if (record->type == INLINE_RANGE_META || record->type == INLINE_EXIT_META) {
+            flow_graph_mark_target_leader(procedure,leaders,
+                    record->type == INLINE_RANGE_META ? item->instrToken : item->operand1Token);
+            flow_graph_mark_target_leader(procedure,leaders,
+                    record->type == INLINE_RANGE_META ? item->operand1Token : item->operand2Token);
+        }
         if (record->instruction_id == RXAS_FLOW_ID_NONE) continue;
         instruction = &procedure->instructions[record->instruction_id];
         if (!instruction->op) {
@@ -1087,6 +1095,9 @@ static const char *flow_graph_record_kind_name(enum queue_item_type type) {
         case INLINE_FRAME_META: return "inline-frame";
         case INLINE_MAP_META: return "inline-map";
         case INLINED_PRIVATE_META: return "inlined-private";
+        case INLINE_REGION_META: return "inline-region";
+        case INLINE_RANGE_META: return "inline-range";
+        case INLINE_EXIT_META: return "inline-exit";
     }
     return "invalid";
 }

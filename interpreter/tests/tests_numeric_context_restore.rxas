@@ -1,0 +1,133 @@
+/* Decimal arithmetic must use the surviving frame's context after both real
+ * returns and owner-directed signals. Keep checks in the parent: a helper CALL
+ * would reattach the provider and could hide the defective transition. */
+.globals=0
+
+main() .locals=5
+    numsci 9,1,1
+
+    /* Equal values still require reattachment: the later setter must update
+     * the context that the provider reads, rather than a retired child's. */
+    call unchanged_child()
+    setnumdgts 7
+    load r1,1d
+    ddiv r2,r1,3d
+    dtos r2
+    seq r0,r2,"0.3333333"
+    brf fail_equal_return,r0
+
+    /* A changed child's cache must not survive its void return. */
+    setnumdgts 9
+    call changed_child()
+    getnumdgts r1
+    ieq r0,r1,9
+    brf fail_void_return,r0
+    load r1,1d
+    ddiv r2,r1,3d
+    dtos r2
+    seq r0,r2,"0.333333333"
+    brf fail_void_return,r0
+
+    /* Independent control for the existing value-return behavior. */
+    call r3,value_child()
+    ieq r0,r3,7
+    brf fail_value_return,r0
+    load r1,1d
+    ddiv r2,r1,3d
+    dtos r2
+    seq r0,r2,"0.333333333"
+    brf fail_value_return,r0
+
+    /* An inherited branch crosses two children before entering this owner. */
+    sigbr branch_caught,"OTHER"
+    call signal_middle()
+    br fail_branch
+branch_caught:
+    load r1,1d
+    ddiv r2,r1,3d
+    dtos r2
+    seq r0,r2,"0.333333333"
+    brf fail_branch,r0
+    setnumdgts 7
+    load r1,1d
+    ddiv r2,r1,3d
+    dtos r2
+    seq r0,r2,"0.3333333"
+    brf fail_branch,r0
+
+    setnumdgts 9
+    sigbrv branch_value_caught,r4,"OTHER"
+    call signal_child()
+    br fail_branch_value
+branch_value_caught:
+    load r1,1d
+    ddiv r2,r1,3d
+    dtos r2
+    seq r0,r2,"0.333333333"
+    brf fail_branch_value,r0
+
+    /* The real signal handler changes precision and returns without a value. */
+    sigcall changed_child(),"OTHER"
+    signal "OTHER","returning handler"
+    load r1,1d
+    ddiv r2,r1,3d
+    dtos r2
+    seq r0,r2,"0.333333333"
+    brf fail_signal_call,r0
+
+    /* CALL_BRANCH must inherit the destination owner's restored context, and
+     * its returning handler must leave that context attached as well. */
+    sigcallbr call_branch_caught,changed_child(),"OTHER"
+    call signal_middle()
+    br fail_call_branch
+call_branch_caught:
+    load r1,1d
+    ddiv r2,r1,3d
+    dtos r2
+    seq r0,r2,"0.333333333"
+    brf fail_call_branch,r0
+    say "PASS: numeric context restored"
+    ret 0
+
+fail_equal_return:
+    say "FAIL: equal-context void return left a stale provider attachment"
+    ret 1
+fail_void_return:
+    say "FAIL: void return kept child numeric settings"
+    ret 1
+fail_value_return:
+    say "FAIL: value return changed result or parent numeric settings"
+    ret 1
+fail_branch:
+    say "FAIL: outward SIGBR kept child numeric settings"
+    ret 1
+fail_branch_value:
+    say "FAIL: outward SIGBRV kept child numeric settings"
+    ret 1
+fail_signal_call:
+    say "FAIL: returning SIGCALL handler kept its numeric settings"
+    ret 1
+fail_call_branch:
+    say "FAIL: SIGCALLBR did not restore its owner numeric settings"
+    ret 1
+
+unchanged_child() .locals=0
+    ret
+
+changed_child() .locals=0
+    setnumdgts 3
+    ret
+
+value_child() .locals=0
+    setnumdgts 3
+    ret 7
+
+signal_middle() .locals=0
+    setnumdgts 5
+    call signal_child()
+    ret
+
+signal_child() .locals=0
+    setnumdgts 3
+    signal "OTHER","child unwound"
+    ret

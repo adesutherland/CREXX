@@ -101,14 +101,6 @@ crexx_add_rxdas_roundtrip(
         EXPECT_DISASSEMBLY_TEXT_1 "cnop r0,r1,r2,r3,r4,r5,r6,r7,r8"
 )
 
-crexx_add_rxdas_roundtrip(
-        NAME rxdas_roundtrip_inline_scope
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_inline_scope_roundtrip.rxas
-        EXPECT_DISASSEMBLY_TEXT_1 "inlenter"
-        EXPECT_DISASSEMBLY_TEXT_2 "qglobbind"
-        EXPECT_DISASSEMBLY_TEXT_3 "linkargv"
-)
-
 add_test(NAME inline_diagnostic_roundtrip
         COMMAND ${CMAKE_COMMAND}
         -DRXAS=$<TARGET_FILE:rxas> -DRXDAS=$<TARGET_FILE:rxdas>
@@ -268,6 +260,19 @@ crexx_label_smoke_tests(
             rxdas_graph_error_artifact
             test_disassembler_dump
 )
+
+add_test(NAME rxdas_inline_exit_roundtrip
+        COMMAND ${CMAKE_COMMAND}
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXDAS=$<TARGET_FILE:rxdas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRUNNER=$<TARGET_FILE:rxbvm>
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_inline_exit_roundtrip.rxas
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-exit-roundtrip
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_inline_exit_roundtrip.cmake)
+set_tests_properties(rxdas_inline_exit_roundtrip PROPERTIES TIMEOUT 60
+        LABELS "disassembler;metadata;inline;regression"
+        CREXX_PREP_TARGETS "rxas;rxdas;rxlink;rxbvm")
 
 crexx_finalize_directory_qa_tiers()
 

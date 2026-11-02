@@ -153,6 +153,16 @@ instruction ::= KW_INLINEFRAME INT(I) INT(P) STRING(M) STRING(N) INT(S) NEWLINE.
                 {rxasqmifr(context,I,P,M,N,S);}
 instruction ::= KW_INLINEMAP ID(B) COMMA ID(E) COMMA INT(I) NEWLINE.
                 {rxasqmimp(context,B,E,I);}
+instruction ::= KW_INLINEREGION INT(I) COMMA INT(P) NEWLINE.
+                {rxasqmirg(context,I,P);}
+instruction ::= KW_INLINERANGE ID(B) COMMA ID(E) COMMA INT(I) NEWLINE.
+                {rxasqmira(context,B,E,I);}
+instruction ::= KW_INLINEEXIT INT(I) COMMA ID(B) COMMA ID(E) COMMA INT(O) COMMA STRING(K) COMMA inline_exit_operand(V) NEWLINE.
+                {rxasqmiext(context,I,B,E,O,K,V,0);}
+instruction ::= KW_INLINEEXIT INT(I) COMMA ID(B) COMMA ID(E) COMMA INT(O) COMMA STRING(K) COMMA reg(V) COMMA reg(W) NEWLINE.
+                {rxasqmiext(context,I,B,E,O,K,V,W);}
+inline_exit_operand(V) ::= INT(I). {V=I;}
+inline_exit_operand(V) ::= reg(R). {V=R;}
 instruction ::= KW_INLINEDPRIVATE RREG(R) COMMA STRING(M) COMMA GREG(G) NEWLINE.
                 {rxasqminp(context,R,M,G);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) reg(R) NEWLINE. {rxasqmre(context,V,OP,T,R);}
@@ -178,6 +188,9 @@ instruction ::= KW_TRACEEVENT(T) error NEWLINE. {rxaserat(context, T, "Expecting
 instruction ::= KW_INLINEDPRIVATE(T) error NEWLINE. {rxaserat(context,T,"Expecting .inlinedprivate rK,\"exact-provider\",gN before procedure code");}
 instruction ::= KW_INLINEFRAME(T) error NEWLINE. {rxaserat(context,T,"Expecting .inlineframe {id} {parent} \"{module}\" \"{procedure}\" {source-step}");}
 instruction ::= KW_INLINEMAP(T) error NEWLINE. {rxaserat(context,T,"Expecting .inlinemap {begin-label},{end-label},{frame-id}");}
+instruction ::= KW_INLINEREGION(T) error NEWLINE. {rxaserat(context,T,"Expecting .inlineregion {id},{parent}");}
+instruction ::= KW_INLINERANGE(T) error NEWLINE. {rxaserat(context,T,"Expecting .inlinerange {begin-label},{end-label},{region-id}");}
+instruction ::= KW_INLINEEXIT(T) error NEWLINE. {rxaserat(context,T,"Expecting .inlineexit {region-id},{begin-label},{end-label},{order},\"{action}\",{operand}[,{operand}]");}
 
 // Instructions in a function declaration
 decl_instructions ::= decl_instruction.

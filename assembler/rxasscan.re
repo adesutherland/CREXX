@@ -112,6 +112,9 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     '.srcstep' { return(KW_SRCSTEP); }
     '.inlineframe' { return(KW_INLINEFRAME); }
     '.inlinemap' { return(KW_INLINEMAP); }
+    '.inlineregion' { return(KW_INLINEREGION); }
+    '.inlinerange' { return(KW_INLINERANGE); }
+    '.inlineexit' { return(KW_INLINEEXIT); }
     '.inlinedprivate' { return(KW_INLINEDPRIVATE); }
     '.meta' { return(KW_META); }
     '.const' { return(KW_CONST); }

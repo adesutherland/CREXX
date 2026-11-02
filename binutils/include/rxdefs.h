@@ -296,7 +296,7 @@ typedef enum { RXOP_ABI_NONE, RXOP_ABI_KNOWN, RXOP_ABI_UNKNOWN } RxOpAbiState;
 typedef enum {
     RXOP_ABI_ENTRY, RXOP_ABI_PHYSICAL_RETURN, RXOP_ABI_SCOPED_RETURN,
     RXOP_ABI_SCOPE_LEAVE, RXOP_ABI_FRAME_UNWIND,
-    RXOP_ABI_ROOT_RETURN, RXOP_ABI_ROOT_SIGRETURN, RXOP_ABI_ROOT_UNWIND,
+    RXOP_ABI_ROOT_RETURN, RXOP_ABI_RESERVED_ROOT_SIGRETURN, RXOP_ABI_ROOT_UNWIND,
     RXOP_ABI_EXECUTION_FINISH, RXOP_ABI_FRAME_RETIRE, RXOP_ABI_MODE_COUNT
 } RxOpAbiMode;
 typedef enum {
@@ -316,7 +316,8 @@ typedef enum {
     RXOP_ABI_RESET_STORAGE, RXOP_ABI_LEAVE_FRAME_SCOPES,
     RXOP_ABI_CLEAR_FRAME_HANDLERS, RXOP_ABI_RELEASE_FRAME_POLICY,
     RXOP_ABI_RELEASE_FRAME_REFERENCES, RXOP_ABI_ABANDON_FRAME_INVOCATION,
-    RXOP_ABI_UNPIN_FRAME_INVOCATION, RXOP_ABI_RECYCLE_FRAME
+    RXOP_ABI_UNPIN_FRAME_INVOCATION, RXOP_ABI_RECYCLE_FRAME,
+    RXOP_ABI_FINALIZE_FRAME_PAYLOADS, RXOP_ABI_RESTORE_NATIVE_POLICY
 } RxOpAbiOperation;
 typedef enum {
     RXOP_ABI_ENTRY_CAPTURE, RXOP_ABI_ENTRY_PRECLEAR, RXOP_ABI_ENTRY_PUBLISH,
@@ -334,7 +335,8 @@ typedef enum {
     RXOP_ABI_FINISH_STORAGE, RXOP_ABI_FINISH_CONTROL, RXOP_ABI_ROOT_SIGNAL_CLEAR,
     RXOP_ABI_RETIRE_SCOPES, RXOP_ABI_RETIRE_HANDLERS, RXOP_ABI_RETIRE_POLICY,
     RXOP_ABI_RETIRE_REFERENCES, RXOP_ABI_RETIRE_INVOCATION_ABANDON,
-    RXOP_ABI_RETIRE_INVOCATION_UNPIN, RXOP_ABI_RETIRE_RECYCLE
+    RXOP_ABI_RETIRE_INVOCATION_UNPIN, RXOP_ABI_RETIRE_RECYCLE,
+    RXOP_ABI_RETIRE_PAYLOADS, RXOP_ABI_RETIRE_NATIVE_POLICY
 } RxOpAbiCheckpoint;
 typedef enum {
     RXOP_ABI_ROLE_NONE, RXOP_ABI_RECIPE_CAPTURES, RXOP_ABI_SCOPE_CAPTURES,
@@ -357,7 +359,8 @@ typedef enum {
     RXOP_ABI_EXECUTION_CONTROL, RXOP_ABI_ROOT_SIGNAL_DIAGNOSTIC,
     RXOP_ABI_FRAME_SCOPES, RXOP_ABI_FRAME_HANDLERS, RXOP_ABI_FRAME_PRIVATE_POLICY,
     RXOP_ABI_FRAME_REFERENCES, RXOP_ABI_FRAME_INVOCATION,
-    RXOP_ABI_PROCEDURE_RECYCLER
+    RXOP_ABI_PROCEDURE_RECYCLER, RXOP_ABI_FRAME_OWNED_BACKING,
+    RXOP_ABI_PARENT_POLICY
 } RxOpAbiRole;
 typedef enum {
     RXOP_ABI_EXTENT_NONE, RXOP_ABI_TOP, RXOP_ABI_ACTIVE_TREE, RXOP_ABI_FULL_CAPACITY
@@ -373,7 +376,8 @@ typedef enum {
     RXOP_ABI_ROOT_STATUS_RECEIVER_OR_SAVED, RXOP_ABI_ROOT_STATUS_ZERO,
     RXOP_ABI_EXECUTION_FINISHED, RXOP_ABI_CANONICAL_RECYCLER_OWNER,
     RXOP_ABI_RECYCLED_FRAME_PRESENT, RXOP_ABI_RETIRING_FRAME,
-    RXOP_ABI_FRAME_REFERENCES_MARKED, RXOP_ABI_FRAME_INVOCATION_PRESENT
+    RXOP_ABI_FRAME_REFERENCES_MARKED, RXOP_ABI_FRAME_INVOCATION_PRESENT,
+    RXOP_ABI_RETIRING_PRIVATE_CHILD
 } RxOpAbiRule;
 typedef enum {
     RXOP_ABI_ONCE, RXOP_ABI_EACH_OWNED, RXOP_ABI_OWNED_BEGIN, RXOP_ABI_OWNED_END,
@@ -386,7 +390,7 @@ typedef enum {
  * ROOT_FRAME requires checked native root entry, parent NULL and no invocation
  * completion owner, as established by frame_f on the public entry paths.
  * ROOT_PHYSICAL_RETURN additionally excludes
- * inline-scope RET/SIGRET. ROOT_EXTERNAL_COPIED means ext_proc is nonnull
+ * retired inline-scope return. ROOT_EXTERNAL_COPIED means ext_proc is nonnull
  * (RXVML run or ordinary descriptor); ROOT_CLI_ARGV is the ext_proc-null argv
  * array path with a remaining argv owner. ROOT_EXTERNAL_COPYBACK also requires
  * ext_args. No rule supplies
@@ -404,8 +408,7 @@ typedef enum {
  * Root register status is captured before result transfer, then selected from
  * the receiver's integer field when present, otherwise the saved field.
  * Result COPY/MOVE callbacks run before DEACTIVATE_ROOT; copyback/free run
- * after deactivation. Root SIGRET resets the current signal diagnostic before
- * deactivation. Abrupt unwind frees before retiring/deactivating root.
+ * after deactivation. Abrupt unwind frees before retiring/deactivating root.
  *
  * RECYCLED_BEGIN..RECYCLED_END repeats the entire block in loaded-module,
  * canonical-procedure and recycler LIFO order. It pops a canonical owning
@@ -541,7 +544,10 @@ typedef enum {
     RXOP_SIGNAL_PROP_POLICY_WRITE = 8,
     RXOP_SIGNAL_PROP_ASYNC_ENTRY = 16,
     /* Pending-bit mutation is independent of the structural handler table. */
-    RXOP_SIGNAL_PROP_PENDING_WRITE = 32
+    RXOP_SIGNAL_PROP_PENDING_WRITE = 32,
+    /* static_names are uncatchable instruction self-errors. An operand-selected
+     * primary requested event retains its ordinary catchable continuations. */
+    RXOP_SIGNAL_PROP_STATIC_NAMES_TERMINAL = 64
 } RxOpSignalProperties;
 
 /* Normal-path signal control effect. POLICY_WRITE selects a structural table
@@ -558,7 +564,7 @@ typedef enum {
     RXOP_POLICY_EFFECT_BRANCH,
     RXOP_POLICY_EFFECT_CALL,
     RXOP_POLICY_EFFECT_CALL_BRANCH,
-    RXOP_POLICY_EFFECT_RETURN,
+    RXOP_POLICY_EFFECT_RESERVED_RETURN,
     RXOP_POLICY_EFFECT_CALL_ACTION,
     RXOP_POLICY_EFFECT_PUSH,
     RXOP_POLICY_EFFECT_POP,
@@ -574,7 +580,9 @@ typedef struct {
     /* SIZE_MAX when the name does not come from an RXAS operand. */
     size_t source_operand;
     /* Complete static set for STATIC_NAMES; optional additional alternatives
-     * for operand-selected names, never a replacement for the primary name. */
+     * for operand-selected names, never a replacement for the primary name.
+     * STATIC_NAMES_TERMINAL marks these alternatives as terminal self-errors,
+     * independently of an operand-selected catchable requested event. */
     const char *static_names;
     /* Register operands whose state may be visible on failure. */
     unsigned int failure_writes;
@@ -732,8 +740,10 @@ typedef struct {
 } RxOpCallCauseContract;
 
 /* Native frame_f mode, checked beside SAFE_RECYCLED_STACKFRAMES in
- * rxvmintp.c. Changing recycled owned-local cleanup requires updating both
- * the VM and this bytecode-path contract; it must not silently gain purity. */
+ * rxvmintp.c. Recycled owned locals stay dirty. free_frame now finalizes
+ * finalizer-bearing native payloads in owned backing before recycling, so
+ * ordinary frame preparation has no prior-a0 finalizer callback. Changes to
+ * either path require updating this bytecode-path contract. */
 #define RXOP_CALL_FRAME_REUSED_LOCALS_CLEAR 0
 
 typedef enum {
@@ -1031,10 +1041,8 @@ const char *rxop_callback_value_surface_name(RxOpCallbackValueSurface value);
 /* Native execution control includes possible callback-raised interrupts;
  * rxop_signal_contract remains the intrinsic instruction contract. */
 RxOpSignalContract rxop_execution_signal_contract(int opcode);
-/* One-based explicit receiver for a complete single shared setter normal
- * postwrite profile; zero means unknown. The receiver and computed argument
- * are captured before its resource hook. Only native-payload absence is
- * guaranteed after the final reset; a hook may reinstall a reference. */
+/* Retained projection slot for the retired cleanup-callback setter profile.
+ * Conforming finalizers cannot reenter, so no callback checkpoint is emitted. */
 unsigned int rxop_callback_postwrite_operand(int opcode);
 /* A normally returning resource-only or reviewed bytes-output callback
  * preserves the suspended frame's pointer table and structural activation.
@@ -1082,6 +1090,9 @@ const char *rxop_abi_extent_name(RxOpAbiExtent value);
 const char *rxop_abi_rule_name(RxOpAbiRule value);
 const char *rxop_abi_repeat_name(RxOpAbiRepeat value);
 unsigned int rxop_callback_inputs(int opcode, size_t operand_index);
+/* Retained public projection slots: conforming destination/capacity finalizers
+ * are native cleanup only, so these routes are empty. Value/ownership effects
+ * and UNKNOWN intrinsic callback inventories remain independent. */
 unsigned int rxop_callback_outputs(int opcode, size_t operand_index);
 int rxop_callback_capacity(int opcode, size_t operand_index);
 unsigned int rxop_call_target_components(int opcode);

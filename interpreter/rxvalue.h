@@ -140,6 +140,8 @@ struct rxvm_reference_context {
 typedef struct rxvm_native_payload_ops {
     const char *type_name;
     void (*copy)(void *dest_value, void *source_value);
+    /* Last-resort release in an unspecified Rexx context. No Rexx reentry or
+     * catchable/resumable signal; ordered release belongs in explicit APIs. */
     void (*finalize)(void *value);
 } rxvm_native_payload_ops;
 #endif

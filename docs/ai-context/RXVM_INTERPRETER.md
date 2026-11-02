@@ -430,8 +430,8 @@ table; imported wrappers share it. Frame entry/reuse installs its worker-local
 storage into both suffix pointer maps and resets slot identities, allocating
 value backing only for the owned prefix and `a0`. Full cleanup and reference
 expiry skip borrowed backing; references identify the original provider owner.
-Borrowed RET copies, including when its active pointer has been swapped; MOVE
-requires an owned encoded slot still at its own base. Binding tables survive
+RETURN copies its active value, including when its pointer has been swapped or
+linked; genuine MOVE retains storage-relocation semantics. Binding tables survive
 relink and are released once with their canonical procedure. A failed resolution
 keeps the context dirty and nonexecutable; partially prepared tables remain
 context-owned for retry or destruction.
@@ -445,8 +445,20 @@ arguments do not own value storage, but their entry pointers are recorded in
 both `baselocals` and the active `locals` map. This makes `UNLINK` well-defined
 for argument registers and preserves the frame-entry mapping needed when a
 nested call uses `a1...` as its call window. Ordinary
-return places the frame on the procedure recycler; full value teardown happens
-when recycled frames are drained. Because references are rare, frames carry a
+return finalizes native payloads that remain in owned local backing, `a0`, or
+owned attribute backing, then places the frame on the procedure recycler. A
+returned value is assigned before frame cleanup. Register RETURN has logically
+COPY-equivalent value semantics; internal buffer transfer is an optimization
+only where it preserves the surface contract or an explicitly accepted
+variance applies. The current register-return path uses `copy_value()`, retaining
+the destination's storage identity and copying source active attributes into
+destination backing. Source target identities remain at their original storage
+and expire with the callee. Returned descriptors still name their original
+target, so returning a descriptor cannot extend a callee-owned target lifetime.
+COPY hooks retain their real effects. General storage-relocation MOVE retains
+its own semantics. Other dirty contents and reusable storage remain
+until the recycler is drained. Because references are
+rare, frames carry a
 small flag that enables reference-lifetime cleanup. A helper may execute
 `MKREF` against caller-owned receiver storage. For a fallback reference, the
 VM marks the active frame and its ancestors; it does not search every physical
@@ -455,7 +467,12 @@ reference-lifetime cleanup on return, invalidating
 frame-owned local and `a0` storage plus nested attribute storage without freeing
 reusable buffers. Incoming `a1+` pointers are borrowed and never released by
 the callee's frame cleanup; a linked global or external value retains its own
-lifetime. Lexical scopes that own local storage emit `endlife` for each
+lifetime. A register return that may carry reference state also marks surviving
+ancestors, so copied descriptor retains are released by their destination owner.
+The guard captures the callee reference flag or a returned root identity,
+descriptor, aggregate or native COPY hook before assignment; ordinary scalar
+returns require no ancestor walk or tree search.
+Lexical scopes that own local storage emit `endlife` for each
 storage-owning local before block metadata is closed and, when eligible, before
 the compiler returns those registers to the reuse pool. Register reuse is more
 conservative than lexical cleanup: arguments, `.ref` arguments,
@@ -477,7 +494,8 @@ Counted argument-bearing bytecode calls record the first register in the
 caller's contiguous call window. `CALL R,P,R` and `DCALL R,R,R` capture the
 integer count once after initializer return and before frame allocation/reset.
 That checked snapshot drives allocation, frame-failure telemetry and argument
-binding even if a recycled `a0` finalizer mutates the caller's count. Invalid
+binding. Ordinary retired frames have no finalizer-bearing `a0` payload; the
+snapshot also protects against private host injection into recycled backing. Invalid
 integer/window bounds use the existing call-frame failure path. Result-pointer
 capture stays before allocation; actual pointers are still bound afterward.
 Normal return still executes the
@@ -528,14 +546,25 @@ frame-local mutation, the child makes a private copy and marks it owned, so
 handlers installed by a caller are visible to later callees while child changes
 still cannot mutate the caller's policy. The LIFO call-frame lifetime keeps a
 shared parent table live until its children return. Returning restores the
-caller's signal state by returning to the caller frame, and a recycled child
-releases any private table before it is reused.
+caller's signal state by returning to the caller frame. Retiring a child with
+a private table reapplies the surviving parent's native interrupt modes after
+discarding the child's saved entries and private table. This includes unsaved
+SIGIGNORE changes on both normal return and owner-directed unwind. A recycled
+child releases any private table before it is reused.
+Native enable/ignore transitions retain the first captured host disposition;
+run cleanup restores its handler, mask and flags rather than an intermediate VM
+mode.
 
 Each frame also owns an `interrupt_stack` used by block-scoped handlers. The
 `sigpush` and `sigpop` instructions save and restore individual handler entries
 on that stack. Any instruction that must change the frame's handler policy
-first uses the common copy-on-write helper; allocation failure follows the
-normal signal/OOM path. Frame cleanup clears any remaining pushed entries and
+first uses the common copy-on-write helper. A signal instruction's own invalid
+tag/handler/target/origin, unmatched POP, allocation failure or native-mode
+installation failure terminates the current VM run with its error status and
+ordinary embedding cleanup; installed handlers cannot catch that self-error.
+Validate and allocate before publishing changed handler entries or saves. A
+valid SIGNAL's requested event remains catchable through the ordinary policy.
+Bare BPON/BPOFF only change pending bits. Frame cleanup clears pushed entries and
 discards their saved table values without forcing a private copy, which gives
 block-scoped handling a safety net for frame exit and frame recycling without
 allocating during cleanup.
@@ -553,12 +582,14 @@ delivery during a multi-tag pop sequence and removal below the stack head.
 Inherited parent-frame markers remain owned by the parent. Whole-frame teardown
 discards the stack without allocating or rebasing the table that dies with it.
 Rebasing does not make `sigpop` idempotent: popping a name without a remaining
-save still raises `INVALID_SIGNAL_CODE`.
+save still terminates the run with `INVALID_SIGNAL_CODE`.
 
 Signal codes are defined in `interpreter/rxsignal.h`. The handler responses are
-`IGNORE`, `HALT`, `SILENT_HALT`, `RETURN`, `BRANCH`, `BRANCH_VALUE`, `CALL`,
-and `CALL_BRANCH`, exposed in RXAS as `sigignore`, `sighalt`, `sigshalt`,
-`sigret`, `sigbr`, `sigbrv`, `sigcall`, and `sigcallbr`. `KILL` is always
+`IGNORE`, `HALT`, `SILENT_HALT`, `BRANCH`, `BRANCH_VALUE`, `CALL`,
+`CALL_ACTION` and `CALL_BRANCH`, exposed in RXAS as `sigignore`, `sighalt`,
+`sigshalt`, `sigbr`, `sigbrv`, `sigcall`, `sigcalla` and `sigcallbr`. SIGRET and
+the physical-frame RETURN response are retired; opcode 502 remains reserved
+and source/stale binary input is rejected. `KILL` is always
 halt-only. `BREAKPOINT` is the debugger/trace signal rather than an ordinary
 error condition.
 
@@ -644,14 +675,55 @@ Payload copying is identical to register-payload `signal`: preserve type,
 attributes and explicit text/binary length, including embedded NUL, without
 message conversion or UTF8 validation. Validate the literal name first, then
 the bound-event representation before reading its raw slots. Unknown names
-raise `INVALID_SIGNAL_CODE`; invalid origins raise `INVALID_ARGUMENTS`, both at
-the current instruction. The requested name may deliberately differ from the
+terminate the run with `INVALID_SIGNAL_CODE`; invalid origins terminate with
+`INVALID_ARGUMENTS`, both at the current instruction. These self-errors bypass
+installed handlers. The requested name may deliberately differ from the
 origin event's name. Capture the source before copying the payload, so the two
 register operands may alias. The override is per raised condition and consumed
 once by dispatch; ordinary `signal` retains its current-instruction source.
 Opcode 660, operand encoding, flow and handler policy are unchanged. Level C
 uses this form for typed outward relay and a missing delivered handler's 16.1,
 retaining the causing event rather than the generated handler-entry location.
+
+#### Executable inline regions on signal departure
+
+RXBIN feature 12 supplies typed logical REGION, RANGE and EXIT records, separate
+from diagnostic inline frames. Their handwritable RXAS declarations and validation
+rules are documented in the [assembler guide](RXAS_ASSEMBLER.md). A region may
+have several disjoint code ranges, with checked parent ancestry and an exact
+owning procedure. Exit actions have source-PC phases and explicit order.
+
+The loader builds immutable region/range/action indexes once. Ordinary entry,
+execution and return do not push a scope, allocate a frame, interpret a return
+plan or add a dispatch condition. The producer emits ordinary normal-return
+restoration instructions where needed.
+
+When BRANCH, BRANCH_VALUE or CALL_BRANCH selects an outward destination, the VM
+copies the handler and identifies source ownership from the actual interrupted
+PC. For a real child it validates the suspended owner's canonical callsite;
+the child's return PC may equal a range endpoint. SIGNALORIGIN changes diagnostic
+provenance and never substitutes for this executable coordinate. A target must
+belong to the active region or an ancestor, not an inactive sibling/descendant.
+
+Before retiring anything, validate the selected action phases, owned numeric
+sources, effective numeric values and runtime argument-slot bounds. Then restore
+the real-child call windows and unwind real children, restore the selected
+handler's existing save marker, and retire crossed logical regions inside out.
+Cold actions expire owned reference bases and undo introduced LINK/UNLINK/SWAP
+deltas. SWAP restores pointer and unique slot identity; it does not copy values.
+Numeric restoration reattaches the decimal provider to the resulting live
+context before entering the handler. Malformed runtime state is an uncatchable
+VM-run error with ordinary embedding cleanup.
+Numeric bounds follow the ordinary RXAS setters independently, including an
+inherited FUZZ greater than or equal to DIGITS. Real signal-handler frames keep
+their actual suspended parent coordinate separately from diagnostic provenance;
+ordinary child calls recover the canonical instruction ending at return_pc.
+
+An internal catch or resuming CALL/CALL_ACTION keeps the region live. IGNORE
+resumes. HALT/SILENT_HALT and terminal self-errors finish the run and retire
+physical owners normally; no per-region finalizer scan is needed. Finalizer
+timing/context and external-interrupt placement retain their documented freedom,
+while reference expiry and ordinary ownership remain exact.
 
 #### Terminal caller-context transport
 
@@ -671,28 +743,23 @@ names/source text and coordinates. It retains no live frame, module, worker,
 metadata or value pointer. Private diagnostic callout scopes are independent
 of checked-invocation authorization and restore on every exit.
 
-Committed inline scopes contribute their saved physical INLENTER call sites
-to that same chain. Walk logical scopes and real frames from the innermost
-activation outward, including retained child calls and suspended callouts,
-without duplicating a frame segment. A failed entry contributes no new logical
-frame. `logical origin` and `logical caller` labels identify the sealed provider
-procedure/module separately from each actual executable module/address. Source
-records and their procedure-range checks always use the physical instruction
-owner; no provider address is inferred from a clone offset. Both detached event
-rendering and the live fallback use the same walker. COPY and SIGNALORIGIN
-retain this logical context after scope unwind, including empty/unavailable
-allocation outcomes. Direct clones instead use the typed RXBIN 007
-`INLINE_FRAME`/`INLINE_MAP` metadata and its required inline-diagnostics feature
-bit. The module loader prepares immutable frame, parent, source-step and
-disjoint address-range indexes once. Ordinary execution adds no scope state,
-per-call allocation or diagnostic instructions. These records provide names
-and source identity only; they never select an executable provider.
+Direct clones use typed RXBIN 007 `INLINE_FRAME`/`INLINE_MAP` metadata and its
+required inline-diagnostics feature bit. The module loader prepares immutable
+frame, parent, source-step and disjoint address-range indexes once. The
+diagnostic walker combines those static frames with ordinary physical callers
+and suspended callouts, including retained child calls. `logical origin` and
+`logical caller` labels identify the source procedure/module separately from
+the executable module/address; source records always use the physical
+instruction owner. COPY and SIGNALORIGIN retain the detached context after
+unwind. Ordinary execution adds no logical-scope state, per-call allocation or
+diagnostic instructions. Static records provide names and source identity
+only; they never select an executable provider.
 
 The same walker selects the initial static frame from the actual fault/resume
 PC and each suspended physical caller's static frame from its retained child's
 return PC. A SIGNALORIGIN raw-coordinate override does not choose static frames.
-Static parents and runtime inline scopes contribute to the same ordered caller
-chain. Each frame record's physical clone-entry address is its removed-call
+Static parents contribute to the ordered caller chain. Each frame record's
+physical clone-entry address is its removed-call
 coordinate; its referenced source step supplies exact file/line/span text,
 including repeated identical step IDs at restored source anchors. SOURCE
 stripping preserves logical names and maps but clears these source-step
@@ -1502,10 +1569,16 @@ the host `reserve_decimal` service and must not call `free(decimal_value)`.
 The VM loads the default decimal plugin for the worker before executing the
 first frame. Ordinary child frames borrow the plugin instance and attach it to
 their numeric context; the published VM and plugin interfaces do not install a
-frame-owned decimal or Unicode plugin. Current entry/return paths synchronize
-inherited numeric settings; the ABI also permits the host to omit a redundant
-synchronization when effective numeric settings are unchanged. The legacy
-`decimal_loaded_here` and `unicode_loaded_here` cleanup checks are defensive;
+frame-owned decimal or Unicode plugin. Child entry attaches the borrowed decimal
+instance to the child's numeric context. Every return to a live parent,
+including a void return or returning signal handler, reattaches it to that
+parent before retiring the child. An owner-directed signal unwind does the same
+for each crossed real frame, so the destination handler uses its owner's
+settings. Reattachment is required even when the values match: later setters
+and decimal operations read the live context through that pointer. These
+transitions synchronize effective settings; the ABI also permits the host to
+omit a redundant synchronization when effective numeric settings are unchanged.
+The legacy `decimal_loaded_here` and `unicode_loaded_here` cleanup checks are defensive;
 their flags remain unset on published entry and instruction paths. This
 ownership fact does not imply that plugin values, context, callbacks or
 external observations are unchanged.
@@ -1581,12 +1654,11 @@ The VM has two distinct value-transfer paths:
 - `move_value(dest, source)` transfers ownership of allocated buffers and
   attribute arrays into `dest`, then reinitializes `source`. Here "ownership"
   means owner-local value ownership; it does not retag worker slabs or authorize
-  a cross-worker move. This is used for
-  returning true local values from a Rexx procedure and is the efficient path
-  for unique ownership.
-- Rexx `RET_REG` moves only when returning a real local register. Returning an
-  argument, global, or linked attribute is copied so the caller-visible source
-  remains valid.
+  a cross-worker move. This is the explicit storage-relocation path; reference
+  identity follows the moved storage.
+- Rexx `RET_REG` assigns with COPY semantics for local and borrowed sources.
+  It preserves source/descriptor targets and destination storage identity,
+  invokes required native COPY hooks, then retires callee-owned lifetimes.
 - Rexx procedure calls initially link caller argument registers into callee
   locals. The compiler/emitter is responsible for adding defensive copies for
   by-value writable formals when required by the language contract.
@@ -1656,15 +1728,30 @@ source offset and overwrite it with `-1`, `0`, or `1`.
 `FREADB` reads bytes with `fread(ptr, 1, n, file)`, so `binary_length` is the
 actual byte count read, not a C item count.
 
-Native payload finalization caused only by cleanup of dirty private frame
-storage has no specified call-relative or instruction-relative time. The VM
-may run it on frame reuse, frame retirement or context teardown; an optimizer
-may change which of those opportunities occurs. Programs and provider hooks
-must not use that incidental timing to order program work. Each payload that
-is actually installed remains owned until transfer or destruction and must be
-finalized exactly once when its ownership ends. Explicit value operations
-retain their documented effects and ordering; this rule does not defer an
-explicit clear or turn a borrowed `a1+` value into callee-owned storage.
+On frame retirement, the VM scans owned local backing, `a0`, and owned
+attribute backing and finalizes any native payloads still carrying a finalizer.
+It leaves other dirty components and reusable storage intact. Transferred
+return values have a new owner before this scan; incoming `a1+` arguments,
+globals and foreign private bindings remain borrowed and are not scanned as
+callee-owned storage. A payload is finalized once when its ownership ends.
+Programs and provider hooks must not use incidental cleanup timing to order
+program work: an optimizer can change when a value is last retained or moved.
+Explicit value operations retain their documented effects and ordering.
+
+Native payload finalizers are last-resort resource cleanup. Their execution
+point and Rexx execution context are unspecified: an optimization may retain
+an owned payload until its enclosing frame retires. A finalizer must not
+reenter Rexx, depend on the active frame, handler or numeric context, or raise
+a catchable/resumable Rexx signal. In particular, a signal named `FAILURE` or
+`CANCEL` is not necessarily terminal because a handler may intercept it.
+On cleanup failure, a finalizer may make a best-effort host diagnostic log and
+continue, or use an unconditional terminal host path. Neither path selects a
+Rexx handler; the timing and diagnostic frame are unspecified. A finalizer may
+release native resources and run nested native cleanup, but program code must
+use explicit close/dispose
+operations when it needs ordered release or a recoverable error. A provider
+that relies on program-visible finalizer timing or Rexx signal delivery is
+outside this contract.
 
 When `native_payload_ops` is set:
 
@@ -1688,7 +1775,7 @@ When `native_payload_ops` is set:
   visible value, so stale native resources are not accidentally copied after a
   register is reused as an integer, float, or string.
 
-The supported public callback ABI exposes value handles, not writable suspended
+Other supported public callbacks expose value handles, not writable suspended
 caller `value **` slots. A resource callback may reenter Rexx through a separate
 root activation and may mutate pointees, resources, lifetime state, context
 and pending signals. On normal return it preserves the suspended frame's
@@ -2412,8 +2499,9 @@ The same profiling-only backend also records the NR-05 dynamic call census at
 authoritative VM boundaries. It distinguishes direct/dynamic bytecode and
 native calls, external/root entry, signal-handler entry, failed/unresolved
 attempts, exact actual arity, callable metadata kind, and fresh/reused/no-child
-frame disposition. `RET_REG` records its actual true-local move or
-non-local copy branch; void, ignored, immediate, terminal, and unwind domains
+frame disposition. `RET_REG` records its value copy in `ret_reg_copy`; the
+reserved legacy local-move counter remains zero. Void, ignored, immediate,
+terminal, and unwind domains
 remain distinct. `SRCMETHODSEL` and `SRCFPROCSEL` record
 attempt/success/failure separately from the later `DCALL`.
 

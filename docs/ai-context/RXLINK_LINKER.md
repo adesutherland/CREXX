@@ -38,8 +38,8 @@ shared typed RXBIN validator. Program and initializer roles remain distinct.
 The native linker also rejects
 executable procedure targets that resolve locally, through an import, or through
 an exact sealed image binding to marked main; the same check runs before and
-after its trusted inline service. Handler and logical activation targets share
-the canonical P-operand rule. This metadata grants no permission to clone code.
+after its trusted inline service. Handler targets use the canonical P-operand
+rule. This metadata grants no permission to clone code.
 At runtime the existing `rxvm_run` and `rxvml_run` supply checked program entry; ordinary
 `rxvm_call` and child entry reject before initialization/preparation side effects.
 
@@ -280,9 +280,18 @@ It intentionally does not remove runtime contract metadata such as:
 - `META_IMPLEMENTS`
 - `META_MEMBER`
 - `META_INITIALIZER`
+- `META_INLINE_REGION`, `META_INLINE_RANGE` and `META_INLINE_EXIT`
 - sealed `.task1`/`.task2`/`.task3` bindings
 
 That keeps interface/class dispatch and metadata-aware tooling behaviour stable while still removing source text/file path payloads and source-level TRACE value metadata.
+
+Executable inline exits require RXBIN 007 feature 12. They are independent of
+diagnostic inline frames/maps and survive both source and compiler-inline
+stripping. Shared-pool linking relocates the region's owning PROC reference;
+code coordinates and typed r/g/a indices remain module-local. Relinking retains
+fragmented ranges, phase/order and every numeric/lifetime/binding operand. The
+checked codec rejects invalid ancestry, cross-procedure/overlapping sibling
+ranges, action phases/orders and owned-base bounds before output publication.
 
 ## Control Files
 

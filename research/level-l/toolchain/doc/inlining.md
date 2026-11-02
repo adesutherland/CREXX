@@ -1,7 +1,8 @@
 # RXAS inlining architecture
 
-**Status: the following design is approved; implementation and qualification are
-open under the [single toolchain plan](../PLAN.md).** Delivery is VM changes and
+**Status: this design is approved and native VM preparation is locally qualified.
+Shared Level L adoption and inliner2 remain open under the
+[single toolchain plan](../PLAN.md).** Delivery is VM changes and
 QA, then shared Level L changes and QA, then a fresh inliner2. This document owns
 semantics and mapping rules; the plan owns numbered outcomes, tasks and gates.
 Inliner1 is not the implementation baseline for the new service.
@@ -116,7 +117,7 @@ SIGNALORIGIN changes diagnostic provenance, not executable ownership.
 | **S5 — interrupted multi-tag cleanup** | Accepted SHRUG: ordinary successive POPs and existing dispatch remain. External interrupt timing/context may differ, including rare interrupted-run cleanup/terminal errors. Preserve ordinary ownership/values/control; no atomic group/return instruction or exact CALL/RET checkpoint proof. |
 | **S6 — KILL** | Accepted SHRUG: HALT/SILENT_HALT terminal status/reporting and later KILL policy differences do not veto inlining. Copy authored setters; never synthesize unsupported KILL PUSH/POP. No KILL snapshot extension. |
 | **S7 — producers/breakpoints** | Shared rules cover G blocks and C wrappers/relay. BPON with a procedure changes handler plus pending state; bare BPON/BPOFF affect pending state only. Preserve pending operations and protect changed handler entries. Physical TRACE/host observations retain their explicit M3 contract. |
-| **S8 — native mode recovery** | VM owner: independently reproduce suspected native ignore-mode leakage after an unsaved real-child SIGIGNORE and repair if confirmed. Native behavior is not the oracle and this defect is not an inliner admission rule. |
+| **S8 — native mode recovery** | VM retirement reapplies the surviving parent policy when discarding a private child table. Native mode transitions preserve the first captured host disposition for final restoration. Real-child normal/unwind and host readback controls qualify this; it is not an inliner admission rule. |
 
 Native B/G protected blocks and Level L C use grouped PUSH/BR or BRV/reverse POP.
 C adds Classic activation/condition and fatal-relay layering; native C handler
@@ -130,7 +131,7 @@ The selected handler's own block saves remain for authored handler-entry POPs.
 For nested A/B/C/D clones, escape to A restores saves newer than A's recorded
 marker and retires D,C,B; a target in C retires only D. A returning handler keeps
 its suspended region. There is no new signal-stack marker or atomic multi-tag
-restore. Full implementation/QA of these contracts remains open.
+restore. Native support is locally qualified; shared L policy facts and generated clone emission remain open.
 
 ### Duty 2 — numeric and provider context
 
@@ -143,7 +144,7 @@ published per-clone provider switch or provider allocation is required.
 | **N1 — changed fields** | Level L consumes canonical separate numeric read/write masks and point/exit facts. A read alone needs no restoration. Real-child local settings do not become the enclosing clone's write set. |
 | **N2 — normal restore** | Use existing GET/SET. Known enclosing values restore as literals; unknown values are saved once in fresh protected locals. Restore only affected fields, reuse adequate authored restoration and omit equal/unchanged work. Unknown caller settings alone do not reject inlining. Transfer result under callee view first. |
 | **N3 — nonlocal restore** | Internal catches/resuming handlers retain current view. Cold region data restores crossed fields from constants or mapped saved registers before entering an ancestor handler, inside out. No numeric stack, entry allocation or new numeric opcode. |
-| **N4 — surviving real frame** | VM reattaches shared decimal provider to the surviving live numeric context on every return/unwind, including void and handler returns. Rebind even when values match. Numeric repair exists with bounded native checks; integration and L projection QA remain open. |
+| **N4 — surviving real frame** | VM reattaches shared decimal provider to the surviving live numeric context on every return/unwind, including void and handler returns. Rebind even when values match. Native return/unwind repair and component integration are locally qualified; L projection QA remains open. |
 | **N5 — provider identity** | Preserve selected worker providers and authored operations. Defensive legacy loaded-here flags do not imply a frame-owned provider. Only a real published switch would add a new duty. |
 | **N6 — errors/timing** | Ordinary invalid numeric setters retain catchable program errors. Only signal-instruction self-errors use S1. External snapshots during successive restores use the approved timing SHRUG; once outward delivery is selected, N3 still restores before owner handler entry. |
 
@@ -168,8 +169,8 @@ does not change. Ordinary decimal operations retain their own effects.
 | **R2 — normal exit** | Existing ENDLIFE invalidates target identities and releases descriptor retains throughout owned backing, including inactive unlinked attributes. Address the base via proved mapping/UNLINK, never borrowed active storage. After result assignment end remaining owned lifetimes before repeated activation reuse. No ordinary value clear/native finalizer is implied. |
 | **R3 — returned values** | Logical COPY-equivalent return governs value, destination assignment and descriptor targets, then callee-owned expiry. A returned descriptor still targets original storage; returning it does not extend a local target's lifetime. Internal copy/move choices are not an inliner contract or per-site compliance proof. |
 | **R4 — outward exit** | Cold cleanup uses the same owned-base map with exit-specific presence facts, retiring crossed regions inside out. A root emptied by a later normal return may still require cleanup on an earlier signal. Internal/resuming handlers retain locals; preserve authored lexical ENDLIFE independently. |
-| **R5 — conservative cleanup** | Unknown presence with known owned root permits ENDLIFE, not call rejection. Omit only if identities AND descriptor payloads are absent across the owned tree, including inactive capacity and child MKREF through borrowed clone storage. Correct ENDLIFE's canonical unknown-signal row to NONE. |
-| **R6 — VM conformance** | Repair generic return implementation/bookkeeping against R3, covering source/destination identities, linked attributes, returned descriptors, borrowed sources and native-copy effects. Result-installed identity/descriptor retains must mark the surviving owner for retirement. No universal COPY helper requirement or blanket reference SHRUG. |
+| **R5 — conservative cleanup** | Unknown presence with known owned root permits ENDLIFE, not call rejection. Omit only if identities AND descriptor payloads are absent across the owned tree, including inactive capacity and child MKREF through borrowed clone storage. ENDLIFE has a canonical NONE signal row and complete no-callback inventory. |
+| **R6 — VM conformance** | Ordinary register RETURN uses COPY assignment and marks surviving owners when reference state may be installed. Controls cover source/destination identities, linked attributes, returned descriptors, borrowed sources and native-copy effects. Result-installed identity/descriptor retains must mark the surviving owner for retirement. No universal COPY helper requirement or blanket reference SHRUG. |
 
 ENDLIFE is opcode 514, one register; its helper neither allocates, invokes Rexx
 callbacks nor synchronously signals. It follows owned unlinked attribute backing,
@@ -182,7 +183,7 @@ RETURN's surface.
 
 | ID | Required rule and owner |
 |---|---|
-| **F1 — eventual physical retirement** | VM scans owned local/a0/all owned attribute backing, including inactive capacity, before recycling on normal/unwind exit. Finalize each outstanding ownership obligation once; exclude borrowed actuals/globals/active links/private suffix. Other dirty value contents remain. Scan implementation exists; real-frame qualification remains open. |
+| **F1 — eventual physical retirement** | VM scans owned local/a0/all owned attribute backing, including inactive capacity, before recycling on normal/unwind exit. Finalize each outstanding ownership obligation once; exclude borrowed actuals/globals/active links/private suffix. Other dirty value contents remain. The scan and real-frame normal/unwind/terminal/reuse controls are locally qualified. |
 | **F2 — clone exit** | Accepted SHRUG: payload left in clone backing remains owned by enclosing physical frame until its retirement; explicit destruction/overwrite may release earlier. No per-clone finalizer instruction, logical-exit scan or cold finalizer action. Timing and active Rexx frame/numeric/signal context are unspecified. Reference expiry is separate. |
 | **F3 — copies/transfer/return** | Preserve COPY/share and genuine MOVE ownership, logically COPY-equivalent return and required native-copy effects. Faster buffer movement must remain equivalent or have a specifically accepted difference. Never lose/double ownership or consume borrowed storage without a valid contract. |
 | **F4 — body operations** | Preserve explicit clear/overwrite/close/dispose and native calls through canonical effects. Possible finalization does not exclude a procedure. Optional deletion/reordering needs ordinary shared effect/ownership facts; uncertainty keeps the operation. |
@@ -287,10 +288,32 @@ Diagnostic maps alone grant neither executable identity nor cleanup authority.
 
 ### Executable cold-exit boundaries
 
-The approved direction is a typed checked region/continuation tree and finite
-exit-specific numeric/owned-reference/introduced-binding actions, evaluated only
-on a selected cold departure. The concrete syntax/version/layout is to be
-frozen early in VM phase 1, with loader/relocation validation before implementation.
+RXBIN 007 feature 12 carries version-1 REGION, RANGE and EXIT records. REGION
+defines a module-local identity, parent and owning PROC at the clone-entry
+coordinate; `.inlineregion id,parent` writes it. `.inlinerange begin,end,id`
+maps a half-open instruction range. Several disjoint ranges may name one
+region, every child range is contained in a parent range, and unrelated ranges
+cannot overlap. Diagnostic inline IDs confer no executable region authority.
+
+`.inlineexit id,begin,end,order,"action",operands` records a finite cold action
+for a half-open source-PC phase within one range. Active orders within a region
+are unique. Numeric field names select literals or saved owned r bases;
+ENDLIFE names owned r bases; UNLINK/SWAP/LINK use typed r/g/a slots, including
+captured entry anchors. Static local/global/owned-prefix bounds are checked at
+decode and argument-window bounds at cold use. Unused fields are zero. Phases
+begin after a required save or binding change exists, and finish when ordinary
+cleanup discharges that duty. They describe duty changes, not every instruction.
+The codec owns portable encoding and prepublication validation. Native linking
+relocates PROC references while preserving module-local code and bank indices;
+executable records survive stripping. The native optimizer protects affected
+ranges and named storage until it models cold consumers, leaving unrelated
+code available to ordinary optimization. No inliner refusal follows from that
+conservative native cost; phase 2 owns shared target relocation and facts.
+
+Only a selected cold departure evaluates these actions. Numeric saved values
+obey the individual RXAS field bounds; no source-language FUZZ-versus-DIGITS
+restriction is imposed. Sources and bounds are validated before cleanup; fields
+restore inside out and the provider reattaches to the final surviving view.
 Actual PC, not SIGNALORIGIN, determines source owner. Validate retained-child
 callsite ownership independently of return PC, active/ancestor destination,
 action storage ownership and bounds. Inactive sibling/stale targets fail safely.

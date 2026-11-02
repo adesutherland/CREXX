@@ -1,4 +1,5 @@
-/* cREXX License (MIT). Recycled-a0 finalizer versus counted-call capture. */
+/* cREXX License (MIT). Private host injection into recycled a0 versus
+ * counted-call capture. Ordinary retired frames have no such payload. */
 #include "rxvm.h"
 #include "rxvmintp.h"
 #include "rxvml.h"

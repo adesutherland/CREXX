@@ -247,45 +247,6 @@ foreach(_invoke_case core native values)
     endforeach()
 endforeach()
 
-# Checked request completion when a bytecode target leaves an inline scope by
-# inherited SIGRET. The target is authored RXAS so the tested ISA is explicit.
-set(_invoke_sigret_program "${CMAKE_CURRENT_BINARY_DIR}/rxpa_invocation_inline_sigret")
-crexx_add_fixture_command(OUTPUT "${_invoke_sigret_program}-linked.rxbin"
-    BYPRODUCTS "${_invoke_sigret_program}.rxas"
-        "${_invoke_sigret_program}.rxbin"
-        "${_invoke_sigret_program}-target.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
-        -i "${CMAKE_BINARY_DIR}/bin"
-        -o "${_invoke_sigret_program}"
-        "${CMAKE_CURRENT_SOURCE_DIR}/rxpa_invocation_inline_sigret.crexx"
-    COMMAND $<TARGET_FILE:rxas> -n "${_invoke_sigret_program}"
-    COMMAND $<TARGET_FILE:rxas> -n -o "${_invoke_sigret_program}-target"
-        "${CMAKE_CURRENT_SOURCE_DIR}/rxpa_invocation_inline_sigret_target.rxas"
-    COMMAND $<TARGET_FILE:rxlink>
-        -r "${_invoke_sigret_program}"
-        -r "${CMAKE_CURRENT_SOURCE_DIR}/rxpa_invocation_inline_sigret_target.rxas"
-        -o "${_invoke_sigret_program}-linked"
-        "${_invoke_sigret_program}" "${_invoke_sigret_program}-target"
-        "${CMAKE_BINARY_DIR}/bin/library"
-    DEPENDS rxc rxas rxlink library compiler_exit_bin
-        "${CMAKE_BINARY_DIR}/bin/library.rxbin"
-        "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
-        "${CMAKE_CURRENT_SOURCE_DIR}/rxpa_invocation_inline_sigret.crexx"
-        "${CMAKE_CURRENT_SOURCE_DIR}/rxpa_invocation_inline_sigret_target.rxas"
-    VERBATIM)
-add_custom_target(rxpa_invocation_inline_sigret_artifact
-    DEPENDS "${_invoke_sigret_program}-linked.rxbin")
-if(TARGET rxbvm)
-    add_test(NAME rxpa_invocation_inline_sigret_rxbvm
-        COMMAND $<TARGET_FILE:rxbvm> "${_invoke_sigret_program}-linked")
-    set_tests_properties(rxpa_invocation_inline_sigret_rxbvm PROPERTIES
-        PASS_REGULAR_EXPRESSION "CHECKED_INLINE_SIGRET_PASS"
-        FAIL_REGULAR_EXPRESSION "PANIC:|ERROR:|FAIL:"
-        TIMEOUT 90 LABELS "rxpa;core;ownership;inline;signal")
-    crexx_register_test_prep_targets(TESTS rxpa_invocation_inline_sigret_rxbvm
-        TARGETS rxpa_invocation_inline_sigret_artifact rxbvm)
-endif()
-
 function(enable_rxpa_test_vm_platform target)
     # These static-plugin harness VMs need the core socket symbols, but they
     # intentionally keep the historical no-TLS test configuration.

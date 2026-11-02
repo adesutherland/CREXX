@@ -5,8 +5,37 @@ foreach(_required VM ASSEMBLER LINKER DISASSEMBLER SERVICE BAD_SERVICE MUTATOR W
   endif()
 endforeach()
 file(MAKE_DIRECTORY "${WORK}")
-file(WRITE "${WORK}/root.rxas" ".globals=1\nhelper() .expose=linkinline.helper\nmain() .locals=4\n  load g0,100\n  load r0,5\n  call1 r1,helper(),r0\n  ieq r2,r1,12\n  brf failed,r2\n  ieq r3,g0,100\n  brf failed,r3\n  sayx \"PASS: selected private global\"\n  ret 0\nfailed:\n  ret 1\nprivate_child() .locals=0\n  ret 999\n")
-file(WRITE "${WORK}/provider.rxas" ".globals=1\nhelper() .locals=2 .expose=linkinline.helper\n  load g0,7\n  call1 r0,private_child(),a1\n  iadd r1,r0,g0\n  ret r1\nprivate_child() .locals=1\n  iadd r0,a1,0\n  ret r0\n")
+# The call intentionally observes its physical caller. The service must retain
+# that CALL while preserving the separately authored static private binding.
+file(WRITE "${WORK}/root.rxas" [=[.globals=1
+main() .locals=4
+  .inlinedprivate r3,"@1",g0
+  load g0,100
+  load r3,7
+  load r0,5
+  call1 r1,@1::0(),r0
+  ieq r2,r1,12
+  brf failed,r2
+  ieq r2,g0,100
+  brf failed,r2
+  sayx "PASS: selected private global"
+  ret 0
+failed:
+  ret 1
+private_child() .locals=0
+  ret 999
+]=])
+file(WRITE "${WORK}/provider.rxas" [=[.globals=1
+private_child() .locals=2
+  metaloadcalleraddr r0
+  linkattr1 r1,r0,2
+  igt r1,r1,0
+  brf missing_parent,r1
+  iadd r1,a1,g0
+  ret r1
+missing_parent:
+  ret -100
+]=])
 
 function(run_checked _name)
   execute_process(COMMAND ${ARGN} RESULT_VARIABLE _result
@@ -19,7 +48,9 @@ endfunction()
 
 run_checked("assemble root" "${ASSEMBLER}" -n "${WORK}/root.rxas")
 run_checked("assemble provider" "${ASSEMBLER}" -n "${WORK}/provider.rxas")
-set(_inputs "${WORK}/root.rxbin" "${WORK}/provider.rxbin")
+run_checked("seal exact call and private binding" "${MUTATOR}" join-seal
+  "${WORK}/selected-input.rxbin" "${WORK}/root.rxbin" "${WORK}/provider.rxbin")
+set(_inputs "${WORK}/selected-input.rxbin")
 set(_options)
 foreach(_runtime IN LISTS RUNTIME)
   list(APPEND _options --inline-runtime "${_runtime}")
@@ -44,10 +75,10 @@ if(NOT _stdout MATCHES "PASS: selected private global")
   message(FATAL_ERROR "selected provider lost private/global identity")
 endif()
 run_checked("selected service disassembly" "${DISASSEMBLER}" "${WORK}/inlined.rxbin")
-if(_stdout MATCHES "[\n ]+call1 [^\n]*helper\\(\\)" OR
-   NOT _stdout MATCHES "inlenter" OR NOT _stdout MATCHES "qglobbind[^\n]*@1" OR
-   NOT _stdout MATCHES "call1 [^\n]*@1::[0-9]+\\(\\)")
-  message(FATAL_ERROR "selected call was retained or exact private-global binding missing\n${_stdout}")
+if(NOT _stdout MATCHES "[.]inlinedprivate r[0-9]+,\"@1\",g0" OR
+   NOT _stdout MATCHES "call1 [^\n]*@1::0\\(\\)" OR
+   _stdout MATCHES "[ \t](inlenter2?|linkargv|qglobbind)[ \t]")
+  message(FATAL_ERROR "service lost retained physical CALL or static private binding\n${_stdout}")
 endif()
 
 # Reprocess existing sealed output after changing the selected module order.
@@ -64,10 +95,11 @@ if(NOT _stdout STREQUAL "PASS: selected private global")
   message(FATAL_ERROR "service reprocessing changed private target/global identity: ${_stdout}")
 endif()
 run_checked("reprocessed selected identities" "${DISASSEMBLER}" "${WORK}/reprocessed.rxbin")
-if(NOT _stdout MATCHES "qglobbind[^\n]*@2" OR
+if(NOT _stdout MATCHES "[.]inlinedprivate r[0-9]+,\"@2\",g0" OR
+   NOT _stdout MATCHES "call1 [^\n]*@2::0\\(\\)" OR
    _stdout MATCHES "@1::[0-9]+\\(\\)" OR
-   _stdout MATCHES "call1 [^\n]*@2::[0-9]+\\(\\)")
-  message(FATAL_ERROR "sealed private child was not selected/rebased before reprocessing\n${_stdout}")
+   _stdout MATCHES "[ \t](inlenter2?|linkargv|qglobbind)[ \t]")
+  message(FATAL_ERROR "sealed private child or static binding was not rebased before reprocessing\n${_stdout}")
 endif()
 file(SHA256 "${WORK}/inlined.rxbin" _sealed_input_after)
 if(NOT _sealed_input_before STREQUAL _sealed_input_after)
@@ -75,9 +107,9 @@ if(NOT _sealed_input_before STREQUAL _sealed_input_after)
 endif()
 file(SHA256 "${WORK}/reprocessed.rxbin" _reprocessed_before)
 
-# Mutate only one executable contract at a time. A valid wrong recipe ordinal
-# disagrees with its P operand; QPR1's module/procedure bounds fail at prepare.
-foreach(_mutation feature qproc-module qproc-procedure recipe-mismatch)
+# Mutate one surviving executable contract at a time. QPR1's provider bounds
+# fail at prepare; static binding seal/global failures are checked by the loader.
+foreach(_mutation feature qproc-module qproc-procedure qproc-unsealed private-unsealed private-global)
   run_checked("mutate ${_mutation}" "${MUTATOR}" "${_mutation}"
     "${WORK}/inlined.rxbin" "${WORK}/${_mutation}.rxbin")
   execute_process(COMMAND "${VM}" "${WORK}/${_mutation}.rxbin"
@@ -90,10 +122,6 @@ foreach(_mutation feature qproc-module qproc-procedure recipe-mismatch)
   if(_mutation MATCHES "^qproc-" AND
      NOT _rejected_stderr MATCHES "Invalid or unsealed qualified procedure")
     message(FATAL_ERROR "${_mutation} lacked checked preparation rejection: ${_rejected_stderr}")
-  endif()
-  if(_mutation STREQUAL "recipe-mismatch" AND
-     NOT _rejected_stderr MATCHES "RXBIN_CORRUPTION")
-    message(FATAL_ERROR "${_mutation} lacked provider identity rejection: ${_rejected_stderr}")
   endif()
   execute_process(COMMAND "${LINKER}" --inline-service "${SERVICE}"
     --inline-policy all-legal ${_options} -r anchor -r root -o "${WORK}/reprocessed"
@@ -131,8 +159,9 @@ endif()
 run_checked("disabled service selection" "${LINKER}" --inline-service "${BAD_SERVICE}"
   --inline-policy never -o "${WORK}/disabled" ${_inputs})
 run_checked("disabled disassembly" "${DISASSEMBLER}" "${WORK}/disabled.rxbin")
-if(NOT _stdout MATCHES "call1 [^\n]*helper\\(\\)")
-  message(FATAL_ERROR "disabled control did not retain ordinary call")
+if(NOT _stdout MATCHES "call1 [^\n]*@1::0\\(\\)" OR
+   NOT _stdout MATCHES "[.]inlinedprivate r[0-9]+,\"@1\",g0")
+  message(FATAL_ERROR "disabled control did not retain the exact call and static binding")
 endif()
 
 # A compact many-procedure input deterministically exhausts the request-local

@@ -350,33 +350,8 @@ static int inline_rebase_inputs(inline_module *modules, size_t count, inline_wor
             int opcode = code[at].instruction.opcode;
             OpFormat format = rxbin_opcode_format(opcode);
             size_t width = rxop_format_operand_count(format), j;
-            unsigned int recipe_operand = rxop_recipe_operand(opcode);
             if (!inline_take(work, width + 1u) || width >= source->header.instruction_size - at)
                 return 0;
-            if (recipe_operand) {
-                const string_constant *binary;
-                rxinl_recipe_view recipe;
-                RxOpCallContract call = rxop_call_contract(opcode);
-                size_t provider, actual_provider, ordinal, target_offset;
-                unsigned char *bytes;
-                int ok;
-                if (recipe_operand > width || !call.target_operand || call.target_operand > width)
-                    goto invalid;
-                binary = inline_binary(source, code[at + recipe_operand].index);
-                if (!binary || !rxinl_recipe_decode(binary->string, binary->string_len, &recipe) ||
-                    !(recipe.flags & RXINL_RECIPE_SEALED) ||
-                    !inline_old_member(modules, count, source, recipe.image_module, &provider, work) ||
-                    !inline_target_from(modules, count, m, source, 1,
-                        code[at + call.target_operand].index, &actual_provider, &ordinal, &target_offset, work) ||
-                    provider != actual_provider || ordinal != recipe.provider_procedure) goto invalid;
-                bytes = (unsigned char *)malloc(binary->string_len);
-                if (!bytes) return 0;
-                memcpy(bytes, binary->string, binary->string_len);
-                ok = rxinl_recipe_seal(bytes, binary->string_len, (uint32_t)provider, (uint32_t)ordinal) &&
-                     inline_rebase_operand(&modules[m], at + recipe_operand, bytes, binary->string_len, &used_bytes, work);
-                free(bytes);
-                if (!ok) return 0;
-            }
             for (j = 0u; j < width; ++j) {
                 const string_constant *binary;
                 unsigned char *bytes = NULL;
@@ -1286,6 +1261,23 @@ static int inline_same_metadata(const module_file *a, const meta_entry *left,
             ROW(meta_entry_state_constant);
             return REF(procedure) && x->version == y->version && x->kind == y->kind;
         }
+        case META_INLINE_REGION: {
+            ROW(meta_inline_region_constant);
+            return REF(procedure) && x->version == y->version && x->region_id == y->region_id && x->parent_id == y->parent_id;
+        }
+        case META_INLINE_RANGE: {
+            ROW(meta_inline_range_constant);
+            const proc_constant *ap = inline_address_owner(a,x->start,work), *bp = inline_address_owner(b,y->start,work);
+            return x->region_id == y->region_id && ap && bp && inline_equal(ap->name,bp->name,work);
+        }
+        case META_INLINE_EXIT: {
+            ROW(meta_inline_exit_constant);
+            const proc_constant *ap = inline_address_owner(a,x->start,work), *bp = inline_address_owner(b,y->start,work);
+            return ap && bp && inline_equal(ap->name,bp->name,work) &&
+                   x->region_id == y->region_id && x->order == y->order && x->kind == y->kind &&
+                   x->field == y->field && x->source == y->source && x->literal == y->literal &&
+                   x->bank1 == y->bank1 && x->index1 == y->index1 && x->bank2 == y->bank2 && x->index2 == y->index2;
+        }
         case META_INLINED_PRIVATE: {
             ROW(meta_inlined_private_constant);
             const string_constant *xp = inline_binary(a,x->provider), *yp = inline_binary(b,y->provider);
@@ -1427,7 +1419,6 @@ static int inline_seal(inline_module *modules, size_t count, size_t owner,
         int opcode = code[at].instruction.opcode;
         size_t width = rxop_format_operand_count(rxbin_opcode_format(opcode)), j;
         size_t provider = owner, procedure = 0u;
-        unsigned int recipe_ordinal = rxop_recipe_operand(opcode);
         if (!inline_take(work, width + 1u) || width > module->header.instruction_size - at - 1u) return 0;
         for (j = 0u; j < width; ++j) {
             const chameleon_constant *entry;
@@ -1444,20 +1435,8 @@ static int inline_seal(inline_module *modules, size_t count, size_t owner,
                     if (!inline_find_proc(modules[owner].changed ? module : modules[owner].original,
                                           proc->name, &procedure, NULL, work)) return 0;
                     provider = owner;
-                } else if (recipe_ordinal) {
-                    size_t original_offset, old_ordinal, target_offset;
-                    if (!inline_find_proc(modules[owner].original, proc->name, NULL, &original_offset, work) ||
-                        !inline_target(modules, count, owner, original_offset, &provider, &old_ordinal, &target_offset, work)) return 0;
-                    original = inline_proc(modules[provider].original, old_ordinal, NULL, work);
-                    if (!original || !inline_find_proc(modules[provider].changed ? modules[provider].candidate : modules[provider].original,
-                                                       original->name, &procedure, NULL, work)) return 0;
                 }
             } else return 0;
-        }
-        if (recipe_ordinal) {
-            string_constant *recipe = (string_constant *)inline_constant(module, code[at + recipe_ordinal].index);
-            if (!recipe || recipe->base.type != BINARY_CONST || provider >= count || procedure > UINT32_MAX ||
-                !rxinl_recipe_seal(recipe->string, recipe->string_len, (uint32_t)provider, (uint32_t)procedure)) return 0;
         }
         for (j = 0u; j < width; ++j) if (rxop_operand_relocation(opcode, j) == RXOP_RELOC_MODULE) {
             string_constant *binary = (string_constant *)inline_constant(module, code[at + j + 1u].index);

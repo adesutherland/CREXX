@@ -1,4 +1,4 @@
-/* Focused RXBIN feature/operational-binding mutations for maintained controls. */
+/* Focused RXBIN qualified-call and static-private-binding mutations. */
 #include "rxbin.h"
 #include "rxinline_recipe.h"
 
@@ -50,23 +50,11 @@ static int feature_rejected(const char *path) {
     int rejected;
     if (!source) return 0;
     rxbin_reader_init_file(&reader, source);
-    rejected = rxbin_reader_next_module(&reader, &module) != 0;
+    rejected = rxbin_reader_next_module(&reader, &module) < 0;
     error = rxbin_last_error();
-    rejected = rejected && error && strstr(error, "requires feature flag 0x00000100");
+    rejected = rejected && error && *error;
     rxbin_reader_close(&reader); fclose(source); free_module(module);
     return rejected;
-}
-
-static uint32_t other_procedure(const module_file *module, uint32_t excluded) {
-    int offset = module->header.proc_head;
-    uint32_t ordinal = 0u;
-    while (offset >= 0) {
-        const proc_constant *proc = (const proc_constant *)(
-            (const unsigned char *)module->constant + (size_t)offset);
-        if (ordinal != excluded && proc->start != SIZE_MAX) return ordinal;
-        offset = proc->next; ++ordinal;
-    }
-    return UINT32_MAX;
 }
 
 /* Construct a checked old image for ordinary-relink controls. The assembler
@@ -77,33 +65,12 @@ static int seal_image(module_file **modules, size_t count) {
     for (m = 0u; m < count; ++m) {
         bin_code *code = (bin_code *)modules[m]->instructions;
         size_t at = 0u;
-        while (at < modules[m]->header.instruction_size) {
-            int opcode = code[at].instruction.opcode;
-            OpFormat format = rxbin_opcode_format(opcode);
-            size_t width = rxop_format_operand_count(format), j;
-            rxinl_qualified_proc_view target = { 0u, 0u, 0 };
-            int qualified_target = 0;
-            for (j = 0u; j < width; ++j) {
-                string_constant *binary;
-                if (rxop_format_operand_type(format, j) != OP_FUNC) continue;
-                binary = (string_constant *)(modules[m]->constant + code[at + j + 1u].index);
-                if (binary->base.type != BINARY_CONST) continue;
-                if (!rxinl_qualified_proc_decode(binary->string, binary->string_len, &target) ||
-                    target.image_module >= count ||
-                    !rxinl_qualified_proc_seal(binary->string, binary->string_len)) return 0;
-                qualified_target = 1;
-            }
-            if (opcode == OP_INLENTER_REG_FUNC_STRING_ID) {
-                string_constant *binary = (string_constant *)(modules[m]->constant + code[at + 3u].index);
-                rxinl_recipe_view view;
-                if (!rxinl_recipe_decode(binary->string, binary->string_len, &view)) return 0;
-                if (qualified_target) {
-                    if (!rxinl_recipe_seal(binary->string, binary->string_len,
-                                           target.image_module, target.provider_procedure)) return 0;
-                } else if (!(view.flags & RXINL_RECIPE_SEALED)) return 0;
-            }
-            if (opcode == OP_QGLOBBIND_REG_STRING_INT) {
-                string_constant *binary = (string_constant *)(modules[m]->constant + code[at + 2u].index);
+        int metadata = modules[m]->header.meta_head;
+        while (metadata != -1) {
+            meta_entry *entry = (meta_entry *)((unsigned char *)modules[m]->constant + metadata);
+            if (entry->base.type == META_INLINED_PRIVATE) {
+                meta_inlined_private_constant *binding = (meta_inlined_private_constant *)entry;
+                string_constant *binary = (string_constant *)((unsigned char *)modules[m]->constant + binding->provider);
                 rxinl_module_ref_view view;
                 uint32_t provider = 0u, k;
                 if (!rxinl_module_ref_decode(binary->string, binary->string_len, &view)) return 0;
@@ -113,8 +80,25 @@ static int seal_image(module_file **modules, size_t count) {
                     for (k = 1u; k < view.selector_length; ++k)
                         provider = provider * 10u + (uint32_t)(view.selector[k] - '0');
                 }
-                if (provider >= count ||
+                if (provider >= count || binding->global_index >= (uint32_t)modules[provider]->header.globals ||
                     !rxinl_module_ref_seal(binary->string, binary->string_len, provider)) return 0;
+            }
+            metadata = entry->next;
+        }
+        while (at < modules[m]->header.instruction_size) {
+            int opcode = code[at].instruction.opcode;
+            OpFormat format = rxbin_opcode_format(opcode);
+            size_t width = rxop_format_operand_count(format), j;
+            if (width >= modules[m]->header.instruction_size - at) return 0;
+            for (j = 0u; j < width; ++j) {
+                string_constant *binary;
+                rxinl_qualified_proc_view target;
+                if (rxop_format_operand_type(format, j) != OP_FUNC) continue;
+                binary = (string_constant *)((unsigned char *)modules[m]->constant + code[at + j + 1u].index);
+                if (binary->base.type != BINARY_CONST) continue;
+                if (!rxinl_qualified_proc_decode(binary->string, binary->string_len, &target) ||
+                    target.image_module >= count ||
+                    !rxinl_qualified_proc_seal(binary->string, binary->string_len)) return 0;
             }
             at += width + 1u;
         }
@@ -128,36 +112,36 @@ static int mutate(module_file **modules, size_t count, const char *mode) {
         module_file *module = modules[m];
         bin_code *code = (bin_code *)module->instructions;
         size_t at = 0u;
+        int metadata = module->header.meta_head;
+        while (metadata != -1) {
+            meta_entry *entry = (meta_entry *)((unsigned char *)module->constant + metadata);
+            if (entry->base.type == META_INLINED_PRIVATE) {
+                meta_inlined_private_constant *binding = (meta_inlined_private_constant *)entry;
+                string_constant *binary = (string_constant *)((unsigned char *)module->constant + binding->provider);
+                rxinl_module_ref_view view;
+                if (!rxinl_module_ref_decode(binary->string, binary->string_len, &view) || !view.sealed) return 0;
+                if (!strcmp(mode, "private-unsealed")) {
+                    put_u32((unsigned char *)binary->string + 4u, UINT32_MAX);
+                    put_u32((unsigned char *)binary->string + 8u, view.self_relative ? 2u : 0u);
+                    return 1;
+                }
+                if (!strcmp(mode, "private-global")) {
+                    binding->global_index = UINT32_MAX;
+                    return 1;
+                }
+            }
+            metadata = entry->next;
+        }
         while (at < module->header.instruction_size) {
             int opcode = code[at].instruction.opcode;
             OpFormat format = rxbin_opcode_format(opcode);
             size_t width = rxop_format_operand_count(format), j;
-            if (!strcmp(mode, "recipe-mismatch") && opcode == OP_INLENTER_REG_FUNC_STRING_ID) {
-                string_constant *binary = (string_constant *)(
-                    (unsigned char *)module->constant + code[at + 3u].index);
-                rxinl_recipe_view recipe;
-                uint32_t replacement;
-                if (!rxinl_recipe_decode(binary->string, binary->string_len, &recipe) ||
-                    !(recipe.flags & RXINL_RECIPE_SEALED) || recipe.image_module >= count) return 0;
-                replacement = other_procedure(modules[recipe.image_module], recipe.provider_procedure);
-                return replacement != UINT32_MAX && rxinl_recipe_seal(
-                    binary->string, binary->string_len, recipe.image_module, replacement);
-            }
-            if (opcode == OP_QGLOBBIND_REG_STRING_INT && !strcmp(mode, "qglob-unsealed")) {
-                string_constant *binary = (string_constant *)(module->constant + code[at + 2u].index);
-                rxinl_module_ref_view view;
-                if (!rxinl_module_ref_decode(binary->string, binary->string_len, &view) ||
-                    !view.sealed || view.self_relative) return 0;
-                put_u32((unsigned char *)binary->string + 4u, UINT32_MAX);
-                put_u32((unsigned char *)binary->string + 8u, 0u);
-                return 1;
-            }
+            if (width >= module->header.instruction_size - at) return 0;
             for (j = 0u; j < width; ++j) {
                 chameleon_constant *entry;
                 string_constant *binary;
                 rxinl_qualified_proc_view qualified;
-                if (opcode == OP_INLENTER_REG_FUNC_STRING_ID ||
-                    rxop_format_operand_type(format, j) != OP_FUNC) continue;
+                if (rxop_format_operand_type(format, j) != OP_FUNC) continue;
                 entry = (chameleon_constant *)((unsigned char *)module->constant + code[at + j + 1u].index);
                 if (entry->type != BINARY_CONST) continue;
                 binary = (string_constant *)entry;

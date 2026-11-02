@@ -36,10 +36,9 @@ RXVM_HANDLER(BPON, VM_ADVANCE(0);
 RXVM_HANDLER(BPON_FUNC, VM_ADVANCE(1);
             {
                 proc_runtime *signal_function = PROC_OP(1);
-                if (signal_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
-                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
-                                   "Program entry cannot be installed as a handler")
-                    DISPATCH;
+                if (!rxsignal_valid_handler(signal_function)) {
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_ARGUMENTS,
+                                                  "Invalid signal handler target");
                 }
                 DEBUG("TRACE - BPON %s()\n", signal_function->name);
                 if (!rxsignal_ensure_private_interrupt_table(current_frame))
@@ -72,20 +71,21 @@ RXVM_HANDLER(BPOFF, VM_ADVANCE(0);
 RXVM_HANDLER(SIGIGNORE_STRING, VM_ADVANCE(1);
             DEBUG("TRACE - SIGIGNORE \"%.*s\"\n", (int) op1S->string_len, op1S->string);
             {
-                size_t sig = string_to_interrupt(op1S->string);
+                size_t sig = rxsignal_operand_code(op1S->string, op1S->string_len);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 }
                 else {
                     if (!rxsignal_ensure_private_interrupt_table(current_frame))
                         RXVM_HANDLER_INTERRUPT_TABLE_OOM();
+                    if (ignore_interrupt((int)sig) != 0)
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE, "Unable to install native signal mode");
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_IGNORE;
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
                     current_frame->interrupt_table[sig-1].stack_marker = 0;
-                    ignore_interrupt((int)sig); // Set the corresponding native interrupt to ignore
                 }
             }
             DISPATCH;
@@ -97,20 +97,21 @@ RXVM_HANDLER(SIGIGNORE_STRING, VM_ADVANCE(1);
 RXVM_HANDLER(SIGHALT_STRING, VM_ADVANCE(1);
             DEBUG("TRACE - SIGHALT \"%.*s\"\n", (int) op1S->string_len, op1S->string);
             {
-                size_t sig = string_to_interrupt(op1S->string);
+                size_t sig = rxsignal_operand_code(op1S->string, op1S->string_len);
                 if (sig == RXSIGNAL_MAX) { // Kill can be set to halt
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 }
                 else {
                     if (!rxsignal_ensure_private_interrupt_table(current_frame))
                         RXVM_HANDLER_INTERRUPT_TABLE_OOM();
+                    if (enable_interrupt((int)sig) != 0)
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE, "Unable to install native signal mode");
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_HALT;
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
                     current_frame->interrupt_table[sig-1].stack_marker = 0;
-                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH;
@@ -122,20 +123,21 @@ RXVM_HANDLER(SIGHALT_STRING, VM_ADVANCE(1);
 RXVM_HANDLER(SIGSHALT_STRING, VM_ADVANCE(1);
             DEBUG("TRACE - SIGSHALT \"%.*s\"\n", (int) op1S->string_len, op1S->string);
             {
-                size_t sig = string_to_interrupt(op1S->string);
+                size_t sig = rxsignal_operand_code(op1S->string, op1S->string_len);
                 if (sig == RXSIGNAL_MAX) { // KILL can be set to silent halt
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 }
                 else {
                     if (!rxsignal_ensure_private_interrupt_table(current_frame))
                         RXVM_HANDLER_INTERRUPT_TABLE_OOM();
+                    if (enable_interrupt((int)sig) != 0)
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE, "Unable to install native signal mode");
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_SILENT_HALT;
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
                     current_frame->interrupt_table[sig-1].stack_marker = 0;
-                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH;
@@ -147,21 +149,23 @@ RXVM_HANDLER(SIGSHALT_STRING, VM_ADVANCE(1);
 RXVM_HANDLER(SIGBR_ID_STRING, VM_ADVANCE(2);
             DEBUG("TRACE - SIGBR 0x%x,\"%.*s\"\n", (unsigned int)REG_IDX(1), (int)op2S->string_len, op2S->string);
             {
-                size_t sig = string_to_interrupt(op2S->string);
+                size_t sig = rxsignal_operand_code(op2S->string, op2S->string_len);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 }
                 else {
+                    if (!runtime_procedure_contains(current_module, current_frame->procedure, REG_IDX(1)))
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_ARGUMENTS, "Invalid signal branch target");
                     if (!rxsignal_ensure_private_interrupt_table(current_frame))
                         RXVM_HANDLER_INTERRUPT_TABLE_OOM();
+                    if (enable_interrupt((int)sig) != 0)
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE, "Unable to install native signal mode");
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].frame = current_frame;
                     current_frame->interrupt_table[sig-1].value_register = 0;
                     current_frame->interrupt_table[sig-1].stack_marker = current_frame->interrupt_stack;
-                    current_frame->interrupt_table[sig-1].inline_scope = current_frame->inline_scope;
-                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH;
@@ -173,21 +177,25 @@ RXVM_HANDLER(SIGBR_ID_STRING, VM_ADVANCE(2);
 RXVM_HANDLER(SIGBRV_ID_REG_STRING, VM_ADVANCE(3);
             DEBUG("TRACE - SIGBRV 0x%x,R%d,\"%.*s\"\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)op3S->string_len, op3S->string);
             {
-                size_t sig = string_to_interrupt(op3S->string);
+                size_t sig = rxsignal_operand_code(op3S->string, op3S->string_len);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 }
                 else {
+                    if (!runtime_procedure_contains(current_module, current_frame->procedure, REG_IDX(1)))
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_ARGUMENTS, "Invalid signal branch target");
+                    if (REG_IDX(2) >= current_frame->number_locals)
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_ARGUMENTS, "Invalid signal destination register");
                     if (!rxsignal_ensure_private_interrupt_table(current_frame))
                         RXVM_HANDLER_INTERRUPT_TABLE_OOM();
+                    if (enable_interrupt((int)sig) != 0)
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE, "Unable to install native signal mode");
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH_VALUE;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].frame = current_frame;
                     current_frame->interrupt_table[sig-1].value_register = REG_IDX(2);
                     current_frame->interrupt_table[sig-1].stack_marker = current_frame->interrupt_stack;
-                    current_frame->interrupt_table[sig-1].inline_scope = current_frame->inline_scope;
-                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH;
@@ -199,27 +207,27 @@ RXVM_HANDLER(SIGBRV_ID_REG_STRING, VM_ADVANCE(3);
 RXVM_HANDLER(SIGCALL_FUNC_STRING, VM_ADVANCE(2);
             {
                 proc_runtime *signal_function = PROC_OP(1);
-                if (signal_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
-                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
-                                   "Program entry cannot be installed as a handler")
-                    DISPATCH;
+                if (!rxsignal_valid_handler(signal_function)) {
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_ARGUMENTS,
+                                                  "Invalid signal handler target");
                 }
                 DEBUG("TRACE - SIGCALL %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
 
-                size_t sig = string_to_interrupt(op2S->string);
+                size_t sig = rxsignal_operand_code(op2S->string, op2S->string_len);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 }
                 else {
                     if (!rxsignal_ensure_private_interrupt_table(current_frame))
                         RXVM_HANDLER_INTERRUPT_TABLE_OOM();
+                    if (enable_interrupt((int)sig) != 0)
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE, "Unable to install native signal mode");
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL;
                     current_frame->interrupt_table[sig-1].function = signal_function;
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
                     current_frame->interrupt_table[sig-1].stack_marker = 0;
-                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH;
@@ -231,27 +239,27 @@ RXVM_HANDLER(SIGCALL_FUNC_STRING, VM_ADVANCE(2);
 RXVM_HANDLER(SIGCALLA_FUNC_STRING, VM_ADVANCE(2);
             {
                 proc_runtime *signal_function = PROC_OP(1);
-                if (signal_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
-                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
-                                   "Program entry cannot be installed as a handler")
-                    DISPATCH;
+                if (!rxsignal_valid_handler(signal_function)) {
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_ARGUMENTS,
+                                                  "Invalid signal handler target");
                 }
                 DEBUG("TRACE - SIGCALLA %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
 
-                size_t sig = string_to_interrupt(op2S->string);
+                size_t sig = rxsignal_operand_code(op2S->string, op2S->string_len);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 }
                 else {
                     if (!rxsignal_ensure_private_interrupt_table(current_frame))
                         RXVM_HANDLER_INTERRUPT_TABLE_OOM();
+                    if (enable_interrupt((int)sig) != 0)
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE, "Unable to install native signal mode");
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_ACTION;
                     current_frame->interrupt_table[sig-1].function = signal_function;
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
                     current_frame->interrupt_table[sig-1].stack_marker = 0;
-                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH;
@@ -261,54 +269,30 @@ RXVM_HANDLER(SIGCALLA_FUNC_STRING, VM_ADVANCE(2);
 )
 
 RXVM_HANDLER(SIGCALLBR_ID_FUNC_STRING, VM_ADVANCE(3);
-            DEBUG("TRACE - SIGCALLBR 0x%x,%s(),\"%.*s\"\n", (unsigned int)REG_IDX(1), PROC_OP(2)->name, (int)op3S->string_len, op3S->string);
             {
                 proc_runtime *signal_function = PROC_OP(2);
-                if (signal_function->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
-                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
-                                   "Program entry cannot be installed as a handler")
-                    DISPATCH;
+                if (!rxsignal_valid_handler(signal_function)) {
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_ARGUMENTS,
+                                                  "Invalid signal handler target");
                 }
-                size_t sig = string_to_interrupt(op3S->string);
+                DEBUG("TRACE - SIGCALLBR 0x%x,%s(),\"%.*s\"\n", (unsigned int)REG_IDX(1), signal_function->name, (int)op3S->string_len, op3S->string);
+                size_t sig = rxsignal_operand_code(op3S->string, op3S->string_len);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 }
                 else {
+                    if (!runtime_procedure_contains(current_module, current_frame->procedure, REG_IDX(1)))
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_ARGUMENTS, "Invalid signal branch target");
                     if (!rxsignal_ensure_private_interrupt_table(current_frame))
                         RXVM_HANDLER_INTERRUPT_TABLE_OOM();
+                    if (enable_interrupt((int)sig) != 0)
+                        RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE, "Unable to install native signal mode");
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_BRANCH;
                     current_frame->interrupt_table[sig-1].function = signal_function;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
                     current_frame->interrupt_table[sig-1].frame = current_frame;
                     current_frame->interrupt_table[sig-1].value_register = 0;
                     current_frame->interrupt_table[sig-1].stack_marker = current_frame->interrupt_stack;
-                    current_frame->interrupt_table[sig-1].inline_scope = current_frame->inline_scope;
-                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
-                }
-            }
-            DISPATCH;
-
-        /* Set Signal op1 Handle to Return */
-
-)
-
-RXVM_HANDLER(SIGRET_STRING, VM_ADVANCE(1);
-            DEBUG("TRACE - SIGRET \"%.*s\"\n", (int)op1S->string_len, op1S->string);
-            {
-                size_t sig = string_to_interrupt(op1S->string);
-                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
-                }
-                else {
-                    if (!rxsignal_ensure_private_interrupt_table(current_frame))
-                        RXVM_HANDLER_INTERRUPT_TABLE_OOM();
-                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_RETURN;
-                    current_frame->interrupt_table[sig-1].function = 0;
-                    current_frame->interrupt_table[sig-1].jump = 0;
-                    current_frame->interrupt_table[sig-1].frame = 0;
-                    current_frame->interrupt_table[sig-1].value_register = 0;
-                    current_frame->interrupt_table[sig-1].stack_marker = 0;
-                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH;
@@ -317,14 +301,21 @@ RXVM_HANDLER(SIGRET_STRING, VM_ADVANCE(1);
 
 )
 
+/* Reserved dispatch sentinel; source/codec validation rejects opcode 502. */
+RXVM_HANDLER(RESERVED_502,
+    SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION);
+    DISPATCH;
+)
+
 RXVM_HANDLER(SIGPUSH_STRING, VM_ADVANCE(1);
             DEBUG("TRACE - SIGPUSH \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             {
-                size_t sig = string_to_interrupt(op1S->string);
+                size_t sig = rxsignal_operand_code(op1S->string, op1S->string_len);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) {
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 } else {
-                    rxsignal_push_handler(current_frame, (unsigned char)sig);
+                    if (!rxsignal_push_handler(current_frame, (unsigned char)sig))
+                        RXVM_HANDLER_INTERRUPT_TABLE_OOM();
                 }
             }
             DISPATCH;
@@ -336,14 +327,16 @@ RXVM_HANDLER(SIGPUSH_STRING, VM_ADVANCE(1);
 RXVM_HANDLER(SIGPOP_STRING, VM_ADVANCE(1);
             DEBUG("TRACE - SIGPOP \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             {
-                size_t sig = string_to_interrupt(op1S->string);
+                size_t sig = rxsignal_operand_code(op1S->string, op1S->string_len);
                 rxsignal_pop_result pop_result = RXSIGNAL_POP_NOT_FOUND;
                 if (sig != RXSIGNAL_MAX && sig != RXSIGNAL_KILL)
                     pop_result = rxsignal_pop_handler(current_frame, (unsigned char)sig);
                 if (pop_result == RXSIGNAL_POP_NO_MEMORY) RXVM_HANDLER_INTERRUPT_TABLE_OOM();
+                if (pop_result == RXSIGNAL_POP_NATIVE_ERROR)
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_FAILURE, "Unable to restore native signal mode");
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL ||
                     pop_result == RXSIGNAL_POP_NOT_FOUND) {
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 }
             }
             DISPATCH;
@@ -354,8 +347,7 @@ RXVM_HANDLER(SIGPOP_STRING, VM_ADVANCE(1);
 
 RXVM_HANDLER(SIGNAL_REG, VM_ADVANCE(1);
             DEBUG("TRACE - SIGNAL R%d\n", (int)REG_IDX(1));
-            null_terminate_string_buffer(op1R);
-            SET_SIGNAL_FROM_NAME(op1R->string_value);
+            SET_SIGNAL_FROM_NAME(op1R->string_value, op1R->string_length);
             DISPATCH;
 
         /* SIGNALT_STRING_REG Signal type op1 if op2 true */
@@ -365,7 +357,7 @@ RXVM_HANDLER(SIGNAL_REG, VM_ADVANCE(1);
 RXVM_HANDLER(SIGNALT_STRING_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SIGNALT \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
             if (op2RI) {
-                SET_SIGNAL_FROM_NAME(op1S->string);
+                SET_SIGNAL_FROM_NAME(op1S->string, op1S->string_len);
             }
             DISPATCH;
 
@@ -376,7 +368,7 @@ RXVM_HANDLER(SIGNALT_STRING_REG, VM_ADVANCE(2);
 RXVM_HANDLER(SIGNALF_STRING_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SIGNALF \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
             if (!op2RI) {
-                SET_SIGNAL_FROM_NAME(op1S->string);
+                SET_SIGNAL_FROM_NAME(op1S->string, op1S->string_len);
             }
             DISPATCH;
 
@@ -386,7 +378,7 @@ RXVM_HANDLER(SIGNALF_STRING_REG, VM_ADVANCE(2);
 
 RXVM_HANDLER(SIGNAL_STRING_STRING, VM_ADVANCE(2);
             DEBUG("TRACE - SIGNAL \"%.*s\",\"%.*s\"\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string);
-            SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
+            SET_SIGNAL_MSG_FROM_NAME(op1S->string, op1S->string_len, op2S->string);
             DISPATCH;
 
         /* SIGNAL_STRING_REG Signal type op1 (payload op2) */
@@ -395,7 +387,7 @@ RXVM_HANDLER(SIGNAL_STRING_STRING, VM_ADVANCE(2);
 
 RXVM_HANDLER(SIGNAL_STRING_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SIGNAL \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
-            SET_SIGNAL_PAYLOAD_FROM_NAME(op1S->string, op2R);
+            SET_SIGNAL_PAYLOAD_FROM_NAME(op1S->string, op1S->string_len, op2R);
             DISPATCH;
 
         /* Raise with the source location carried by a bound runtime signal. */
@@ -406,12 +398,12 @@ RXVM_HANDLER(SIGNALORIGIN_STRING_REG_REG, VM_ADVANCE(3);
             {
                 rxinteger source_module;
                 rxinteger source_address;
-                unsigned char signal_name = string_to_interrupt(op1S->string);
+                unsigned char signal_name = rxsignal_operand_code(op1S->string, op1S->string_len);
                 if (signal_name == RXSIGNAL_MAX) {
-                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_SIGNAL_CODE, "Invalid signal instruction name or missing save");
                 } else if (!rxsignal_runtime_origin(op3R, &source_module,
                                                     &source_address)) {
-                    SET_SIGNAL(RXSIGNAL_INVALID_ARGUMENTS);
+                    RXVM_SIGNAL_INSTRUCTION_ERROR(RXSIGNAL_INVALID_ARGUMENTS, "Invalid SIGNALORIGIN event");
                 } else {
                     value diagnostic = {0};
                     /* Retain before copying the payload: both operands can
@@ -436,8 +428,7 @@ RXVM_HANDLER(SIGNALORIGIN_STRING_REG_REG, VM_ADVANCE(3);
 
 RXVM_HANDLER(SIGNAL_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SIGNAL R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            null_terminate_string_buffer(op1R);
-            SET_SIGNAL_PAYLOAD_FROM_NAME(op1R->string_value, op2R);
+            SET_SIGNAL_PAYLOAD_FROM_NAME(op1R->string_value, op1R->string_length, op2R);
             DISPATCH;
 
         /* SIGNALT_STRING_STRING_REG Signal type op1 (message op2) if op3 true */
@@ -447,7 +438,7 @@ RXVM_HANDLER(SIGNAL_REG_REG, VM_ADVANCE(2);
 RXVM_HANDLER(SIGNALT_STRING_STRING_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SIGNALT \"%.*s\",\"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
             if (op3RI) {
-                SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
+                SET_SIGNAL_MSG_FROM_NAME(op1S->string, op1S->string_len, op2S->string);
             }
             DISPATCH;
 
@@ -458,7 +449,7 @@ RXVM_HANDLER(SIGNALT_STRING_STRING_REG, VM_ADVANCE(3);
 RXVM_HANDLER(SIGNALF_STRING_STRING_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SIGNALF \"%.*s\",\"%.*s\"\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
             if (!op3RI) {
-                SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
+                SET_SIGNAL_MSG_FROM_NAME(op1S->string, op1S->string_len, op2S->string);
             }
             DISPATCH;
 
@@ -929,8 +920,12 @@ RXVM_HANDLER(METALOADDATA_REG_REG_REG, VM_ADVANCE(3);
                              * by the loader and have no .meta reflection shape. */
                             break;
                         case META_ENTRY_STATE:
+                        case META_INLINE_REGION:
+                        case META_INLINE_RANGE:
+                        case META_INLINE_EXIT:
                             /* Checked program entry is executable metadata,
-                             * not a source-level .meta reflection value. */
+                             * as are cold region exits; neither is a source
+                             * .meta reflection value. */
                             break;
                         case META_INLINE_FRAME:
                         case META_INLINE_MAP:
@@ -2477,114 +2472,6 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
             }                                                                   \
         } while (0)
 
-RXVM_HANDLER(INLENTER_REG_FUNC_STRING_ID, VM_ADVANCE(4);
-            {
-                const string_constant *constant = CONSTSTRING_OP(3);
-                rxinl_recipe_view recipe;
-                rxinl_qualified_proc_view expected;
-                proc_runtime *provider;
-                rxvm_inline_scope *scope;
-                bin_code *clone_body = next_pc;
-                size_t continuation = REG_IDX(4);
-                int fault = RXSIGNAL_RXBIN_CORRUPTION;
-                /* A failed call resumes at the caller continuation, including
-                 * IGNORE and returning CALL/action handlers. Select that cold
-                 * successor before preparation; only a committed scope may
-                 * enter the physical-next clone body. The signal source pc
-                 * and all preparation/capture ordering remain unchanged. */
-                if (continuation >= current_frame->procedure->binarySpace->inst_size) {
-                    rc = RXSIGNAL_RXBIN_CORRUPTION;
-                    RXVM_HANDLER_FINISH();
-                }
-                /* VM_ADVANCE already recorded this instruction's one
-                 * sequential transition. This internal default is neither a
-                 * dispatch nor another semantic progress/safepoint. */
-                next_pc = VM_EXECUTION_POINTER(continuation);
-                VM_RESOLVE_SELECTED();
-                if (constant->base.type != BINARY_CONST ||
-                    !rxinl_recipe_decode(constant->string, constant->string_len,
-                                         &recipe) ||
-                    !(recipe.flags & RXINL_RECIPE_SEALED)) {
-                    SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
-                    DISPATCH;
-                }
-                expected.image_module = recipe.image_module;
-                expected.provider_procedure = recipe.provider_procedure;
-                expected.sealed = 1;
-                provider = PROC_OP(2);
-                if (!provider || provider != rxvm_qualified_procedure(
-                        context, current_module, &expected)) {
-                    SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
-                    DISPATCH;
-                }
-                if (provider->entry_state_kind == RXBIN_ENTRY_PROGRAM_DEFAULT) {
-                    SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
-                                   "Program entry cannot be called as a child")
-                    DISPATCH;
-                }
-                if (recipe.flags & RXINL_PREP_CLEAR) {
-                    if (recipe.clear_register >= current_frame->number_locals) {
-                        SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
-                        DISPATCH;
-                    }
-                    value_zero(current_locals[recipe.clear_register]);
-                }
-                if (recipe.flags & RXINL_PREP_SETTP) {
-                    if (recipe.status_register >= current_frame->number_locals) {
-                        SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
-                        DISPATCH;
-                    }
-                    current_locals[recipe.status_register]->status.all_type_flags =
-                        RXFLAGS_PUBLIC_WRITE(
-                            current_locals[recipe.status_register]->status.all_type_flags,
-                            recipe.status_flags);
-                }
-                if (recipe.flags & RXINL_PREP_SWAP) {
-                    if (recipe.swap_first >= current_frame->number_locals ||
-                        recipe.swap_second >= current_frame->number_locals) {
-                        SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
-                        DISPATCH;
-                    }
-                    {
-                        value *old = current_locals[recipe.swap_first];
-                        uint32_t identity = current_frame->local_identity[recipe.swap_first];
-                        current_locals[recipe.swap_first] = current_locals[recipe.swap_second];
-                        current_locals[recipe.swap_second] = old;
-                        current_frame->local_identity[recipe.swap_first] =
-                            current_frame->local_identity[recipe.swap_second];
-                        current_frame->local_identity[recipe.swap_second] = identity;
-                        RXVM_INSTRUMENTATION_SWAP(current_frame,
-                                                  recipe.swap_first,
-                                                  recipe.swap_second);
-                    }
-                }
-                if (provider->start == SIZE_MAX) {
-                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, provider->name);
-                    DISPATCH;
-                }
-                scope = rxvm_inline_scope_stage(current_frame, provider, &recipe,
-                                                REG_IDX(1), REG_IDX(4), &fault);
-                if (!scope) {
-                    SET_SIGNAL((unsigned char)fault);
-                    DISPATCH;
-                }
-                scope->entry_address = VM_CANONICAL_INDEX(pc);
-                if (context->initialized_module_count != context->num_modules &&
-                    rxvm_ensure_callee_initialized(context, current_module,
-                                                    provider) != 0) {
-                    rxvm_inline_scope_discard(scope);
-                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE,
-                                   "Module initialization failed");
-                    DISPATCH;
-                }
-                rxvm_inline_scope_commit(current_frame, scope);
-                next_pc = clone_body;
-                VM_RESOLVE_SELECTED();
-            }
-            DISPATCH;
-)
-
-
 RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
             {
                 proc_runtime *called_function = PROC_OP(2);
@@ -2795,14 +2682,6 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
 RXVM_HANDLER(RET,
             DEBUG("TRACE - RET\n");
             {
-                if (current_frame->inline_scope) {
-                    size_t continuation = current_frame->inline_scope->continuation;
-                    rxvm_inline_scope_leave(current_frame);
-                    VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
-                    if (current_frame->is_interrupt == RXSIGNAL_BREAKPOINT)
-                        VM_RESUME_INTERRUPTED(RXSIGNAL_BREAKPOINT);
-                    DISPATCH;
-                }
                 RXVM_INSTRUMENTATION_RETURN(
                         current_frame->parent
                             ? RXVM_PROFILE_RETURN_VOID
@@ -2842,6 +2721,7 @@ RXVM_HANDLER(RET,
                     arguments_array = 0; /* We have freed it in the loop above */
                     RXVM_HANDLER_FINISH();
                 }
+                rxvm_restore_frame_numeric_context(current_frame);
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
@@ -2857,36 +2737,15 @@ RXVM_HANDLER(RET,
 RXVM_HANDLER(RET_REG,
             DEBUG("TRACE - RET R%lu\n", REG_IDX(1));
             {
-                if (current_frame->inline_scope) {
-                    rxvm_inline_scope *scope = current_frame->inline_scope;
-                    size_t continuation = scope->continuation;
-                    if (scope->result) {
-                        if (rxvm_inline_scope_owns(scope, REG_IDX(1)) &&
-                            current_locals[REG_IDX(1)] ==
-                                rxvm_inline_scope_backing(scope, REG_IDX(1)))
-                            move_value(scope->result, op1R);
-                        else copy_value(scope->result, op1R);
-                    }
-                    rxvm_inline_scope_leave(current_frame);
-                    VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
-                    if (current_frame->is_interrupt == RXSIGNAL_BREAKPOINT)
-                        VM_RESUME_INTERRUPTED(RXSIGNAL_BREAKPOINT);
-                    DISPATCH;
-                }
                 if (!current_frame->parent) {
                     RXVM_INSTRUMENTATION_RETURN(
                             RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL);
                 } else if (!current_frame->return_reg) {
                     RXVM_INSTRUMENTATION_RETURN(
                             RXVM_PROFILE_RETURN_VALUE_IGNORED);
-                } else if (REG_IDX(1) >= (size_t)rxvm_owned_local_count(current_frame->procedure) ||
-                           current_locals[REG_IDX(1)] !=
-                               current_frame->baselocals[REG_IDX(1)]) {
-                    RXVM_INSTRUMENTATION_RETURN(
-                            RXVM_PROFILE_RETURN_COPY_NONLOCAL);
                 } else {
                     RXVM_INSTRUMENTATION_RETURN(
-                            RXVM_PROFILE_RETURN_MOVE_LOCAL);
+                            RXVM_PROFILE_RETURN_COPY_VALUE);
                 }
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
@@ -2894,13 +2753,23 @@ RXVM_HANDLER(RET_REG,
                 int return_rc = (int)op1R->int_value;
                 /* Set the result register */
                 if (current_frame->return_reg) {
-                    if (REG_IDX(1) >= (size_t)rxvm_owned_local_count(current_frame->procedure) || /* Not a local */
-                        current_locals[REG_IDX(1)] != current_frame->baselocals[REG_IDX(1)]) /* swapped/linked so might not be a local really */
-                        copy_value(current_frame->return_reg,
-                                   op1R); /* Must do a copy if it could be an argument, object attribute or global because ... */
-                    else
-                        move_value(current_frame->return_reg,
-                                   op1R); /* ... the faster move deletes the source which is ok for locals going out of scope */
+                    const rxvm_native_payload_ops *return_ops = rxvm_value_native_ops(op1R);
+                    int reference_result = current_frame->has_reference_lifetimes ||
+                            op1R->reference_payload || op1R->reference_identity ||
+                            op1R->num_attributes || (return_ops && return_ops->copy);
+                    /* RETURN assigns the value without relocating either
+                     * storage identity or active attribute bindings. Required
+                     * native copy hooks run before callee-owned expiry. */
+                    copy_value(current_frame->return_reg, op1R);
+                    /* A copied descriptor may now live in caller backing even
+                     * when MKREF marked only the callee. Aggregate contents
+                     * may carry nested descriptors, and a real COPY hook can
+                     * alter the source or install reference state. Capture
+                     * that risk before assignment, without a tree scan or an
+                     * ancestor walk on ordinary scalar returns. */
+                    if (reference_result) {
+                        rxvm_mark_reference_lifetime_ancestors(current_frame->parent);
+                    }
                 }
                 /* back to the parents stack frame */
                 if (current_frame->invocation) rxvm_invoke_complete(current_frame->invocation, 1);
@@ -2940,11 +2809,7 @@ RXVM_HANDLER(RET_REG,
                     arguments_array = 0; /* We have freed it in the loop above */
                     RXVM_HANDLER_FINISH();
                 }
-                // Set the numeric context of the decimal plugin
-                if (current_frame->decimal) {
-                    current_frame->decimal->num_context = &current_frame->num_context;
-                    current_frame->decimal->syncNumericContext(current_frame->decimal);
-                }
+                rxvm_restore_frame_numeric_context(current_frame);
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
@@ -2960,16 +2825,6 @@ RXVM_HANDLER(RET_REG,
 RXVM_HANDLER(RET_FLOAT,
             DEBUG("TRACE - RET %.15g\n", op1F);
             {
-                if (current_frame->inline_scope) {
-                    rxvm_inline_scope *scope = current_frame->inline_scope;
-                    size_t continuation = scope->continuation;
-                    if (scope->result) scope->result->float_value = op1F;
-                    rxvm_inline_scope_leave(current_frame);
-                    VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
-                    if (current_frame->is_interrupt == RXSIGNAL_BREAKPOINT)
-                        VM_RESUME_INTERRUPTED(RXSIGNAL_BREAKPOINT);
-                    DISPATCH;
-                }
                 RXVM_INSTRUMENTATION_RETURN(
                         !current_frame->parent
                             ? RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL
@@ -3015,11 +2870,7 @@ RXVM_HANDLER(RET_FLOAT,
                     arguments_array = 0; /* We have freed it in the loop above */
                     RXVM_HANDLER_FINISH();
                 }
-                // Set the numeric context of the decimal plugin
-                if (current_frame->decimal) {
-                    current_frame->decimal->num_context = &current_frame->num_context;
-                    current_frame->decimal->syncNumericContext(current_frame->decimal);
-                }
+                rxvm_restore_frame_numeric_context(current_frame);
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
@@ -3039,17 +2890,6 @@ RXVM_HANDLER(RET_FLOAT,
 RXVM_HANDLER(RET_STRING,
             DEBUG("TRACE - RET \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             {
-                if (current_frame->inline_scope) {
-                    rxvm_inline_scope *scope = current_frame->inline_scope;
-                    size_t continuation = scope->continuation;
-                    if (scope->result)
-                        set_const_string(scope->result, CONSTSTRING_OP(1));
-                    rxvm_inline_scope_leave(current_frame);
-                    VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
-                    if (current_frame->is_interrupt == RXSIGNAL_BREAKPOINT)
-                        VM_RESUME_INTERRUPTED(RXSIGNAL_BREAKPOINT);
-                    DISPATCH;
-                }
                 RXVM_INSTRUMENTATION_RETURN(
                         !current_frame->parent
                             ? RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL
@@ -3094,11 +2934,7 @@ RXVM_HANDLER(RET_STRING,
                     free_frame(temp_frame);
                     RXVM_HANDLER_FINISH();
                 }
-                // Set the numeric context of the decimal plugin
-                if (current_frame->decimal) {
-                    current_frame->decimal->num_context = &current_frame->num_context;
-                    current_frame->decimal->syncNumericContext(current_frame->decimal);
-                }
+                rxvm_restore_frame_numeric_context(current_frame);
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);

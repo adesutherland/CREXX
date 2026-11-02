@@ -15,32 +15,29 @@ function(reject_case name source expected)
     endif()
 endfunction()
 
-reject_case(malformed_recipe [=[
+reject_case(retired_inlenter [=[
 .globals=0
 main() .locals=4
-    inlenter r0,helper(),"count=1;args=list(r1);a0=r2;proxies=();owned=(r2);prep=unknown",done
-done:
+    inlenter r0,helper(),"count=1;args=list(r1);a0=r2;proxies=();owned=(r2);prep=none",done
     ret
 helper() .locals=0
     ret
-]=] "invalid inline recipe")
-
-reject_case(embedded_nul [=[
-.globals=0
-main() .locals=4
-    inlenter r0,helper(),"count=1;args=list(r1);a0=r2;proxies=();owned=(r2);prep=none\0ignored",done
 done:
-    ret
-helper() .locals=0
-    ret
-]=] "contains NUL")
+]=] "[Uu]nknown instruction|[Ii]nvalid instruction")
 
-reject_case(invalid_module [=[
+reject_case(retired_linkargv [=[
+.globals=0
+main() .locals=2
+    linkargv r0,1
+    ret
+]=] "[Uu]nknown instruction|[Ii]nvalid instruction")
+
+reject_case(retired_qglobbind [=[
 .globals=1
 main() .locals=3
     qglobbind r1,"@",0
     ret
-]=] "invalid qualified module selector")
+]=] "[Uu]nknown instruction|[Ii]nvalid instruction")
 
 reject_case(overflow_procedure [=[
 .globals=0
@@ -48,3 +45,10 @@ main() .locals=1
     call @4294967296::0()
     ret
 ]=] "invalid qualified procedure ordinal")
+
+reject_case(retired_sigret [=[
+.globals=0
+main() .locals=0
+    sigret "OTHER"
+    ret
+]=] "[Uu]nknown instruction|[Ii]nvalid instruction")

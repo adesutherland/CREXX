@@ -49,7 +49,8 @@ enum queue_item_type {
     EMPTY, ASM_LABEL, OP_CODE, SRC_STEP,
     FUNC_META, REG_META, CONST_META, CLEAR_META,
     CLASS_META, ATTR_META, INTERFACE_META, IMPLEMENTS_META, MEMBER_META, INLINE_META, TRACE_EVENT,
-    INLINE_FRAME_META, INLINE_MAP_META, INLINED_PRIVATE_META
+    INLINE_FRAME_META, INLINE_MAP_META, INLINED_PRIVATE_META,
+    INLINE_REGION_META, INLINE_RANGE_META, INLINE_EXIT_META
 };
 
 /* Keyhole Queue Item  */
@@ -95,6 +96,7 @@ typedef struct Assembler_Context {
     int current_locals;
     int current_owned_locals;
     unsigned char current_has_private;
+    unsigned char current_has_inline_exits;
     unsigned char current_proc_has_code;
     int proc_head; /* int because we need -1 */
     int proc_tail;

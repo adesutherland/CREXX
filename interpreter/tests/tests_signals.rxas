@@ -24,11 +24,6 @@ main() .locals=6
     signal "OTHER", r0
     say " ... returned from function signal handler with payload"
 
-    say "5. Test the return on signal mode ..."
-    sigret "OTHER"
-    call return_test()
-    say " ... returned from test"
-
     say "6. Test the call and branch on signal mode ..."
     sigcallbr a_signal2,sighandler(),"OTHER"
     signal "OTHER", "Test 6 Message to handler"
@@ -47,12 +42,6 @@ main() .locals=6
     say " ... And then branch"
     br continue2
 
-
-return_test()  .locals=0
-    say " ... in child function. About to signal"
-    signal "OTHER"
-    say " ... ERROR should not get here"
-    ret
 
 sighandler() .locals=1
     say " ... Signal Function Handler"

@@ -84,8 +84,9 @@ int main(int argc, char **argv) {
         return 2;
     }
     opcode = strtol(argv[3], &end, 10);
-    if (!end || *end || opcode < 466 || opcode > 471) {
-        fprintf(stderr, "retired opcode must be in 466..471\n");
+    if (!end || *end || !((opcode >= 466 && opcode <= 471) ||
+                          opcode == 502 || (opcode >= 661 && opcode <= 664))) {
+        fprintf(stderr, "retired opcode must be 502, in 466..471 or 661..664\n");
         return 2;
     }
     input = fopen(argv[1], "rb");
@@ -106,10 +107,10 @@ int main(int argc, char **argv) {
         fprintf(stderr, "retired-opcode fixture has an unexpected instruction shape\n");
         goto done;
     }
-    operand_count = opcode == 466 ? 3 : (opcode == 471 ? 1 : 2);
-    surrogate = operand_count == 3
+    operand_count = opcode >= 661 || opcode == 502 ? 0 : (opcode == 466 ? 3 : (opcode == 471 ? 1 : 2));
+    surrogate = operand_count == 0 ? OP_CNOP : (operand_count == 3
             ? OP_FADD_REG_REG_REG
-            : (operand_count == 2 ? OP_APPENDCHAR_REG_REG : OP_STOBIN_REG);
+            : (operand_count == 2 ? OP_APPENDCHAR_REG_REG : OP_STOBIN_REG));
     instructions[0].instruction.opcode = surrogate;
     instructions[0].instruction.no_ops = operand_count;
     instructions[operand_count + 1] = instructions[4];

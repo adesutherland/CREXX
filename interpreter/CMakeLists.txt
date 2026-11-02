@@ -1477,13 +1477,51 @@ crexx_add_vm_test(NAME rxassignalattrpayloadtests PREP_TARGETS run_tests_signal_
 crexx_add_vm_test(NAME rxassignalattrsourcetests PREP_TARGETS run_tests_signal_call_attrs RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-source: signal other")
 
 crexx_add_rxas_vm_binary(tests_signal_handler_modes "signal handler response modes")
-crexx_add_vm_test(NAME rxassignalmodeignoretests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ignore-ok.*mode-ret-after")
-crexx_add_vm_test(NAME rxassignalmodebranchtests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-branch-hit.*mode-ret-after")
-crexx_add_vm_test(NAME rxassignalmodecallbranchtests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload.*mode-ret-after")
-crexx_add_vm_test(NAME rxassignalmodereturntests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ret-after")
+crexx_add_vm_test(NAME rxassignalmodeignoretests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ignore-ok.*mode-callbr-after")
+crexx_add_vm_test(NAME rxassignalmodebranchtests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-branch-hit.*mode-callbr-after")
+crexx_add_vm_test(NAME rxassignalmodecallbranchtests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload.*mode-callbr-after")
 
 crexx_add_rxas_vm_binary(tests_signal_call_unwind "signal call-window mapping unwind")
 crexx_add_vm_test(NAME rxassignalcallunwindtests PREP_TARGETS run_tests_signal_call_unwind RXVM_ARGS tests_signal_call_unwind PASS_REGULAR_EXPRESSION "PASS: Signal Call Mapping Unwind")
+
+crexx_add_rxas_vm_binary(tests_numeric_context_restore "numeric context after return and signal unwind")
+add_test(NAME rxasnumericcontextrestoretests
+        COMMAND $<TARGET_FILE:rxbvm> tests_numeric_context_restore
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxasnumericcontextrestoretests PROPERTIES
+        PASS_REGULAR_EXPRESSION "PASS: numeric context restored"
+        FAIL_REGULAR_EXPRESSION "FAIL:"
+        LABELS "interpreter;rxas;numeric;signals")
+crexx_register_test_prep_targets(TESTS rxasnumericcontextrestoretests
+        TARGETS rxbvm run_tests_numeric_context_restore)
+
+crexx_add_rxas_vm_binary(tests_inline_exits "handwritten logical-region cold exits")
+add_test(NAME inline_cold_exits_rxbvm
+        COMMAND $<TARGET_FILE:rxbvm> tests_inline_exits
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(inline_cold_exits_rxbvm PROPERTIES TIMEOUT 30
+        LABELS "interpreter;metadata;inline;signals;ownership;regression"
+        PASS_REGULAR_EXPRESSION "PASS: inline cold exits"
+        FAIL_REGULAR_EXPRESSION "FAIL:"
+        CREXX_PREP_TARGETS "rxbvm;run_tests_inline_exits")
+if(TARGET rxtvm)
+    add_test(NAME inline_cold_exits_rxtvm
+            COMMAND $<TARGET_FILE:rxtvm> tests_inline_exits
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(inline_cold_exits_rxtvm PROPERTIES TIMEOUT 30
+            LABELS "interpreter;metadata;inline;signals;regression"
+            PASS_REGULAR_EXPRESSION "PASS: inline cold exits"
+            FAIL_REGULAR_EXPRESSION "FAIL:"
+            CREXX_PREP_TARGETS "rxtvm;run_tests_inline_exits")
+endif()
+add_test(NAME inline_cold_exit_errors
+        COMMAND ${CMAKE_COMMAND}
+            -DRXAS=$<TARGET_FILE:rxas> -DRUNNER=$<TARGET_FILE:rxbvm>
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-exit-errors
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_inline_exit_errors.cmake)
+set_tests_properties(inline_cold_exit_errors PROPERTIES TIMEOUT 60
+        LABELS "interpreter;metadata;inline;signals;regression"
+        CREXX_PREP_TARGETS "rxas;rxbvm")
 
 crexx_add_rxas_vm_binary(tests_signal_mask_bounds "signal mask boundary handling")
 crexx_add_vm_test(NAME rxassignalmaskotherignoretests PREP_TARGETS run_tests_signal_mask_bounds RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-other-ignore-ok.*mask-tests-passed")
@@ -1526,9 +1564,16 @@ crexx_add_vm_test(NAME rxassignalbrvnametests PREP_TARGETS run_tests_signal_bran
 crexx_add_vm_test(NAME rxassignalbrvpayloadtests PREP_TARGETS run_tests_signal_branch_value RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-payload: value payload")
 
 crexx_add_rxas_vm_binary(tests_signal_origin "source-preserving signal validation")
-crexx_add_vm_test(NAME rxassignalorigininvalidtests PREP_TARGETS run_tests_signal_origin RXVM_ARGS tests_signal_origin PASS_REGULAR_EXPRESSION "invalid-origin-rejected")
-set_tests_properties(rxassignalorigininvalidtests PROPERTIES
-        CREXX_PREP_TARGETS "run_tests_signal_origin")
+crexx_add_vm_test(NAME rxassignaloriginrelaytests
+        PREP_TARGETS run_tests_signal_origin RXVM_ARGS tests_signal_origin
+        PASS_REGULAR_EXPRESSION "PASS: Signal Origin Payload")
+crexx_add_rxas_vm_binary(tests_signal_origin_invalid "terminal invalid signal origin")
+crexx_add_vm_test(NAME rxassignalorigininvalidtests
+        PREP_TARGETS run_tests_signal_origin_invalid RXVM_ARGS tests_signal_origin_invalid
+        EXPECTED_EXIT_CODE 7
+        EXPECTED_FAILURE_DESCRIPTION "invalid SIGNALORIGIN is a terminal VM error"
+        REQUIRED_OUTPUT_REGEX "VM ERROR:.*INVALID_ARGUMENTS"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:")
 
 crexx_add_rxas_vm_binary(tests_signal_diagnostics "event-owned terminal source context")
 crexx_add_rxas_vm_binary(tests_signal_diagnostic_initializer "scoped diagnostic initializer failure")
@@ -1574,6 +1619,44 @@ foreach(_diagnostic_vm rxbvm rxtvm)
     endif()
 endforeach()
 
+crexx_add_rxas_vm_binary(tests_signal_instruction_errors "signal self-errors and native policy recovery")
+function(crexx_configure_signal_instruction_test target)
+    target_include_directories(${target} PRIVATE . ./rxvmplugin ./rxvml
+            ../assembler ../binutils/include ../rxpa ../platform
+            ../third_party/avl_tree ../third_party/utf8)
+    target_link_libraries(${target} Threads::Threads)
+    add_dependencies(${target} run_tests_signal_instruction_errors)
+    add_test(NAME ${target} COMMAND ${target}
+            ${CMAKE_CURRENT_BINARY_DIR}/tests_signal_instruction_errors.rxbin)
+    set_tests_properties(${target} PROPERTIES TIMEOUT 60
+            LABELS "interpreter;signal;ownership;regression"
+            PASS_REGULAR_EXPRESSION "SIGNAL_INSTRUCTION_ERRORS[|]failures=0")
+    crexx_register_test_prep_targets(TESTS ${target} TARGETS ${target})
+endfunction()
+add_executable(signal_instruction_errors-rxbvml EXCLUDE_FROM_ALL tests/test_signal_instruction_errors.c)
+target_link_libraries(signal_instruction_errors-rxbvml rxbvml)
+target_compile_definitions(signal_instruction_errors-rxbvml PRIVATE NTHREADED=1)
+crexx_configure_signal_instruction_test(signal_instruction_errors-rxbvml)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_executable(signal_instruction_errors-rxvml EXCLUDE_FROM_ALL tests/test_signal_instruction_errors.c)
+    target_link_libraries(signal_instruction_errors-rxvml rxvml)
+    crexx_configure_signal_instruction_test(signal_instruction_errors-rxvml)
+endif()
+if(BUILD_TESTING)
+    add_executable(signal_instruction_errors-faults EXCLUDE_FROM_ALL
+            tests/test_signal_instruction_errors.c rxvml.c
+            $<TARGET_OBJECTS:rxbvm_instrumented_core_objects>)
+    target_compile_definitions(signal_instruction_errors-faults PRIVATE NTHREADED=1
+            CREXX_VM_INSTRUMENTATION_TEST=1)
+    target_link_libraries(signal_instruction_errors-faults
+            rxvmplugin mc_decimal_manual avl_tree rxpa rxvmref rxbin)
+    crexx_enable_vm_platform(signal_instruction_errors-faults)
+    if(CREXX_VM_PROFILING)
+        target_compile_definitions(signal_instruction_errors-faults PRIVATE CREXX_VM_PROFILING=1)
+    endif()
+    crexx_configure_signal_instruction_test(signal_instruction_errors-faults)
+endif()
+
 function(crexx_configure_signal_diagnostic_test target)
     target_include_directories(${target} PRIVATE . ./rxvmplugin ./rxvml
             ../assembler ../binutils/include ../rxpa ../platform
@@ -1617,47 +1700,11 @@ if(BUILD_TESTING)
 endif()
 
 # NR-09 large-instruction batch
-crexx_add_rxas_vm_binary(tests_inline_scope_failures "inline scope failure cleanup")
-crexx_add_vm_test(NAME rxasinlinefailurecleanup
-        PREP_TARGETS run_tests_inline_scope_failures
-        RXVM_ARGS tests_inline_scope_failures
-        PASS_REGULAR_EXPRESSION "PASS: inline activation failure cleanup")
 crexx_add_rxas_vm_binary(tests_inline_entry_resume_call "ordinary failed call resumption")
 crexx_add_vm_test(NAME rxasinlineentryresumecall
         PREP_TARGETS run_tests_inline_entry_resume_call
         RXVM_ARGS tests_inline_entry_resume_call
         PASS_REGULAR_EXPRESSION "PASS: ordinary rejected entry resume")
-crexx_add_rxas_vm_binary(tests_inline_entry_resume "inline failed entry resumption")
-crexx_add_vm_test(NAME rxasinlineentryresume
-        PREP_TARGETS run_tests_inline_entry_resume
-        RXVM_ARGS tests_inline_entry_resume
-        PASS_REGULAR_EXPRESSION "PASS: inline rejected entry resume")
-crexx_add_rxas_vm_binary(tests_inline_scope_sigret "inline scoped SIGRET cleanup")
-crexx_add_vm_test(NAME rxasinlinesigretcleanup
-        PREP_TARGETS run_tests_inline_scope_sigret
-        RXVM_ARGS tests_inline_scope_sigret
-        PASS_REGULAR_EXPRESSION "PASS: inline scoped SIGRET cleanup")
-
-crexx_add_rxas_vm_binary(tests_inline_recipe_per_use "inline recipe per-use seal")
-crexx_add_vm_test(NAME rxasinlineperuseseal
-        PREP_TARGETS run_tests_inline_recipe_per_use
-        RXVM_ARGS tests_inline_recipe_per_use
-        PASS_REGULAR_EXPRESSION "PASS: inline recipe per use")
-crexx_add_rxas_vm_binary(tests_inline_scope_optional "inline optional argument backing")
-crexx_add_vm_test(NAME rxasinlineoptionalargument
-        PREP_TARGETS run_tests_inline_scope_optional
-        RXVM_ARGS tests_inline_scope_optional
-        PASS_REGULAR_EXPRESSION "PASS: inline optional argument backing")
-crexx_add_rxas_vm_binary(tests_inline_argument_active "inline active argument bindings")
-crexx_add_vm_test(NAME rxasinlineactiveargument
-        PREP_TARGETS run_tests_inline_argument_active
-        RXVM_ARGS tests_inline_argument_active
-        PASS_REGULAR_EXPRESSION "PASS: inline active argument bindings")
-crexx_add_rxas_vm_binary(tests_inline_nested_unwind "nested inline cancellation reference cleanup")
-crexx_add_vm_test(NAME rxasinlineunwindreference
-        PREP_TARGETS run_tests_inline_nested_unwind
-        RXVM_ARGS tests_inline_nested_unwind
-        PASS_REGULAR_EXPRESSION "PASS: nested inline cancellation reference cleanup")
 crexx_add_rxas_vm_binary(tests_inline_qproc_unsealed "unsealed qualified procedure rejection")
 add_test(NAME rxasinlineunsealedqproc
         COMMAND ${CMAKE_COMMAND}
@@ -2093,6 +2140,39 @@ if(CREXX_THREADED_VM_SUPPORTED)
     add_dependencies(test_retired_process_opcode_bin rxtvm)
 endif()
 
+# The abandoned logical-scope opcode family retains its RXBIN numeric slots.
+# Mutate a valid zero-operand instruction so stale binaries cannot execute
+# any of the former entry/argument/global-binding operations.
+set(_retired_inline_opcode_bins)
+foreach(_retired_inline_opcode IN ITEMS 502 661 662 663 664)
+    set(_retired_inline_opcode_bin
+            "tests_retired_inline_opcode_${_retired_inline_opcode}.rxbin")
+    add_custom_command(
+            OUTPUT "${_retired_inline_opcode_bin}"
+            COMMAND $<TARGET_FILE:mutate_retired_process_opcode>
+                    ${CMAKE_CURRENT_BINARY_DIR}/tests_retired_process_opcode_base.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/${_retired_inline_opcode_bin}
+                    ${_retired_inline_opcode}
+            DEPENDS tests_retired_process_opcode_base.rxbin
+                    mutate_retired_process_opcode
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Injecting retired inline opcode ${_retired_inline_opcode} into stale RXBIN fixture ...")
+    list(APPEND _retired_inline_opcode_bins "${_retired_inline_opcode_bin}")
+endforeach()
+add_custom_target(test_retired_inline_opcode_bin
+        DEPENDS ${_retired_inline_opcode_bins})
+foreach(_retired_inline_opcode IN ITEMS 502 661 662 663 664)
+    crexx_add_vm_expected_failure_test(
+            NAME retired_inline_opcode_${_retired_inline_opcode}_rxbvm
+            RUNNER $<TARGET_FILE:rxbvm>
+            PREP_TARGETS rxbvm test_retired_inline_opcode_bin
+            RXVM_ARGS tests_retired_inline_opcode_${_retired_inline_opcode}
+            EXPECTED_EXIT_CODE 2
+            EXPECTED_FAILURE_DESCRIPTION "retired inline opcode is rejected by RXBIN decoding"
+            REQUIRED_OUTPUT_REGEX "ERROR reading module file"
+            TEST_LABELS "interpreter;rxas;inline;compatibility")
+endforeach()
+
 add_custom_command(
         OUTPUT test_gate_f_channel_benchmark.rxbin
         COMMAND $<TARGET_FILE:rxas> -o test_gate_f_channel_benchmark
@@ -2252,6 +2332,43 @@ set_tests_properties(counted_call_snapshot PROPERTIES TIMEOUT 30
         LABELS "interpreter;calls;regression;ownership"
         PASS_REGULAR_EXPRESSION "COUNTED_CALL_SNAPSHOT[|]failures=0"
         CREXX_PREP_TARGETS test_counted_call_snapshot)
+
+add_executable(test_retired_native_payload EXCLUDE_FROM_ALL
+        tests/test_retired_native_payload.c)
+target_link_libraries(test_retired_native_payload PRIVATE rxbvml)
+target_compile_definitions(test_retired_native_payload PRIVATE NTHREADED=1)
+target_include_directories(test_retired_native_payload PRIVATE
+        . ./rxvmplugin ./rxvml ../assembler ../binutils/include ../rxpa
+        ../platform ../third_party/avl_tree ../third_party/utf8)
+add_test(NAME retired_native_payload COMMAND test_retired_native_payload)
+set_tests_properties(retired_native_payload PROPERTIES TIMEOUT 30
+        LABELS "interpreter;calls;regression;ownership"
+        PASS_REGULAR_EXPRESSION "RETIRED_NATIVE_PAYLOAD[|]failures=0"
+        CREXX_PREP_TARGETS test_retired_native_payload)
+
+add_custom_command(OUTPUT tests_return_retirement.rxbin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_return_retirement.rxas
+            ${CMAKE_CURRENT_BINARY_DIR}/tests_return_retirement.rxas
+        COMMAND $<TARGET_FILE:rxas> -n -o tests_return_retirement-unlinked tests_return_retirement.rxas
+        COMMAND $<TARGET_FILE:rxlink> -r tests_return_retirement.rxas
+            -o tests_return_retirement tests_return_retirement-unlinked.rxbin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS rxas rxlink tests/tests_return_retirement.rxas)
+add_custom_target(run_tests_return_retirement DEPENDS tests_return_retirement.rxbin)
+add_executable(test_return_retirement tests/test_return_retirement.c)
+target_link_libraries(test_return_retirement PRIVATE rxbvml rxpashim)
+target_compile_definitions(test_return_retirement PRIVATE NTHREADED=1)
+target_include_directories(test_return_retirement PRIVATE
+        . ./rxvmplugin ./rxvml ../assembler ../binutils/include ../rxpa
+        ../platform ../third_party/avl_tree ../third_party/utf8)
+add_dependencies(test_return_retirement run_tests_return_retirement)
+add_test(NAME return_retirement COMMAND test_return_retirement
+        ${CMAKE_CURRENT_BINARY_DIR}/tests_return_retirement.rxbin)
+set_tests_properties(return_retirement PROPERTIES TIMEOUT 30
+        LABELS "interpreter;calls;ownership;references;regression"
+        PASS_REGULAR_EXPRESSION "RETURN_RETIREMENT[|]failures=0"
+        CREXX_PREP_TARGETS test_return_retirement)
 
 crexx_add_rxas_vm_binary(tests_inline_authority_hook "private inline authority hook aliasing")
 add_executable(test_inline_authority_hook tests/test_inline_authority_hook.c)

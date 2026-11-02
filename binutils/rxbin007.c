@@ -319,7 +319,7 @@ static uint64_t rxbin007_read_u64_at(const unsigned char *data) {
 }
 
 static int rxbin007_is_metadata(enum const_pool_type type) {
-    return type >= META_FUNC && type <= META_ENTRY_STATE;
+    return type >= META_FUNC && type <= META_INLINE_EXIT;
 }
 
 static size_t rxbin007_bounded_strlen(const char *text, size_t available) {
@@ -384,7 +384,10 @@ static int rxbin007_scan_pool(rxbin007_pool *pool, const char *context) {
         if (entry->type == META_INLINE_MAP) minimum = sizeof(meta_inline_map_constant);
         if (entry->type == META_INLINED_PRIVATE) minimum = sizeof(meta_inlined_private_constant);
         if (entry->type == META_ENTRY_STATE) minimum = sizeof(meta_entry_state_constant);
-        if (entry->type < STRING_CONST || entry->type > META_ENTRY_STATE ||
+        if (entry->type == META_INLINE_REGION) minimum = sizeof(meta_inline_region_constant);
+        if (entry->type == META_INLINE_RANGE) minimum = sizeof(meta_inline_range_constant);
+        if (entry->type == META_INLINE_EXIT) minimum = sizeof(meta_inline_exit_constant);
+        if (entry->type < STRING_CONST || entry->type > META_INLINE_EXIT ||
             entry->size_in_pool < minimum || (entry->size_in_pool & 7u) ||
             entry->size_in_pool > pool->size - offset) {
             rxbin007_set_error("RXBIN 007 %s has an invalid constant entry at offset %lu",
@@ -863,6 +866,29 @@ static int rxbin007_encode_entry_payload(const rxbin007_pool *pool,
                    rxbin007_u64(payload, (uint64_t)entry->end) &&
                    rxbin007_u32(payload, entry->frame_id);
         }
+        case META_INLINE_REGION: {
+            const meta_inline_region_constant *entry = (const meta_inline_region_constant *)base;
+            return rxbin007_payload_ref(payload,pool,entry->procedure) &&
+                   rxbin007_u32(payload,entry->version) &&
+                   rxbin007_u32(payload,entry->region_id) &&
+                   rxbin007_u32(payload,entry->parent_id);
+        }
+        case META_INLINE_RANGE: {
+            const meta_inline_range_constant *entry = (const meta_inline_range_constant *)base;
+            return rxbin007_u64(payload,(uint64_t)entry->start) &&
+                   rxbin007_u64(payload,(uint64_t)entry->end) &&
+                   rxbin007_u32(payload,entry->region_id);
+        }
+        case META_INLINE_EXIT: {
+            const meta_inline_exit_constant *entry = (const meta_inline_exit_constant *)base;
+            return rxbin007_u64(payload,(uint64_t)entry->start) &&
+                   rxbin007_u64(payload,(uint64_t)entry->end) &&
+                   rxbin007_u32(payload,entry->region_id) && rxbin007_u32(payload,entry->order) &&
+                   rxbin007_u32(payload,entry->kind) && rxbin007_u32(payload,entry->field) &&
+                   rxbin007_u32(payload,entry->source) && rxbin007_u32(payload,entry->bank1) &&
+                   rxbin007_u32(payload,entry->index1) && rxbin007_u32(payload,entry->bank2) &&
+                   rxbin007_u32(payload,entry->index2) && rxbin007_u64(payload,(uint64_t)entry->literal);
+        }
         case META_TRACE_EVENT: {
             const meta_trace_event_constant *entry = (const meta_trace_event_constant *)base;
             uint32_t value_constant_id;
@@ -978,21 +1004,8 @@ static int rxbin007_pool_operand_type(OperandType type) {
            type == OP_DECIMAL || type == OP_BINARY;
 }
 
-static int rxbin007_inline_binary_operand(int opcode, size_t operand_index) {
-    return (opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u) ||
-           (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u);
-}
-
-static int rxbin007_inline_payload_valid(int opcode, size_t operand_index,
-                                          const string_constant *entry) {
-    rxinl_recipe_view recipe;
-    rxinl_module_ref_view module_ref;
-    if (!entry || entry->base.type != BINARY_CONST) return 0;
-    if (opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u)
-        return rxinl_recipe_decode(entry->string, entry->string_len, &recipe);
-    if (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u)
-        return rxinl_module_ref_decode(entry->string, entry->string_len, &module_ref);
-    return 0;
+static int rxbin007_retired_opcode(int opcode) {
+    return opcode == 502 || (opcode >= OP_RESERVED_661 && opcode <= OP_RESERVED_664);
 }
 
 static uint32_t rxbin007_opcode_features(int opcode) {
@@ -1025,11 +1038,6 @@ static uint32_t rxbin007_opcode_features(int opcode) {
             return RXBIN007_FEATURE_CHANNELS;
         case OP_CHANRELEASE_REG_REG_REG:
             return RXBIN007_FEATURE_CHANNELS | RXBIN007_FEATURE_CHANNEL_RELEASE;
-        case OP_INLENTER_REG_FUNC_STRING_ID:
-        case OP_LINKARGV_REG_REG_INT:
-        case OP_LINKARGV_REG_INT:
-        case OP_QGLOBBIND_REG_STRING_INT:
-            return RXBIN007_FEATURE_INLINE_SCOPES;
         default:
             return 0u;
     }
@@ -1057,6 +1065,10 @@ static int rxbin007_encode_instructions(const module_file *module,
 
         opcode = instructions[index].instruction.opcode;
         if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return 0;
+        if (rxbin007_retired_opcode(opcode)) {
+            rxbin007_set_error("RXBIN 007 retired opcode %d", opcode);
+            return 0;
+        }
         *feature_flags |= rxbin007_opcode_features(opcode);
         format = rxbin_opcode_format(opcode);
         operand_count = rxop_format_operand_count(format);
@@ -1135,13 +1147,6 @@ static int rxbin007_encode_instructions(const module_file *module,
                     return 0;
                 }
                 entry = pool->entries[constant_id].entry;
-                if (rxbin007_inline_binary_operand(opcode, operand_index) &&
-                    !rxbin007_inline_payload_valid(
-                        opcode, operand_index,
-                        (const string_constant *)entry)) {
-                    rxbin007_set_error("RXBIN 007 instruction has an invalid typed inline operand");
-                    return 0;
-                }
                 if (rxop_format_operand_type(format, operand_index) == OP_FUNC &&
                     entry->type == BINARY_CONST) {
                     rxinl_qualified_proc_view qualified;
@@ -1736,6 +1741,301 @@ done:
     return result;
 }
 
+typedef struct rxbin007_region_check {
+    const meta_inline_region_constant *record;
+    const proc_constant *procedure;
+    size_t parent;
+    size_t depth;
+    size_t owned_locals;
+    size_t procedure_end;
+    unsigned char color;
+} rxbin007_region_check;
+typedef struct rxbin007_range_check {
+    const meta_inline_range_constant *record;
+    size_t region;
+    size_t depth;
+} rxbin007_range_check;
+typedef struct rxbin007_exit_proc_check {
+    const proc_constant *record;
+    size_t offset;
+    size_t end;
+    size_t owned_locals;
+} rxbin007_exit_proc_check;
+
+static int rxbin007_exit_proc_start_compare(const void *a, const void *b) {
+    size_t x = ((const rxbin007_exit_proc_check *)a)->record->start;
+    size_t y = ((const rxbin007_exit_proc_check *)b)->record->start;
+    return x < y ? -1 : x > y;
+}
+static int rxbin007_exit_proc_offset_compare(const void *a, const void *b) {
+    size_t x = ((const rxbin007_exit_proc_check *)a)->offset;
+    size_t y = ((const rxbin007_exit_proc_check *)b)->offset;
+    return x < y ? -1 : x > y;
+}
+static rxbin007_exit_proc_check *rxbin007_exit_proc_find(rxbin007_exit_proc_check *rows, size_t count, size_t offset) {
+    size_t low = 0u, high = count;
+    while (low < high) {
+        size_t mid = low + (high - low) / 2u;
+        if (rows[mid].offset < offset) low = mid + 1u;
+        else high = mid;
+    }
+    return low < count && rows[low].offset == offset ? rows + low : NULL;
+}
+
+static int rxbin007_region_compare(const void *a, const void *b) {
+    uint32_t x = ((const rxbin007_region_check *)a)->record->region_id;
+    uint32_t y = ((const rxbin007_region_check *)b)->record->region_id;
+    return x < y ? -1 : x > y;
+}
+static size_t rxbin007_region_find(const rxbin007_region_check *rows, size_t count, uint32_t id) {
+    size_t low = 0u, high = count;
+    while (low < high) {
+        size_t mid = low + (high - low) / 2u;
+        if (rows[mid].record->region_id < id) low = mid + 1u;
+        else high = mid;
+    }
+    return low < count && rows[low].record->region_id == id ? low : SIZE_MAX;
+}
+static int rxbin007_range_compare(const void *a, const void *b) {
+    const rxbin007_range_check *x = a, *y = b;
+    if (x->record->start != y->record->start) return x->record->start < y->record->start ? -1 : 1;
+    if (x->depth != y->depth) return x->depth < y->depth ? -1 : 1;
+    if (x->record->end != y->record->end) return x->record->end > y->record->end ? -1 : 1;
+    return x->region < y->region ? -1 : x->region > y->region;
+}
+static int rxbin007_region_range_compare(const void *a, const void *b) {
+    const rxbin007_range_check *x = a, *y = b;
+    if (x->region != y->region) return x->region < y->region ? -1 : 1;
+    return x->record->start < y->record->start ? -1 : x->record->start > y->record->start;
+}
+static int rxbin007_region_contains(const rxbin007_range_check *ranges, size_t count,
+                                    size_t region, size_t start, size_t end) {
+    size_t low = 0u, high = count;
+    while (low < high) {
+        size_t mid = low + (high - low) / 2u;
+        if (ranges[mid].region < region ||
+            (ranges[mid].region == region && ranges[mid].record->start <= start)) low = mid + 1u;
+        else high = mid;
+    }
+    return low && ranges[low - 1u].region == region &&
+           ranges[low - 1u].record->start <= start && end <= ranges[low - 1u].record->end;
+}
+static int rxbin007_exit_compare(const void *a, const void *b) {
+    const meta_inline_exit_constant *x = *(const meta_inline_exit_constant *const *)a;
+    const meta_inline_exit_constant *y = *(const meta_inline_exit_constant *const *)b;
+    if (x->region_id != y->region_id) return x->region_id < y->region_id ? -1 : 1;
+    if (x->order != y->order) return x->order < y->order ? -1 : 1;
+    return x->start < y->start ? -1 : x->start > y->start;
+}
+static int rxbin007_exit_slot(const module_file *module, const proc_constant *proc,
+                              uint32_t bank, uint32_t index) {
+    if (bank == RXBIN_INLINE_BANK_R) return proc->locals >= 0 && index < (uint32_t)proc->locals;
+    if (bank == RXBIN_INLINE_BANK_G) return module->header.globals >= 0 && index < (uint32_t)module->header.globals;
+    /* Argument extent is a runtime property; the active frame checks it before
+     * any cold action. Keep the packed physical register index representable. */
+    return bank == RXBIN_INLINE_BANK_A && proc->locals >= 0 && module->header.globals >= 0 &&
+           (uint64_t)(unsigned)proc->locals + (unsigned)module->header.globals + index <= INT_MAX;
+}
+static int rxbin007_exit_action(const module_file *module, const rxbin007_region_check *region,
+                                const meta_inline_exit_constant *action) {
+    if (action->kind == RXBIN_INLINE_ACTION_NUMERIC) {
+        if (action->bank1 != RXBIN_INLINE_BANK_R || action->bank2 || action->index2) return 0;
+        if (action->field != RXOP_CONTEXT_DIGITS && action->field != RXOP_CONTEXT_FUZZ &&
+            action->field != RXOP_CONTEXT_FORM && action->field != RXOP_CONTEXT_CASE &&
+            action->field != RXOP_CONTEXT_STANDARD) return 0;
+        if (action->source == RXBIN_INLINE_SOURCE_OWNED_BASE)
+            return !action->literal && action->index1 < region->owned_locals;
+        if (action->source != RXBIN_INLINE_SOURCE_LITERAL || action->index1 ||
+            action->literal > INT_MAX) return 0;
+        if (action->field == RXOP_CONTEXT_DIGITS) return action->literal >= 1;
+        if (action->field == RXOP_CONTEXT_FUZZ) return action->literal >= 0;
+        return action->literal == 1 || action->literal == 2;
+    }
+    if (action->field || action->source || action->literal) return 0;
+    if (action->kind == RXBIN_INLINE_ACTION_ENDLIFE)
+        return action->bank1 == RXBIN_INLINE_BANK_R && action->index1 < region->owned_locals &&
+               !action->bank2 && !action->index2;
+    if (!rxbin007_exit_slot(module,region->procedure,action->bank1,action->index1)) return 0;
+    if (action->kind == RXBIN_INLINE_ACTION_UNLINK) return !action->bank2 && !action->index2;
+    return (action->kind == RXBIN_INLINE_ACTION_SWAP || action->kind == RXBIN_INLINE_ACTION_LINK) &&
+           rxbin007_exit_slot(module,region->procedure,action->bank2,action->index2);
+}
+
+/* No producer convention is proved here. These records grant precisely the
+ * same ownership-limited actions as their ordinary instruction counterparts.
+ * Sorting bounds ancestry/range/order validation independently of body size. */
+int rxbin_validate_inline_exits(const module_file *module) {
+    const unsigned char *pool;
+    const bin_code *code;
+    rxbin007_region_check *regions = NULL;
+    rxbin007_range_check *ranges = NULL;
+    rxbin007_exit_proc_check *procedures = NULL;
+    const meta_inline_exit_constant **actions = NULL;
+    size_t *stack = NULL;
+    unsigned char *boundaries = NULL;
+    size_t region_count = 0u, range_count = 0u, action_count = 0u, procedure_count = 0u;
+    size_t r = 0u, m = 0u, a = 0u, i, j, visits = 0u, limit, position, stack_size = 0u;
+    int offset, previous = -1, ok = 0;
+    const char *fault = "invalid executable inline-exit metadata";
+    if (!module || module->header.meta_head == -1) return 1;
+    pool = module->constant;
+    if (!pool) goto done;
+    limit = module->header.constant_size / sizeof(meta_entry) + 1u;
+    offset = module->header.meta_head;
+    while (offset != -1) {
+        const meta_entry *entry;
+        size_t required = sizeof(*entry);
+        if (offset < 0 || ++visits > limit || (size_t)offset > module->header.constant_size ||
+            module->header.constant_size - (size_t)offset < required) goto done;
+        entry = (const meta_entry *)(pool + offset);
+        if (entry->base.type == META_INLINE_REGION) { required = sizeof(meta_inline_region_constant); region_count++; }
+        if (entry->base.type == META_INLINE_RANGE) { required = sizeof(meta_inline_range_constant); range_count++; }
+        if (entry->base.type == META_INLINE_EXIT) { required = sizeof(meta_inline_exit_constant); action_count++; }
+        if (entry->base.type == META_INLINED_PRIVATE) required = sizeof(meta_inlined_private_constant);
+        if (entry->base.size_in_pool < required || entry->base.size_in_pool > module->header.constant_size - (size_t)offset ||
+            entry->prev != previous || entry->address > module->header.instruction_size) goto done;
+        previous = offset; offset = entry->next;
+    }
+    if (!region_count && !range_count && !action_count) return 1;
+    if (!region_count || !range_count || !module->instructions || module->header.instruction_size == SIZE_MAX ||
+        region_count > SIZE_MAX / sizeof(*regions) || range_count > SIZE_MAX / sizeof(*ranges) ||
+        range_count > SIZE_MAX / sizeof(*stack) || region_count > SIZE_MAX / sizeof(*stack) ||
+        action_count > SIZE_MAX / sizeof(*actions) || limit > SIZE_MAX / sizeof(*procedures)) goto done;
+    regions = calloc(region_count,sizeof(*regions)); ranges = calloc(range_count,sizeof(*ranges));
+    actions = action_count ? malloc(action_count * sizeof(*actions)) : NULL;
+    stack = malloc((range_count > region_count ? range_count : region_count) * sizeof(*stack));
+    boundaries = calloc(module->header.instruction_size + 1u,1u);
+    procedures = calloc(limit,sizeof(*procedures));
+    if (!regions || !ranges || (action_count && !actions) || !stack || !boundaries || !procedures) {
+        fault = "out of memory validating executable inline-exit metadata"; goto done;
+    }
+    offset = module->header.meta_head;
+    while (offset != -1) {
+        const meta_entry *entry = (const meta_entry *)(pool + offset);
+        if (entry->base.type == META_INLINE_REGION) regions[r++].record = (const meta_inline_region_constant *)entry;
+        if (entry->base.type == META_INLINE_RANGE) ranges[m++].record = (const meta_inline_range_constant *)entry;
+        if (entry->base.type == META_INLINE_EXIT) actions[a++] = (const meta_inline_exit_constant *)entry;
+        offset = entry->next;
+    }
+    code = module->instructions; position = 0u;
+    while (position < module->header.instruction_size) {
+        size_t width;
+        if (code[position].instruction.no_ops < 0) goto done;
+        width = (size_t)code[position].instruction.no_ops + 1u;
+        if (width > module->header.instruction_size - position) goto done;
+        boundaries[position] = 1u; position += width;
+    }
+    boundaries[position] = 1u;
+    offset = module->header.proc_head; visits = 0u;
+    while (offset != -1) {
+        const proc_constant *proc;
+        if (offset < 0 || ++visits > limit || (size_t)offset > module->header.constant_size ||
+            module->header.constant_size - (size_t)offset < sizeof(*proc)) goto done;
+        proc = (const proc_constant *)(pool + offset);
+        if (proc->base.type != PROC_CONST || proc->base.size_in_pool < sizeof(*proc) ||
+            proc->base.size_in_pool > module->header.constant_size - (size_t)offset) goto done;
+        if (proc->start != SIZE_MAX) {
+            if (proc->start >= module->header.instruction_size || !boundaries[proc->start] || proc->locals < 0) goto done;
+            procedures[procedure_count].record = proc; procedures[procedure_count].offset = (size_t)offset;
+            procedures[procedure_count++].owned_locals = (size_t)proc->locals;
+        }
+        offset = proc->next;
+    }
+    qsort(procedures,procedure_count,sizeof(*procedures),rxbin007_exit_proc_start_compare);
+    for (i = 0u; i < procedure_count;) {
+        size_t after = i + 1u, end;
+        while (after < procedure_count && procedures[after].record->start == procedures[i].record->start) after++;
+        end = after < procedure_count ? procedures[after].record->start : module->header.instruction_size;
+        while (i < after) procedures[i++].end = end;
+    }
+    qsort(procedures,procedure_count,sizeof(*procedures),rxbin007_exit_proc_offset_compare);
+    offset = module->header.meta_head;
+    while (offset != -1) {
+        const meta_entry *entry = (const meta_entry *)(pool + offset);
+        if (entry->base.type == META_INLINED_PRIVATE) {
+            const meta_inlined_private_constant *binding = (const meta_inlined_private_constant *)entry;
+            rxbin007_exit_proc_check *proc = rxbin007_exit_proc_find(procedures,procedure_count,binding->procedure);
+            if (proc && binding->owned_locals < proc->owned_locals) proc->owned_locals = binding->owned_locals;
+        }
+        offset = entry->next;
+    }
+    qsort(regions,region_count,sizeof(*regions),rxbin007_region_compare);
+    for (i = 0u; i < region_count; i++) {
+        const meta_inline_region_constant *region = regions[i].record;
+        rxbin007_exit_proc_check *proc = rxbin007_exit_proc_find(procedures,procedure_count,region->procedure);
+        if (!region->region_id || region->version != RXBIN_INLINE_EXIT_VERSION ||
+            (i && regions[i - 1u].record->region_id == region->region_id) ||
+            !proc || region->base.address < proc->record->start || region->base.address >= proc->end ||
+            !boundaries[region->base.address]) goto done;
+        regions[i].procedure = proc->record; regions[i].owned_locals = proc->owned_locals; regions[i].procedure_end = proc->end;
+        regions[i].parent = region->parent_id ? rxbin007_region_find(regions,region_count,region->parent_id) : SIZE_MAX;
+        if (region->parent_id && (regions[i].parent == SIZE_MAX ||
+            regions[regions[i].parent].record->procedure != region->procedure)) goto done;
+    }
+    for (i = 0u; i < region_count; i++) {
+        size_t current = i, depth;
+        while (!regions[current].color) {
+            regions[current].color = 1u;
+            if (regions[current].parent == SIZE_MAX) break;
+            current = regions[current].parent;
+            if (regions[current].color == 1u) goto done;
+        }
+        current = i;
+        while (regions[current].color == 1u) {
+            regions[current].color = 2u;
+            if (regions[current].parent == SIZE_MAX) break;
+            current = regions[current].parent;
+        }
+        /* Parent chains are now acyclic; use their checked depth without a
+         * recursive C walk, including arbitrarily ordered module-local IDs. */
+        current = i; j = 0u;
+        while (regions[current].parent != SIZE_MAX && !regions[current].depth) {
+            stack[j++] = current; current = regions[current].parent;
+        }
+        depth = regions[current].depth;
+        if (!depth) regions[current].depth = depth = 1u;
+        while (j) regions[stack[--j]].depth = ++depth;
+    }
+    for (i = 0u; i < range_count; i++) {
+        const meta_inline_range_constant *range = ranges[i].record;
+        size_t region = rxbin007_region_find(regions,region_count,range->region_id);
+        if (region == SIZE_MAX || range->start >= range->end || range->end > regions[region].procedure_end ||
+            !boundaries[range->start] || !boundaries[range->end] ||
+            range->start < regions[region].procedure->start) goto done;
+        ranges[i].region = region; ranges[i].depth = regions[region].depth;
+    }
+    qsort(ranges,range_count,sizeof(*ranges),rxbin007_range_compare);
+    for (i = 0u; i < range_count; i++) {
+        size_t region = ranges[i].region;
+        while (stack_size && ranges[stack[stack_size - 1u]].record->end <= ranges[i].record->start) stack_size--;
+        if (stack_size) {
+            const rxbin007_range_check *outer = &ranges[stack[stack_size - 1u]];
+            if (regions[region].parent != outer->region || ranges[i].record->end > outer->record->end) goto done;
+        } else if (regions[region].parent != SIZE_MAX) goto done;
+        stack[stack_size++] = i;
+    }
+    qsort(ranges,range_count,sizeof(*ranges),rxbin007_region_range_compare);
+    for (i = 0u; i < region_count; i++)
+        if (!rxbin007_region_contains(ranges,range_count,i,regions[i].record->base.address,
+                                       regions[i].record->base.address + 1u)) goto done;
+    if (action_count) qsort(actions,action_count,sizeof(*actions),rxbin007_exit_compare);
+    for (i = 0u; i < action_count; i++) {
+        const meta_inline_exit_constant *action = actions[i];
+        size_t region = rxbin007_region_find(regions,region_count,action->region_id);
+        if (region == SIZE_MAX || action->start >= action->end || action->end > module->header.instruction_size ||
+            !boundaries[action->start] || !boundaries[action->end] ||
+            !rxbin007_region_contains(ranges,range_count,region,action->start,action->end) ||
+            !rxbin007_exit_action(module,&regions[region],action)) goto done;
+        if (i && actions[i - 1u]->region_id == action->region_id && actions[i - 1u]->order == action->order &&
+            actions[i - 1u]->end > action->start) goto done;
+    }
+    ok = 1;
+done:
+    free(regions); free(ranges); free(actions); free(stack); free(boundaries); free(procedures);
+    if (!ok) rxbin007_set_error("RXBIN 007 %s in module %s",fault,module && module->name ? module->name : "<unnamed>");
+    return ok;
+}
+
 int write_modules(module_file *const *input_modules,
                   size_t module_count,
                   RxGraph *semantic_graph,
@@ -1777,7 +2077,7 @@ int write_modules(module_file *const *input_modules,
             goto error;
         }
         if (!rxbin007_validate_inline_diagnostics(module) || !rxbin007_validate_inlined_private(module) ||
-            !rxbin007_validate_entry_state(module)) goto error;
+            !rxbin007_validate_entry_state(module) || !rxbin_validate_inline_exits(module)) goto error;
         for (pool_index = 0u; pool_index < pool_count; pool_index++) {
             if (pools[pool_index].data == (unsigned char *)module->constant &&
                 pools[pool_index].size == module->header.constant_size) break;
@@ -1835,6 +2135,9 @@ int write_modules(module_file *const *input_modules,
                 feature_flags |= RXBIN007_FEATURE_INLINED_PRIVATE;
             } else if (pools[i].entries[entry_index].entry->type == META_ENTRY_STATE) {
                 feature_flags |= RXBIN007_FEATURE_ENTRY_STATE;
+            } else if (pools[i].entries[entry_index].entry->type >= META_INLINE_REGION &&
+                       pools[i].entries[entry_index].entry->type <= META_INLINE_EXIT) {
+                feature_flags |= RXBIN007_FEATURE_INLINE_EXITS;
             }
         }
     }
@@ -2089,7 +2392,7 @@ static int rxbin007_parse_record_section(const rxbin007_section_view *section,
             !rxbin007_reader_u32(&reader, &flags) ||
             !rxbin007_reader_u64(&reader, &payload_size) ||
             pool_index >= pool_count || id == RXBIN007_NONE || id >= maximum_records ||
-            type > META_ENTRY_STATE || flags ||
+            type > META_INLINE_EXIT || flags ||
             metadata != rxbin007_is_metadata((enum const_pool_type)type) ||
             payload_size > (uint64_t)(reader.end - reader.cursor) ||
             !rxbin007_pool_read_grow(&pools[pool_index], id + 1u)) return 0;
@@ -2200,6 +2503,9 @@ static size_t rxbin007_native_size(const rxbin007_record_view *record) {
         case META_INLINE_MAP: base_size = sizeof(meta_inline_map_constant); goto metadata;
         case META_INLINED_PRIVATE: base_size = sizeof(meta_inlined_private_constant); goto metadata;
         case META_ENTRY_STATE: base_size = sizeof(meta_entry_state_constant); goto metadata;
+        case META_INLINE_REGION: base_size = sizeof(meta_inline_region_constant); goto metadata;
+        case META_INLINE_RANGE: base_size = sizeof(meta_inline_range_constant); goto metadata;
+        case META_INLINE_EXIT: base_size = sizeof(meta_inline_exit_constant); goto metadata;
         default:
             return 0u;
 metadata:
@@ -2619,6 +2925,35 @@ static int rxbin007_fill_record(rxbin007_pool_read *pool, uint32_t id) {
             entry->start = (size_t)start; entry->end = (size_t)end;
             return 1;
         }
+        case META_INLINE_REGION: {
+            meta_inline_region_constant *entry = (meta_inline_region_constant *)base;
+            return rxbin007_reader_ref_kind(&reader,pool,RXBIN007_REF_PROCEDURE,0,&entry->procedure) &&
+                   rxbin007_reader_u32(&reader,&entry->version) &&
+                   rxbin007_reader_u32(&reader,&entry->region_id) &&
+                   rxbin007_reader_u32(&reader,&entry->parent_id) && rxbin007_payload_done(&reader);
+        }
+        case META_INLINE_RANGE: {
+            meta_inline_range_constant *entry = (meta_inline_range_constant *)base;
+            uint64_t start, end;
+            if (!rxbin007_reader_u64(&reader,&start) || !rxbin007_reader_u64(&reader,&end) ||
+                start > SIZE_MAX || end > SIZE_MAX || !rxbin007_reader_u32(&reader,&entry->region_id) ||
+                !rxbin007_payload_done(&reader)) return 0;
+            entry->start = (size_t)start; entry->end = (size_t)end; return 1;
+        }
+        case META_INLINE_EXIT: {
+            meta_inline_exit_constant *entry = (meta_inline_exit_constant *)base;
+            uint64_t start, end, literal;
+            if (!rxbin007_reader_u64(&reader,&start) || !rxbin007_reader_u64(&reader,&end) ||
+                start > SIZE_MAX || end > SIZE_MAX ||
+                !rxbin007_reader_u32(&reader,&entry->region_id) || !rxbin007_reader_u32(&reader,&entry->order) ||
+                !rxbin007_reader_u32(&reader,&entry->kind) || !rxbin007_reader_u32(&reader,&entry->field) ||
+                !rxbin007_reader_u32(&reader,&entry->source) || !rxbin007_reader_u32(&reader,&entry->bank1) ||
+                !rxbin007_reader_u32(&reader,&entry->index1) || !rxbin007_reader_u32(&reader,&entry->bank2) ||
+                !rxbin007_reader_u32(&reader,&entry->index2) || !rxbin007_reader_u64(&reader,&literal) ||
+                !rxbin007_payload_done(&reader)) return 0;
+            entry->start = (size_t)start; entry->end = (size_t)end;
+            memcpy(&entry->literal,&literal,sizeof(literal)); return 1;
+        }
         case META_TRACE_EVENT: {
             meta_trace_event_constant *entry = (meta_trace_event_constant *)base;
             uint32_t packed;
@@ -2708,16 +3043,11 @@ static int rxbin007_pool_id_has_type(const rxbin007_pool_read *pool,
 }
 
 static int rxbin007_pool_operand_id_valid(const rxbin007_pool_read *pool,
-                                          int opcode,
-                                          size_t operand_index,
                                           OperandType operand_type,
                                           uint32_t id) {
     enum const_pool_type expected;
 
-    if ((opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u) ||
-        (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u))
-        expected = BINARY_CONST;
-    else switch (operand_type) {
+    switch (operand_type) {
         case OP_FUNC: expected = PROC_CONST; break;
         case OP_FLOAT: expected = FLOAT_CONST; break;
         case OP_STRING: expected = STRING_CONST; break;
@@ -2733,11 +3063,6 @@ static int rxbin007_pool_operand_id_valid(const rxbin007_pool_read *pool,
                                            &qualified);
     }
     if (!rxbin007_pool_id_has_type(pool, id, expected)) return 0;
-    if (rxbin007_inline_binary_operand(opcode, operand_index)) {
-        const string_constant *entry = (const string_constant *)(
-            pool->shared->data + pool->offsets[id]);
-        return rxbin007_inline_payload_valid(opcode, operand_index, entry);
-    }
     return 1;
 }
 
@@ -2780,6 +3105,11 @@ static int rxbin007_decode_instructions(const unsigned char *data,
 
         if (!rxbin_var_reader_read(&reader, &opcode_token) ||
             opcode_token >= (uint64_t)OP_MAX_INSTRUCTIONS) goto error;
+        if (rxbin007_retired_opcode((int)opcode_token)) {
+            rxbin007_set_error("RXBIN 007 retired opcode %llu",
+                               (unsigned long long)opcode_token);
+            goto error;
+        }
         if ((rxbin007_opcode_features((int)opcode_token) & feature_flags) !=
             rxbin007_opcode_features((int)opcode_token)) {
             rxbin007_set_error(
@@ -2812,8 +3142,6 @@ static int rxbin007_decode_instructions(const unsigned char *data,
             } else if (rxbin007_pool_operand_type(rxop_format_operand_type(format, operand_index))) {
                 if (token > UINT32_MAX ||
                     !rxbin007_pool_operand_id_valid(pool,
-                                                    (int)opcode_token,
-                                                    operand_index,
                                                     rxop_format_operand_type(format, operand_index),
                                                     (uint32_t)token)) goto error;
                 if (rxop_format_operand_type(format, operand_index) == OP_FUNC &&
@@ -3216,6 +3544,14 @@ static int rxbin007_parse_image(const unsigned char *image,
                           (unsigned int)RXBIN007_FEATURE_ENTRY_STATE);
         goto error;
     }
+    if ((rxbin007_pool_reads_have_type(pools,pool_count,META_INLINE_REGION) ||
+         rxbin007_pool_reads_have_type(pools,pool_count,META_INLINE_RANGE) ||
+         rxbin007_pool_reads_have_type(pools,pool_count,META_INLINE_EXIT)) &&
+        !(feature_flags & RXBIN007_FEATURE_INLINE_EXITS)) {
+        rxbin007_set_error("RXBIN 007 executable inline-exit metadata requires feature flag 0x%08x",
+                          (unsigned int)RXBIN007_FEATURE_INLINE_EXITS);
+        goto error;
+    }
     for (i = 0u; i < pool_count; i++) {
         if (!rxbin007_materialize_pool(&pools[i])) goto error;
     }
@@ -3234,7 +3570,8 @@ static int rxbin007_parse_image(const unsigned char *image,
     for (i = 0u; i < state->module_count; i++)
         if (!rxbin007_validate_inline_diagnostics(state->modules[i]) ||
             !rxbin007_validate_inlined_private(state->modules[i]) ||
-            !rxbin007_validate_entry_state(state->modules[i])) goto error;
+            !rxbin007_validate_entry_state(state->modules[i]) ||
+            !rxbin_validate_inline_exits(state->modules[i])) goto error;
     rxbin007_free_pool_reads(pools, pool_count, 0);
     rx_graph_release(&graph);
     rxbin007_free_section_views(sections);

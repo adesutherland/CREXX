@@ -57,7 +57,7 @@ static const char *const rxvm_profile_call_outcome_names[
 
 static const char *const rxvm_profile_return_placement_names[
         RXVM_PROFILE_RETURN_PLACEMENT_COUNT] = {
-        "void", "ret_reg_move_local", "ret_reg_copy_nonlocal",
+        "void", "ret_reg_move_local", "ret_reg_copy",
         "value_ignored", "immediate", "terminal_external"
 };
 

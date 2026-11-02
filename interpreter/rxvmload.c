@@ -622,6 +622,9 @@ void rxfremod(rxvm_context *context) {
         (void)rxvm_memory_release(context->modules[j]->dynamic_site_caches);
         (void)rxvm_memory_release(context->modules[j]->inline_diagnostic_maps);
         (void)rxvm_memory_release(context->modules[j]->inline_diagnostic_frames);
+        (void)rxvm_memory_release(context->modules[j]->inline_exits);
+        (void)rxvm_memory_release(context->modules[j]->inline_ranges);
+        (void)rxvm_memory_release(context->modules[j]->inline_regions);
         if (context->modules[j]->proc_runtime_lookup)
             (void)rxvm_memory_release(context->modules[j]->proc_runtime_lookup);
         if (context->modules[j]->procedures)
@@ -922,6 +925,97 @@ static void build_module_inline_diagnostics(module *mod) {
         map->frame = inline_diagnostic_frame_by_id(mod, map->definition->frame_id);
     }
     (void)rxvm_memory_release(steps);
+}
+
+static int compare_inline_regions(const void *left, const void *right) {
+    uint32_t a = ((const rxvm_inline_region *)left)->definition->region_id;
+    uint32_t b = ((const rxvm_inline_region *)right)->definition->region_id;
+    return (a > b) - (a < b);
+}
+
+static int compare_inline_ranges(const void *left, const void *right) {
+    size_t a = ((const rxvm_inline_range *)left)->definition->start;
+    size_t b = ((const rxvm_inline_range *)right)->definition->start;
+    return (a > b) - (a < b);
+}
+
+static int compare_inline_exits(const void *left, const void *right) {
+    const meta_inline_exit_constant *a = ((const rxvm_inline_exit *)left)->definition;
+    const meta_inline_exit_constant *b = ((const rxvm_inline_exit *)right)->definition;
+    if (a->region_id != b->region_id)
+        return (a->region_id > b->region_id) - (a->region_id < b->region_id);
+    if (a->order != b->order) return (a->order > b->order) - (a->order < b->order);
+    return (a->start > b->start) - (a->start < b->start);
+}
+
+static rxvm_inline_region *inline_region_by_id(module *mod, uint32_t id) {
+    size_t low = 0u, high = mod->inline_region_count;
+    while (low < high) {
+        size_t middle = low + (high - low) / 2u;
+        rxvm_inline_region *region = &mod->inline_regions[middle];
+        uint32_t found = region->definition->region_id;
+        if (found == id) return region;
+        if (found < id) low = middle + 1u;
+        else high = middle;
+    }
+    return NULL;
+}
+
+/* The shared RXBIN validator has already checked ancestry, typed references,
+ * ranges and action phases. This only binds their immutable runtime owners. */
+static void build_module_inline_exits(module *mod) {
+    size_t regions = 0u, ranges = 0u, exits = 0u, index;
+    int offset;
+    mod->inline_regions = NULL;
+    mod->inline_ranges = NULL;
+    mod->inline_exits = NULL;
+    mod->inline_region_count = 0u;
+    mod->inline_range_count = 0u;
+    mod->inline_exit_count = 0u;
+    for (offset = mod->meta_head; offset != -1;) {
+        const meta_entry *meta = (const meta_entry *)(mod->segment.const_pool + (size_t)offset);
+        if (meta->base.type == META_INLINE_REGION) ++mod->inline_region_count;
+        else if (meta->base.type == META_INLINE_RANGE) ++mod->inline_range_count;
+        else if (meta->base.type == META_INLINE_EXIT) ++mod->inline_exit_count;
+        offset = meta->next;
+    }
+    if (!mod->inline_region_count) return;
+    mod->inline_regions = inline_diagnostic_index(mod, mod->inline_region_count, sizeof(*mod->inline_regions));
+    mod->inline_ranges = inline_diagnostic_index(mod, mod->inline_range_count, sizeof(*mod->inline_ranges));
+    mod->inline_exits = inline_diagnostic_index(mod, mod->inline_exit_count, sizeof(*mod->inline_exits));
+    for (offset = mod->meta_head; offset != -1;) {
+        const meta_entry *meta = (const meta_entry *)(mod->segment.const_pool + (size_t)offset);
+        if (meta->base.type == META_INLINE_REGION)
+            mod->inline_regions[regions++].definition = (const meta_inline_region_constant *)meta;
+        else if (meta->base.type == META_INLINE_RANGE)
+            mod->inline_ranges[ranges++].definition = (const meta_inline_range_constant *)meta;
+        else if (meta->base.type == META_INLINE_EXIT)
+            mod->inline_exits[exits++].definition = (const meta_inline_exit_constant *)meta;
+        offset = meta->next;
+    }
+    qsort(mod->inline_regions, regions, sizeof(*mod->inline_regions), compare_inline_regions);
+    if (ranges) qsort(mod->inline_ranges, ranges, sizeof(*mod->inline_ranges), compare_inline_ranges);
+    if (exits) qsort(mod->inline_exits, exits, sizeof(*mod->inline_exits), compare_inline_exits);
+    for (index = 0u; index < regions; ++index) {
+        rxvm_inline_region *region = &mod->inline_regions[index];
+        region->procedure = rxvm_get_module_runtime_procedure(mod, region->definition->procedure);
+        region->parent = inline_region_by_id(mod, region->definition->parent_id);
+    }
+    /* Resolve arbitrary ID order before computing depths. */
+    for (index = 0u; index < regions; ++index) {
+        const rxvm_inline_region *parent;
+        mod->inline_regions[index].depth = 1u;
+        for (parent = mod->inline_regions[index].parent; parent; parent = parent->parent)
+            ++mod->inline_regions[index].depth;
+    }
+    for (index = 0u; index < ranges; ++index)
+        mod->inline_ranges[index].region = inline_region_by_id(mod, mod->inline_ranges[index].definition->region_id);
+    for (index = 0u; index < exits; ++index) {
+        rxvm_inline_region *region = inline_region_by_id(mod, mod->inline_exits[index].definition->region_id);
+        mod->inline_exits[index].region = region;
+        if (!region->action_count) region->first_action = index;
+        ++region->action_count;
+    }
 }
 
 static void build_module_runtime_procedures(module *mod) {
@@ -1342,6 +1436,7 @@ size_t rxvm_materialize_module_overlay(
     context->modules[n]->dynamic_site_cache_count = 0u;
     build_module_runtime_procedures(context->modules[n]);
     build_module_inline_diagnostics(context->modules[n]);
+    build_module_inline_exits(context->modules[n]);
     build_module_dynamic_site_caches(context->modules[n]);
     context->link_dirty = 1;
     context->interface_method_registry_dirty = 1;

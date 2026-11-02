@@ -114,39 +114,13 @@ selects the service policy. The assembler passes `--no-cleanup` to the service;
 the original source name and default `.rxbin` output stem in the emitted
 module. Service failure ends before assembly and does not alter the source.
 
-Handwritten RXAS may spell the feature-gated inline operands directly:
-
-```rxas
-inlenter r0,callee(),"count=r7;args=window(r8);a0=r20;proxies=(r21:1);owned=(r20,r21,r22,r23);prep=none",after
-linkargv r21,1
-linkargv r21,r9,0
-qglobbind r22,"self",0
-qglobbind r23,"@2",1
-call @2::3()
-after:
-```
-
-`inlenter` is `R,P,S,L`: the readable recipe becomes a typed `INL1` binary
-constant, sealed to the selected provider before execution. `count` is an
-immediate or register; `args=list(rN,...)` captures explicit ordered cells and
-`args=window(rN)` starts at the first actual after a counted-call count slot.
-`a0` and every `owned` cell must be fresh; `owned` is a comma-separated list
-of individual registers covering all cells whose binding the clone can change.
-`proxies=(rN:ordinal,...)` includes absent optional formals: ordinals above the
-actual count retain fresh empty backing cells. `prep` accepts `none`,
-`clear(rN)`, `swap(rN,rM)`, `settp(rN,flags)`, or the latter plus `+swap(...)`;
-only the original call's in-instruction preparation belongs there. Optional
-`;result=ignored` preserves void calls. `linkargv` has immediate and
-register-plus-adjust forms and requires an active matching inline scope.
-
-`qglobbind` is `R,S,I`: its selector becomes a typed `QGR1` binary constant.
-`"self"` is relative to the executing module; `"@N"` names an exact image-local
-ordinal sealed by the linker. A provider name can be written for linker
-resolution. An existing `P` call operand accepts typed `QPR1`
-`@moduleOrdinal::procedureOrdinal()` for a retained private provider procedure.
-The VM rejects unsealed qualified targets. RXBIN 007 feature bit 8
-(`RXBIN007_FEATURE_INLINE_SCOPES`) gates these executable forms and validates
-typed lengths, flags, ordinals, counts and duplicate proxy/owned bindings.
+The experimental `inlenter`, `linkargv` and `qglobbind` instructions are
+retired. Their opcode numbers are reserved so later RXBIN opcode identities
+do not move. Direct inlining emits ordinary instructions; a site that cannot
+be expanded retains its ordinary `CALL`. An existing `P` call operand still
+accepts typed `QPR1` `@moduleOrdinal::procedureOrdinal()` for an exact private
+provider procedure. The VM rejects unsealed qualified targets. The existing
+RXBIN 007 feature-bit identity for qualified targets remains unchanged.
 
 `.inlinedprivate rK,"exact-provider",gN` is a procedure declaration for
 linker-selected private global storage. Write it after the procedure header
@@ -352,6 +326,51 @@ source stripping clears the caller source-step reference. The VM reads this
 tree only for diagnostic reconstruction, with no per-call setup or heap work.
 Repeated `.srcstep` records with one ID may restore the same source anchor;
 their source payloads must agree when an inline frame references that ID.
+
+Executable cold exits use separate typed RXBIN 007 feature-12 records:
+
+```rxas
+clone_begin:
+    .inlineregion 1,0
+    .inlinerange clone_begin,clone_end,1
+    getnumdgts r8
+saved:
+    .inlineexit 1,saved,clone_end,0,"digits",r8
+    .inlineexit 1,saved,clone_end,1,"endlife",r3
+    .inlineexit 1,saved,clone_end,2,"link",r4,r9
+```
+
+`.inlineregion id,parent` defines a nonzero module-local executable region at
+the clone entry and records its current owning procedure; parent zero names
+that physical procedure. IDs are independent of diagnostic inline-frame IDs.
+`.inlinerange begin,end,id` supplies a half-open instruction range. One region
+may have several disjoint ranges. Every child range must fit within a parent
+range; unrelated regions cannot overlap, and ancestry stays in one procedure.
+Definitions must lie in one of their own ranges.
+
+`.inlineexit id,begin,end,order,"action",operands` applies only on a cold
+departure crossing that region, when its actual source PC is in the action's
+half-open phase. Nonoverlapping phases may reuse an order; active orders within
+one region are unique. The action names `digits`, `fuzz`, `form`, `case` and
+`standard` restore one numeric field from an integer literal or saved owned
+`rN` base. Effective FORM/CASE/STANDARD literals are 1 or 2. `endlife,rN`
+expires owned base backing without finalizing payloads. `unlink,slot`,
+`swap,slot,slot` and `link,slot,anchor` undo introduced pointer changes using
+the corresponding ordinary binding semantics. Binding slots use r/g/a banks;
+argument bounds are checked against the active frame before cleanup. Numeric
+saves and ENDLIFE cannot name borrowed private suffixes, globals or arguments.
+
+Phase boundaries describe changes in outstanding duties, such as completion
+of a GET save or ordinary normal-exit restoration; they need no per-instruction
+record. A phase must fit within one range of its region. The loader validates
+version 1, IDs/parents, procedure/storage ownership, boundaries, action operands
+and orders before publication; invalid active saved values or inactive/sibling
+destinations fail terminally on the cold path. These records survive source and
+compiler-inline stripping, and relocation updates their code/PROC references.
+Native optimization currently protects executable ranges and metadata-named
+storage as conservative barriers while allowing unrelated code to optimize;
+the generic target services own later cold-consumer optimization. There is no
+entry opcode/allocation, normal-return plan interpreter or new dispatch test.
 
 TRACE event records deliberately store compact codes, not presentation strings.
 Current event kinds include `A` assignment, `V` variable read, `C` resolved
@@ -803,14 +822,18 @@ existing handlers and do not change VM or RXBIN semantics.
   `NONE` means no explicit write. The canonical effect row owns this kind;
   `rxop_value_writer()` and the generated Level L catalogue expose it per
   operand. A setter can release an old reference/native payload and run its
-  finalizer. An unknown writer cannot prove the absence of that callback.
+  finalizer. Conforming finalizers perform native cleanup without Rexx reentry
+  or catchable signals; resource release remains a value/ownership effect.
   Stem string reads remain unknown because a successful output/source alias
   skips the release, so no unconditional clear may be inferred.
 - Callback inventory is independent of intrinsic signals and opaque-effect
   barriers. `RXOP_EFFECT_KNOWN` rows certify a complete route inventory;
   ordinary rows retain an unknown route. `rxop_callback_obligations()` combines
-  that completeness with source-copy, destination, retained-capacity, selector,
-  host, invocation and hidden ABI/departure hooks. Zero proves no hook; a
+  that completeness with source-copy, selector, host, invocation and hidden
+  ABI/departure hooks. Destination and retained-capacity cleanup alone add no
+  Rexx callback route. ABI-3 numeric synchronization is total and non-reentrant,
+  so it adds no callback cause at numeric setters or call ingress. Zero proves
+  no Rexx callback; a
   nonzero mask is an obligation, not permission to discard or reorder work.
   Reviewed raw numeric-context getters can have an empty inventory while
   remaining opaque for other optimizer purposes. SAY/SAYX retain host routes.
@@ -828,7 +851,8 @@ existing handlers and do not change VM or RXBIN semantics.
   binding and raw scalar/status recipes likewise have no value hook; their
   intrinsic range/overflow signals remain. Explicit substring writes only its
   string buffer/cache, unlike alias-sensitive CONCAT's buffer-replacement path.
-  CONCAT therefore retains a conditional callback obligation.
+  Unreviewed CONCAT implementations retain an unknown intrinsic callback
+  inventory; buffer replacement alone no longer creates a finalizer route.
 - `rxop_signal_contract()` describes intrinsic instruction signals.
   `rxop_execution_signal_contract()` additionally accounts for hooks that may
   request an interrupt in the active context. Native CFG snapshots retain both
@@ -837,15 +861,14 @@ existing handlers and do not change VM or RXBIN semantics.
   policy and effect versions. No post-setter constant or clear is attached to
   a potentially rebound register. Local ENTRY provenance does not establish
   absent resources on recycled backing. A future point no-hook proof must use
-  callback-aware incoming facts for every source and destination extent;
-  logical count0 cannot prove retained capacity empty.
+  callback-aware incoming facts for real source COPY hooks. Resource-release
+  obligations stay independent, including ownership in inactive capacity.
   The bounded normal-return resource-only public-ABI profile preserves the
   suspended frame's pointer coordinates and structural handler policy while
-  invalidating pointees and retaining pending interrupt/control uncertainty. A complete
-  single explicit shared setter can commit its computed value and final native
-  reset to its captured physical receiver. It cannot establish reference absence
-  after an intervening finalizer. This normal checkpoint does not describe a
-  delivered handler or resumed exceptional edge. The additive
+  invalidating pointees and retaining pending interrupt/control uncertainty.
+  The former cleanup-only setter postwrite callback profile is empty: conforming
+  finalizers cannot reenter to rebound its receiver or create reference state.
+  This does not describe a delivered handler or resumed exceptional edge. The additive
   `rxas_flow_callback_resources_at_instruction()` checks only exact incoming
   owner/epoch resource facts (or explicitly requested normal-after conditions);
   its after-condition never claims the completed callback did not execute.
@@ -1577,12 +1600,21 @@ Signal support adds action-aware and dynamic-name forms:
   in `rPayload` and module/address from a VM-bound `.runtime_signal` created by
   `sigbrv`. Preserve attributes and explicit text/binary length, including NUL,
   with ordinary register-payload SIGNAL copy semantics. The requested tag may
-  differ from the origin tag. Invalid names and origins retain their respective
-  `INVALID_SIGNAL_CODE`/`INVALID_ARGUMENTS` errors at the current instruction;
+  differ from the origin tag. Invalid names and origins terminate the current
+  VM run with `INVALID_SIGNAL_CODE`/`INVALID_ARGUMENTS` at the current instruction;
   ordinary `signal` keeps its existing source and payload behavior
 
-Unknown dynamic names raise `INVALID_SIGNAL_CODE`. Literal `signal "NAME"`
-forms are still assembled directly against the static signal table.
+Unknown dynamic names, including a valid prefix followed by embedded NUL bytes,
+terminate the current VM run with `INVALID_SIGNAL_CODE`. Signal-management
+instruction misuse, unmatched named POP, allocation and native-mode failures
+likewise bypass installed handlers and retain embedding cleanup. A valid
+requested SIGNAL remains catchable; untaken conditional forms do not validate
+or raise their name. The canonical signal property
+`RXOP_SIGNAL_PROP_STATIC_NAMES_TERMINAL` marks terminal `static_names`
+alternatives separately from an operand-selected requested event. Pure policy
+setters have normal/terminal continuations; bare BPON/BPOFF retain pending-bit
+behavior. SIGRET is retired with opcode 502 reserved; source and stale binaries
+are rejected. SIGCALLBR remains supported.
 
 Optimiser rule operands use lowercase `r` for a captured register. Uppercase
 `R`, `G`, and `A` match literal local/global/argument register numbers. The

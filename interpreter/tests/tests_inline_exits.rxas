@@ -1,0 +1,337 @@
+/* Independent handwritten VM boundary controls: no expander is involved. */
+.globals=3
+
+main() .locals=2
+    call r1,nested()
+    ieq r0,r1,0
+    brf failed,r0
+    call r1,internal()
+    ieq r0,r1,0
+    brf failed,r0
+    call r1,fragmented()
+    ieq r0,r1,0
+    brf failed,r0
+    call r1,callbranch()
+    ieq r0,r1,0
+    brf failed,r0
+    call r1,skip_two()
+    ieq r0,r1,0
+    brf failed,r0
+    load g2,123
+    call1 r1,bank_bindings(),g2
+    ieq r0,r1,0
+    brf failed,r0
+    ieq r0,g2,77
+    brf failed,r0
+    say "PASS: inline cold exits"
+    ret 0
+failed:
+    say "FAIL: inline cold exits"
+    ret 1
+
+nested() .locals=12
+    numsci 18,1,1
+    load r1,11
+    load r2,22
+    load r4,44
+    load r7,66
+    link r6,r7
+    link r5,r7
+    load g2,123
+    sigpush "OTHER"
+    sigbr outer_caught,"OTHER"
+outer_begin:
+    .inlineregion 1,0
+    .inlinerange outer_begin,outer_end,1
+    .inlineexit 1,outer_ready,outer_end,0,"digits",18
+    .inlineexit 1,outer_ready,outer_end,1,"endlife",r10
+    setnumdgts 9
+outer_ready:
+    sigpush "OTHER"
+    sigbrv inner_caught,r9,"OTHER"
+inner_begin:
+    .inlineregion 2,1
+    .inlinerange inner_begin,inner_end,2
+    .inlineexit 2,inner_ready,inner_end,0,"digits",r11
+    .inlineexit 2,inner_ready,inner_end,1,"fuzz",0
+    .inlineexit 2,inner_ready,inner_end,2,"form",1
+    .inlineexit 2,inner_ready,inner_end,3,"case",1
+    .inlineexit 2,inner_ready,inner_end,4,"standard",1
+    .inlineexit 2,inner_ready,inner_end,5,"endlife",r3
+    .inlineexit 2,inner_ready,inner_end,6,"swap",r1,r2
+    .inlineexit 2,inner_ready,inner_end,7,"unlink",r4
+    .inlineexit 2,inner_ready,inner_end,8,"link",r5,r6
+    getnumdgts r11
+    numeng 6,2,2
+    setnumfuz 1
+    load r3,7
+    mkref g0,r3
+    swap r1,r2
+    link r4,r3
+    link r5,r3
+inner_ready:
+    /* The return PC is exactly inner_end: source ownership is the CALL. */
+    call fault_child()
+inner_end:
+    br nested_bad
+inner_caught:
+    sigpop "OTHER"
+    getnumdgts r8
+    ieq r0,r8,9
+    brf nested_bad,r0
+    getnumfuz r8
+    ieq r0,r8,0
+    brf nested_bad,r0
+    getnumfrm r8
+    ieq r0,r8,1
+    brf nested_bad,r0
+    getnumcas r8
+    ieq r0,r8,1
+    brf nested_bad,r0
+    getnumstd r8
+    ieq r0,r8,1
+    brf nested_bad,r0
+    refvalid r0,g0
+    brt nested_bad,r0
+    ieq r0,r1,11
+    brf nested_bad,r0
+    ieq r0,r2,22
+    brf nested_bad,r0
+    ieq r0,r4,44
+    brf nested_bad,r0
+    load r5,77
+    ieq r0,r7,77
+    brf nested_bad,r0
+    ieq r0,g2,123
+    brf nested_bad,r0
+    load r10,88
+    mkref g1,r10
+    load r8,"leave outer with the child's diagnostic origin"
+    signalorigin "OTHER",r8,r9
+outer_end:
+    br nested_bad
+outer_caught:
+    sigpop "OTHER"
+    getnumdgts r8
+    ieq r0,r8,18
+    brf nested_bad,r0
+    refvalid r0,g1
+    brt nested_bad,r0
+    /* Decimal provider must be attached to the restored live context. */
+    setnumdgts 7
+    load r8,1d
+    ddiv r9,r8,3d
+    dtos r9
+    seq r0,r9,"0.3333333"
+    brf nested_bad,r0
+    ret 0
+nested_bad:
+    say "FAIL: nested region cleanup"
+    ret 1
+
+fault_child() .locals=0
+    setnumdgts 5
+    signal "OTHER","real child"
+    ret
+
+internal() .locals=5
+    numsci 18,1,1
+    sigpush "OTHER"
+    sigbr internal_done,"OTHER"
+internal_begin:
+    .inlineregion 10,0
+    .inlinerange internal_begin,internal_end,10
+    .inlineexit 10,internal_changed,internal_end,0,"digits",18
+    .inlineexit 10,internal_changed,internal_end,1,"endlife",r1
+    /* No numeric action is active before its saving/changing phase. */
+    sigpush "OTHER"
+    sigbr internal_caught,"OTHER"
+    load r1,99
+    mkref g0,r1
+    setnumdgts 6
+internal_changed:
+    signal "OTHER","internal catch"
+    br internal_bad
+internal_caught:
+    sigpop "OTHER"
+    getnumdgts r2
+    ieq r0,r2,6
+    brf internal_bad,r0
+    refvalid r0,g0
+    brf internal_bad,r0
+    sigpush "OTHER"
+    sigcall resume_handler(),"OTHER"
+    signal "OTHER","resuming call"
+    ieq r0,g2,6
+    brf internal_bad,r0
+    getnumdgts r2
+    ieq r0,r2,6
+    brf internal_bad,r0
+    refvalid r0,g0
+    brf internal_bad,r0
+    sigpop "OTHER"
+    signal "OTHER","now leave"
+internal_end:
+    br internal_bad
+internal_done:
+    sigpop "OTHER"
+    getnumdgts r2
+    ieq r0,r2,18
+    brf internal_bad,r0
+    refvalid r0,g0
+    brt internal_bad,r0
+    ret 0
+internal_bad:
+    say "FAIL: internal or resuming handler"
+    ret 1
+
+resume_handler() .locals=1
+    /* A real handler sees the interrupted numeric context. */
+    getnumdgts r0
+    icopy g2,r0
+    setnumdgts 5
+    ret
+
+fragmented() .locals=2
+    numsci 18,1,1
+    sigpush "OTHER"
+    sigbrv fragment_done,r1,"OTHER"
+fragment_first:
+    .inlineregion 20,0
+    .inlinerange fragment_first,fragment_first_end,20
+    .inlinerange fragment_second,fragment_second_end,20
+    setnumdgts 6
+    br fragment_second
+fragment_first_end:
+    cnop
+fragment_second:
+    .inlineexit 20,fragment_second,fragment_second_end,0,"digits",18
+    signal "OTHER","second fragment"
+fragment_second_end:
+    ret 1
+fragment_done:
+    sigpop "OTHER"
+    getnumdgts r1
+    ieq r0,r1,18
+    brf fragment_bad,r0
+    ret 0
+fragment_bad:
+    say "FAIL: fragmented region"
+    ret 1
+
+callbranch() .locals=2
+    numsci 18,1,1
+    sigpush "OTHER"
+    sigcallbr callbranch_done,resume_handler(),"OTHER"
+callbranch_begin:
+    .inlineregion 30,0
+    .inlinerange callbranch_begin,callbranch_end,30
+    .inlineexit 30,callbranch_ready,callbranch_end,0,"digits",18
+    setnumdgts 6
+callbranch_ready:
+    signal "OTHER","call then branch"
+callbranch_end:
+    ret 1
+callbranch_done:
+    sigpop "OTHER"
+    ieq r0,g2,18
+    brf callbranch_bad,r0
+    getnumdgts r1
+    ieq r0,r1,18
+    brf callbranch_bad,r0
+    ret 0
+callbranch_bad:
+    say "FAIL: call-branch cleanup"
+    ret 1
+
+skip_two() .locals=4
+    /* RXAS setters permit these independent field values; cold restoration
+     * must not impose a source-language FUZZ restriction on the VM surface. */
+    numsci 18,1,1
+    setnumfuz 9
+    setnumdgts 6
+    sigpush "OTHER"
+    sigbr two_done,"OTHER"
+two_outer:
+    .inlineregion 50,0
+    .inlinerange two_outer,two_outer_end,50
+    .inlineexit 50,two_outer_ready,two_outer_end,0,"digits",6
+    .inlineexit 50,two_outer_ready,two_outer_end,1,"fuzz",9
+    .inlineexit 50,two_outer_ready,two_outer_end,2,"endlife",r1
+    numsci 12,1,1
+    load r1,1
+    mkref g0,r1
+two_outer_ready:
+two_inner:
+    .inlineregion 51,50
+    .inlinerange two_inner,two_inner_end,51
+    .inlineexit 51,two_inner_ready,two_inner_end,0,"digits",12
+    .inlineexit 51,two_inner_ready,two_inner_end,1,"endlife",r2
+    numsci 8,1,1
+    load r2,2
+    mkref g1,r2
+two_inner_ready:
+    signal "OTHER","cross both regions at once"
+two_inner_end:
+    ret 1
+two_outer_end:
+    ret 1
+two_done:
+    sigpop "OTHER"
+    getnumdgts r3
+    ieq r0,r3,6
+    brf two_bad,r0
+    getnumfuz r3
+    ieq r0,r3,9
+    brf two_bad,r0
+    refvalid r0,g0
+    brt two_bad,r0
+    refvalid r0,g1
+    brt two_bad,r0
+    ret 0
+two_bad:
+    say "FAIL: direct multi-region departure"
+    ret 1
+
+bank_bindings() .locals=5
+    load r1,11
+    load r2,22
+    sigpush "OTHER"
+    sigbr bank_done,"OTHER"
+bank_begin:
+    .inlineregion 60,0
+    .inlinerange bank_begin,bank_end,60
+    .inlineexit 60,bank_ready,bank_end,0,"swap",r1,g2
+    .inlineexit 60,bank_ready,bank_end,1,"unlink",g1
+    .inlineexit 60,bank_ready,bank_end,2,"unlink",a1
+    .inlineexit 60,bank_ready,bank_end,3,"link",r4,a1
+    swap r1,g2
+    load g2,33
+    link a1,r2
+    load a1,44
+    link g1,r2
+    load g1,55
+bank_ready:
+    signal "OTHER","restore r/g/a views without undoing value writes"
+bank_end:
+    ret 1
+bank_done:
+    sigpop "OTHER"
+    ieq r0,r1,33
+    brf bank_bad,r0
+    ieq r0,g2,123
+    brf bank_bad,r0
+    ieq r0,a1,123
+    brf bank_bad,r0
+    ieq r0,r2,55
+    brf bank_bad,r0
+    load g1,66
+    ieq r0,r2,55
+    brf bank_bad,r0
+    load r4,77
+    ieq r0,a1,77
+    brf bank_bad,r0
+    ret 0
+bank_bad:
+    say "FAIL: typed bank binding restoration"
+    ret 1

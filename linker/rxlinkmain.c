@@ -1420,43 +1420,6 @@ static int sealed_qprocedure(const module_list *modules, const module_file *sour
     return 1;
 }
 
-/* Validate the old recipe against its P operand before any resealing. An
- * imported P must name this exact provider's callable contract, not a shadow
- * with a matching private procedure name. */
-static int sealed_recipe(const module_list *modules, const module_file *source,
-                           size_t recipe_offset, size_t target_offset,
-                           size_t *provider, uint32_t *ordinal) {
-    const string_constant *binary = sealed_binary(source, recipe_offset);
-    const chameleon_constant *target = sealed_constant(source, target_offset);
-    const module_file *owner;
-    const proc_constant *proc, *selected;
-    size_t selected_offset;
-    rxinl_recipe_view view;
-    if (!binary || !target ||
-        !rxinl_recipe_decode(binary->string, binary->string_len, &view) ||
-        !(view.flags & RXINL_RECIPE_SEALED) ||
-        !sealed_member(modules, source, view.image_module, provider)) return 0;
-    owner = modules->items[*provider].original_module;
-    selected = sealed_procedure(owner, view.provider_procedure, &selected_offset);
-    if (!selected || selected->start >= owner->header.instruction_size) return 0;
-    *ordinal = view.provider_procedure;
-    if (target->type == BINARY_CONST) {
-        size_t p;
-        uint32_t o;
-        return sealed_qprocedure(modules, source, sealed_binary(source, target_offset), &p, &o) &&
-               p == *provider && o == *ordinal;
-    }
-    if (target->type != PROC_CONST || target->size_in_pool < sizeof(proc_constant)) return 0;
-    proc = (const proc_constant *)target;
-    if (proc->start != SIZE_MAX) return owner == source && target_offset == selected_offset;
-    {
-        const expose_proc_constant *imported = sealed_exposure(source, proc);
-        const expose_proc_constant *defined = sealed_exposure(owner, selected);
-        return imported && imported->imported && defined && !defined->imported &&
-               !strcmp(imported->index, defined->index);
-    }
-}
-
 static int sealed_module(const module_list *modules, const module_file *source,
                           const string_constant *binary, size_t *provider) {
     rxinl_module_ref_view view;
@@ -1509,17 +1472,6 @@ static int select_sealed_dependencies(module_list *modules, link_module_info *in
         size_t provider;
         uint32_t ordinal;
         if (width >= source->header.instruction_size - at) goto invalid;
-        if (opcode == OP_INLENTER_REG_FUNC_STRING_ID &&
-            (!sealed_recipe(modules, source, code[at + 3u].index, code[at + 2u].index,
-                             &provider, &ordinal) ||
-             !select_module_by_index(modules, queue, count, capacity, provider))) goto invalid;
-        if (opcode == OP_QGLOBBIND_REG_STRING_INT) {
-            if (!sealed_module(modules, source, sealed_binary(source, code[at + 2u].index), &provider) ||
-                code[at + 3u].iconst < 0 ||
-                (uint64_t)code[at + 3u].iconst >=
-                    (uint64_t)modules->items[provider].original_module->header.globals ||
-                !select_module_by_index(modules, queue, count, capacity, provider)) goto invalid;
-        }
         for (j = 0u; j < width; ++j) {
             const chameleon_constant *entry;
             if (rxop_format_operand_type(format, j) != OP_FUNC) continue;
@@ -2155,17 +2107,11 @@ static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleo
     return offset;
 }
 
-/* Inline recipes and qualified references are executable constants.
+/* Qualified procedure references are executable constants.
  * Rebase their checked original image identities before leaf deduplication; raw
  * binary constants with the same bytes must retain their original payload.
  * Service-produced candidates carry final image ordinals and are separately
  * validated before this ordinary relocation pass. */
-enum inline_operand_kind {
-    INLINE_OPERAND_RECIPE = 1,
-    INLINE_OPERAND_MODULE,
-    INLINE_OPERAND_PROCEDURE
-};
-
 static int relocated_procedure(const link_module_info *provider, uint32_t old,
                                 uint32_t *ordinal) {
     const proc_constant *original = sealed_procedure(provider->original_module, old, NULL);
@@ -2223,17 +2169,16 @@ static string_constant *relocated_binary(const void *bytes, size_t length) {
     return result;
 }
 
-static size_t link_inline_operand(rxlink_build_context *context,
+static size_t link_qualified_procedure_operand(rxlink_build_context *context,
                                   rxlink_output_module *output_module,
                                   module_file *input_module,
-                                  size_t old_offset, enum inline_operand_kind kind,
-                                  int *ok) {
+                                  size_t old_offset, int *ok) {
     const chameleon_constant *entry;
     const string_constant *source;
     string_constant *copy;
     size_t output_offset;
     size_t provider;
-    uint32_t procedure, image_module;
+    uint32_t procedure;
     if (old_offset > input_module->header.constant_size ||
         input_module->header.constant_size - old_offset < sizeof(chameleon_constant))
         goto invalid;
@@ -2252,54 +2197,7 @@ static size_t link_inline_operand(rxlink_build_context *context,
         return 0;
     }
     memcpy(copy, entry, entry->size_in_pool);
-    if (kind == INLINE_OPERAND_RECIPE) {
-        rxinl_recipe_view view;
-        if (!rxinl_recipe_decode(copy->string, copy->string_len, &view) ||
-            !(view.flags & RXINL_RECIPE_SEALED)) goto invalid_copy;
-        if (output_module->final_inline_seals) {
-            if (view.image_module >= output_module->image_module_count)
-                goto invalid_copy;
-        } else {
-            if (!sealed_member(context->modules, input_module, view.image_module, &provider) ||
-                !context->modules->items[provider].selected ||
-                !relocated_procedure(&context->modules->items[provider], view.provider_procedure, &procedure) ||
-                !rxinl_recipe_seal(copy->string, copy->string_len,
-                                   context->modules->items[provider].output_ordinal,
-                                   procedure)) goto invalid_copy;
-        }
-    } else if (kind == INLINE_OPERAND_MODULE) {
-        rxinl_module_ref_view view;
-        if (!rxinl_module_ref_decode(copy->string, copy->string_len, &view))
-            goto invalid_copy;
-        if (output_module->final_inline_seals) {
-            if (!view.sealed ||
-                view.image_module >= output_module->image_module_count)
-                goto invalid_copy;
-        } else {
-            unsigned char *bytes = NULL;
-            size_t length = 0u;
-            string_constant *replacement;
-            char spelling[32];
-            if (!sealed_module(context->modules, input_module, source, &provider) ||
-                !context->modules->items[provider].selected) goto invalid_copy;
-            image_module = context->modules->items[provider].output_ordinal;
-            /* A foreign @ordinal spelling and its sealed field must agree.
-             * Rebuild through the codec because decimal width can change. */
-            if (view.self_relative) {
-                if (!rxinl_module_ref_seal(copy->string, copy->string_len, image_module)) goto invalid_copy;
-            } else {
-                snprintf(spelling, sizeof(spelling), "@%u", (unsigned)image_module);
-                if (!rxinl_module_ref_from_text(spelling, &bytes, &length) ||
-                    !rxinl_module_ref_seal(bytes, length, image_module)) {
-                    free(bytes); goto invalid_copy;
-                }
-                replacement = relocated_binary(bytes, length);
-                free(bytes);
-                if (!replacement) goto invalid_copy;
-                free(copy); copy = replacement;
-            }
-        }
-    } else if (kind == INLINE_OPERAND_PROCEDURE) {
+    {
         rxinl_qualified_proc_view view;
         if (!rxinl_qualified_proc_decode(copy->string, copy->string_len, &view) || !view.sealed)
             goto invalid_copy;
@@ -2320,8 +2218,6 @@ static size_t link_inline_operand(rxlink_build_context *context,
             }
             memcpy(copy->string, bytes, length); free(bytes);
         }
-    } else {
-        goto invalid_copy;
     }
     output_offset = dedupe_leaf_constant(context, &copy->base, ok);
     free(copy);
@@ -2344,6 +2240,9 @@ static int is_meta_constant_type(enum const_pool_type type) {
         case META_TRACE_EVENT:
         case META_INLINE_FRAME:
         case META_INLINE_MAP:
+        case META_INLINE_REGION:
+        case META_INLINE_RANGE:
+        case META_INLINE_EXIT:
         case META_INLINED_PRIVATE:
         case META_ENTRY_STATE:
         case META_FUNC:
@@ -2377,6 +2276,20 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
                                  module_file *input_module, chameleon_constant *entry,
                                  size_t new_offset, int prev_offset, int next_offset, int *ok) {
     switch (entry->type) {
+        case META_INLINE_REGION: {
+            const meta_inline_region_constant *source = (const meta_inline_region_constant *)entry;
+            size_t procedure = link_constant_offset(context,output_module,input_module,source->procedure,ok);
+            meta_inline_region_constant *result = (meta_inline_region_constant *)(context->shared_pool.data + new_offset);
+            result->base.prev = prev_offset; result->base.next = next_offset;
+            result->procedure = procedure; return *ok;
+        }
+        case META_INLINE_RANGE:
+        case META_INLINE_EXIT: {
+            meta_entry *result = (meta_entry *)(context->shared_pool.data + new_offset);
+            result->prev = prev_offset; result->next = next_offset;
+            /* Native linking preserves per-module code and typed bank indices. */
+            return 1;
+        }
         case META_ENTRY_STATE: {
             const meta_entry_state_constant *source = (const meta_entry_state_constant *)entry;
             size_t procedure = link_constant_offset(context,output_module,input_module,source->procedure,ok);
@@ -2817,6 +2730,9 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
         case META_TRACE_EVENT:
         case META_INLINE_FRAME:
         case META_INLINE_MAP:
+        case META_INLINE_REGION:
+        case META_INLINE_RANGE:
+        case META_INLINE_EXIT:
         case META_INLINED_PRIVATE:
         case META_ENTRY_STATE:
         case META_FUNC:
@@ -2939,25 +2855,13 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
                                       (unsigned int)operand_index) != RX_GRAPH_OPERAND_NONE) {
                 continue;
             }
-            if (opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u) {
-                operand->index = link_inline_operand(context, output_module, input,
-                                                     old_offset, INLINE_OPERAND_RECIPE, &ok);
-                if (!ok) return 0;
-                continue;
-            }
-            if (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u) {
-                operand->index = link_inline_operand(context, output_module, input,
-                                                     old_offset, INLINE_OPERAND_MODULE, &ok);
-                if (!ok) return 0;
-                continue;
-            }
             switch (rxop_format_operand_type(format, operand_index)) {
                 case OP_FUNC:
                     if (old_offset < input->header.constant_size &&
                         input->header.constant_size - old_offset >= sizeof(chameleon_constant) &&
                         ((chameleon_constant *)((unsigned char *)input->constant + old_offset))->type == BINARY_CONST) {
-                        operand->index = link_inline_operand(context, output_module, input,
-                                                             old_offset, INLINE_OPERAND_PROCEDURE, &ok);
+                        operand->index = link_qualified_procedure_operand(context, output_module, input,
+                                                                          old_offset, &ok);
                         break;
                     }
                     /* Fall through to the ordinary module-owned procedure. */

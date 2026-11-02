@@ -4072,6 +4072,45 @@ static void test_entry_policy_causes(Assembler_Context *context) {
     rxas_flow_entry_profile_destroy(profile); rxas_flow_procedure_destroy(raw); fixture_destroy(&fixture);
 }
 
+static void test_signal_instruction_terminal_policy(Assembler_Context *context) {
+    FlowFixture fixture;
+    Assembler_Token *operands[1];
+    RxasFlowProcedure *raw, *view;
+    RxasFlowEntryProfile *profile;
+    RxasFlowPolicyViewStatus status;
+    size_t edge_id, terminal[3] = {0}, skip[3] = {0}, handlers[3] = {0};
+    const RxasFlowMetrics *metrics;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_string(&fixture, "OTHER");
+    fixture_op(&fixture, "sigpush", operands, 1);
+    fixture_op(&fixture, "signal", operands, 1);
+    fixture_op(&fixture, "sigpop", operands, 1);
+    fixture_op(&fixture, "ret", NULL, 0);
+    raw = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 108);
+    profile = rxas_flow_entry_profile_create(raw, 108, RXAS_FLOW_ENTRY_POLICY_IGNORE, 1);
+    view = rxas_flow_procedure_entry_view(raw, 108, profile, 208, 0, &status);
+    check(view && status == RXAS_FLOW_POLICY_VIEW_OK, "terminal self-error policy fixture did not freeze");
+    if (view) {
+        metrics = rxas_flow_procedure_metrics(view, 208);
+        for (edge_id = 0; edge_id < metrics->edges; ++edge_id) {
+            const RxasFlowEdge *edge = rxas_flow_procedure_edge(view, 208, edge_id);
+            size_t id = edge->producer_instruction;
+            if (id >= 3 || edge->cause != RXAS_FLOW_CAUSE_INTRINSIC) continue;
+            terminal[id] += edge->kind == RXAS_FLOW_EDGE_TERMINAL;
+            skip[id] += edge->kind == RXAS_FLOW_EDGE_SIGNAL_SKIP;
+            handlers[id] += edge->kind == RXAS_FLOW_EDGE_HANDLER;
+        }
+        check(terminal[0] && terminal[2] && !skip[0] && !skip[2] && !handlers[0] && !handlers[2],
+              "IGNORE policy caught a signal-management self-error");
+        check(terminal[1] && skip[1] && !handlers[1],
+              "requested SIGNAL event lost its catchable path or its terminal validation alternative");
+        rxas_flow_procedure_destroy(view);
+    }
+    rxas_flow_entry_profile_destroy(profile);
+    rxas_flow_procedure_destroy(raw);
+    fixture_destroy(&fixture);
+}
+
 static void test_entry_policy_growth(Assembler_Context *context) {
     int mode;
     for (mode = 0; mode < 4; mode++) {
@@ -4177,6 +4216,7 @@ int main(int argc, char **argv) {
     if (argc == 2 && !strcmp(argv[1], "--policy-view")) {
         test_entry_policy_posthook(&context);
         test_entry_policy_causes(&context);
+        test_signal_instruction_terminal_policy(&context);
         test_entry_policy_growth(&context);
         test_entry_policy_budget(&context);
         goto done;

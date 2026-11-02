@@ -21,20 +21,11 @@ branch_after:
 callbr_after:
     say "mode-callbr-after"
 
-    sigret "OTHER"
-    call child_return()
-    say "mode-ret-after"
     ret 0
 
 branch_hit:
     say "mode-branch-hit"
     br branch_after
-
-child_return() .locals=0
-    say "mode-ret-before"
-    signal "OTHER"
-    signal "FAILURE","sigret did not return from child frame"
-    ret
 
 mode_handler() .locals=1
     linkattr1 r0,a1,5

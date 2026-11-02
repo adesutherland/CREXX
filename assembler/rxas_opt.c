@@ -864,7 +864,8 @@ static int is_rule_barrier(const instruction_queue *instruction) {
         }
     }
 
-    else if (instruction->instrType == ASM_LABEL) return 1;
+    else if (instruction->instrType == ASM_LABEL || instruction->instrType == INLINE_REGION_META ||
+             instruction->instrType == INLINE_RANGE_META || instruction->instrType == INLINE_EXIT_META) return 1;
 
     return 0;
 }
@@ -990,7 +991,9 @@ static int instruction_is_relevant(op_map *map, instruction_queue *instruction) 
     Assembler_Token *value_ref;
     char register_type;
 
-    if (instruction->instrType == INLINE_FRAME_META || instruction->instrType == INLINE_MAP_META) return 1;
+    if (instruction->instrType == INLINE_FRAME_META || instruction->instrType == INLINE_MAP_META ||
+        instruction->instrType == INLINE_REGION_META || instruction->instrType == INLINE_RANGE_META ||
+        instruction->instrType == INLINE_EXIT_META) return 1;
 
     if (instruction->instrType == TRACE_EVENT) {
         value_source = instruction->operand2Token;
@@ -1773,6 +1776,16 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
         case INLINE_MAP_META:
             rxasmeimp(context,item->instrToken,item->operand1Token,item->operand2Token);
             break;
+        case INLINE_REGION_META:
+            rxasmeirg(context,item->instrToken,item->operand1Token);
+            break;
+        case INLINE_RANGE_META:
+            rxasmeira(context,item->instrToken,item->operand1Token,item->operand2Token);
+            break;
+        case INLINE_EXIT_META:
+            rxasmeiext(context,item->instrToken,item->operand1Token,item->operand2Token,item->operand3Token,
+                       item->operand4Token,item->operand5Token,item->operand6Token);
+            break;
         case OP_CODE:
             rxasgenv(context, item->instrToken, item->operandTokens, item->operandCount);
             break;
@@ -1904,7 +1917,7 @@ static void queue_instruction_ext_full(Assembler_Context *context, enum queue_it
     context->optimiser_queue_items++;
 
     /* Optimise */
-    if (!context->current_has_private) optimise(context);
+    if (!context->current_has_private && !context->current_has_inline_exits) optimise(context);
 }
 
 static void queue_opcode(Assembler_Context *context,
@@ -1923,7 +1936,7 @@ static void queue_opcode(Assembler_Context *context,
     item->instrToken = instrToken;
     rxas_set_queue_operands(context, item, operandTokens, operandCount);
     item->borrowed_private_boundary = rxas_instruction_borrows_private(context,item);
-    if (!context->current_has_private) optimise(context);
+    if (!context->current_has_private && !context->current_has_inline_exits) optimise(context);
 }
 
 static void queue_instruction_ext(Assembler_Context *context, enum queue_item_type type,
@@ -2080,6 +2093,24 @@ void rxasqmimp(Assembler_Context *context, Assembler_Token *begin, Assembler_Tok
     else rxasmeimp(context,begin,end,id);
 }
 
+void rxasqmirg(Assembler_Context *context, Assembler_Token *id, Assembler_Token *parent) {
+    context->current_has_inline_exits = 1;
+    if (context->optimise) queue_instruction(context,INLINE_REGION_META,id,parent,0,0,0,0);
+    else rxasmeirg(context,id,parent);
+}
+void rxasqmira(Assembler_Context *context, Assembler_Token *begin, Assembler_Token *end, Assembler_Token *id) {
+    context->current_has_inline_exits = 1;
+    if (context->optimise) queue_instruction(context,INLINE_RANGE_META,begin,end,id,0,0,0);
+    else rxasmeira(context,begin,end,id);
+}
+void rxasqmiext(Assembler_Context *context, Assembler_Token *id, Assembler_Token *begin,
+                 Assembler_Token *end, Assembler_Token *order, Assembler_Token *kind,
+                 Assembler_Token *first, Assembler_Token *second) {
+    context->current_has_inline_exits = 1;
+    if (context->optimise) queue_instruction_ext(context,INLINE_EXIT_META,id,begin,end,order,kind,first,second,0);
+    else rxasmeiext(context,id,begin,end,order,kind,first,second);
+}
+
 /* Queue Trace Event */
 void rxasqmte(Assembler_Context *context, Assembler_Token *kind, Assembler_Token *mode_mask,
               Assembler_Token *value_source, Assembler_Token *value_type, Assembler_Token *register_type,
@@ -2234,7 +2265,7 @@ static void protect_private_bindings(Assembler_Context *context) {
     for (i = 0u; i < context->procedure_queue_items; i++) {
         instruction_queue *item = context->procedure_queue + i;
         if (item->instrType != OP_CODE) continue;
-        item->borrowed_private_boundary = rxas_instruction_borrows_private(context,item);
+        item->borrowed_private_boundary = item->borrowed_private_boundary || rxas_instruction_borrows_private(context,item);
         for (j = 0u; !item->borrowed_private_boundary && j < item->operandCount; j++) {
             Assembler_Token *operand = rxas_queue_operand(item,j);
             if (operand && operand->token_type == RREG && operand->token_value.integer >= 0 &&
@@ -2249,10 +2280,60 @@ static void protect_private_bindings(Assembler_Context *context) {
 /* Private declarations defer peepholes until pointer transport is known. Now
  * replay the existing bounded rule engine on the marked stream, allowing its
  * normal owned-only rewrites without moving through a borrowed boundary. */
+static size_t inline_exit_label_record(Assembler_Context *context, const Assembler_Token *label) {
+    size_t i, length;
+    if (!label) return SIZE_MAX;
+    length = strlen((const char *)label->token_value.string);
+    for (i = 0u; i < context->procedure_queue_items; i++) {
+        const instruction_queue *item = context->procedure_queue + i;
+        const char *name;
+        if (item->instrType != ASM_LABEL) continue;
+        name = (const char *)item->instrToken->token_value.string;
+        if (!strncmp(name,(const char *)label->token_value.string,length) &&
+            (name[length] == ':' || name[length] == 0)) return i;
+    }
+    return SIZE_MAX;
+}
+
+/* Cold consumers are not normal lexical reads. Until native flow models their
+ * exit edges, retain affected ranges and their named storage rather than allow
+ * a lexical-use proof to remove a save or captured binding anchor. Unrelated
+ * ranges remain available to the ordinary optimizer. */
+static void protect_inline_exits(Assembler_Context *context) {
+    size_t i, j, k;
+    for (i = 0u; i < context->procedure_queue_items; i++) {
+        const instruction_queue *meta = context->procedure_queue + i;
+        if (meta->instrType == INLINE_RANGE_META || meta->instrType == INLINE_EXIT_META) {
+            const Assembler_Token *begin = meta->instrType == INLINE_RANGE_META ? meta->instrToken : meta->operand1Token;
+            const Assembler_Token *end = meta->instrType == INLINE_RANGE_META ? meta->operand1Token : meta->operand2Token;
+            size_t first = inline_exit_label_record(context,begin), last = inline_exit_label_record(context,end);
+            if (first != SIZE_MAX && last != SIZE_MAX && first < last)
+                for (j = first; j < last; j++)
+                    if (context->procedure_queue[j].instrType == OP_CODE)
+                        context->procedure_queue[j].borrowed_private_boundary = 1;
+        }
+        if (meta->instrType != INLINE_EXIT_META) continue;
+        for (j = 0u; j < context->procedure_queue_items; j++) {
+            instruction_queue *item = context->procedure_queue + j;
+            if (item->instrType != OP_CODE) continue;
+            for (k = 0u; k < item->operandCount; k++) {
+                const Assembler_Token *operand = rxas_queue_operand(item,k);
+                const Assembler_Token *first = meta->operand5Token, *second = meta->operand6Token;
+                if (!operand) continue;
+                if ((first && first->token_type != INT && operand->token_type == first->token_type &&
+                     operand->token_value.integer == first->token_value.integer) ||
+                    (second && operand->token_type == second->token_type &&
+                     operand->token_value.integer == second->token_value.integer))
+                    item->borrowed_private_boundary = 1;
+            }
+        }
+    }
+}
+
 static void optimise_private_stream(Assembler_Context *context) {
     instruction_queue *source = context->procedure_queue;
     size_t count = context->procedure_queue_items, i;
-    protect_private_bindings(context);
+    if (context->current_has_private) protect_private_bindings(context);
     context->procedure_queue = NULL;
     context->procedure_queue_items = 0u;
     context->procedure_queue_capacity = 0u;
@@ -2274,7 +2355,8 @@ void flushopt(Assembler_Context *context) {
             retire_oldest_queue_item(context);
         }
 
-        if (context->current_has_private) optimise_private_stream(context);
+        if (context->current_has_inline_exits) protect_inline_exits(context);
+        if (context->current_has_private || context->current_has_inline_exits) optimise_private_stream(context);
 
         rxas_flow_optimise(context);
 

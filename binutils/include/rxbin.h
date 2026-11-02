@@ -77,6 +77,7 @@ enum rxbin007_feature_flags {
     RXBIN007_FEATURE_INLINE_DIAGNOSTICS = 1u << 9,
     RXBIN007_FEATURE_INLINED_PRIVATE = 1u << 10,
     RXBIN007_FEATURE_ENTRY_STATE = 1u << 11,
+    RXBIN007_FEATURE_INLINE_EXITS = 1u << 12,
     RXBIN007_SUPPORTED_FEATURES = RXBIN007_FEATURE_FIXED_CALLS |
                                    RXBIN007_FEATURE_FROZEN_PARSE |
                                    RXBIN007_FEATURE_NATIVE_STEM |
@@ -88,7 +89,8 @@ enum rxbin007_feature_flags {
                                    RXBIN007_FEATURE_INLINE_SCOPES |
                                    RXBIN007_FEATURE_INLINE_DIAGNOSTICS |
                                    RXBIN007_FEATURE_INLINED_PRIVATE |
-                                   RXBIN007_FEATURE_ENTRY_STATE
+                                   RXBIN007_FEATURE_ENTRY_STATE |
+                                   RXBIN007_FEATURE_INLINE_EXITS
 };
 
 typedef struct bin_space bin_space;
@@ -135,7 +137,7 @@ enum const_pool_type {
     META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP,
     META_TRACE_EVENT, META_TASK_TARGET, META_PROVIDER, META_INITIALIZER,
     META_AUTOLOAD, META_INLINE_FRAME, META_INLINE_MAP, META_INLINED_PRIVATE,
-    META_ENTRY_STATE
+    META_ENTRY_STATE, META_INLINE_REGION, META_INLINE_RANGE, META_INLINE_EXIT
 };
 
 enum rxbin_provider_flags {
@@ -247,6 +249,58 @@ typedef struct meta_inline_map_constant {
     size_t end;
     uint32_t frame_id;
 } meta_inline_map_constant;
+
+enum rxbin_inline_exit_contract {
+    RXBIN_INLINE_EXIT_VERSION = 1,
+    RXBIN_INLINE_ACTION_NUMERIC = 1,
+    RXBIN_INLINE_ACTION_ENDLIFE = 2,
+    RXBIN_INLINE_ACTION_UNLINK = 3,
+    RXBIN_INLINE_ACTION_SWAP = 4,
+    RXBIN_INLINE_ACTION_LINK = 5,
+    RXBIN_INLINE_SOURCE_LITERAL = 1,
+    RXBIN_INLINE_SOURCE_OWNED_BASE = 2,
+    RXBIN_INLINE_BANK_R = 0,
+    RXBIN_INLINE_BANK_G = 1,
+    RXBIN_INLINE_BANK_A = 2
+};
+
+/* Executable logical regions, independent of diagnostic inline frames. The
+ * owning PROC is a pool reference; IDs and code coordinates are module-local. */
+typedef struct meta_inline_region_constant {
+    meta_entry base;
+    size_t procedure;
+    uint32_t version;
+    uint32_t region_id;
+    uint32_t parent_id;
+} meta_inline_region_constant;
+
+typedef struct meta_inline_range_constant {
+    meta_entry base;
+    size_t start;
+    size_t end;
+    uint32_t region_id;
+} meta_inline_range_constant;
+
+/* Only a selected cold departure interprets actions whose source-PC phase
+ * contains its actual/saved-callsite PC. Unused fields must be zero. Numeric
+ * field is one RXOP_CONTEXT_* bit; saved sources and ENDLIFE use owned r bases.
+ * Binding actions use active typed slots. LINK restores a captured anchor's
+ * pointer using ordinary LINK semantics; it never copies a value. */
+typedef struct meta_inline_exit_constant {
+    meta_entry base;
+    size_t start;
+    size_t end;
+    uint32_t region_id;
+    uint32_t order;
+    uint32_t kind;
+    uint32_t field;
+    uint32_t source;
+    uint32_t bank1;
+    uint32_t index1;
+    uint32_t bank2;
+    uint32_t index2;
+    rxinteger literal;
+} meta_inline_exit_constant;
 
 /* Procedure-local borrowed suffix: executable linkage/ownership, not proof.
  * provider is a typed QGR1 selector, sealed to an exact image module at link. */
@@ -526,6 +580,8 @@ int write_modules(module_file *const *modules,
                   FILE *outFile);
 /* Borrowed calling-thread text, until the next RXBIN operation on that thread. */
 const char *rxbin_last_error(void);
+/* Shared executable-metadata validation; no runtime indexes or entry state. */
+int rxbin_validate_inline_exits(const module_file *module);
 void rxbin_reader_init_file(rxbin_reader *reader, FILE *inFile);
 void rxbin_reader_init_mem(rxbin_reader *reader,
                            char **in_buffer,

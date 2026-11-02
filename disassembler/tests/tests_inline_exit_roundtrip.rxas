@@ -1,0 +1,32 @@
+* Handwritten fragmented regions and every cold action operand shape.
+.globals=1
+main() .locals=8
+outer_begin:
+    .inlineregion 1,0
+    .inlinerange outer_begin,outer_end,1
+    load r7,18
+inner_begin:
+    .inlineregion 2,1
+    .inlinerange inner_begin,inner_end,2
+    .inlinerange inner_again,inner_again_end,2
+    .inlineexit 2,inner_ready,inner_end,0,"digits",r7
+    .inlineexit 2,inner_ready,inner_end,1,"fuzz",0
+    .inlineexit 2,inner_ready,inner_end,2,"form",1
+    .inlineexit 2,inner_ready,inner_end,3,"case",1
+    .inlineexit 2,inner_ready,inner_end,4,"standard",1
+    .inlineexit 2,inner_ready,inner_end,5,"endlife",r0
+    .inlineexit 2,inner_ready,inner_end,6,"unlink",r1
+    .inlineexit 2,inner_ready,inner_end,7,"swap",r2,g0
+    .inlineexit 2,inner_ready,inner_end,8,"link",r3,a1
+    cnop
+inner_ready:
+    cnop
+inner_end:
+    cnop
+inner_again:
+    .inlineexit 2,inner_again,inner_again_end,0,"digits",18
+    cnop
+inner_again_end:
+    cnop
+outer_end:
+    ret 0

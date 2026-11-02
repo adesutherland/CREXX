@@ -1,0 +1,239 @@
+/* Independent terminal self-error oracle. The host selects g2; no failed
+ * instruction may enter caught() or reach after. */
+.globals=3
+main() .locals=3 .expose=signaltest.selferror
+  sigcall caught(),"INVALID_SIGNAL_CODE"
+  sigcall caught(),"INVALID_ARGUMENTS"
+  sigcall caught(),"FAILURE"
+  ieq r0,g2,1
+  brt case_1,r0
+  ieq r0,g2,2
+  brt case_2,r0
+  ieq r0,g2,3
+  brt case_3,r0
+  ieq r0,g2,4
+  brt case_4,r0
+  ieq r0,g2,5
+  brt case_5,r0
+  ieq r0,g2,6
+  brt case_6,r0
+  ieq r0,g2,7
+  brt case_7,r0
+  ieq r0,g2,8
+  brt case_8,r0
+  ieq r0,g2,9
+  brt case_9,r0
+  ieq r0,g2,10
+  brt case_10,r0
+  ieq r0,g2,11
+  brt case_11,r0
+  ieq r0,g2,12
+  brt case_12,r0
+  ieq r0,g2,13
+  brt case_13,r0
+  ieq r0,g2,14
+  brt case_14,r0
+  ieq r0,g2,15
+  brt case_15,r0
+  ieq r0,g2,16
+  brt case_16,r0
+  ieq r0,g2,17
+  brt case_17,r0
+  ieq r0,g2,18
+  brt case_18,r0
+  ieq r0,g2,19
+  brt case_19,r0
+  ieq r0,g2,20
+  brt case_20,r0
+  ieq r0,g2,21
+  brt case_21,r0
+  ieq r0,g2,22
+  brt case_22,r0
+  ieq r0,g2,23
+  brt case_23,r0
+  ieq r0,g2,24
+  brt case_24,r0
+  ieq r0,g2,25
+  brt case_25,r0
+  ieq r0,g2,26
+  brt case_26,r0
+  ieq r0,g2,27
+  brt case_27,r0
+  ieq r0,g2,28
+  brt case_28,r0
+  ieq r0,g2,29
+  brt case_29,r0
+  ieq r0,g2,30
+  brt case_30,r0
+  ieq r0,g2,31
+  brt case_31,r0
+  ieq r0,g2,32
+  brt case_32,r0
+  ieq r0,g2,33
+  brt case_33,r0
+  signal "FAILURE","invalid test selector"
+case_1:
+  sigignore "BAD"
+  br after
+case_2:
+  sighalt "BAD"
+  br after
+case_3:
+  sigshalt "BAD"
+  br after
+case_4:
+  sigbr after,"BAD"
+  br after
+case_5:
+  sigbrv after,r1,"BAD"
+  br after
+case_6:
+  sigcall target(),"BAD"
+  br after
+case_7:
+  sigcalla target(),"BAD"
+  br after
+case_8:
+  sigcallbr after,target(),"BAD"
+  br after
+case_9:
+  sigpush "BAD"
+  br after
+case_10:
+  sigpop "OTHER"
+  br after
+case_11:
+  load r0,"BAD"
+  signal r0
+  br after
+case_12:
+  signal "BAD"
+  br after
+case_13:
+  signal "BAD","message"
+  br after
+case_14:
+  signal "BAD",r1
+  br after
+case_15:
+  load r0,"BAD"
+  signal r0,r1
+  br after
+case_16:
+  load r1,1
+  signalt "BAD",r1
+  br after
+case_17:
+  load r1,0
+  signalf "BAD",r1
+  br after
+case_18:
+  load r1,1
+  signalt "BAD","message",r1
+  br after
+case_19:
+  load r1,0
+  signalf "BAD","message",r1
+  br after
+case_20:
+  null r1
+  signalorigin "OTHER",r1,r1
+  br after
+case_21:
+  null r1
+  signalorigin "BAD",r1,r1
+  br after
+case_22:
+  sigignore "KILL"
+  br after
+case_23:
+  sigpush "KILL"
+  br after
+case_24:
+  sigpop "KILL"
+  br after
+case_25:
+  sigcall target(),"OTHER"
+  br after
+case_26:
+  bpon target()
+  br after
+case_27:
+  sigbr after,"OTHER"
+  br after
+case_28:
+  sigbrv after,r1,"OTHER"
+  br after
+case_29:
+  sigcallbr after,target(),"OTHER"
+  br after
+case_30:
+  sayx "arm"
+  sigpush "OTHER"
+  br after
+case_31:
+  call cow_failure()
+  br after
+case_32:
+  call pop_failure()
+  br after
+case_33:
+  signal g0
+  br after
+after:
+  inc g0
+  ret 0
+caught() .locals=0
+  inc g1
+  ret
+
+target() .locals=0
+  ret
+cow_failure() .locals=0
+  sayx "arm"
+  sighalt "OTHER"
+  ret
+pop_failure() .locals=0
+  sigpush "OTHER"
+  sayx "arm"
+  sigpop "OTHER"
+  ret
+
+good() .locals=2 .expose=signaltest.good
+  sigcall caught(),"OTHER"
+  signal "OTHER"
+  load r0,"BAD"
+  load r1,0
+  signalt "BAD",r1
+  signalt "BAD","untaken",r1
+  load r1,1
+  signalf "BAD",r1
+  signalf "BAD","untaken",r1
+  ret 0
+
+native_normal() .locals=0 .expose=signaltest.native.normal
+  sigbr native_normal_hit,"POSIX_USR1"
+  call native_ignore()
+  sayx "raise-native"
+  ret 0
+native_normal_hit:
+  inc g0
+  ret 0
+native_unwind() .locals=0 .expose=signaltest.native.unwind
+  sigbr native_unwind_after,"OTHER"
+  sigbr native_unwind_hit,"POSIX_USR1"
+  call native_escape()
+  signal "FAILURE","child did not unwind"
+native_unwind_after:
+  sayx "raise-native"
+  ret 0
+native_unwind_hit:
+  inc g0
+  ret 0
+native_ignore() .locals=0
+  sigignore "POSIX_USR1"
+  ret
+native_escape() .locals=0
+  sigignore "POSIX_USR1"
+  signal "OTHER"
+  ret

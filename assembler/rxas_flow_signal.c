@@ -1064,8 +1064,7 @@ static int flow_policy_effect_is_constant(
         RxOpSignalPolicyEffect effect) {
     return effect == RXOP_POLICY_EFFECT_IGNORE ||
            effect == RXOP_POLICY_EFFECT_HALT ||
-           effect == RXOP_POLICY_EFFECT_SILENT_HALT ||
-           effect == RXOP_POLICY_EFFECT_RETURN;
+           effect == RXOP_POLICY_EFFECT_SILENT_HALT;
 }
 
 static int flow_policy_fact_equal(const RxasFlowPolicyFact *left,

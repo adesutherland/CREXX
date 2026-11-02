@@ -53,6 +53,12 @@ void rxasqmifr(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assemb
 void rxasqmimp(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
 void rxasmeifr(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
 void rxasmeimp(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
+void rxasqmirg(Assembler_Context *, Assembler_Token *, Assembler_Token *);
+void rxasqmira(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
+void rxasqmiext(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
+void rxasmeirg(Assembler_Context *, Assembler_Token *, Assembler_Token *);
+void rxasmeira(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
+void rxasmeiext(Assembler_Context *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *, Assembler_Token *);
 /* Source Step */
 void rxasqmstp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
                Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,

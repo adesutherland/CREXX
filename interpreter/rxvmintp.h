@@ -165,6 +165,27 @@ typedef struct rxvm_inline_diagnostic_map {
     const rxvm_inline_diagnostic_frame *frame;
 } rxvm_inline_diagnostic_map;
 
+/* Load-time executable indexes. They are read only on a cold signal departure;
+ * entering or executing an inline region needs no runtime scope or polling. */
+typedef struct rxvm_inline_region {
+    const meta_inline_region_constant *definition;
+    const struct rxvm_inline_region *parent;
+    const proc_runtime *procedure;
+    size_t depth;
+    size_t first_action;
+    size_t action_count;
+} rxvm_inline_region;
+
+typedef struct rxvm_inline_range {
+    const meta_inline_range_constant *definition;
+    const rxvm_inline_region *region;
+} rxvm_inline_range;
+
+typedef struct rxvm_inline_exit {
+    const meta_inline_exit_constant *definition;
+    const rxvm_inline_region *region;
+} rxvm_inline_exit;
+
 /* Module Structure */
 struct module {
     rxvm_memory_worker *memory_worker; /* Owning heap; immutable after load. */
@@ -196,6 +217,12 @@ struct module {
     size_t inline_diagnostic_frame_count;
     rxvm_inline_diagnostic_map *inline_diagnostic_maps;
     size_t inline_diagnostic_map_count;
+    rxvm_inline_region *inline_regions;
+    size_t inline_region_count;
+    rxvm_inline_range *inline_ranges;
+    size_t inline_range_count;
+    rxvm_inline_exit *inline_exits;
+    size_t inline_exit_count;
 };
 
 static inline proc_runtime *rxvm_bound_graph_callable(
@@ -248,7 +275,6 @@ static inline proc_runtime *rxvm_get_module_runtime_procedure(module *mod, size_
 /* Interrupt Response Codes */
 typedef enum interrupt_response {
     RXSIGNAL_RESPONSE_IGNORE = 0,   /* Ignore the interrupt */
-    RXSIGNAL_RESPONSE_RETURN,       /* Return to the stack frame - the stack is unwound to the frame */
     RXSIGNAL_RESPONSE_BRANCH,       /* Branch to an address in a stack frame - the stack is unwound to the frame */
     RXSIGNAL_RESPONSE_BRANCH_VALUE, /* Branch to an address and bind a .signal object in the handler frame */
     RXSIGNAL_RESPONSE_CALL,         /* Call a function - will return to the current instruction */
@@ -266,7 +292,6 @@ typedef struct interrupt_entry {
     stack_frame *frame;             /* Frame that owns branch/jump handlers */
     size_t value_register;          /* Destination register for branch handlers with a signal object */
     struct interrupt_saved_entry *stack_marker; /* Saved-handler stack at branch scope entry */
-    struct rxvm_inline_scope *inline_scope; /* Logical branch target scope. */
 } interrupt_entry;
 
 typedef struct interrupt_saved_entry {
@@ -303,6 +328,7 @@ struct stack_frame {
     stack_frame *parent;
     proc_runtime *procedure;
     bin_code *return_pc;
+    size_t signal_parent_address; /* Actual suspended PC for a real signal handler; SIZE_MAX otherwise. */
     value *return_reg;
     size_t number_locals;
     size_t nominal_number_locals;
@@ -322,7 +348,6 @@ struct stack_frame {
     value **baselocals; /* Initial / base / fixed local pointers */
     value **locals;     /* Locals pointer mapping (after swaps / links) */
     uint32_t *local_identity; /* Unique slot permutation, independent of linked value pointers */
-    struct rxvm_inline_scope *inline_scope; /* Active logical inline activation, if any. */
 };
 
 #ifdef NDEBUG  // RELEASE
@@ -808,6 +833,10 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
 /* Private signal-container ownership; never copies visible payload fields. */
 void rxvm_signal_diagnostic_copy(value *destination, const value *source);
 #ifdef CREXX_VM_INSTRUMENTATION_TEST
+void rxvm_signal_instruction_test_fail_after(size_t allocations);
+void rxvm_signal_instruction_test_reset(void);
+void rxvm_signal_instruction_test_observe(
+        void (*observer)(const stack_frame *, void *), void *userdata);
 void rxvm_signal_diagnostic_test_fail_after(size_t operations);
 void rxvm_signal_diagnostic_test_reset(void);
 int rxvm_signal_diagnostic_test_state(const value *container);

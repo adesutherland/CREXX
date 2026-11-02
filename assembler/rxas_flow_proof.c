@@ -546,8 +546,7 @@ static int flow_proof_guard_success_dominates(
                 &policy) &&
         policy.state == RXAS_FLOW_POLICY_EXACT &&
         (policy.effect == RXOP_POLICY_EFFECT_HALT ||
-         policy.effect == RXOP_POLICY_EFFECT_SILENT_HALT ||
-         policy.effect == RXOP_POLICY_EFFECT_RETURN))
+         policy.effect == RXOP_POLICY_EFFECT_SILENT_HALT))
         return 1;
     /* The generic proof below is block-based.  Entry at the generator's
      * block therefore also reaches a same-block candidate without crossing
