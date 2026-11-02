@@ -669,6 +669,13 @@ handlers installed with `sigbrv` perform the same wrapping in the VM before
 branching to the handler label, so compiler-generated block handlers can bind an
 `as name` local directly as a user-facing `.signal` value.
 
+The VM completes the raw event's COPY, including native payload copy hooks,
+in private storage before publishing the wrapper. It then clears the active
+destination, sets the runtime-signal type, six-attribute layout and raw-valid
+marker, and moves the completed raw value into place. A copy hook retains its
+ordinary external effects; it cannot alter a partially constructed new wrapper
+through a reference to the destination and a supported nested call.
+
 `signalorigin "NAME",rPayload,rSignal` raises a signal with the complete value
 in `rPayload` and the source module/address carried by a VM-bound runtime event.
 Payload copying is identical to register-payload `signal`: preserve type,

@@ -1089,6 +1089,17 @@ const char *rxop_abi_role_name(RxOpAbiRole value);
 const char *rxop_abi_extent_name(RxOpAbiExtent value);
 const char *rxop_abi_rule_name(RxOpAbiRule value);
 const char *rxop_abi_repeat_name(RxOpAbiRepeat value);
+/* VM-owned initialized bound-event shell. Metadata and delivery share the
+ * same name/layout; these are object-contract constants, not opcode slots. */
+#define RXVM_RUNTIME_SIGNAL_TYPE_NAME "rxfnsb.runtime_signal"
+#define RXVM_RUNTIME_SIGNAL_ATTRIBUTE_COUNT 6u
+#define RXVM_RUNTIME_SIGNAL_VALID_ATTRIBUTE 0u
+#define RXVM_RUNTIME_SIGNAL_RAW_ATTRIBUTE 4u
+/* Saved slot is one-based in instruction operand space, zero when absent. */
+unsigned int rxop_policy_binding_operand(int opcode);
+const char *rxop_signal_delivery_type_name(int opcode);
+unsigned int rxop_signal_delivery_attribute_count(int opcode);
+uint32_t rxop_signal_delivery_initialized_flag(int opcode);
 unsigned int rxop_callback_inputs(int opcode, size_t operand_index);
 /* Retained public projection slots: conforming destination/capacity finalizers
  * are native cleanup only, so these routes are empty. Value/ownership effects

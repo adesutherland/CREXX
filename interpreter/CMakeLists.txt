@@ -1559,6 +1559,32 @@ crexx_add_vm_test(NAME rxassignalpushpophandlerrestoretests PREP_TARGETS run_tes
 crexx_add_vm_test(NAME rxassignalpushpopmarkertests PREP_TARGETS run_tests_signal_pushpop RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-marker-lifetime-ok")
 
 crexx_add_rxas_vm_binary(tests_signal_branch_value "signal branch with bound value")
+crexx_add_rxas_vm_binary(tests_signal_delivery "signal event publication and payload COPY")
+add_custom_command(OUTPUT tests_signal_delivery-linked.rxbin
+        COMMAND $<TARGET_FILE:rxlink> -o tests_signal_delivery-linked.rxbin
+                tests_signal_delivery.rxbin
+        DEPENDS tests_signal_delivery.rxbin rxlink
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_custom_target(run_tests_signal_delivery_linked
+        DEPENDS tests_signal_delivery-linked.rxbin)
+add_executable(signal_delivery_ownership-rxbvml EXCLUDE_FROM_ALL
+        tests/test_signal_delivery.c)
+target_include_directories(signal_delivery_ownership-rxbvml PRIVATE
+        . ./rxvmplugin ./rxvml ../binutils/include ../rxpa
+        ../platform ../third_party/avl_tree ../third_party/utf8)
+target_link_libraries(signal_delivery_ownership-rxbvml PRIVATE rxbvml Threads::Threads)
+add_dependencies(signal_delivery_ownership-rxbvml
+        run_tests_signal_delivery run_tests_signal_delivery_linked)
+add_test(NAME signal_delivery_ownership-rxbvml
+        COMMAND signal_delivery_ownership-rxbvml
+                ${CMAKE_CURRENT_BINARY_DIR}/tests_signal_delivery.rxbin
+                ${CMAKE_CURRENT_BINARY_DIR}/tests_signal_delivery-linked.rxbin)
+set_tests_properties(signal_delivery_ownership-rxbvml PROPERTIES
+        TIMEOUT 60 LABELS "interpreter;signal;ownership;embedding;regression"
+        PASS_REGULAR_EXPRESSION "SIGNAL_DELIVERY[|]failures=0"
+        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+crexx_register_test_prep_targets(TESTS signal_delivery_ownership-rxbvml
+        TARGETS signal_delivery_ownership-rxbvml)
 crexx_add_vm_test(NAME rxassignalbrvrawtests PREP_TARGETS run_tests_signal_branch_value RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-has-raw: 1.*brv-payload: value payload")
 crexx_add_vm_test(NAME rxassignalbrvnametests PREP_TARGETS run_tests_signal_branch_value RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-name: OTHER.*brv-payload: value payload")
 crexx_add_vm_test(NAME rxassignalbrvpayloadtests PREP_TARGETS run_tests_signal_branch_value RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-payload: value payload")

@@ -5396,8 +5396,8 @@ static void rxsignal_populate_raw_interrupt(value *raw,
 }
 
 static const RxGraphTypeRef rxvm_runtime_signal_type = {
-    .name = "rxfnsb.runtime_signal",
-    .name_length = sizeof("rxfnsb.runtime_signal") - 1u,
+    .name = RXVM_RUNTIME_SIGNAL_TYPE_NAME,
+    .name_length = sizeof(RXVM_RUNTIME_SIGNAL_TYPE_NAME) - 1u,
     .id = RX_GRAPH_NONE
 };
 
@@ -5420,12 +5420,18 @@ static int rxsignal_runtime_origin(const value *condition,
 }
 
 static void rxsignal_populate_runtime_signal(value *dest, value *raw) {
+    value staged_raw = {0};
 
+    /* A payload COPY hook can reach dest through an owned reference and a
+     * supported nested VM call. Finish that COPY before publishing the new
+     * wrapper, so its type, layout and raw-valid marker are final writes. */
+    copy_value(&staged_raw, raw);
     value_zero(dest);
-    set_num_attributes(dest, 6);
+    set_num_attributes(dest, RXVM_RUNTIME_SIGNAL_ATTRIBUTE_COUNT);
     dest->object_type = &rxvm_runtime_signal_type;
-    dest->attributes[0]->int_value = 1;
-    copy_value(dest->attributes[4], raw);
+    dest->attributes[RXVM_RUNTIME_SIGNAL_VALID_ATTRIBUTE]->int_value = 1;
+    move_value(dest->attributes[RXVM_RUNTIME_SIGNAL_RAW_ATTRIBUTE], &staged_raw);
+    clear_value(&staged_raw);
 }
 
 /* Preserve the existing runtime_signal representation and payload owner. */
