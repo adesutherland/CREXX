@@ -32,10 +32,11 @@ The [single target-toolchain plan](toolchain/PLAN.md) proposes a B/L RXAS
 assembler, RXBIN reassembler, module linker and shared instruction inliner,
 with explicit final-stage L validation. The selected
 [standalone inliner](toolchain/PLAN.md#selected-standalone-inliner-outcome)
-now has an approved architecture and implementation plan, independently of
-complete assembler/codec/linker delivery. Its INL implementation criteria and
-all wider TGT criteria remain open. This neither closes this programme's
-criteria nor changes the separate C delivery or develop QA/publication scope.
+now has an approved VM → shared Level L → fresh inliner2 delivery sequence,
+independently of complete assembler/codec/linker delivery. The initial IN2
+proof, wider INL outcomes and all TGT criteria remain open. This neither closes
+this programme's criteria nor changes the separate C delivery or develop
+QA/publication scope.
 
 <a id="current-action-ir-schema-reads"></a>
 

@@ -895,7 +895,8 @@ point facts and liveness), and `lltargetsummary..analyse` (direct and
 transitive procedure facts). `lltargetnormalize..normalize` performs the
 entry-dependent owned-local clear/warning transaction; `lltargetremap` owns
 typed register/reference relocation and foreign module/global identities.
-`llinline` is a consumer of these services, not their definition. Constructed
+The replacement `inliner2` will consume these services rather than define them;
+the old `llinline` admission machinery is not its baseline. Constructed
 rich profiles exercise the generic algorithms independently of the current
 native catalogue. A canonical unknown is an explicit missing fact, never a
 proof of no effect. Keep the exact module, catalogue revision, profile and
@@ -903,8 +904,10 @@ flow owners alive together; each service rejects stale or foreign evidence.
 The [inlining architecture](../../research/level-l/toolchain/doc/inlining.md)
 sets the intended shared semantics, and
 `research/level-l/toolchain/tests/target-{transfer-cfg,flow,module-remap,summary}.crexx`
-contains small independent consumers. Their focused qualification is recorded
-under INL-STEP03F in the [toolchain plan](../../research/level-l/toolchain/PLAN.md).
+contains small independent consumers. The shared baseline and its qualification
+remain open under LLF-AC01–04 in phase 2 of the
+[toolchain plan](../../research/level-l/toolchain/PLAN.md#phase-2--complete-the-shared-level-l-foundation),
+after the approved VM changes and QA.
 
 RXAS optimisation routing is explicit in `assembler/rxas_flow_pass.c`. Every
 current rule family has one stable owner—local mechanical scan, immutable CFG,

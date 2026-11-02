@@ -158,6 +158,92 @@ finalization work failures retain their resource-limit identity; only a genuinel
 absent target has an unresolved-label record error. A rejected request can leave
 a producer's previously published output intact.
 
+## Typed assignment API
+
+`llrxas.assignment` is the same allocation kernel used by the text `program`
+adapter, exposed for consumers that already have checked typed references and
+access facts. It receives numeric rows, not target/module handles, and performs
+no parsing, instruction selection, reference remapping or rendering. The
+consumer owns those operations and the semantic proof behind each input row.
+
+Construct `assignment(virtualLocals,recordIds,registerBudget,work=1000000,
+bytes=67108864)`, passing `recordIds` by reference as an `.int[]`. The vector
+contains unique positive stable record IDs in source order; their numeric
+values need not increase. The constructor validates and retains its own copy.
+Zero virtual cells, zero register budget and an empty record vector are valid
+when the other inputs permit them; work and byte budgets must be positive.
+`error()` reports construction or later admission failure, and `remaining()`
+reports remaining work.
+
+Supply every declared row exactly once with
+`row(ordinal,refs,reads,writes,kills,observations,origin=0)`. Pass all five
+`.int[]` vectors by reference; admission checks and retains owned copies.
+Row ordinals and vector positions are one-based; virtual and physical cells
+are zero-based. Every vector has unique in-range members. Reads, writes and
+observations must be subsets of `refs`, and definite kills must be a subset
+of writes. An empty row explicitly records no local-cell references. Origins
+are opaque numeric identities preserved for the consuming emitter.
+
+The rows must include executable, implicit-window, metadata, TRACE and hidden
+cleanup references relevant to allocation. Reads and observations require the
+incoming allocation-domain state. A definite kill describes a checked
+definition in that domain; it does not assert that a scalar VM instruction
+clears the whole register value. Candidate admission additionally requires the
+consumer to prove successful scalar initialization, equivalent zero entry and
+absence of hidden status, payload, identity, lifetime or release obligations.
+Missing references or an unproved premise cannot authorize reuse or deletion.
+
+Declare constraints before `finish()`:
+
+| Method | Contract |
+|---|---|
+| `candidate(virtual,kind='integer')` | Mark a proved plain scalar candidate; only `integer` and `boolean` kinds are accepted. |
+| `pin(virtual)` | Preserve distinct storage while allowing relocation. |
+| `fixed(virtual)` | Preserve distinct storage and its authored physical index. The typed API does not fix cell zero implicitly. |
+| `retain(virtual,required=1)` | Retain an otherwise unused cell by default. Setting zero permits omission only when references and other constraints do not require it. |
+| `window(base,count)` | Preserve the exact ordered contiguous group; `count` includes every member. Overlapping windows form one group, and a fixed member fixes that group. |
+| `boundary(ordinal)` | Prevent reuse of a lifetime crossing this source-order row boundary. |
+| `protect(first,last)` | Prevent reuse of a lifetime overlapping this inclusive row interval. |
+
+`finish(mode='reuse')` seals the request once and returns an owned
+`assignmentresult`. `identity` retains the entire virtual frame at its original
+indices. `dense` places required cells distinctly, allowing unused cells to
+disappear and movable cells to change index. `reuse` additionally shares cells
+between eligible nonoverlapping inclusive intervals. An eligible lifetime
+starts with a definite definition that neither reads nor observes its incoming
+state, and crosses no declared boundary or protected interval. Pinned, fixed
+and window cells remain distinct. These source-order intervals alone provide
+no general CFG interference or every-path initialization proof; a graph-aware
+consumer must impose adequate constraints or use distinct placement.
+
+Check `valid()` or `error()` before reading the result. `locals()` gives the
+physical frame extent, and `assigned(virtual)` gives the physical cell or `-1`
+for an omitted cell. `resets()` counts ordered reset requests;
+`reset(ordinal)` returns a `typedreset` with `virtual()`, `physical()`,
+`recordid()` and `origin()`. A reset requests whole-cell `NULL` immediately
+before the later occupant's first source record. The consumer emits those
+resets with their origins and applies the validated mapping to its records;
+allocation does not insert instructions itself. Identity and dense placement
+need no resets.
+
+`validate(reference mapping,locals,reference resets)` independently rebuilds
+intervals and checks the proposed map against the declared rows, constraints
+and current assignment mode. The mapping is an `.int[]` indexed by
+`virtual+1`; resets are an `.object[]` of `typedreset` objects. Validation checks
+required and omitted cells, frame bounds, fixed/identity positions, distinct
+storage, inclusive interference, ordered windows, and the exact required reset
+count, order, arrival record and origin. It returns an empty string on success
+or a diagnostic on failure, without publishing output. It checks the supplied
+premises rather than proving the consumer's machine semantics. `finish()` runs
+this checker before publishing its result.
+
+Construction, placement and validation share bounded work and logical-byte
+accounting; validation also consumes those budgets. A failed `finish()` exposes
+no partial mapping or reset list. A sealed request cannot accept more rows or
+constraints or be finished again. The earlier text API retains its
+positive-frame/budget contract and its own parsing, conservative window and
+rendering behavior.
+
 ## Query the canonical instruction view
 
 ```rexx

@@ -1432,13 +1432,14 @@ The local inlining design should be considered established when:
 
 The current requested standalone B/L inliner is specified in the
 [target-toolchain plan](../../research/level-l/toolchain/PLAN.md#selected-standalone-inliner-outcome)
-and its [architecture/mapping proposal](../../research/level-l/toolchain/doc/inlining.md).
+and its [approved architecture/mapping contract](../../research/level-l/toolchain/doc/inlining.md).
 Those documents supersede this review's earlier recommendation to begin with a
 compiler-driven prototype. The alternatives and source-boundary discussion below
 remain background; the current native AST inliner is unchanged.
 
 **Background architecture review.** The standalone B/L plan linked above is
-approved for implementation; migration/default replacement is not approved.
+approved for VM preparation and QA, shared Level L preparation and QA, then a
+fresh inliner2 integer-loop proof; migration/default replacement is not approved.
 The current AST inliner and all its supported shapes retain their
 contracts above. The [Level L compiler plan](../../research/level-l/compilers/PLAN.md#emission-simplifications-and-conformance-choices)
 retains future optimisation decisions outside the bounded C research closure. This review
