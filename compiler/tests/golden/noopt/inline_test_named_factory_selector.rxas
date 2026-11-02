@@ -131,6 +131,7 @@ describedNamed() .locals=5
 §inline_test_named_factory_selector.car.§factory() .locals=4
    .meta "inline_test_named_factory_selector.car.§factory"="b" ".inline_test_named_factory_selector..car" §inline_test_named_factory_selector.car.§factory() "name=.string"
    .srcstep 24 24 17 "inline_test_named_factory_selector.crexx" 36 3 13 "  *: factory"
+   null r1
    setattrs r1,2
    setobjtype r1,"inline_test_named_factory_selector.car"
    numsci 18,1,1
@@ -153,6 +154,7 @@ describedNamed() .locals=5
 §inline_test_named_factory_selector.car.§factory.from_name() .locals=4
    .meta "inline_test_named_factory_selector.car.§factory.from_name"="b" ".inline_test_named_factory_selector..car" §inline_test_named_factory_selector.car.§factory.from_name() "name=.string"
    .srcstep 28 28 17 "inline_test_named_factory_selector.crexx" 41 3 21 "  from_name: factory"
+   null r1
    setattrs r1,2
    setobjtype r1,"inline_test_named_factory_selector.car"
    numsci 18,1,1

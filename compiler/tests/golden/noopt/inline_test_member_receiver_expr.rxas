@@ -59,6 +59,7 @@ buildBox() .locals=4
 §inline_test_member_receiver_expr.box.§factory() .locals=3
    .meta "inline_test_member_receiver_expr.box.§factory"="b" ".inline_test_member_receiver_expr..box" §inline_test_member_receiver_expr.box.§factory() "initial=.string"
    .srcstep 14 14 17 "inline_test_member_receiver_expr.crexx" 18 3 13 "  *: factory"
+   null r1
    setattrs r1,2
    setobjtype r1,"inline_test_member_receiver_expr.box"
    numsci 18,1,1

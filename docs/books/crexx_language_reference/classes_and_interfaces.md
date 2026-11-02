@@ -110,6 +110,13 @@ write `*: factory` or `name: factory`, then declare arguments with `arg` as
 usual. A factory return type written after `=` is not part of the Level B source
 syntax.
 
+Each factory invocation constructs a fresh instance. Attributes start with
+their declared type's default value before the factory body runs, including
+when a conditional branch leaves an attribute untouched. This applies to both
+default and named factories. Constructing another object preserves values in
+previously returned instances; it does not depend on the storage used for an
+earlier return being empty.
+
 Assignment compatibility in the current Level B implementation flows from a
 concrete class value to an implemented interface. In practice that means a
 statement such as `iface = .widget(...)` is supported, while interface-to-interface

@@ -36,6 +36,7 @@ main() .locals=4
 §inline_test_block_expr_live_sibling.holder.§factory() .locals=6
    .meta "inline_test_block_expr_live_sibling.holder.§factory"="b" ".inline_test_block_expr_live_sibling..holder" §inline_test_block_expr_live_sibling.holder.§factory() "label=.string"
    .srcstep 11 11 17 "inline_test_block_expr_live_sibling.crexx" 14 3 13 "  *: factory"
+   null r1
    setattrs r1,5
    setobjtype r1,"inline_test_block_expr_live_sibling.holder"
    numsci 18,1,1
@@ -117,6 +118,7 @@ main() .locals=4
 §inline_test_block_expr_live_sibling.child.§factory() .locals=3
    .meta "inline_test_block_expr_live_sibling.child.§factory"="b" ".inline_test_block_expr_live_sibling..child" §inline_test_block_expr_live_sibling.child.§factory() "label=.string"
    .srcstep 17 17 17 "inline_test_block_expr_live_sibling.crexx" 28 3 13 "  *: factory"
+   null r1
    setattrs r1,2
    setobjtype r1,"inline_test_block_expr_live_sibling.child"
    numsci 18,1,1

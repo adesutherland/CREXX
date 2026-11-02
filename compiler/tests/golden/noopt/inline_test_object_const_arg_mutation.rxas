@@ -58,6 +58,7 @@ mutateBox() .locals=5
 §inline_test_object_const_arg_mutation.box.§factory() .locals=3
    .meta "inline_test_object_const_arg_mutation.box.§factory"="b" ".inline_test_object_const_arg_mutation..box" §inline_test_object_const_arg_mutation.box.§factory() "initial=.string"
    .srcstep 15 15 17 "inline_test_object_const_arg_mutation.crexx" 19 3 13 "  *: factory"
+   null r1
    setattrs r1,2
    setobjtype r1,"inline_test_object_const_arg_mutation.box"
    numsci 18,1,1

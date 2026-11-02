@@ -70,6 +70,7 @@ main() .locals=3
 §interface_default_codegen.box.§factory() .locals=1
    .meta "interface_default_codegen.box.§factory"="b" ".interface_default_codegen..box" §interface_default_codegen.box.§factory() ""
    .srcstep 9 9 17 "interface_default_codegen.crexx" 17 3 13 "  *: factory"
+   null r0
    setattrs r0,0
    setobjtype r0,"interface_default_codegen.box"
    numsci 18,1,1

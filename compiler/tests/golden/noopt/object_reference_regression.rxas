@@ -175,6 +175,7 @@ l95d:
 §object_reference_regression.smallpayload.§factory() .locals=3
    .meta "object_reference_regression.smallpayload.§factory"="b" ".object_reference_regression..smallpayload" §object_reference_regression.smallpayload.§factory() "label=.string"
    .srcstep 31 31 17 "object_reference_regression.crexx" 39 3 13 "  *: factory"
+   null r1
    setattrs r1,2
    setobjtype r1,"object_reference_regression.smallpayload"
    numsci 18,1,1
@@ -225,6 +226,7 @@ l95d:
 §object_reference_regression.largepayload.§factory() .locals=8
    .meta "object_reference_regression.largepayload.§factory"="b" ".object_reference_regression..largepayload" §object_reference_regression.largepayload.§factory() "label=.string"
    .srcstep 58 58 17 "object_reference_regression.crexx" 65 3 13 "  *: factory"
+   null r2
    setattrs r2,12
    setobjtype r2,"object_reference_regression.largepayload"
    numsci 18,1,1

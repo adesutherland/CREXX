@@ -1,0 +1,86 @@
+/* Every invocation constructs fresh fields, including a reused inline site. */
+options levelb
+namespace factory_fresh_instances
+
+main: procedure = .int
+  first = .Fresh
+  named_first = .Fresh
+  current = .Fresh
+  do iteration = 1 to 4
+    mode = 0
+    if iteration = 1 then mode = 1
+    current = .Fresh(mode)
+    named = .Fresh.from_mode(mode)
+    if iteration = 1 then do
+      first = current
+      named_first = named
+    end
+    else do
+      if \current.clean() then return fail('default factory retained old fields')
+      if \named.clean() then return fail('named factory retained old fields')
+    end
+    if \first.marked(7) then return fail('default factory changed old instance')
+    if \named_first.marked(17) then return fail('named factory changed old instance')
+  end
+
+  /* The new result replaces an actual; evaluate it before clearing self. */
+  current = first
+  current = .Fresh.from_previous(current)
+  if current.flag() <> 8 then return fail('result alias lost constructor actual')
+  if \current.empty_values() then return fail('copying factory inherited old array')
+  if \first.marked(7) then return fail('result alias changed retained instance')
+
+  /* A caller attribute also needs capture before entering the new receiver. */
+  if first.rebuild().flag() <> 7 then return fail('caller attribute lost constructor actual')
+  if \first.marked(7) then return fail('caller attribute capture changed old instance')
+  say 'PASS: factories construct fresh instances'
+  return 0
+
+fail: procedure = .int
+  arg reason = .string
+  say 'FAIL:' reason
+  return 1
+
+Fresh: class
+  _values = .int[]
+  _flag = .int
+  _text = .string
+
+  *: factory
+    arg mode = .int
+    if mode > 0 then do
+      _values[1] = 7
+      _flag = 7
+      _text = 'marked'
+    end
+    return
+
+  from_mode: factory
+    arg mode = .int
+    if mode > 0 then do
+      _values[1] = 17
+      _flag = 17
+      _text = 'marked'
+    end
+    return
+
+  from_previous: factory
+    arg previous = .Fresh
+    _flag = previous.flag() + 1
+    return
+
+  clean: method = .boolean
+    return _values[0] = 0 & _flag = 0 & _text = ''
+
+  empty_values: method = .boolean
+    return _values[0] = 0 & _text = ''
+
+  marked: method = .boolean
+    arg expected = .int
+    return _values[0] = 1 & _values[1] = expected & _flag = expected & _text = 'marked'
+
+  flag: method = .int
+    return _flag
+
+  rebuild: method = .Fresh
+    return .Fresh(_flag)

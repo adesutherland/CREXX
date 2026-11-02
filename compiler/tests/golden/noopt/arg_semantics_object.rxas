@@ -131,6 +131,7 @@ replaceBoxRef() .locals=3
 §arg_semantics_object.box.§factory() .locals=3
    .meta "arg_semantics_object.box.§factory"="b" ".arg_semantics_object..box" §arg_semantics_object.box.§factory() "initial=.string"
    .srcstep 24 24 17 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
+   null r1
    setattrs r1,2
    setobjtype r1,"arg_semantics_object.box"
    numsci 18,1,1

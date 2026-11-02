@@ -486,6 +486,31 @@ static int inline_expansion_cost_collect(ASTNode *root, InlineExpansionCost *cos
     return cost->valid;
 }
 
+/* Fresh receiver storage is implicit in an ordinary factory call. Expanding
+ * that ABI setup must not turn an otherwise tiny helper into authored body
+ * complexity. Keep these nodes in the full executable/serialized cost; this
+ * count is used only by the existing tiny-helper classification. */
+static size_t inline_implicit_factory_reset_nodes(ASTNode *node) {
+    ASTNode *child;
+    size_t count = 0;
+
+    if (!node || inline_node_is_callable_def(node)) return 0;
+    child = node->child;
+    if (node->node_type == ASSEMBLER &&
+        node->source_provenance == AST_SOURCE_SYNTHETIC &&
+        node->node_string && node->node_string_length == 4 &&
+        memcmp(node->node_string, "null", 4) == 0 &&
+        child && child->node_type == VAR_TARGET &&
+        !child->child && !child->sibling && child->symbolNode &&
+        child->symbolNode->symbol && child->symbolNode->symbol->is_factory) {
+        return 2; /* instruction and its single receiver operand */
+    }
+    for (; child; child = child->sibling) {
+        count += inline_implicit_factory_reset_nodes(child);
+    }
+    return count;
+}
+
 static int inline_expansion_cost_is_strict_improvement(const InlineExpansionCost *reference,
                                                        const InlineExpansionCost *candidate) {
     int strict;
@@ -824,6 +849,7 @@ static int inline_expansion_plan_commit(Context *context,
                                         ASTNode *candidate_root) {
     int exact_scalar_accessor;
     int tiny_callable;
+    size_t implicit_factory_nodes;
 
     if (!plan || !plan->original_call || !plan->replacement_target ||
         !candidate_root || plan->committed) {
@@ -856,8 +882,12 @@ static int inline_expansion_plan_commit(Context *context,
     exact_scalar_accessor = plan->callee_symbol && plan->callee_symbol->ast_template &&
                             inline_exact_scalar_accessor_kind(plan->callee_symbol->ast_template) !=
                                 INLINE_SCALAR_ACCESSOR_NONE;
+    implicit_factory_nodes = plan->callee_symbol && plan->callee_symbol->ast_template ?
+            inline_implicit_factory_reset_nodes(
+                    ast_chld(plan->callee_symbol->ast_template, INSTRUCTIONS, 0)) : 0;
     tiny_callable = plan->callee_symbol && plan->callee_symbol->inline_summary &&
-                    plan->callee_symbol->inline_summary->structural_nodes <= 20;
+                    implicit_factory_nodes <= plan->callee_symbol->inline_summary->structural_nodes &&
+                    plan->callee_symbol->inline_summary->structural_nodes - implicit_factory_nodes <= 20;
     if (!exact_scalar_accessor && !tiny_callable) {
         InlineExpansionCost executable_reference;
 

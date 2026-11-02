@@ -7,7 +7,7 @@
 
 main() .locals=9
    .meta "inline_test2.main"="b" ".int" main() ""
-   .srcstep 17 17 17 "inline_test2.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 20 20 17 "inline_test2.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test2.crexx" 4 3 49 "  say \"Testing ineligible inlining scenarios...\""
    say "Testing ineligible inlining scenarios..."
@@ -29,123 +29,133 @@ main() .locals=9
    sconcat r7,"LargeProc result:",r7
    .traceevent "O" 4 "R" "S" "r" 7 2 2 0 "" ""
    say r7
-   .srcstep 5 5 17 "inline_test2.crexx" 10 3 50 "  say \"NestedCallProc result:\" nestedCallProc(10)"
-   .srcstep 4 4 17 "inline_test2.crexx" 10 32 46 "  say \"NestedCallProc result:\" nestedCallProc(10)"
-   .srcstep 3 3 17 "inline_test2.crexx" 39 3 21 "  return helper(val)"
+   .srcstep 6 6 17 "inline_test2.crexx" 10 3 50 "  say \"NestedCallProc result:\" nestedCallProc(10)"
+   .srcstep 5 5 17 "inline_test2.crexx" 10 32 46 "  say \"NestedCallProc result:\" nestedCallProc(10)"
+   .srcstep 3 3 33 "inline_test2.crexx" 38 7 10 "  arg val = .int"
    load r7,10
-   .traceevent "L" 4 "R" "I" "r" 7 5 5 0 "" ""
+   .traceevent "L" 4 "R" "I" "r" 7 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 3 3 0 "val" ""
+   .srcstep 4 4 17 "inline_test2.crexx" 39 3 21 "  return helper(val)"
+   .traceevent "V" 6 "R" "I" "r" 7 6 6 0 "val" ""
    call1 r5,helper(),r7
-   .traceevent "F" 4 "R" "I" "r" 5 5 5 0 "helper" ""
-   icopy r7,r5
+   .traceevent "F" 4 "R" "I" "r" 5 6 6 0 "helper" ""
+   icopy r6,r5
 l238bexprend:
-   itos r7
-   sconcat r7,"NestedCallProc result:",r7
-   .traceevent "O" 4 "R" "S" "r" 7 5 5 0 "" ""
-   say r7
-   .srcstep 9 9 17 "inline_test2.crexx" 13 3 15 "  o = .MyClass()"
-   .srcstep 6 6 6 "inline_test2.crexx" 47 3 13 "  *: factory"
-   setattrs r8,0
-   .srcstep 7 7 6 "inline_test2.crexx" 47 3 13 "  *: factory"
-   setobjtype r8,"inline_test2.myclass"
-   .srcstep 8 8 33 "inline_test2.crexx" 48 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 8 8 8 0 "§factory" ""
-   copy r0,r8
-   .traceevent "A" 6 "R" "O" "r" 0 8 8 0 "o" ""
-   .srcstep 14 14 17 "inline_test2.crexx" 14 3 38 "  say \"Method result:\" o.myMethod(20)"
-   .meta "inline_test2.main.o"="b" ".myclass" r0
-   .srcstep 13 13 17 "inline_test2.crexx" 14 24 25 "  say \"Method result:\" o.myMethod(20)"
-   .srcstep 10 10 33 "inline_test2.crexx" 14 24 25 "  say \"Method result:\" o.myMethod(20)"
-   .traceevent "V" 6 "R" "O" "r" 0 10 10 0 "o" ""
-   .traceevent "A" 6 "R" "O" "r" 0 10 10 0 "§this" ""
-   .srcstep 11 11 6 "inline_test2.crexx" 50 3 26 "  myMethod: method = .int"
-   .traceevent "V" 6 "R" "O" "r" 0 14 14 0 "§this" ""
-   assertinitialized r0
-   .srcstep 12 12 17 "inline_test2.crexx" 52 5 17 "    return v * 2"
-   load r7,40
-   .traceevent "L" 4 "R" "I" "r" 7 14 14 0 "" ""
-   icopy r6,r7
-l334bexprend:
    itos r6
-   sconcat r6,"Method result:",r6
-   .traceevent "O" 4 "R" "S" "r" 6 14 14 0 "" ""
-   say r6
-   .srcstep 15 15 17 "inline_test2.crexx" 17 3 43 "  say \"MultiReturn result:\" multiReturn(1)"
+   sconcat r7,"NestedCallProc result:",r6
+   .traceevent "O" 4 "R" "S" "r" 7 6 6 0 "" ""
+   say r7
+   .srcstep 11 11 17 "inline_test2.crexx" 13 3 15 "  o = .MyClass()"
+   .srcstep 7 7 6 "inline_test2.crexx" 47 3 13 "  *: factory"
+   null r8
+   .srcstep 8 8 6 "inline_test2.crexx" 47 3 13 "  *: factory"
+   setattrs r8,0
+   .srcstep 9 9 6 "inline_test2.crexx" 47 3 13 "  *: factory"
+   setobjtype r8,"inline_test2.myclass"
+   .srcstep 10 10 33 "inline_test2.crexx" 48 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 8 10 10 0 "§factory" ""
+   copy r0,r8
+   .traceevent "A" 6 "R" "O" "r" 0 10 10 0 "o" ""
+   .srcstep 17 17 17 "inline_test2.crexx" 14 3 38 "  say \"Method result:\" o.myMethod(20)"
+   .meta "inline_test2.main.o"="b" ".myclass" r0
+   .srcstep 16 16 17 "inline_test2.crexx" 14 24 25 "  say \"Method result:\" o.myMethod(20)"
+   .srcstep 12 12 33 "inline_test2.crexx" 14 24 25 "  say \"Method result:\" o.myMethod(20)"
+   .traceevent "V" 6 "R" "O" "r" 0 12 12 0 "o" ""
+   .traceevent "A" 6 "R" "O" "r" 0 12 12 0 "§this" ""
+   .srcstep 13 13 33 "inline_test2.crexx" 51 9 10 "    arg v = .int"
+   load r7,20
+   .traceevent "L" 4 "R" "I" "r" 7 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 13 13 0 "v" ""
+   .srcstep 14 14 6 "inline_test2.crexx" 50 3 26 "  myMethod: method = .int"
+   .traceevent "V" 6 "R" "O" "r" 0 17 17 0 "§this" ""
+   assertinitialized r0
+   .srcstep 15 15 17 "inline_test2.crexx" 52 5 17 "    return v * 2"
+   .traceevent "V" 6 "R" "I" "r" 7 17 17 0 "v" ""
+   imult r6,r7,2
+   .traceevent "O" 4 "R" "I" "r" 6 17 17 0 "" ""
+   icopy r5,r6
+l336bexprend:
+   itos r5
+   sconcat r7,"Method result:",r5
+   .traceevent "O" 4 "R" "S" "r" 7 17 17 0 "" ""
+   say r7
+   .srcstep 18 18 17 "inline_test2.crexx" 17 3 43 "  say \"MultiReturn result:\" multiReturn(1)"
    say "MultiReturn result: 1"
-   .srcstep 16 16 17 "inline_test2.crexx" 19 3 11 "  return 0"
+   .srcstep 19 19 17 "inline_test2.crexx" 19 3 11 "  return 0"
    ret 0
    .meta "inline_test2.main.o"
 
 largeProc() .locals=6
    .meta "inline_test2.largeproc"="b" ".int" largeProc() "a=.int,b=.int,c=.int,d=.int,e=.int"
-   .srcstep 34 34 17 "inline_test2.crexx" 22 1 28 "largeProc: procedure = .int"
+   .srcstep 37 37 17 "inline_test2.crexx" 22 1 28 "largeProc: procedure = .int"
    numsci 18,1,1
-   .srcstep 18 18 17 "inline_test2.crexx" 23 7 13 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
+   .srcstep 21 21 17 "inline_test2.crexx" 23 7 13 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
    .meta "inline_test2.largeproc.a"="b" ".int" a1
-   .srcstep 19 19 17 "inline_test2.crexx" 23 15 21 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
+   .srcstep 22 22 17 "inline_test2.crexx" 23 15 21 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
    .meta "inline_test2.largeproc.b"="b" ".int" a2
-   .srcstep 20 20 17 "inline_test2.crexx" 23 23 29 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
+   .srcstep 23 23 17 "inline_test2.crexx" 23 23 29 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
    .meta "inline_test2.largeproc.c"="b" ".int" a3
-   .srcstep 21 21 17 "inline_test2.crexx" 23 31 37 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
+   .srcstep 24 24 17 "inline_test2.crexx" 23 31 37 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
    .meta "inline_test2.largeproc.d"="b" ".int" a4
-   .srcstep 22 22 17 "inline_test2.crexx" 23 39 45 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
+   .srcstep 25 25 17 "inline_test2.crexx" 23 39 45 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
    .meta "inline_test2.largeproc.e"="b" ".int" a5
-   .srcstep 23 23 17 "inline_test2.crexx" 24 3 12 "  x = a + b"
+   .srcstep 26 26 17 "inline_test2.crexx" 24 3 12 "  x = a + b"
    .meta "inline_test2.largeproc.x"="b" ".int" r5
-   .traceevent "V" 6 "R" "I" "a" 1 23 23 0 "a" ""
-   .traceevent "V" 6 "R" "I" "a" 2 23 23 0 "b" ""
+   .traceevent "V" 6 "R" "I" "a" 1 26 26 0 "a" ""
+   .traceevent "V" 6 "R" "I" "a" 2 26 26 0 "b" ""
    iadd r5,a1,a2
-   .traceevent "O" 4 "R" "I" "r" 5 23 23 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 5 23 23 0 "x" ""
-   .srcstep 24 24 17 "inline_test2.crexx" 25 3 12 "  x = x + c"
-   .traceevent "V" 6 "R" "I" "r" 5 24 24 0 "x" ""
-   .traceevent "V" 6 "R" "I" "a" 3 24 24 0 "c" ""
-   iadd r5,r5,a3
-   .traceevent "O" 4 "R" "I" "r" 5 24 24 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 5 24 24 0 "x" ""
-   .srcstep 25 25 17 "inline_test2.crexx" 26 3 12 "  x = x + d"
-   .traceevent "V" 6 "R" "I" "r" 5 25 25 0 "x" ""
-   .traceevent "V" 6 "R" "I" "a" 4 25 25 0 "d" ""
-   iadd r5,r5,a4
-   .traceevent "O" 4 "R" "I" "r" 5 25 25 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 5 25 25 0 "x" ""
-   .srcstep 26 26 17 "inline_test2.crexx" 27 3 12 "  x = x + e"
-   .traceevent "V" 6 "R" "I" "r" 5 26 26 0 "x" ""
-   .traceevent "V" 6 "R" "I" "a" 5 26 26 0 "e" ""
-   iadd r5,r5,a5
    .traceevent "O" 4 "R" "I" "r" 5 26 26 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 5 26 26 0 "x" ""
-   .srcstep 27 27 17 "inline_test2.crexx" 28 3 12 "  x = x * 2"
+   .srcstep 27 27 17 "inline_test2.crexx" 25 3 12 "  x = x + c"
    .traceevent "V" 6 "R" "I" "r" 5 27 27 0 "x" ""
-   imult r5,r5,2
+   .traceevent "V" 6 "R" "I" "a" 3 27 27 0 "c" ""
+   iadd r5,r5,a3
    .traceevent "O" 4 "R" "I" "r" 5 27 27 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 5 27 27 0 "x" ""
-   .srcstep 28 28 17 "inline_test2.crexx" 29 3 12 "  x = x / 2"
+   .srcstep 28 28 17 "inline_test2.crexx" 26 3 12 "  x = x + d"
    .traceevent "V" 6 "R" "I" "r" 5 28 28 0 "x" ""
-   idiv r5,r5,2
+   .traceevent "V" 6 "R" "I" "a" 4 28 28 0 "d" ""
+   iadd r5,r5,a4
    .traceevent "O" 4 "R" "I" "r" 5 28 28 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 5 28 28 0 "x" ""
-   .srcstep 29 29 17 "inline_test2.crexx" 30 3 12 "  x = x + 1"
+   .srcstep 29 29 17 "inline_test2.crexx" 27 3 12 "  x = x + e"
    .traceevent "V" 6 "R" "I" "r" 5 29 29 0 "x" ""
-   iadd r5,r5,1
+   .traceevent "V" 6 "R" "I" "a" 5 29 29 0 "e" ""
+   iadd r5,r5,a5
    .traceevent "O" 4 "R" "I" "r" 5 29 29 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 5 29 29 0 "x" ""
-   .srcstep 30 30 17 "inline_test2.crexx" 31 3 12 "  x = x - 1"
+   .srcstep 30 30 17 "inline_test2.crexx" 28 3 12 "  x = x * 2"
    .traceevent "V" 6 "R" "I" "r" 5 30 30 0 "x" ""
-   isub r5,r5,1
+   imult r5,r5,2
    .traceevent "O" 4 "R" "I" "r" 5 30 30 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 5 30 30 0 "x" ""
-   .srcstep 31 31 17 "inline_test2.crexx" 32 3 12 "  x = x * 3"
+   .srcstep 31 31 17 "inline_test2.crexx" 29 3 12 "  x = x / 2"
    .traceevent "V" 6 "R" "I" "r" 5 31 31 0 "x" ""
-   imult r5,r5,3
+   idiv r5,r5,2
    .traceevent "O" 4 "R" "I" "r" 5 31 31 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 5 31 31 0 "x" ""
-   .srcstep 32 32 17 "inline_test2.crexx" 33 3 12 "  x = x / 3"
+   .srcstep 32 32 17 "inline_test2.crexx" 30 3 12 "  x = x + 1"
    .traceevent "V" 6 "R" "I" "r" 5 32 32 0 "x" ""
-   idiv r5,r5,3
+   iadd r5,r5,1
    .traceevent "O" 4 "R" "I" "r" 5 32 32 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 5 32 32 0 "x" ""
-   .srcstep 33 33 17 "inline_test2.crexx" 34 3 11 "  return x"
+   .srcstep 33 33 17 "inline_test2.crexx" 31 3 12 "  x = x - 1"
    .traceevent "V" 6 "R" "I" "r" 5 33 33 0 "x" ""
+   isub r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 33 33 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 33 33 0 "x" ""
+   .srcstep 34 34 17 "inline_test2.crexx" 32 3 12 "  x = x * 3"
+   .traceevent "V" 6 "R" "I" "r" 5 34 34 0 "x" ""
+   imult r5,r5,3
+   .traceevent "O" 4 "R" "I" "r" 5 34 34 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 34 34 0 "x" ""
+   .srcstep 35 35 17 "inline_test2.crexx" 33 3 12 "  x = x / 3"
+   .traceevent "V" 6 "R" "I" "r" 5 35 35 0 "x" ""
+   idiv r5,r5,3
+   .traceevent "O" 4 "R" "I" "r" 5 35 35 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 35 35 0 "x" ""
+   .srcstep 36 36 17 "inline_test2.crexx" 34 3 11 "  return x"
+   .traceevent "V" 6 "R" "I" "r" 5 36 36 0 "x" ""
    ret r5
    .meta "inline_test2.largeproc.a"
    .meta "inline_test2.largeproc.b"
@@ -156,41 +166,42 @@ largeProc() .locals=6
 
 helper() .locals=2
    .meta "inline_test2.helper"="b" ".int" helper() "v=.int"
-   .srcstep 42 42 17 "inline_test2.crexx" 41 1 25 "helper: procedure = .int"
+   .srcstep 45 45 17 "inline_test2.crexx" 41 1 25 "helper: procedure = .int"
    numsci 18,1,1
-   .srcstep 40 40 17 "inline_test2.crexx" 42 7 15 "  arg v = .int"
+   .srcstep 43 43 17 "inline_test2.crexx" 42 7 15 "  arg v = .int"
    .meta "inline_test2.helper.v"="b" ".int" a1
-   .srcstep 41 41 17 "inline_test2.crexx" 43 3 15 "  return v + 1"
-   .traceevent "V" 6 "R" "I" "a" 1 41 41 0 "v" ""
+   .srcstep 44 44 17 "inline_test2.crexx" 43 3 15 "  return v + 1"
+   .traceevent "V" 6 "R" "I" "a" 1 44 44 0 "v" ""
    iadd r1,a1,1
-   .traceevent "O" 4 "R" "I" "r" 1 41 41 0 "" ""
+   .traceevent "O" 4 "R" "I" "r" 1 44 44 0 "" ""
    ret r1
    .meta "inline_test2.helper.v"
 
 §inline_test2.myclass.§factory() .locals=1
    .meta "inline_test2.myclass.§factory"="b" ".inline_test2..myclass" §inline_test2.myclass.§factory() ""
-   .srcstep 44 44 17 "inline_test2.crexx" 47 3 13 "  *: factory"
+   .srcstep 47 47 17 "inline_test2.crexx" 47 3 13 "  *: factory"
+   null r0
    setattrs r0,0
    setobjtype r0,"inline_test2.myclass"
    numsci 18,1,1
-   .srcstep 43 43 17 "inline_test2.crexx" 48 5 11 "    return"
+   .srcstep 46 46 17 "inline_test2.crexx" 48 5 11 "    return"
    .meta "inline_test2.myclass.§factory.§factory"="b" ".myclass" r0
-   .traceevent "V" 6 "R" "O" "r" 0 43 43 0 "§factory" ""
+   .traceevent "V" 6 "R" "O" "r" 0 46 46 0 "§factory" ""
    ret r0
    .meta "inline_test2.myclass.§factory.§factory"
 
 §inline_test2.myclass.mymethod() .locals=3
    .meta "inline_test2.myclass.mymethod"="b" ".int" §inline_test2.myclass.mymethod() "v=.int"
-   .srcstep 47 47 17 "inline_test2.crexx" 50 3 26 "  myMethod: method = .int"
+   .srcstep 50 50 17 "inline_test2.crexx" 50 3 26 "  myMethod: method = .int"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 45 45 17 "inline_test2.crexx" 51 9 17 "    arg v = .int"
+   .srcstep 48 48 17 "inline_test2.crexx" 51 9 17 "    arg v = .int"
    .meta "inline_test2.myclass.mymethod.v"="b" ".int" a2
    .meta "inline_test2.myclass.mymethod.§this"="b" ".myclass" a1
-   .srcstep 46 46 17 "inline_test2.crexx" 52 5 17 "    return v * 2"
-   .traceevent "V" 6 "R" "I" "a" 2 46 46 0 "v" ""
+   .srcstep 49 49 17 "inline_test2.crexx" 52 5 17 "    return v * 2"
+   .traceevent "V" 6 "R" "I" "a" 2 49 49 0 "v" ""
    imult r2,a2,2
-   .traceevent "O" 4 "R" "I" "r" 2 46 46 0 "" ""
+   .traceevent "O" 4 "R" "I" "r" 2 49 49 0 "" ""
    ret r2
    .meta "inline_test2.myclass.mymethod.v"
    .meta "inline_test2.myclass.mymethod.§this"

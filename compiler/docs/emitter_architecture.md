@@ -101,6 +101,12 @@ table copy is introduced.
 ### Procedures & Program Structure (`rxcp_emit_proc.c`)
 - **Functionality**: Logic for `PROCEDURE`, `PROGRAM_FILE`, and `REXX_UNIVERSE`.
 - **Key Functions**: `add_scope_initiators`.
+- Factory entry clears its new receiver before allocating attributes; returned
+  storage may still contain a prior invocation's value. Inline expansion keeps
+  the same clear after actual-argument capture. Its synthetic receiver reset
+  remains part of executable and serialized costs, while the tiny-helper body
+  classification excludes that implicit ABI setup. Ordinary authored clears
+  and the strict profitability checks for larger helpers keep their full cost.
 
 ### Metadata & Symbols (`rxcp_emit_meta.c`)
 - **Functionality**: Emitting `.meta` directives and symbol-related metadata.

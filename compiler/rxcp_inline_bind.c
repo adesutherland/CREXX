@@ -2816,6 +2816,8 @@ static int inline_initialise_factory_instance(Context *context,
                                               InlineCloneState *clone_state) {
     Symbol *factory_symbol;
     ASTNode *class_node;
+    ASTNode *null_target;
+    ASTNode *null_instr;
     ASTNode *factory_target;
     ASTNode *attrs_count;
     ASTNode *setattrs_instr;
@@ -2829,6 +2831,26 @@ static int inline_initialise_factory_instance(Context *context,
 
     factory_symbol = inline_find_instance_symbol(proc_def, clone_state);
     if (!factory_symbol) return 0;
+
+    /* Actuals that read the caller's receiver have already been captured.
+       Clear only the new factory receiver before allocating its attributes. */
+    null_target = rxcp_remap_create_symbol_node(context,
+                                              inline_scope,
+                                              proc_def,
+                                              factory_symbol,
+                                              VAR_TARGET,
+                                              0,
+                                              1);
+    if (!null_target) return 0;
+    null_instr = rxcp_remap_create_assembler_instr(context,
+                                                  inline_scope,
+                                                  proc_def,
+                                                  "null",
+                                                  null_target,
+                                                  NULL,
+                                                  NULL);
+    if (!null_instr) return 0;
+    add_ast(instr_list, null_instr);
 
     factory_target = rxcp_remap_create_symbol_node(context,
                                                inline_scope,

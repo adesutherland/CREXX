@@ -607,7 +607,11 @@ void emit_proc(ASTNode *node, void *pl) {
                     Symbol *star_sym = sym_lrsv(node->scope, &star_node);
                     int r_this = star_sym->register_num;
 
-                    temp1 = mprintf("   setattrs r%d,%d\n", r_this, n_attrs);
+                    /* A returned instance leaves this local populated. SETATTRS
+                       preserves existing fields, so each invocation must first
+                       detach the new receiver from that previous value. */
+                    temp1 = mprintf("   null r%d\n   setattrs r%d,%d\n",
+                                    r_this, r_this, n_attrs);
                     output_append_text(node->output, temp1);
                     free(temp1);
 

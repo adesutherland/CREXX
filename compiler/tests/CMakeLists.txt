@@ -4217,6 +4217,20 @@ add_crexx_run_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_e
 add_crexx_run_test(inline_test_member_receiver_expr rexx_src/inline_test_member_receiver_expr.crexx)
 add_crexx_run_test(inline_test_named_factory_selector rexx_src/inline_test_named_factory_selector.crexx)
 add_crexx_run_test(inline_test_factory_arg_scope rexx_src/inline_test_factory_arg_scope.crexx)
+add_crexx_run_test(factory_fresh_instances rexx_src/factory_fresh_instances.crexx)
+set_tests_properties(factory_fresh_instances_run_noopt
+        factory_fresh_instances_run_opt PROPERTIES
+        LABELS "compiler;factory;inlining;regression")
+add_test(NAME factory_fresh_instances_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/factory_fresh_instances.crexx
+                 -DWRAPPER_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_member_receiver_expr.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/factory_fresh_instances_shape_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_factory_fresh_instances_shape.cmake)
+set_tests_properties(factory_fresh_instances_shape PROPERTIES
+        LABELS "compiler;factory;inlining;regression"
+        TIMEOUT 60 CREXX_PREP_TARGETS "rxc")
 add_crexx_run_test(san003_inline_scoped_array_actual
         rexx_src/san003_inline_scoped_array_actual.crexx)
 add_test(NAME san003_inline_scoped_array_actual_compile

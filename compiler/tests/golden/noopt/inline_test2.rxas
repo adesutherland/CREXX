@@ -175,6 +175,7 @@ helper() .locals=2
 §inline_test2.myclass.§factory() .locals=1
    .meta "inline_test2.myclass.§factory"="b" ".inline_test2..myclass" §inline_test2.myclass.§factory() ""
    .srcstep 33 33 17 "inline_test2.crexx" 47 3 13 "  *: factory"
+   null r0
    setattrs r0,0
    setobjtype r0,"inline_test2.myclass"
    numsci 18,1,1
