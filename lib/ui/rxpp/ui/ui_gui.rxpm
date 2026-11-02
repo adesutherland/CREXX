@@ -1,0 +1,14 @@
+##MACRO UI_GUI phase,namespace,text
+  phase = upper(unquote(phase))
+  namespace = unquote(namespace)
+  if phase \= 'BLOCK' then return
+  .gen namespace &namespace expose render register_gui
+  .gen import ui
+  .gen import ui_contract
+  .gen render: procedure = .void
+  .gen   arg view = .uiview, bindings = .string[]
+  .gen   return
+  .gen register_gui: procedure = .int
+  .gen   arg session = .uisession
+  .gen   return 0
+##MEND

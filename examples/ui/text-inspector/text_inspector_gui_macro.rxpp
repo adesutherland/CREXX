@@ -1,0 +1,23 @@
+/*
+ * Free-form GUI definition handled by the generic DALIAS HANDLER hook.
+ * The handler is a scripted macro; the preprocessor does not know GUI tags.
+ */
+options levelg
+##loadmacro ui
+##DALIAS DEFINE-GUI HANDLER UI_GUI
+
+DEFINE-GUI TextInspector
+  LABEL path "File: (none)"
+
+  ROW
+    LABEL lines       "Lines: 1"
+    LABEL words       "Words: 1"
+    LABEL characters  "Characters: 0"
+  END ROW
+
+  LABEL status "Status: Ready"
+
+  BUTTON open  "Open..." ACTION document.open
+  BUTTON clear "Clear"   ACTION document.clear
+  BUTTON quit  "Quit"    ACTION document.quit
+END DEFINE-GUI

@@ -7,6 +7,28 @@ set(CREXX_UI_TUI_IMAGE "${CMAKE_BINARY_DIR}/bin/ui_tui.rxbin")
 # Prevent obsolete generated metadata from satisfying imports after reconfigure.
 file(REMOVE "${CMAKE_BINARY_DIR}/bin/ui_compat.rxbin")
 
+# RXPP resolves `##LOADMACRO ui` relative to the executable's `bin/ui`
+# directory.  Keep the source macro package available in an ordinary build as
+# well as in an install tree, so direct `crexx file.rxpp` invocations use the
+# same UI vocabulary as graph builds.
+set(CREXX_UI_RXPP_MACRO_DIR "${CMAKE_BINARY_DIR}/bin/ui")
+set(CREXX_UI_RXPP_MACRO_OUTPUTS)
+foreach(_crexx_ui_rxpp_macro IN ITEMS ui_command ui_gui ui_launcher ui_node)
+    set(_crexx_ui_rxpp_source
+            "${CMAKE_CURRENT_SOURCE_DIR}/rxpp/ui/${_crexx_ui_rxpp_macro}.rxpm")
+    set(_crexx_ui_rxpp_output
+            "${CREXX_UI_RXPP_MACRO_DIR}/${_crexx_ui_rxpp_macro}.rxpm")
+    add_custom_command(
+            OUTPUT "${_crexx_ui_rxpp_output}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CREXX_UI_RXPP_MACRO_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${_crexx_ui_rxpp_source}" "${_crexx_ui_rxpp_output}"
+            DEPENDS "${_crexx_ui_rxpp_source}"
+            VERBATIM)
+    list(APPEND CREXX_UI_RXPP_MACRO_OUTPUTS "${_crexx_ui_rxpp_output}")
+endforeach()
+add_custom_target(ui_rxpp_macros DEPENDS ${CREXX_UI_RXPP_MACRO_OUTPUTS})
+
 add_custom_command(
         OUTPUT "${CREXX_UI_CORE_IMAGE}"
         COMMAND $<TARGET_FILE:rxc> --no-exe-import
@@ -38,7 +60,7 @@ add_custom_command(
 
 add_custom_target(ui ALL DEPENDS "${CREXX_UI_CORE_IMAGE}")
 add_custom_target(ui_tui ALL DEPENDS "${CREXX_UI_TUI_IMAGE}")
-add_dependencies(ui library)
+add_dependencies(ui library ui_rxpp_macros)
 add_dependencies(ui_tui ui ui_contract ui_local_resources)
 
 # The vocabulary has one source. Generate language bindings and transport docs
