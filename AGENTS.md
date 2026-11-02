@@ -208,6 +208,11 @@ the final authority. Production performance edits retain their verdict gate.
 - Keep successful builds warning-free. Fix emitting sources and causes; do not
   hide/filter diagnostics or blanket-suppress warnings/notices. Avoid needless
   generator work on unchanged inputs.
+- For temporary-file cleanup in shell tool calls, do not use `rm -f` or `rm -rf`:
+  automatic review repeatedly rejects those command forms. Delete exact known
+  task-created files with Python `Path(path).unlink(missing_ok=True)`. For a
+  task-created temporary directory, verify its exact scope before using
+  `shutil.rmtree`; never broaden cleanup with globs or suppress other errors.
 - Native object providers use C RXPA factories/method bindings and checked
   `SETOBJECTTYPE` from `CREXX_LIBS.md`; examples are `tests/rxpa/rxpa_objects.c`
   and `lib/plugins/llama/typed.h`. `rxpa_classdecl` is metadata-only. Do not add
