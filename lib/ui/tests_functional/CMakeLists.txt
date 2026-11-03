@@ -67,6 +67,20 @@ file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/oversized-record.txt"
 
 if(UNIX)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    set(edge_inputs "${CMAKE_CURRENT_BINARY_DIR}/ui_driver_probe.rxbin")
+    set(edge_modules ui_ansi ui_dialogs ui_terminal_view ui_local_resources ui_contract ui_catalog ui library)
+    foreach(module IN LISTS edge_modules)
+        list(APPEND edge_inputs "${CMAKE_BINARY_DIR}/bin/${module}.rxbin")
+    endforeach()
+    # The driver probe is the only test-local import. Do not expose sibling
+    # fixture images while their independent assemblers are writing them.
+    set(edge_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/ansi_edges")
+    crexx_add_import_root(ui_ansi_edge_imports
+            DIRECTORY "${edge_import_root}" OUTPUT_VARIABLE edge_import_files
+            FILES ${edge_inputs} "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+                    "${CMAKE_BINARY_DIR}/bin/rxconsole.rxplugin"
+                    "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin"
+            DEPENDS ui_driver_probe ${edge_modules} compiler_exit_bin console fs)
     foreach(mode IN ITEMS noopt opt)
         set(flags)
         if(mode STREQUAL "noopt")
@@ -74,17 +88,14 @@ if(UNIX)
         endif()
         set(edge_module "${CMAKE_CURRENT_BINARY_DIR}/ui_ansi_edges_${mode}_module")
         set(edge_image "${CMAKE_CURRENT_BINARY_DIR}/ui_ansi_edges_${mode}.rxbin")
-        set(edge_inputs "${CMAKE_CURRENT_BINARY_DIR}/ui_driver_probe.rxbin")
-        foreach(module IN ITEMS ui_ansi ui_dialogs ui_terminal_view ui_local_resources ui_contract ui_catalog ui library)
-            list(APPEND edge_inputs "${CMAKE_BINARY_DIR}/bin/${module}.rxbin")
-        endforeach()
         add_custom_command(OUTPUT "${edge_image}"
                 COMMAND $<TARGET_FILE:rxc> --no-exe-import ${flags}
-                        -i "${CMAKE_BINARY_DIR}/bin" -i "${CMAKE_CURRENT_BINARY_DIR}"
+                        -i "${edge_import_root}"
                         -o "${edge_module}" "${CMAKE_CURRENT_SOURCE_DIR}/test_ui_ansi_edges.crexx"
                 COMMAND $<TARGET_FILE:rxas> ${flags} -o "${edge_module}" "${edge_module}"
                 COMMAND $<TARGET_FILE:rxlink> -o "${edge_image}" "${edge_module}.rxbin" ${edge_inputs}
-                DEPENDS rxc rxas rxlink ui_ansi ui_driver_probe ${edge_inputs} test_ui_ansi_edges.crexx
+                DEPENDS rxc rxas rxlink ui_ansi_edge_imports ${edge_import_files}
+                        ${edge_inputs} test_ui_ansi_edges.crexx
                 BYPRODUCTS "${edge_module}.rxas" "${edge_module}.rxbin" VERBATIM)
         add_custom_target(ui_ansi_edges_${mode}_artifact DEPENDS "${edge_image}")
         add_dependencies(ui_functional_tests ui_ansi_edges_${mode}_artifact)

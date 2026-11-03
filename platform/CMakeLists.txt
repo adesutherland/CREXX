@@ -176,6 +176,10 @@ if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
         set_property(TARGET ${tool}_cms_text_harness PROPERTY C_STANDARD 99)
         target_link_libraries(${tool}_cms_text_harness PRIVATE ${frontend})
         if(tool STREQUAL rxas)
+            # rxasmain owns this CLI service outside rxaslib, as in rxas.
+            target_sources(${tool}_cms_text_harness PRIVATE
+                    "${CMAKE_SOURCE_DIR}/assembler/rxas_inline_service.c"
+                    "${CMAKE_SOURCE_DIR}/assembler/rxas_inline_service.h")
             target_link_libraries(${tool}_cms_text_harness PRIVATE avl_tree)
         endif()
     endforeach()

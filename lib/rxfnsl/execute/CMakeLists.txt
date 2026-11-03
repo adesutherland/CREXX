@@ -20,10 +20,23 @@ crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/llirexecute.rxbin"
     "${CMAKE_CURRENT_SOURCE_DIR}/llirexecute.crexx"
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
 set(_control "${CMAKE_CURRENT_BINARY_DIR}/execute.ctl")
+set(_link_root "${CMAKE_CURRENT_BINARY_DIR}/linked")
+set(_link_image "${_link_root}/rxfnsl-execute.rxbin")
+set(_publish_image "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin")
+set(_publish_temp "${CMAKE_CURRENT_BINARY_DIR}/publish/rxfnsl-execute.rxbin.tmp")
 file(GENERATE OUTPUT "${_control}" CONTENT
-  "INPUT ${CMAKE_CURRENT_BINARY_DIR}/llirexecute.rxbin\nINCLUDE llirexecute\nPRESERVE INLINE\nOUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsl-execute\n")
-crexx_add_fixture_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin"
+  "INPUT ${CMAKE_CURRENT_BINARY_DIR}/llirexecute.rxbin\nINCLUDE llirexecute\nPRESERVE INLINE\nOUTPUT ${_link_root}/rxfnsl-execute\n")
+crexx_add_fixture_command(OUTPUT "${_link_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c "${_control}"
   DEPENDS rxlink "${CMAKE_CURRENT_BINARY_DIR}/llirexecute.rxbin" "${_control}" VERBATIM)
-add_custom_target(rxfnsl_execute ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin")
-crexx_install_bytecode(rxfnsl_execute "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin")
+# Binary discovery can hold an older image open while this package rebuilds.
+# Mirror the Classic/classlib publication owner: finish privately, then rename
+# a non-importable stage so readers and failed producers retain a whole image.
+add_custom_command(OUTPUT "${_publish_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/publish"
+  COMMAND ${CMAKE_COMMAND} -E copy "${_link_image}" "${_publish_temp}"
+  COMMAND ${CMAKE_COMMAND} -E rename "${_publish_temp}" "${_publish_image}"
+  DEPENDS "${_link_image}" VERBATIM)
+add_custom_target(rxfnsl_execute ALL DEPENDS "${_publish_image}")
+crexx_install_bytecode(rxfnsl_execute "${_publish_image}")

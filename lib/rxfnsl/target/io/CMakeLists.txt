@@ -68,12 +68,21 @@ foreach(_module llrxasinput llrxasoutput)
   list(APPEND _bins "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
 endforeach()
 set(_control "${CMAKE_CURRENT_BINARY_DIR}/target-io.ctl")
+set(_link_root "${CMAKE_CURRENT_BINARY_DIR}/linked")
+set(_link_image "${_link_root}/rxfnsl-target-io.rxbin")
+set(_publish_image "${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io.rxbin")
+set(_publish_temp "${CMAKE_CURRENT_BINARY_DIR}/publish/rxfnsl-target-io.rxbin.tmp")
 file(GENERATE OUTPUT "${_control}" CONTENT
-  "INPUT ${CMAKE_CURRENT_BINARY_DIR}/llrxasgrammar.rxbin\nINPUT ${CMAKE_CURRENT_BINARY_DIR}/llrxasinput.rxbin\nINPUT ${CMAKE_CURRENT_BINARY_DIR}/llrxasoutput.rxbin\nINCLUDE llrxasgrammar\nINCLUDE llrxasinput\nINCLUDE llrxasoutput\nPRESERVE INLINE\nOUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io\n")
-crexx_add_fixture_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io.rxbin"
+  "INPUT ${CMAKE_CURRENT_BINARY_DIR}/llrxasgrammar.rxbin\nINPUT ${CMAKE_CURRENT_BINARY_DIR}/llrxasinput.rxbin\nINPUT ${CMAKE_CURRENT_BINARY_DIR}/llrxasoutput.rxbin\nINCLUDE llrxasgrammar\nINCLUDE llrxasinput\nINCLUDE llrxasoutput\nPRESERVE INLINE\nOUTPUT ${_link_root}/rxfnsl-target-io\n")
+crexx_add_fixture_command(OUTPUT "${_link_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c "${_control}"
   DEPENDS rxlink ${_bins} "${_control}" VERBATIM)
+add_custom_command(OUTPUT "${_publish_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/publish"
+  COMMAND ${CMAKE_COMMAND} -E copy "${_link_image}" "${_publish_temp}"
+  COMMAND ${CMAKE_COMMAND} -E rename "${_publish_temp}" "${_publish_image}"
+  DEPENDS "${_link_image}" VERBATIM)
 add_custom_target(rxfnsl_target_io
-  DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io.rxbin")
-crexx_install_bytecode(rxfnsl_target_io
-  "${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io.rxbin")
+  DEPENDS "${_publish_image}")
+crexx_install_bytecode(rxfnsl_target_io "${_publish_image}")

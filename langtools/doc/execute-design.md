@@ -14,6 +14,14 @@ image with `rxfnsl-analysis.rxbin`, `rxfnsl.rxbin` and `library.rxbin`.
 non-cREXX operation families. Language-specific adapters live outside this
 package.
 
+The package owner links under `lib/rxfnsl/execute/linked/`, then copies the
+completed image to a private non-importable publication stage and atomically
+renames it to `bin/rxfnsl-execute.rxbin`. Open discovery readers can finish the
+previous image; failed production leaves that last published image intact.
+Actual execute consumers depend on `rxfnsl_execute` through their staged import
+roots. Unrelated tools scanning `bin/` need no execute dependency or global
+serialization.
+
 ## Trusted services and whole-module admission
 
 Construct `registry(contract)` from the trusted frozen schema. Register pure,

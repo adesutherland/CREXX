@@ -376,8 +376,11 @@ add_custom_target(worker_image DEPENDS "${CMAKE_BINARY_DIR}/test_persistent_work
         sdk_declarations=(ROOT/'lib/rxfnsl/rexx/CMakeLists.txt').read_text()
         (sdk/'CMakeLists.txt').write_text(sdk_declarations)
         modules=re.search(r'set\(RXFNSL_REXX_MODULES\s+([^)]*)\)',sdk_declarations).group(1).split()
+        assembly_modules={name for name in modules
+                          if (ROOT/'lib/rxfnsl/rexx'/(name+'.rxas')).is_file()}
         for name in modules:
-            (sdk/(name+'.crexx')).write_text('fixture source\n')
+            suffix='.rxas' if name in assembly_modules else '.crexx'
+            (sdk/(name+suffix)).write_text('complete\n' if name in assembly_modules else 'fixture source\n')
         (source/'unicode').mkdir()
         (source/'unicode/Properties.cmake').write_text(
             'set(_ll_data_source "${CMAKE_CURRENT_SOURCE_DIR}/lludata.crexx")\n')
@@ -451,13 +454,14 @@ add_subdirectory(sdk)
             command('cmake','--build',build,'--parallel','8')
         def events():
             return Counter(tuple(line.split('\t')) for line in calls.read_text().splitlines())
-        expected={('rxlink',str(build/'bin/rxfnsl.rxbin'))}
+        expected={('rxlink',str(build/'sdk/linked/rxfnsl.rxbin'))}
         if include_research:
             expected.update({('rxlang',str(research/'levelc/levelc.rxl')),
                              ('rxas',str(build/'research/frontends/llcgrammar.rxbin'))})
         for name in modules:
-            expected.update({('rxc',str(build/'sdk'/(name+'.rxas'))),
-                             ('rxas',str(build/'sdk'/(name+'.rxbin')))})
+            expected.add(('rxas',str(build/'sdk'/(name+'.rxbin'))))
+            if name not in assembly_modules:
+                expected.add(('rxc',str(build/'sdk'/(name+'.rxas'))))
         if include_research:
             for mode in ('opt','noopt'):
                 for directory,name in ((f'common/{mode}','llscalar'),
@@ -467,8 +471,14 @@ add_subdirectory(sdk)
                                      ('rxas',str(build/'research'/directory/(name+'.rxbin')))})
         prepare()
         self.assertEqual(events(),Counter({event:1 for event in expected}))
+        public_image=build/'bin/rxfnsl.rxbin'
+        self.assertEqual(public_image.read_text(),'complete\n')
+        self.assertEqual(public_image.read_bytes(),(build/'sdk/linked/rxfnsl.rxbin').read_bytes())
+        self.assertFalse((build/'sdk/publish/rxfnsl.rxbin.tmp').exists())
+        public_mtime=public_image.stat().st_mtime_ns
         prepare()
         self.assertEqual(events(),Counter({event:1 for event in expected}))
+        self.assertEqual(public_image.stat().st_mtime_ns,public_mtime)
         calls.write_text('')
         (build/'sdk/llcheck.rxbin').unlink()
         if include_research:

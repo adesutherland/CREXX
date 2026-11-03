@@ -128,6 +128,10 @@ foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
   )
 endforeach()
 
+set(_rxfnsl_link_root "${CMAKE_CURRENT_BINARY_DIR}/linked")
+set(_rxfnsl_link_image "${_rxfnsl_link_root}/rxfnsl.rxbin")
+set(_rxfnsl_publish_image "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
+set(_rxfnsl_publish_temp "${CMAKE_CURRENT_BINARY_DIR}/publish/rxfnsl.rxbin.tmp")
 set(_rxfnsl_control_file "${CMAKE_CURRENT_BINARY_DIR}/rxfnsl_link_$<CONFIG>.ctl")
 string(CONCAT _rxfnsl_control_text
   "* Auto-generated control file for the consolidated cREXX Level L library\n")
@@ -140,12 +144,13 @@ endforeach()
 string(APPEND _rxfnsl_control_text
   "PRESERVE INLINE\n"
   "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
-  "OUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsl\n")
+  "OUTPUT ${_rxfnsl_link_root}/rxfnsl\n")
 
 file(GENERATE OUTPUT "${_rxfnsl_control_file}" CONTENT "${_rxfnsl_control_text}")
 
 crexx_add_fixture_command(
-  OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+  OUTPUT "${_rxfnsl_link_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${_rxfnsl_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c "${_rxfnsl_control_file}"
   DEPENDS rxlink ${RXFNSL_REXX_BINS} "${_rxfnsl_control_file}"
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -153,8 +158,13 @@ crexx_add_fixture_command(
   VERBATIM
 )
 
+add_custom_command(OUTPUT "${_rxfnsl_publish_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/publish"
+  COMMAND ${CMAKE_COMMAND} -E copy "${_rxfnsl_link_image}" "${_rxfnsl_publish_temp}"
+  COMMAND ${CMAKE_COMMAND} -E rename "${_rxfnsl_publish_temp}" "${_rxfnsl_publish_image}"
+  DEPENDS "${_rxfnsl_link_image}" VERBATIM)
 add_custom_target(rxfnsl ALL
-  DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+  DEPENDS "${_rxfnsl_publish_image}"
 )
 
 add_dependencies(rxfnsl library ${RXFNSL_REXX_TARGETS})

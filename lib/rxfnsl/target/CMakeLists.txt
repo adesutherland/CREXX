@@ -76,6 +76,10 @@ foreach(_module IN LISTS _modules)
   set(_previous_module "${_module}")
 endforeach()
 set(_control "${CMAKE_CURRENT_BINARY_DIR}/target.ctl")
+set(_link_root "${CMAKE_CURRENT_BINARY_DIR}/linked")
+set(_link_image "${_link_root}/rxfnsl-target.rxbin")
+set(_publish_image "${CMAKE_BINARY_DIR}/bin/rxfnsl-target.rxbin")
+set(_publish_temp "${CMAKE_CURRENT_BINARY_DIR}/publish/rxfnsl-target.rxbin.tmp")
 set(_target_control "")
 foreach(_module IN LISTS _modules)
   string(APPEND _target_control "INPUT ${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin\n")
@@ -83,12 +87,18 @@ endforeach()
 foreach(_module IN LISTS _modules)
   string(APPEND _target_control "INCLUDE ${_module}\n")
 endforeach()
-string(APPEND _target_control "PRESERVE INLINE\nOUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsl-target\n")
+string(APPEND _target_control "PRESERVE INLINE\nOUTPUT ${_link_root}/rxfnsl-target\n")
 file(GENERATE OUTPUT "${_control}" CONTENT "${_target_control}")
-crexx_add_fixture_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl-target.rxbin"
+crexx_add_fixture_command(OUTPUT "${_link_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c "${_control}"
   DEPENDS rxlink ${_bins} "${_control}" VERBATIM)
-add_custom_target(rxfnsl_target DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsl-target.rxbin")
+add_custom_command(OUTPUT "${_publish_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/publish"
+  COMMAND ${CMAKE_COMMAND} -E copy "${_link_image}" "${_publish_temp}"
+  COMMAND ${CMAKE_COMMAND} -E rename "${_publish_temp}" "${_publish_image}"
+  DEPENDS "${_link_image}" VERBATIM)
+add_custom_target(rxfnsl_target DEPENDS "${_publish_image}")
 
 option(CREXX_BUILD_TARGET_IO "Build the optional Level L target RXAS adapters" OFF)
 

@@ -77,6 +77,7 @@ def check():
         shutil.copyfile(source/relative, target)
     shutil.copyfile(source/'langtools/CMakeLists.txt', tools/'CMakeLists.txt')
     shutil.copyfile(source/'langtools/cmake/generate.cmake', tools/'cmake/generate.cmake')
+    shutil.copyfile(source/'langtools/cmake/ensure-generated.cmake', tools/'cmake/ensure-generated.cmake')
     (tools/'rxlang.crexx').write_text('fixture driver\n')
     (tools/'rexx/llfront.crexx').write_text('/* BEGIN FRONTEND READER */\n/* END FRONTEND READER */\n')
     (tools/'rexx/llgenerate.crexx').write_text('fixture service @LLGENERATE_SOURCE_STAMP@\n')
@@ -94,6 +95,22 @@ def check():
         wrapper.chmod(0o755)
         declarations += [f'add_executable({name} IMPORTED GLOBAL)',
                          f'set_target_properties({name} PROPERTIES IMPORTED_LOCATION "{wrapper}")']
+    # Generator identity includes native prerequisites even though this fixture
+    # performs no native compilation. Model their actual target kinds and give
+    # each one a private identity input, rather than weakening the real stamp.
+    for name, kind in [('rxdaslib', 'STATIC'), ('rxpashim', 'STATIC'),
+                       ('rxlink_main_object', 'OBJECT'), ('rxcpack', None)]:
+        artifact = fixture / (name + '.identity')
+        artifact.write_text(name + ' fixture identity\n')
+        if kind is None:
+            declarations.append(f'add_executable({name} IMPORTED GLOBAL)')
+        else:
+            declarations.append(f'add_library({name} {kind} IMPORTED GLOBAL)')
+        location = 'IMPORTED_OBJECTS' if kind == 'OBJECT' else 'IMPORTED_LOCATION'
+        declarations.append(f'set_target_properties({name} PROPERTIES {location} "{artifact}")')
+    # project(NONE) deliberately avoids a host compiler probe; its identity is
+    # still a required stamp input, represented by this existing executable.
+    declarations.append(f'set(CMAKE_C_COMPILER "{Path(sys.executable).resolve()}")')
     (fixture/'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.24)
 project(level_l_build_order NONE)
 set(CREXX_LEVEL_L_STANDALONE ON)
@@ -149,6 +166,12 @@ add_dependencies(consume rxlanglib levell_unicode_lexer)
 
     (build/'langtools/bootstrap/L2/rxlang-linked.rxbin').unlink()
     build_once('missing-l2', ['L2'])
+    (build/'langtools/bootstrap/L2/llsyntax.rxas').unlink()
+    build_once('missing-syntax', ['L2'])
+    (build/'gennorm2_language.rxas').unlink()
+    calls = build_once('missing-unicode', None)
+    assert {name for name, path in calls} == {'rxtvm', 'rxas'}, calls
+    build_once('recovered-noop', [])
     time.sleep(1.05)  # Accommodate Make/filesystems with one-second mtime resolution.
     with (tools/'rxlang.crexx').open('a') as stream:
         stream.write('changed fixture driver\n')

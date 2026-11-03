@@ -80,22 +80,39 @@ foreach(stage RANGE 0 2)
   set(_ll_front_imports "${_ll_root}/imports")
   set(_ll_syntax_import_files)
   set(_ll_syntax_import_target)
+  set(_ll_syntax_source_target)
   set(seed OFF)
   if(stage EQUAL 0)
     set(seed ON)
   else()
     math(EXPR previous "${stage} - 1")
-    crexx_add_fixture_command(OUTPUT "${dir}/llsyntax.rxas"
-      COMMAND ${CMAKE_COMMAND} -DLEVEL_L_VM=$<TARGET_FILE:${_ll_vm}>
-        -DLEVEL_L_BYTECODE=${_ll_root}/L${previous}/rxlang-linked.rxbin
-        -DSPEC=${_ll_spec} -DOUTPUT=${dir}/llsyntax.rxas -DFORMAT=rxas
-        -DLEXER_WORKERS=${CREXX_LEVEL_L_LEXER_WORKERS}
+    set(_syntax_generate_args
+      -DLEVEL_L_VM=$<TARGET_FILE:${_ll_vm}>
+      -DLEVEL_L_BYTECODE=${_ll_root}/L${previous}/rxlang-linked.rxbin
+      -DSPEC=${_ll_spec} -DOUTPUT=${dir}/llsyntax.rxas -DFORMAT=rxas
+      -DLEXER_WORKERS=${CREXX_LEVEL_L_LEXER_WORKERS})
+    # The existing audited marker suffix keeps generated RXAS and its success
+    # boundary together when runtime QA borrows ordinary producer outputs.
+    set(_syntax_stamp "${dir}/llsyntax.generation.qa-output")
+    crexx_add_fixture_command(OUTPUT "${_syntax_stamp}"
+      BYPRODUCTS "${dir}/llsyntax.rxas"
+      COMMAND ${CMAKE_COMMAND} ${_syntax_generate_args}
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate.cmake"
+      COMMAND ${CMAKE_COMMAND} -E touch "${_syntax_stamp}"
       DEPENDS ${_ll_vm} "${_ll_root}/L${previous}/rxlang-linked.rxbin"
         "${_ll_spec}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate.cmake" VERBATIM)
+    set(_ll_syntax_source_target levell_syntax_source_${stage})
+    if(CMAKE_GENERATOR MATCHES "^Ninja")
+      add_custom_target(${_ll_syntax_source_target} DEPENDS "${_syntax_stamp}")
+    else()
+      add_custom_target(${_ll_syntax_source_target}
+        COMMAND ${CMAKE_COMMAND} ${_syntax_generate_args}
+          -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ensure-generated.cmake"
+        DEPENDS "${_syntax_stamp}" VERBATIM)
+    endif()
     crexx_add_fixture_command(OUTPUT "${dir}/llsyntax.rxbin"
       COMMAND $<TARGET_FILE:rxas> ${_ll_flags} "${dir}/llsyntax"
-      DEPENDS rxas "${dir}/llsyntax.rxas" VERBATIM)
+      DEPENDS rxas ${_ll_syntax_source_target} "${dir}/llsyntax.rxas" VERBATIM)
     set(syntax "${dir}/llsyntax.rxbin")
     set(_ll_syntax_import_target levell_syntax_imports_${stage})
     crexx_add_import_root(${_ll_syntax_import_target}
@@ -103,6 +120,7 @@ foreach(stage RANGE 0 2)
       OUTPUT_VARIABLE _ll_syntax_import_files
       FILES "${syntax}"
       DEPENDS "${syntax}")
+    add_dependencies(${_ll_syntax_import_target} ${_ll_syntax_source_target})
     string(APPEND _ll_front_imports ";${dir}/syntax-imports")
   endif()
   add_custom_command(OUTPUT "${dir}/source/llfront.crexx"

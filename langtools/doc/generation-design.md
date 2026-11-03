@@ -318,8 +318,9 @@ changes neither prior output nor cache. Replace staged cache data and manifest
 atomically per file, with the manifest last as commit marker; an interrupted or
 inconsistent pair is a miss on the next invocation. Do not rewrite an equal
 capsule or equal generated output. Publish changed output atomically as the real
-product. The prepared RXAS grammar owns a successful-generation stamp and the
-generated RXAS as its byproduct, then assembles that RXAS in a separate rule.
+product. The prepared RXAS grammar, bootstrap L1/L2 syntax and Unicode lexer
+each own a successful-generation stamp and the generated RXAS as its byproduct,
+then assemble that RXAS in a separate rule.
 An equal RXAS therefore does not force reassembly, while the success stamp
 prevents repeated no-op generation after a relink. Non-Ninja generators run a
 cheap missing-byproduct guard because Make does not rebuild an absent RXAS from

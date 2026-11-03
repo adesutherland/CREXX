@@ -55,6 +55,13 @@ compiler products require their opt-in stage and install component. The
 [bootstrap guide](bootstrap.md) describes the build prerequisites and standalone
 seed route.
 
+Every `rxfnsl` package, including the optional target adapters, links into its
+own private `linked` directory. Its single publication owner copies the complete
+image to a non-importable private stage, then atomically renames it into `bin`.
+Concurrent discovery retains a whole old or new image; a failed producer leaves
+the last good public image in place. Importers retain their existing package
+freshness dependencies. Publication adds no dependency to unrelated scanners.
+
 ## Specification compilation
 
 The `rxlang` command handles arguments, file I/O and reporting. Its
@@ -196,6 +203,10 @@ generated helper nodes. `then tree` mappings and `llast` construct an
 application AST with checked kinds and fields. `llannotation` supplies sparse
 properties; `llflow` interprets authored flow mappings for source-shaped
 control analysis. An application decides which branches to execute.
+Flow conditions, graphs and analysis results track whether their borrowed root
+was successfully bound. An early owner/resource refusal never inspects a
+placeholder node; subsequent queries retain the owning diagnostic. VM object
+initialization flags do not replace that source lifecycle state.
 
 Strict recognition, explicit recovery and Earley forest inspection are distinct
 outcomes. A recovered tree carries damaged/generated provenance and does not

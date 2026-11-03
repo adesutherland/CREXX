@@ -228,7 +228,8 @@ crexx_add_rxdas_roundtrip(
         EXPECT_DISASSEMBLY_TEXT_3 ".jcase jtable_"
 )
 
-add_executable(test_disassembler_dump tests/test_disassembler_dump.c rxdadism.c)
+add_executable(test_disassembler_dump tests/test_disassembler_dump.c rxdadism.c
+        ../binutils/include/opdata.c)
 add_dependencies(test_disassembler_dump avl_tree platform rxdas_test_prereqs)
 target_link_libraries(test_disassembler_dump avl_tree rxbin platform)
 target_include_directories(test_disassembler_dump PRIVATE

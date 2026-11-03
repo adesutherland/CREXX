@@ -96,16 +96,21 @@ def main():
     analysis_image = build / 'bin/rxfnsl-analysis.rxbin'
 
     core_inputs, core, output = control(sdk / 'rexx' / f'rxfnsl_link_{args.config}.ctl')
-    assert output == core_image.with_suffix('')
+    assert output == sdk / 'rexx/linked/rxfnsl'
+    assert digest(output.with_suffix('.rxbin')) == digest(core_image), 'stale published core image'
     assert core == {path.stem for path in core_inputs} and not core & OPTIONAL
     assert all(path.parent == sdk / 'rexx' for path in core_inputs)
     core_sources = list((ROOT / 'lib/rxfnsl/rexx').glob('*.crexx'))
     source_imports(core_sources, core | {'rxfnsb'})
     declared, dependencies = core_dependencies()
     assert core == declared, ('core image', 'declared module inventory', sorted(core), sorted(declared))
-    # Canonical modules have private sibling roots below the shared base root.
-    imports(sdk / 'rexx/imports', [base], directories=core)
-    for module in sorted(core):
+    # Source-compiled modules have private sibling import roots. Maintained
+    # RXAS modules assemble directly and do not acquire a compiler import root.
+    assembly_modules = {path.stem for path in (ROOT / 'lib/rxfnsl/rexx').glob('*.rxas')}
+    assert assembly_modules <= core, ('unpackaged core RXAS module', assembly_modules - core)
+    compiled_modules = core - assembly_modules
+    imports(sdk / 'rexx/imports', [base], directories=compiled_modules)
+    for module in sorted(compiled_modules):
         originals = [base] + [sdk / 'rexx' / (name + '.rxbin')
                               for name in sorted(dependencies[module])]
         imports(sdk / 'rexx/imports' / module, originals)
@@ -123,17 +128,44 @@ def main():
         inputs, selectors, output = control(sdk / directory / filename)
         assert selectors == members == {path.stem for path in inputs}, (image, selectors)
         assert all(path.parent == sdk / directory for path in inputs), image
-        assert output == build / 'bin' / image
+        public_image = build / 'bin' / (image + '.rxbin')
+        assert output == sdk / directory / 'linked' / image
+        assert digest(output.with_suffix('.rxbin')) == digest(public_image), \
+            (image, 'stale published image')
         sources = list((ROOT / 'lib/rxfnsl' / directory).glob('*.crexx'))
         if directory == 'rxas':
             sources.append(sdk / 'rxas/llrxascatalog.crexx')
         source_imports(sources, allowed)
         imports(sdk / directory / 'imports', dependencies)
 
-    # The prepared view must name the current canonical native owner inputs.
-    catalog_inputs = ('binutils/include/rxops.h', 'binutils/include/rxopeffects.h',
-                      'binutils/include/rxopsignals.h', 'binutils/include/rxdefs.h',
-                      'binutils/rxopmeta.c', 'binutils/include/opdata.c')
+    # Optional target packages retain their independent preparation boundary.
+    # A completed private image must match its publication; an unselected
+    # optional producer does not become a core-package prerequisite.
+    for directory, filename, image in (
+            ('target', 'target.ctl', 'rxfnsl-target'),
+            ('target/io', 'target-io.ctl', 'rxfnsl-target-io')):
+        public_image = build / 'bin' / (image + '.rxbin')
+        private_image = sdk / directory / 'linked' / (image + '.rxbin')
+        if not private_image.is_file():
+            continue
+        _, _, output = control(sdk / directory / filename)
+        assert output == sdk / directory / 'linked' / image
+        assert digest(output.with_suffix('.rxbin')) == digest(public_image), \
+            (image, 'stale published optional image')
+
+    # Hash the current source files in the canonical owner's declared order,
+    # independently of the prepared view and its compiled-in fingerprint.
+    catalog_owner = ROOT / 'cmake/CrexxRxasCatalog.cmake'
+    catalog_inventory = re.search(r'^set\(_crexx_catalog_inputs\s+([^)]*)\)',
+                                   catalog_owner.read_text(), re.M)
+    assert catalog_inventory, (catalog_owner, 'missing fingerprint input inventory')
+    catalog_inputs = re.findall(r'"\$\{CMAKE_SOURCE_DIR\}/([^"\s]+)"',
+                                catalog_inventory.group(1))
+    assert catalog_inputs and len(catalog_inputs) == len(set(catalog_inputs)), \
+        (catalog_owner, 'invalid fingerprint input inventory')
+    assert {'binutils/include/rxops.h', 'binutils/include/rxopeffects.h',
+            'binutils/include/rxopsignals.h', 'binutils/rxopmeta.c'} <= set(catalog_inputs), \
+        (catalog_owner, 'missing canonical opcode owner')
     fingerprint = hashlib.sha256(''.join(digest(ROOT / name) for name in catalog_inputs).encode()).hexdigest()
     assert fingerprint in (sdk / 'rxas/llrxascatalog.crexx').read_text(), 'stale canonical RXAS view'
 
