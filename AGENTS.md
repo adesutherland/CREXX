@@ -122,12 +122,17 @@ The sanitizer profile/preparation strategy belongs to `docs/SANITIZER-WORKLIST.m
 and `docs/ai-context/CREXX_ASAN_TESTING.md`. Daily component memory assurance
 runs every day, including Sunday; compiler/assembler/linker memory producers
 stop at their own output, and VM panels use ordinary producers. Daily assurance
-cannot certify full release/SAN-closure scope or replace original instrumented
-producers. Those guides own schedules, conservative fallback and runner details.
+cannot certify full release/original-producer scope. Finding closure uses
+focused repair proof and appropriate bounded platform component-memory gates,
+as recorded in the sanitizer worklist; it does not certify a full run. Those
+guides own schedules, conservative fallback and runner details.
 After ordinary functional QA, do not rerun the whole functional matrix under
 ASan merely to repeat correctness proof. Select the owned native-memory panel
-and focused regressions; reserve full original-producer instrumentation for an
-explicit broad qualification or the existing actual-SAN closure gate.
+and focused regressions. A full original-producer sweep is required only when
+a concrete finding cannot be reproduced or qualified faithfully in focused
+form, or Adrian explicitly names a broad gate. Record that unresolved boundary
+and the smallest necessary scope before expanding. Full release qualification
+retains its separate gate.
 
 ## Emitted-code quality
 
@@ -329,9 +334,19 @@ No release/sanitizer-clean claim is allowed with open first-party SAN items.
 Only explicit user assignment of outstanding platform proof to a named release
 QA gate can close a bounded phase; list every open SAN item, repair evidence
 and owner. It does not close/downgrade the item. Closure requires a permanent
-regression, the same focused normal Debug and maintained-sanitizer command,
-and the broad platform gate in `CREXX_ASAN_TESTING.md`. Record unsupported
-capabilities such as Apple LSan and cover them on a supported platform.
+regression for the original fault, the same focused normal Debug and
+maintained-sanitizer build/test shape, replay of the original failing workload
+or a focused equivalent preserving its native failure mechanism, and the
+appropriate bounded platform component-memory gates in
+`CREXX_ASAN_TESTING.md`. Instrument the component that owns the fault, including
+native producers when implicated. Record unsupported capabilities such as
+Apple LSan and retain supported Linux leak detection. A finding does not
+automatically require the full functional suite under instrumentation; expand
+only for an unresolved failure mechanism or an explicitly named broad gate.
+Closure qualifies the repair and selected panel, not full original-producer or
+release assurance. SAN-014/SAN-015 closed after current-code hosted `daily`
+passed on both platforms, with Linux leaks on, as recorded in the sanitizer
+worklist.
 
 No first-party suppression, exclusion, supported-platform leak-off wrapper or
 time waiver without explicit user approval; approved exceptions remain open

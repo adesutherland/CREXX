@@ -13,15 +13,16 @@ routine leak strategy. Add a sanitizer test to `daily` only for a reviewed nativ
 memory boundary or an actual first-party memory regression. The runner's legacy
 bare-command default is the broad `full` profile, so always pass `--profile`
 explicitly. Full original-producer assurance is reserved for an explicit
-release, SAN-closure or other agreed broad gate.
+release/broad gate or a concrete finding whose native failure mechanism cannot
+be reproduced or qualified faithfully with focused checks.
 
 At a full functional baseline, finish focused repairs and rerun their failing
 ordinary tests first. Freeze the candidate and pass the complete ordinary
 regression suite once before running the bounded two-platform `daily` memory
 panel. A targeted maintained sanitizer command is appropriate earlier only to
 diagnose or verify an actual native-memory finding; it does not turn the entire
-functional suite into an ASan suite. An open `SAN-nnn` item retains its separate
-full closure requirements and cannot be described as sanitizer-clean.
+functional suite into an ASan suite. An open `SAN-nnn` item retains its agreed
+closure requirements and cannot be described as sanitizer-clean.
 
 The hosted core gate explicitly uses `ENABLE_LLAMA=OFF`. Adrian clarified on
 15 September 2026 that sanitizer QA covers first-party cREXX code, not upstream
@@ -49,17 +50,44 @@ release-QA owner; it does not close or downgrade the item. The entry must retain
 the exact failing command and concise diagnostic, affected revision, smallest permanent
 reproducer, owner or next action, and closure checks.
 
-Closure requires all of the following:
+Finding closure uses focused repair proof and bounded component-memory
+qualification. It requires all of the following:
 
 1. a permanent focused regression that fails for the original reason without
    the repair;
 2. the same focused build/test shape passing in normal Debug and the maintained
    sanitizer tree;
-3. the original broader trigger passing after a clean enough rebuild to avoid
-   stale generated artifacts; and
-4. the applicable full platform sanitizer gate passing.  Apple AddressSanitizer
-   does not supply LeakSanitizer, so leak closure additionally requires a
-   supported Linux ASan/LSan run.
+3. the original failing workload, or a focused equivalent preserving its native
+   ownership and failure mechanism, passing after a clean enough rebuild to
+   avoid stale generated artifacts; and
+4. the applicable bounded platform component-memory gates passing, with the
+   regression executed in its owning instrumented component. Apple ASan does
+   not supply LSan; retain supported Linux ASan/LSan with leaks on during build
+   and tests for leak qualification.
+
+Instrument the component that owns the finding: a compiler/assembler/linker
+fault needs its owning native producer instrumented, while VM memory tests may
+use ordinary prepared bytecode. Add a missing focused regression to the owning
+panel; do not expand to every functional permutation. A full original-producer
+sweep is required only when the concrete finding cannot be reproduced or
+qualified faithfully in focused form, or Adrian explicitly names a broad gate.
+Record the unresolved boundary and smallest necessary broader scope before
+launching it. Discovery during a broad build or suite does not by itself make
+that entire suite a closure prerequisite. Explicit release/full qualification
+remains separate, and finding closure certifies only the repair and selected
+component-memory panel.
+
+For SAN-014/SAN-015, the existing focused normal Debug and maintained
+sanitizer repair proof and the SAN-015 malformed linked-image trigger replay
+were followed by current-code hosted `daily` component-memory passes on both
+Apple arm64 and Linux x64. Linux leak detection was on during build and tests.
+The manifest already includes
+`recv390_directory_max_userdata` and `compact_format_check`; both regressions
+executed in their owning instrumented panels. Both findings are closed under
+this focused scope. Their former automatic full-platform/original-full-suite
+requirement is superseded by the focused closure policy above. Full functional
+sanitizer/release assurance and other explicitly agreed broad gates retain
+their separate scope.
 
 Do not suppress, exclude, or disable a supported sanitizer to obtain closure.
 An explicitly approved temporary exception stays open and release-blocking
@@ -342,7 +370,9 @@ fresh selected preparation/execution, never a broader profile. No prior broad
 baseline is required. Manual dispatch defaults to this same memory suite; full
 coverage requires an explicit full choice or version-tag release qualification.
 Legacy explicit broad profile names retain their original complete scope.
-Actual SAN findings retain their focused repair and full closure gates.
+Actual SAN findings retain their focused repair and agreed platform closure
+gates under the bounded component-memory closure policy above; a finding does
+not automatically commission a full sweep.
 The focused job has a 120-minute hang backstop covering preparation and checks;
 explicit broad jobs retain 360 minutes. These are failure limits, not targets.
 Default manual dispatch from `master` also qualifies current `develop`, because this
@@ -454,8 +484,9 @@ Do not manually dispatch this workflow or make its two job names universal
 Additional pre-publication sanitizer qualification is a documented exception
 for explicitly agreed higher-risk work, release qualification, or closure of an
 actual first-party sanitizer finding. Record the reason and required scope in
-the work plan. The SAN worklist's broad closure requirements, supported Linux
-leak detection and prohibition on unapproved suppressions remain unchanged.
+the work plan. The SAN worklist owns each finding's agreed closure scope;
+supported Linux leak detection and the prohibition on unapproved suppressions
+remain unchanged.
 Account for elapsed-time and integration-delay costs before selecting an extra
 long run; prefer focused checks and retained valid evidence for the concrete
 unresolved risk. See `AGENTS.md` for the canonical development-publication

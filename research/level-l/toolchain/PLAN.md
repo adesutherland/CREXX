@@ -2,7 +2,8 @@
 
 **Status: phase 1 VM preparation and phase 2 shared Level L foundation are
 implemented and locally qualified. Native RXAS/core ordinary functional
-qualification is complete; actual SAN acceptance and inliner2 remain open.** This is the single
+qualification and its bounded SAN acceptance are complete; inliner2 remains
+open.** This is the single
 authoritative plan. The [inlining architecture](doc/inlining.md) owns the detailed
 mapping and exit contracts; this file owns outcomes, steps and completion gates.
 
@@ -449,21 +450,23 @@ replacement and delivery boundaries require an explicit decision.
 |---|---|---|
 | **NFX-AC01 — native flow semantics** | All outstanding native flow failures are classified against VM/database contracts; material implementation defects and stale oracles are repaired. The complete native flow graph contract and directly affected metadata/callback/policy controls pass on frozen inputs. | done — reviewed native contracts, runtime/codegen controls and affected L projections locally qualified |
 | **NFX-AC02 — core correctness integration** | After NFX-AC01, prepare the existing normal Debug `qa-comprehensive` closure, repair/replay failures, freeze inputs and run the complete selected ordinary correctness panel once green. Reuse its optimizer-parity coverage rather than running a duplicate panel. | done — complete selected ordinary panel qualified on frozen inputs |
-| **NFX-AC03 — reviewed local baseline** | Owning contracts/known limits are current, warning-free changed inputs and representative emitted RXAS reviewed, task scratch removed, and the repair committed. Formal acceptance also follows the repository's actual-SAN closure rule. Install/package, stress, measurement and hosted qualification remain separate. | open — local review, documentation and commits delivered; actual SAN platform/original-producer closure remains outstanding |
+| **NFX-AC03 — reviewed local baseline** | Owning contracts/known limits are current, warning-free changed inputs and representative emitted RXAS reviewed, task scratch removed, and the repair committed. Formal acceptance follows Adrian's revised SAN-014/SAN-015 bounded closeout: focused repair proof plus current-code hosted `daily` passes on both platforms, with Linux leaks on. Install/package, stress, measurement and full original-producer/release qualification remain separate. | done — local review and commits delivered; hosted Apple/Linux `daily` passed on source `6ee2b8278` with both SAN regressions executed and Linux leaks on |
 
 | Step | State and dependency |
 |---|---|
 | **NFX-STEP01 — classify and repair** | done: independent VM/database review, coherent shared repairs and affected executable controls complete; serves AC01. |
 | **NFX-STEP02 — comprehensive integration** | done: maintained comprehensive preparation and the complete ordinary correctness panel pass on frozen inputs after affected repairs; serves AC02. |
-| **NFX-STEP03 — document and commit** | local delivery done, formal acceptance open: guides/limits and reviewed commits are delivered; actual SAN closure remains outstanding under AC03. |
+| **NFX-STEP03 — document and commit** | done: guides/limits and reviewed commits are delivered; SAN-014/SAN-015 hosted `daily` closeout passed under AC03. |
 
-The ordinary functional repair and local commits do not close SAN-014, SAN-015,
-SAN-QA-026 or SAN-QA-027. Their owners and original-producer/platform closure
-checks remain in the [sanitizer worklist](../../../docs/SANITIZER-WORKLIST.md).
-Formal NFX phase acceptance requires those applicable gates or Adrian's explicit
-assignment of outstanding platform proof to a named release QA gate; such an
-assignment would not itself close the SAN items. No additional sanitizer campaign,
-publication or inliner2 implementation is implicitly commissioned here.
+The ordinary functional repair and local commits alone did not close
+SAN-014/SAN-015. Their focused repair proof and both current-code hosted
+`daily` platform passes, including Linux leak detection, complete the revised
+NFX phase acceptance; the [sanitizer worklist](../../../docs/SANITIZER-WORKLIST.md)
+owns the exact bounded closure. Full original-producer and release QA remain
+separate and unverified; incomplete broad runs and remaining broad-QA
+preparation/scheduling checks are not claimed as passing by this closeout. No
+additional broad sanitizer campaign, publication or inliner2 implementation is
+commissioned here.
 
 ### Shared Level L baseline status
 

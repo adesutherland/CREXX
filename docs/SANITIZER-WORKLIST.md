@@ -8,8 +8,9 @@ sanitizer configurations.  Repository policy and closure requirements are in
 Current operating rule: the scheduled and default manual `daily` profile is the
 fixed component-memory panel in [`sanitizer-memory-tests.json`](../tools/sanitizer-memory-tests.json),
 with ordinary prepared bytecode for VM memory tests. It does not run every
-functional test under instrumentation. Explicit `full`/version-tag and actual
-SAN-closure gates retain their separate broad obligations. The historical
+functional test under instrumentation. Explicit `full`/version-tag gates retain
+their separate broad obligations; actual SAN closure follows each item's agreed
+focused repair and bounded component-memory scope below. The historical
 daily/weekly proposals and full-run findings below explain past decisions;
 they are not instructions to restore a weekly or Sunday full sweep.
 Recorded original triggers include broad preparation for SAN-001, SAN-003,
@@ -18,9 +19,57 @@ findings used focused or selected commands. This establishes value for explicit
 broad qualification, but does not establish that every functional permutation must
 run under ASan each night, or what a different targeted panel would have found.
 
+## Finding closure scope
+
+For each actual finding, retain a permanent regression for the original fault,
+matching focused normal Debug and maintained-sanitizer proof, and replay of the
+original workload or a focused equivalent preserving the native failure
+mechanism. Complete the appropriate bounded platform component-memory gates,
+with the regression in its owning instrumented panel and supported Linux leaks
+on. Instrument a native producer when it owns the finding. Missing coverage
+requires a focused panel addition, not the full functional matrix under ASan.
+
+A full original-producer sweep is required only when the concrete finding
+cannot be reproduced or qualified faithfully in focused form, or Adrian
+explicitly names a broad gate. Record the unresolved boundary and smallest
+necessary scope before expanding. This rule supersedes historical blanket
+full-sweep closure requirements; explicitly commissioned broad qualification
+and release gates retain their scope. Finding closure certifies the repair and
+selected panel, not full original-producer or release assurance.
+
+## Approved SAN-014/SAN-015 closeout scope
+
+The focused closure policy replaces these findings' former automatic full
+Apple/Linux original-producer gates with the normal hosted `daily` panel.
+Retain the focused normal Debug and matching maintained-sanitizer repair proof
+recorded below, including SAN-015's malformed linked-image trigger replay.
+The closeout gate was current-code hosted `daily` success on both Apple arm64
+ASan and Linux x64 ASan/LSan, with Linux leaks on during build and tests.
+The existing manifest already maps SAN-014 to
+`recv390_directory_max_userdata` and SAN-015 to `compact_format_check`; both
+executed in their owning instrumented panels. No panel expansion was needed.
+Both jobs passed on source `6ee2b8278`: 405/405 selected macOS tests and
+400/400 selected Linux tests completed, including both regressions on each
+platform. The result receipts report complete selected qualification; Linux
+used leak detection during build and tests. SAN-014 and SAN-015 are closed
+under this focused scope.
+
+This amendment supersedes broad-only SAN-014/SAN-015 statements elsewhere in
+this worklist. It qualifies these repaired native-memory boundaries and the
+selected component panel; it does not establish full original-producer,
+full functional sanitizer or release assurance. An incomplete or timed-out
+`full` run remains incomplete broad QA and is not converted into a broad pass.
+Unresolved broad build/test scheduling items retain their separate owners and
+checks; a timeout without a memory diagnostic is not a sanitizer finding.
+The superseded full Linux run on `6ee2b8278` passed native build and `qa-prep`
+but stopped when `rxbuild_graph` reached its 180-second CTest limit, with no
+ASan/LSan report in the retained diagnostic artifact. Codex owns an isolated
+unchanged replay and scheduling review if that broad QA gate is resumed.
+
 ## SAN-015 — rejected linked RXBIN releases a shared pool twice
 
-Status: **open**. Owner: Codex, hotfix2 native RXAS/core integration gate
+Status: **closed — focused component-memory qualification, 3 November 2026**.
+Owner: Codex, hotfix2 native RXAS/core integration gate
 NFX-AC01–03 in `research/level-l/toolchain/PLAN.md`. Affected revision:
 `26725a882` with the native-flow/core integration repairs. The reader detects a
 retired opcode in a later linked module after earlier modules have retained the
@@ -55,15 +104,15 @@ section decoding independently of automatic compression selection.
 The focused normal Debug check and matching maintained Apple ASan check pass
 with original producers; the original linked retired-opcode trigger now rejects
 cleanly in ordinary and instrumented `rxdas`. `SAN-015` is registered against the
-existing component-memory regression. Closure still requires applicable broad
-Apple/Linux SAN-closure gates from `CREXX_ASAN_TESTING.md`, including Linux leak
-detection. Keep this item open while those gates are unverified; delete task
-logs and scratch after extraction. No suppression or leak-off exception is
-approved.
+existing component-memory regression. Both current-code hosted Apple/Linux
+`daily` gates passed with this regression executed; Linux leak detection was
+on. This closes the repaired finding under the focused scope above. Task logs
+and scratch were deleted. No suppression or leak-off exception was used.
 
 ## SAN-014 — recv390 maximum directory user data overflows display buffer
 
-Status: **open**. Owner: Codex, approved develop baseline qualification.
+Status: **closed — focused component-memory qualification, 3 November 2026**.
+Owner: Codex, approved develop baseline qualification.
 Affected revision: `62765ad7c5e1` with the reviewed baseline repairs and
 bounded-formatting warning cleanup. A legal 74-byte non-ISPF member entry
 contains 62 user-data bytes. Its complete display is 143 characters plus NUL,
@@ -88,31 +137,40 @@ Repair implemented: display capacity derives from the admitted eight-byte member
 TTR, indicator and maximum user data, including NUL. Full output and parser
 semantics are preserved; that capacity also covers the existing bounded ISPF
 date display. The same normal Debug command and its maintained Apple match pass.
-Complete the original full baseline and applicable full Apple/Linux sanitizer gates. Keep
-the item open until those platform obligations pass; delete temporary logs
-after extracting this diagnostic.
+Both current-code hosted Apple/Linux `daily` gates passed with this regression
+executed; Linux leak detection was on. This closes the repaired finding under
+the focused scope above. Temporary diagnostic copies were deleted.
 
 ## SAN-QA-029 — target-foundation tests lack their QA preparation edge
 
-Status: **open**. Owner: Codex, full core sanitizer preparation. The hosted
+Status: **closed — QA preparation finding**.
+Owner: Codex, core QA preparation. The hosted
 Linux x64 full ASan/LSan run at source `369256ef1` built the instrumented
 product and completed `qa-prep`, then six `levell_target_*_rxbvm` tests failed
 immediately because their `target-*-linked.rxbin` files were absent. No memory
-diagnostic was reported in these failures. The target directory registers the
-tests and their `CREXX_PREP_TARGETS`, but does not finalize its QA tiers; those
-producer targets never enter `qa-prep-comprehensive`.
+diagnostic was reported in these failures. The affected target directory
+registered the tests and their `CREXX_PREP_TARGETS`, but did not finalize its QA
+tiers; those producer targets never entered `qa-prep-comprehensive`.
 
 Repair contract: finalize that directory after all its test declarations so
 the normal comprehensive preparation owns each target-foundation image and
 CTest applies its fixture and sanitizer guards. Preserve the tests and their
-oracles. Closure requires a focused configured-graph regression, preparation
-and execution of one representative image, followed by the full hosted gate
-that exposed the missing edge. SAN-014/SAN-015 retain their separate broad
-platform closure requirements.
+oracles. Verified closure: the focused configured-graph regression, rebuilt
+representative image and all six normal target-foundation CTests pass. As with
+SAN-QA-026, the narrowed QA-only scope closes this preparation repair on focused
+graph and execution proof. The `daily` panel does not select these Level L
+target-foundation tests and supplies no closure proof for this item.
+
+Replay of the original full hosted gate remains an unverified future broad-QA
+check owned by Codex, separate from this closed repair. No full hosted pass is
+claimed or additional full ASan run required by this item. SAN-014/SAN-015
+closed after both hosted `daily` platform jobs passed under their approved
+bounded closeout scope above.
 
 ## SAN-QA-028 — standalone decimal registration omits framework math linkage
 
-Status: **open**. Owner: Codex, hosted core build-preparation qualification.
+Status: **closed — link-closure QA finding**. Owner: Codex, hosted core
+build-preparation qualification.
 Affected source revision: `7e9034a16`. Linux x64 full ASan preparation fails
 linking `test_decimal_registration`: `librxvmplugin.a` references `floor`, and
 the linker reports `libm.so.6: DSO missing from command line`. The framework
@@ -124,16 +182,18 @@ Repair contract: add the existing platform-selected `CREXX_MATH_LIBRARY` to
 requirement; MSVC retains the existing empty math-library selection. Do not add
 a test-only workaround or change numeric/runtime behavior.
 
-Closure: build the existing standalone `test_decimal_registration` target and
-run `decimal_plugin_registration_v3` in normal Linux Debug, then complete the
-hosted full core preparation that exposed the failure. The test links only the
-framework and retains its independent ABI, registration, synchronization and
-teardown checks. SAN-014/SAN-015 retain their separate sanitizer closure gates.
-Extract diagnostics and delete temporary logs; no archive.
+Verified closure: the standalone target and `decimal_plugin_registration_v3`
+passed in normal Mac Debug. Hosted Linux full instrumented core preparation
+then linked the same standalone target and ran that exact test successfully on
+source `6ee2b8278`; the native build and `qa-prep` were warning-free. The test
+links only the framework and retains its independent ABI, registration,
+synchronization and teardown checks. No broader CTest pass is inferred from
+the later unrelated timeout. SAN-014/SAN-015 closed under the separate focused
+scope above. Temporary diagnostic copies were deleted.
 
 ## SAN-QA-027 — full Apple preparation exposes warning closure
 
-Status: **open — repair implemented; hosted core warning gate pending**.
+Status: **closed — hosted core warning-preparation gate**.
 Owner: Codex, core toolchain regression qualification.
 Affected revision: `62765ad7c5e1` with the reviewed native seed/packaging repairs.
 The original maintained full Apple build emitted SDK `sprintf` deprecations in
@@ -152,11 +212,13 @@ preparation built native tool/provider/test targets without warnings or errors;
 it stopped during research grammar generation and is not full-build proof.
 No diagnostic suppression or provider algorithm change is used.
 
-Remaining gate: warning-free hosted full core preparation, with research
-compilers OFF under the existing core CI contract. Broad research sanitizer
-qualification is outside this QA warning item. The actual SAN-014/SAN-015
-findings retain their full Apple/Linux closure obligations, including supported
-Linux leak detection. Delete temporary diagnostics after extracting conclusions.
+Verified closure: hosted Apple arm64 full core build and `qa-prep` completed
+without compiler warnings on source `6ee2b8278`, with research compilers OFF.
+The job was canceled during the later broad CTest sweep; no broad CTest result
+is claimed. Broad research sanitizer qualification is outside this QA warning
+item. SAN-014/SAN-015 follow their approved bounded Apple/Linux `daily`
+closeout scope above, including supported Linux leak detection. Temporary
+diagnostic copies were deleted.
 
 ## SAN-QA-026 — parallel Make duplicates Level L producers
 
@@ -202,7 +264,7 @@ duplicate producers. A fresh research-enabled `C;G` Make graph gives each of
 Adrian narrowed this QA-only item to focused build-graph proof. Level L remains
 WIP; broad research sanitizer preparation and platform qualification are outside
 this closure. No completed full research build or sanitizer qualification is
-claimed. SAN-014/SAN-015 retain their actual full Apple/Linux closure gates.
+claimed. SAN-014/SAN-015 closed under the focused platform scope above.
 Extract diagnostics and delete temporary logs; no archive.
 
 ## Sanitizer scope review and proposal — 20 October 2026
