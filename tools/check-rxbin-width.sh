@@ -15,6 +15,7 @@ work=$(CDPATH= cd -- "$2" && pwd)
 ${CC:-cc} ${CFLAGS:-} -std=c99 -I "$root/binutils/include" -I "$root/platform" \
     -I "$root/assembler" "$root/interpreter/tests/test_compact_format.c" \
     "$root/binutils/rxbin.c" "$root/binutils/rxbin007.c" \
+    "$root/binutils/rxinline_recipe.c" \
     "$root/binutils/rxsignature.c" "$root/binutils/rxsha256.c" \
     "$root/binutils/rxgraph.c" -o "$work/compact-format"
 (cd "$work" && ./compact-format)

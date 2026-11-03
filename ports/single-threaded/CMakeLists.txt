@@ -28,7 +28,7 @@ set(vm_sources
     interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c
     interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decContext.c
     platform/platform.c platform/platform_tso.c platform/platform_native.c platform/text_codec.c platform/oom.c platform/rxinteger.c third_party/avl_tree/avl_tree.c rxpa/rxpa.c
-    binutils/rxbin.c binutils/rxbin007.c binutils/rxsignature.c
+    binutils/rxbin.c binutils/rxbin007.c binutils/rxinline_recipe.c binutils/rxsignature.c
     binutils/rxcore_bindings.c binutils/rxcore_parse_decl.c binutils/rxcore_invoke_decl.c
     binutils/rxcontract.c
     binutils/rxsha256.c binutils/rxgraph.c)
