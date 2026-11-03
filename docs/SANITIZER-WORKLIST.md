@@ -94,33 +94,40 @@ after extracting this diagnostic.
 
 ## SAN-QA-027 — full Apple preparation exposes warning closure
 
-Status: **open**. Owner: Codex, approved develop baseline qualification.
+Status: **open — repair implemented; hosted core warning gate pending**.
+Owner: Codex, core toolchain regression qualification.
 Affected revision: `62765ad7c5e1` with the reviewed native seed/packaging repairs.
-The maintained full Apple build emits SDK `sprintf` deprecations in native
-tool, provider and test sources outside the daily panel, plus implicit-binding
-warnings in the ODBC fixture. No memory diagnostic has been established.
+The original maintained full Apple build emitted SDK `sprintf` deprecations in
+native tool, provider and test sources outside the daily panel, plus
+implicit-binding warnings in the ODBC fixture. No memory diagnostic has been
+established.
 
-Reproducer: the full original-producer Apple command under SAN-QA-026, with
-the current Apple SDK. Inspect all preparation diagnostics, including those
-before long grammar generation.
+Original trigger: the full original-producer Apple command under SAN-QA-026,
+with the current Apple SDK.
 
-Repair: replace the encountered deprecated calls at their owners using known
-allocated capacities and exact output, preserving allocation/error semantics;
-make the intended ODBC local bindings explicit. No diagnostic suppression,
-frontend behavior change, unrelated formatting sweep or provider algorithm
-change. Review coherent source, then qualify directly affected normal component
-checks before their maintained matches and warning-free full preparation.
-Complete the applicable full platform gates, retaining Linux leak detection.
-Delete temporary diagnostics after extracting lasting conclusions.
+Repair implemented in `69ccbe22a`: bounded formatting uses the owning allocation
+capacities and preserves complete output/error semantics; the ODBC fixture has
+explicit local declarations. Independent source review found no material issue.
+The actual ODBC fixture compiles without warnings. Partial maintained Apple
+preparation built native tool/provider/test targets without warnings or errors;
+it stopped during research grammar generation and is not full-build proof.
+No diagnostic suppression or provider algorithm change is used.
+
+Remaining gate: warning-free hosted full core preparation, with research
+compilers OFF under the existing core CI contract. Broad research sanitizer
+qualification is outside this QA warning item. The actual SAN-014/SAN-015
+findings retain their full Apple/Linux closure obligations, including supported
+Linux leak detection. Delete temporary diagnostics after extracting conclusions.
 
 ## SAN-QA-026 — parallel Make duplicates Level L producers
 
-Status: **open**. Owner: Codex, approved develop baseline qualification.
+Status: **closed — build-graph finding**. Owner: Codex, core toolchain regression
+qualification.
 Affected revision: `62765ad7c5e1` with the reviewed native seed/packaging repairs.
 This is a preparation-graph finding; no ASan/LSan memory diagnostic or corrupted
 final artifact has been established.
 
-Reproducer: maintained full preparation with Unix Makefiles,
+Original trigger: maintained full preparation with Unix Makefiles,
 `tools/asan-run.sh --build-dir cmake-build-debugasan --phase full --profile full
 --build-jobs 4 --test-jobs 8 --build-leaks off --leaks off`, on Apple where LSan
 is unsupported. Research C is explicitly enabled. The build executes
@@ -129,27 +136,35 @@ own the same recipe. The generator's output lock ends before assembly.
 Canonical SDK modules also have repeated recipes in independent import roots:
 28 outputs have 46 recipes, including `llcheck`, `llast` and `llcfg`.
 
-Repair: assign one target owner to each selected grammar/canonical SDK module;
-make staging and aggregate consumers wait for that owner while preserving file
-freshness dependencies. Reuse the existing generated-grammar ownership pattern.
-Keep native producer algorithms and supported instrumentation unchanged.
+Repair implemented: canonical targets own each selected grammar/SDK module and
+each research-local `ll_compile` RXBIN/RXAS pair. Import, link, aggregate, staged
+runtime and packed-launcher consumers wait for their owners while file
+dependencies preserve freshness. Independent module owners remain parallel;
+producer algorithms, compiler behavior and instrumentation are unchanged.
 
 The core strategy always checks the maintained SDK module owners, cold and
 warm preparation and missing-module recovery without reading research compiler
 declarations. The original grammar/client ownership extension runs only when
 `CREXX_BUILD_RESEARCH_COMPILERS` is enabled; that option belongs to the fixture
 and qualification configuration identity. Core-only proof does not close the
-research grammar trigger or this item's original full/platform obligations.
+research grammar trigger.
 Normal core/product, plugin, native parity and comprehensive CI explicitly
 select research compilers OFF; research-enabled qualification retains the
 original strict grammar/client ownership extension.
 
-Closure: a permanent miniature parallel Make regression using the maintained
-owner declarations must fail without the ownership repair and prove exactly one
-production, warm no-op and missing-output recovery. Run its normal Debug command
-before the matching maintained command, then complete the original full
-preparation and the applicable full Apple/Linux sanitizer gates. Linux keeps
-leak detection enabled. Extract diagnostics and delete temporary logs; no archive.
+Verified closure: the maintained miniature covers SDK/grammar owners, two
+research client branches per mode, the real command-link declaration, complete
+inputs, exactly-once production, warm no-op and missing-output recovery. Focused
+normal checks, including the research extension, and the matching maintained
+Apple strategy check pass. The unrepaired CMake overlay fails on simultaneous
+duplicate producers. A fresh research-enabled `C;G` Make graph gives each of
+287 research RXBIN outputs one owner; 41 had multiple owners before the repair.
+
+Adrian narrowed this QA-only item to focused build-graph proof. Level L remains
+WIP; broad research sanitizer preparation and platform qualification are outside
+this closure. No completed full research build or sanitizer qualification is
+claimed. SAN-014/SAN-015 retain their actual full Apple/Linux closure gates.
+Extract diagnostics and delete temporary logs; no archive.
 
 ## Sanitizer scope review and proposal — 20 October 2026
 

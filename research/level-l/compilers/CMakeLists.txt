@@ -20,10 +20,16 @@ if("c" IN_LIST _languages)
 endif()
 function(ll_compile NAME SOURCE DIRECTORY)
   set(_files ${ARGN})
-  # Cross-directory generated imports need their producer target as well as
-  # the file dependency, so Unix Make builds them before staging metadata.
+  # Generated imports need their producer target as well as the file
+  # dependency, so Unix Make builds them once before staging metadata.
   set(_producers)
   foreach(_file IN LISTS _files)
+    get_filename_component(_input_directory "${_file}" DIRECTORY)
+    get_filename_component(_input_name "${_file}" NAME_WE)
+    string(MAKE_C_IDENTIFIER "${_input_directory}_${_input_name}" _input_key)
+    if(TARGET ${_input_key}_module)
+      list(APPEND _producers ${_input_key}_module)
+    endif()
     if(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/library.rxbin")
       list(APPEND _producers library)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
@@ -56,6 +62,8 @@ function(ll_compile NAME SOURCE DIRECTORY)
       list(APPEND _producers llcompiler_c_grammar)
     elseif(_file STREQUAL "${_front}/llggrammar.rxbin")
       list(APPEND _producers llcompiler_g_grammar)
+    elseif(_file STREQUAL "${_products}/llcbrowser.rxbin")
+      list(APPEND _producers llcompiler_llcbrowser_opt)
     endif()
   endforeach()
   list(REMOVE_DUPLICATES _producers)
@@ -68,6 +76,11 @@ function(ll_compile NAME SOURCE DIRECTORY)
       -o "${DIRECTORY}/${NAME}" "${SOURCE}"
     COMMAND $<TARGET_FILE:rxas> ${_flags} "${DIRECTORY}/${NAME}"
     DEPENDS rxc rxas ${_key}_imports ${_imports} "${SOURCE}" VERBATIM)
+  # A module may feed independent imports, links and aggregate targets.
+  # Keep its complete compile/assemble recipe under one Make target.
+  add_custom_target(${_key}_module
+    DEPENDS "${DIRECTORY}/${NAME}.rxbin" "${DIRECTORY}/${NAME}.rxas")
+  set(_ll_compiled_target ${_key}_module PARENT_SCOPE)
 endfunction()
 # Internal compiler bytecode keeps its compiler-only import contract. The public
 # packed C command gains source-run support in a separate image below.
@@ -85,13 +98,14 @@ function(ll_command _language _mode _dir)
   add_custom_command(OUTPUT "${_dir}/${_cli}-linked.rxbin"
     COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/${_cli}-linked"
       "${_dir}/${_cli}" ${_link_inputs}
-    DEPENDS rxlink "${_dir}/${_cli}.rxbin" ${_link_inputs} VERBATIM)
+    DEPENDS rxlink ${_ll_compiled_target} "${_dir}/${_cli}.rxbin" ${_link_inputs} VERBATIM)
   add_custom_target(llcompiler_${_cli}_${_mode} ALL DEPENDS "${_dir}/${_cli}-linked.rxbin")
   if(_mode STREQUAL "opt" AND _language STREQUAL "g")
     add_custom_command(OUTPUT "${_dir}/${_cli}-launcher.c"
       COMMAND $<TARGET_FILE:rxcpack> -o "${_dir}/${_cli}-launcher" "${_dir}/${_cli}-linked"
       DEPENDS rxcpack "${_dir}/${_cli}-linked.rxbin" VERBATIM)
     add_executable(${_cli} "${_dir}/${_cli}-launcher.c")
+    add_dependencies(${_cli} llcompiler_${_cli}_${_mode})
     set_target_properties(${_cli} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${_products}")
     configure_linker_for_static_lib(${_cli} fs)
     if(_language STREQUAL "c")
@@ -190,6 +204,7 @@ foreach(_mode opt noopt)
     endforeach()
     set(_service "ll${_language}compiler")
     ll_compile(${_service} "${CMAKE_CURRENT_SOURCE_DIR}/level${_language}/${_service}.crexx" "${_langdir}" ${_base} ${_host})
+    set(_service_target ${_ll_compiled_target})
     list(APPEND _host "${_langdir}/${_service}.rxbin")
     list(APPEND _allhosts ${_host})
     set(_cli "llrxc-${_language}")
@@ -220,7 +235,7 @@ foreach(_mode opt noopt)
       file(GENERATE OUTPUT "${_langdir}/service.ctl" CONTENT "${_control}")
       add_custom_command(OUTPUT "${_products}/${_service}.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -c "${_langdir}/service.ctl"
-        DEPENDS rxlink ${_host} "${_langdir}/service.ctl" VERBATIM)
+        DEPENDS rxlink ${_service_target} ${_host} "${_langdir}/service.ctl" VERBATIM)
       add_custom_target(${_service} ALL DEPENDS "${_products}/${_service}.rxbin")
       install(FILES "${_products}/${_service}.rxbin" DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
     endif()
@@ -230,6 +245,7 @@ foreach(_mode opt noopt)
     ll_compile(llctarget "${CMAKE_CURRENT_SOURCE_DIR}/levelc/runtime/llctarget.crexx" "${_dir}"
       "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
     add_custom_target(llcompiler_target_${_mode} ALL DEPENDS "${_dir}/llctarget.rxbin")
+    add_dependencies(llcompiler_target_${_mode} ${_ll_compiled_target})
 
     set(_dynamic_dir "${CMAKE_CURRENT_BINARY_DIR}/dynamic/${_mode}")
     set(_dynamic_inputs ${_base} ${_c_frontend_host}
@@ -254,6 +270,7 @@ foreach(_mode opt noopt)
         "${_dynamic_dir}" ${_part_inputs})
       list(APPEND _dynamic_inputs "${_dynamic_dir}/${_part}.rxbin")
     endforeach()
+    set(_dynamic_target ${_ll_compiled_target})
     set(_dynamic_runtime ${_dynamic_inputs}
       "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
       "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin")
@@ -277,7 +294,7 @@ foreach(_mode opt noopt)
       add_custom_command(OUTPUT "${_dir}/llrxc-c-command-linked.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/llrxc-c-command-linked"
           "${_dir}/llccommand.rxbin" ${_c_command_inputs}
-        DEPENDS rxlink "${_dir}/llccommand.rxbin" ${_c_command_inputs} VERBATIM)
+        DEPENDS rxlink ${_ll_compiled_target} "${_dir}/llccommand.rxbin" ${_c_command_inputs} VERBATIM)
       add_custom_command(OUTPUT "${_dir}/llrxc-c-launcher.c"
         COMMAND $<TARGET_FILE:rxcpack> -o "${_dir}/llrxc-c-launcher" "${_dir}/llrxc-c-command-linked"
         DEPENDS rxcpack "${_dir}/llrxc-c-command-linked.rxbin" VERBATIM)
@@ -298,7 +315,7 @@ foreach(_mode opt noopt)
       file(GENERATE OUTPUT "${_dynamic_dir}/interpreter.ctl" CONTENT "${_interpreter_control}")
       add_custom_command(OUTPUT "${_products}/llrexx.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -c "${_dynamic_dir}/interpreter.ctl"
-        DEPENDS rxlink classlib rxunicode_core "${_dynamic_dir}/llrexx.rxbin"
+        DEPENDS rxlink classlib rxunicode_core ${_ll_compiled_target} "${_dynamic_dir}/llrexx.rxbin"
           "${_dynamic_dir}/llcruncli.rxbin" ${_dynamic_runtime}
           "${_dynamic_dir}/interpreter.ctl" VERBATIM)
       add_custom_target(llcompiler_llrexx_opt DEPENDS "${_products}/llrexx.rxbin")
@@ -306,6 +323,7 @@ foreach(_mode opt noopt)
         COMMAND $<TARGET_FILE:rxcpack> -o "${_dynamic_dir}/llrexx-launcher" "${_products}/llrexx"
         DEPENDS rxcpack "${_products}/llrexx.rxbin" VERBATIM)
       add_executable(llrexx "${_dynamic_dir}/llrexx-launcher.c")
+      add_dependencies(llrexx llcompiler_llrexx_opt)
       set_target_properties(llrexx PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${_products}")
       configure_linker_for_static_lib(llrexx fs)
       configure_linker_for_static_lib(llrexx cstream)
@@ -325,7 +343,7 @@ foreach(_mode opt noopt)
       file(GENERATE OUTPUT "${_dynamic_dir}/browser.ctl" CONTENT "${_browser_control}")
       add_custom_command(OUTPUT "${_products}/llcbrowser.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -c "${_dynamic_dir}/browser.ctl"
-        DEPENDS rxlink classlib rxunicode_core "${_dynamic_dir}/llcbrowser.rxbin"
+        DEPENDS rxlink classlib rxunicode_core ${_ll_compiled_target} "${_dynamic_dir}/llcbrowser.rxbin"
           ${_dynamic_runtime} "${_dynamic_dir}/browser.ctl" VERBATIM)
       add_custom_target(llcompiler_llcbrowser_opt DEPENDS "${_products}/llcbrowser.rxbin")
       install(FILES "${_products}/llcbrowser.rxbin" DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
@@ -334,7 +352,7 @@ foreach(_mode opt noopt)
       add_custom_command(OUTPUT "${_dynamic_dir}/browser-contracts-linked.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_dynamic_dir}/browser-contracts-linked"
           "${_dynamic_dir}/browser-contracts.rxbin" "${_products}/llcbrowser.rxbin"
-        DEPENDS rxlink "${_dynamic_dir}/browser-contracts.rxbin" "${_products}/llcbrowser.rxbin" VERBATIM)
+        DEPENDS rxlink ${_ll_compiled_target} "${_dynamic_dir}/browser-contracts.rxbin" "${_products}/llcbrowser.rxbin" VERBATIM)
       add_custom_target(llcompiler_browser_contracts_opt DEPENDS "${_dynamic_dir}/browser-contracts-linked.rxbin")
       set(_dynamic_control "")
       foreach(_file IN LISTS _dynamic_inputs)
@@ -366,13 +384,14 @@ foreach(_mode opt noopt)
       file(GENERATE OUTPUT "${_dynamic_dir}/dynamic.ctl" CONTENT "${_dynamic_control}")
       add_custom_command(OUTPUT "${_products}/llcdynamic.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -c "${_dynamic_dir}/dynamic.ctl"
-        DEPENDS rxlink ${_dynamic_inputs} "${_dynamic_dir}/dynamic.ctl" VERBATIM)
+        DEPENDS rxlink ${_dynamic_target} ${_dynamic_inputs} "${_dynamic_dir}/dynamic.ctl" VERBATIM)
       add_custom_target(llcdynamic ALL DEPENDS "${_products}/llcdynamic.rxbin")
       install(FILES "${_products}/llcdynamic.rxbin" DESTINATION bin
         COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
     endif()
     add_custom_target(llcompiler_dynamic_${_mode}
       DEPENDS "${_dynamic_dir}/llcdynamic.rxbin")
+    add_dependencies(llcompiler_dynamic_${_mode} ${_dynamic_target})
     if(_mode STREQUAL "opt")
       ll_compile(dynamic-command-contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/dynamic/command-contracts.crexx"
@@ -380,7 +399,7 @@ foreach(_mode opt noopt)
       add_custom_command(OUTPUT "${_dynamic_dir}/dynamic-command-contracts-linked.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_dynamic_dir}/dynamic-command-contracts-linked"
           "${_dynamic_dir}/dynamic-command-contracts.rxbin" ${_dynamic_runtime}
-        DEPENDS rxlink classlib rxunicode_core
+        DEPENDS rxlink classlib rxunicode_core ${_ll_compiled_target}
           "${_dynamic_dir}/dynamic-command-contracts.rxbin" ${_dynamic_runtime} VERBATIM)
       add_custom_target(llcompiler_dynamic_command_opt
         DEPENDS "${_dynamic_dir}/dynamic-command-contracts-linked.rxbin")
@@ -408,7 +427,7 @@ foreach(_mode opt noopt)
         COMMAND $<TARGET_FILE:rxlink> -s
           -o "${_dynamic_dir}/dynamic-${_case}-contracts-linked"
           "${_dynamic_dir}/dynamic-${_case}-contracts.rxbin" ${_case_runtime}
-        DEPENDS rxlink ${_case_link_targets}
+        DEPENDS rxlink ${_case_link_targets} ${_ll_compiled_target}
           "${_dynamic_dir}/dynamic-${_case}-contracts.rxbin" ${_case_runtime}
         VERBATIM)
       add_custom_target(llcompiler_dynamic_${_case}_${_mode}
@@ -442,7 +461,7 @@ foreach(_mode opt noopt)
       add_custom_command(OUTPUT "${_dir}/parser-observation-contracts-linked.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/parser-observation-contracts-linked"
           "${_dir}/parser-observation-contracts.rxbin" ${_observation_inputs}
-        DEPENDS rxlink "${_dir}/parser-observation-contracts.rxbin" ${_observation_inputs} VERBATIM)
+        DEPENDS rxlink ${_ll_compiled_target} "${_dir}/parser-observation-contracts.rxbin" ${_observation_inputs} VERBATIM)
       add_custom_target(llcompiler_c_observations_opt
         DEPENDS "${_dir}/parser-observation-contracts-linked.rxbin")
       if(BUILD_TESTING)
@@ -488,7 +507,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/infrastructure-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/infrastructure-contracts-linked"
         "${_dir}/infrastructure-contracts.rxbin" ${_infrastructure_inputs}
-      DEPENDS rxlink "${_dir}/infrastructure-contracts.rxbin" ${_infrastructure_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/infrastructure-contracts.rxbin" ${_infrastructure_inputs} VERBATIM)
     add_custom_target(llcompiler_infrastructure_contracts_${_mode}
       DEPENDS "${_dir}/infrastructure-contracts-linked.rxbin")
     ll_compile(c-context-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/c-context-contracts.crexx"
@@ -496,7 +515,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/c-context-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/c-context-contracts-linked"
         "${_dir}/c-context-contracts.rxbin" ${_c_contract_inputs}
-      DEPENDS rxlink "${_dir}/c-context-contracts.rxbin" ${_c_contract_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/c-context-contracts.rxbin" ${_c_contract_inputs} VERBATIM)
     crexx_add_import_root(llcompiler_c_context_contract_runtime_${_mode}
       DIRECTORY "${_dir}/context-contract-runtime"
       OUTPUT_VARIABLE _c_contract_runtime
@@ -505,6 +524,8 @@ foreach(_mode opt noopt)
         "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${_dir}/llctarget.rxbin")
     add_custom_target(llcompiler_c_context_contracts_${_mode}
       DEPENDS "${_dir}/c-context-contracts-linked.rxbin" "${_c_contract_runtime}")
+    add_dependencies(llcompiler_c_context_contracts_${_mode}
+      llcompiler_c_context_contract_runtime_${_mode})
     # Independent packet and selector fixtures, separate from source grammar.
     foreach(_parse_fixture program-contracts admission core-backend)
       ll_compile(parse-${_parse_fixture}
@@ -513,7 +534,7 @@ foreach(_mode opt noopt)
       add_custom_command(OUTPUT "${_dir}/parse-${_parse_fixture}-linked.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/parse-${_parse_fixture}-linked"
           "${_dir}/parse-${_parse_fixture}.rxbin" ${_c_contract_inputs}
-        DEPENDS rxlink "${_dir}/parse-${_parse_fixture}.rxbin" ${_c_contract_inputs} VERBATIM)
+        DEPENDS rxlink ${_ll_compiled_target} "${_dir}/parse-${_parse_fixture}.rxbin" ${_c_contract_inputs} VERBATIM)
     endforeach()
     get_target_property(_c_runtime_rxas rxfnsc CREXX_RXFNSC_MEMBER_RXAS)
     add_custom_target(llcompiler_c_parse_core_${_mode}
@@ -521,7 +542,8 @@ foreach(_mode opt noopt)
         "${_dir}/parse-admission-linked.rxbin"
         "${_dir}/parse-core-backend-linked.rxbin" "${_c_contract_runtime}"
         "${_dir}/llctarget.rxas" ${_c_runtime_rxas})
-    add_dependencies(llcompiler_c_parse_core_${_mode} rxfnsc)
+    add_dependencies(llcompiler_c_parse_core_${_mode}
+      rxfnsc llcompiler_target_${_mode} llcompiler_c_context_contract_runtime_${_mode})
     set(_c_drop_inputs ${_c_contract_inputs}
       "${_classic_names}"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparse.rxbin"
@@ -532,27 +554,32 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/drop-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/drop-contracts-linked"
         "${_dir}/drop-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/drop-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/drop-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_c_drop_contracts_${_mode}
       DEPENDS "${_dir}/drop-contracts-linked.rxbin")
     ll_compile(prepared-invalid-grammar "${CMAKE_CURRENT_SOURCE_DIR}/tests/prepared-invalid-grammar.crexx"
       "${_dir}" ${_base})
+    set(_prepared_invalid_target ${_ll_compiled_target})
     ll_compile(prepared-language "${CMAKE_CURRENT_SOURCE_DIR}/tests/prepared-language.crexx"
       "${_dir}" ${_c_drop_inputs})
+    set(_prepared_target ${_ll_compiled_target})
     add_custom_command(OUTPUT "${_dir}/prepared-language-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/prepared-language-linked"
         "${_dir}/prepared-language.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/prepared-language.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/prepared-language.rxbin" ${_c_drop_inputs} VERBATIM)
     set(_c_invalid_inputs ${_c_drop_inputs})
     list(REMOVE_ITEM _c_invalid_inputs "${_front}/llcgrammar.rxbin")
     list(APPEND _c_invalid_inputs "${_dir}/prepared-invalid-grammar.rxbin")
     add_custom_command(OUTPUT "${_dir}/prepared-language-invalid-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/prepared-language-invalid-linked"
         "${_dir}/prepared-language.rxbin" ${_c_invalid_inputs}
-      DEPENDS rxlink "${_dir}/prepared-language.rxbin" ${_c_invalid_inputs} VERBATIM)
+      DEPENDS rxlink ${_prepared_target} ${_prepared_invalid_target}
+        "${_dir}/prepared-language.rxbin" ${_c_invalid_inputs} VERBATIM)
     add_custom_target(llcompiler_c_prepared_${_mode}
       DEPENDS "${_dir}/prepared-language-linked.rxbin"
         "${_dir}/prepared-language-invalid-linked.rxbin" ${_c_contract_runtime})
+    add_dependencies(llcompiler_c_prepared_${_mode}
+      llcompiler_c_context_contract_runtime_${_mode})
     set(_prepared_vm rxbvm)
     if(_mode STREQUAL "noopt" AND TARGET rxtvm)
       set(_prepared_vm rxtvm)
@@ -584,9 +611,12 @@ foreach(_mode opt noopt)
       add_custom_command(OUTPUT "${_dir}/prepared-language-failing-linked.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/prepared-language-failing-linked"
           "${_dir}/prepared-language.rxbin" ${_c_failing_inputs}
-        DEPENDS rxlink "${_dir}/prepared-language.rxbin" ${_c_failing_inputs} VERBATIM)
+        DEPENDS rxlink ${_prepared_target} ${_ll_compiled_target}
+          "${_dir}/prepared-language.rxbin" ${_c_failing_inputs} VERBATIM)
       add_custom_target(llcompiler_c_prepared_fault_opt
         DEPENDS "${_dir}/prepared-language-failing-linked.rxbin" ${_c_contract_runtime})
+      add_dependencies(llcompiler_c_prepared_fault_opt
+        llcompiler_c_context_contract_runtime_${_mode})
       set(_prepared_fault "llcompiler_c_prepared_fault_opt_rxbvm")
       add_test(NAME ${_prepared_fault} COMMAND $<TARGET_FILE:rxbvm>
         "${_dir}/prepared-language-failing-linked.rxbin" -a "${_dir}/context-contract-runtime" fault)
@@ -611,7 +641,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/call-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/call-contracts-linked"
         "${_dir}/call-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/call-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/call-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_call_contracts_${_mode}
       DEPENDS "${_dir}/call-contracts-linked.rxbin")
     set(_c_external_inputs ${_c_drop_inputs}
@@ -621,7 +651,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/call-external-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/call-external-contracts-linked"
         "${_dir}/call-external-contracts.rxbin" ${_c_external_inputs}
-      DEPENDS rxlink "${_dir}/call-external-contracts.rxbin" ${_c_external_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/call-external-contracts.rxbin" ${_c_external_inputs} VERBATIM)
     add_custom_target(llcompiler_call_external_contracts_${_mode}
       DEPENDS "${_dir}/call-external-contracts-linked.rxbin")
     ll_compile(command-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/command/contracts.crexx"
@@ -629,7 +659,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/command-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/command-contracts-linked"
         "${_dir}/command-contracts.rxbin" ${_c_external_inputs}
-      DEPENDS rxlink "${_dir}/command-contracts.rxbin" ${_c_external_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/command-contracts.rxbin" ${_c_external_inputs} VERBATIM)
     add_custom_target(llcompiler_command_contracts_${_mode}
       DEPENDS "${_dir}/command-contracts-linked.rxbin")
     ll_compile(clause-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/clause/contracts.crexx"
@@ -637,7 +667,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/clause-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/clause-contracts-linked"
         "${_dir}/clause-contracts.rxbin" ${_c_external_inputs}
-      DEPENDS rxlink "${_dir}/clause-contracts.rxbin" ${_c_external_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/clause-contracts.rxbin" ${_c_external_inputs} VERBATIM)
     add_custom_target(llcompiler_clause_contracts_${_mode}
       DEPENDS "${_dir}/clause-contracts-linked.rxbin")
     ll_compile(return-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/return/contracts.crexx"
@@ -645,7 +675,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/return-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/return-contracts-linked"
         "${_dir}/return-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/return-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/return-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_return_contracts_${_mode}
       DEPENDS "${_dir}/return-contracts-linked.rxbin")
     ll_compile(exit-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/exit/contracts.crexx"
@@ -653,7 +683,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/exit-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/exit-contracts-linked"
         "${_dir}/exit-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/exit-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/exit-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_exit_contracts_${_mode}
       DEPENDS "${_dir}/exit-contracts-linked.rxbin")
     ll_compile(llc-queue-insertion-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/queue-insertion/contracts.crexx"
@@ -661,7 +691,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/llc-queue-insertion-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/llc-queue-insertion-contracts-linked"
         "${_dir}/llc-queue-insertion-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/llc-queue-insertion-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/llc-queue-insertion-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_queue_insertion_contracts_${_mode}
       DEPENDS "${_dir}/llc-queue-insertion-contracts-linked.rxbin")
     ll_compile(address-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/address/contracts.crexx"
@@ -669,7 +699,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/address-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/address-contracts-linked"
         "${_dir}/address-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/address-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/address-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_address_contracts_${_mode}
       DEPENDS "${_dir}/address-contracts-linked.rxbin")
     ll_compile(numeric-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/numeric/contracts.crexx"
@@ -677,7 +707,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/numeric-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/numeric-contracts-linked"
         "${_dir}/numeric-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/numeric-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/numeric-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_numeric_contracts_${_mode}
       DEPENDS "${_dir}/numeric-contracts-linked.rxbin")
     ll_compile(trace-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/trace/contracts.crexx"
@@ -685,7 +715,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/trace-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/trace-contracts-linked"
         "${_dir}/trace-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/trace-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/trace-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_trace_contracts_${_mode}
       DEPENDS "${_dir}/trace-contracts-linked.rxbin")
     # One warm fixture compiler and focused C22 admission contracts. Native C
@@ -707,7 +737,7 @@ foreach(_mode opt noopt)
       add_custom_command(OUTPUT "${_dir}/${_conditions_name}-linked.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/${_conditions_name}-linked"
           "${_dir}/${_conditions_name}.rxbin" ${_conditions_inputs}
-        DEPENDS rxlink "${_dir}/${_conditions_name}.rxbin" ${_conditions_inputs} VERBATIM)
+        DEPENDS rxlink ${_ll_compiled_target} "${_dir}/${_conditions_name}.rxbin" ${_conditions_inputs} VERBATIM)
     endforeach()
     add_custom_target(llcompiler_conditions_observations_${_mode}
       DEPENDS "${_dir}/conditions-fixtures-linked.rxbin"
@@ -717,7 +747,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/label-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/label-contracts-linked"
         "${_dir}/label-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/label-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/label-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_label_contracts_${_mode}
       DEPENDS "${_dir}/label-contracts-linked.rxbin")
     ll_compile(signal-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/signal/contracts.crexx"
@@ -725,7 +755,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/signal-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/signal-contracts-linked"
         "${_dir}/signal-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/signal-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/signal-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_signal_contracts_${_mode}
       DEPENDS "${_dir}/signal-contracts-linked.rxbin")
     ll_compile(conditions-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/signal/conditions-contracts.crexx"
@@ -733,7 +763,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/conditions-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/conditions-contracts-linked"
         "${_dir}/conditions-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/conditions-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/conditions-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_signal_conditions_contracts_${_mode}
       DEPENDS "${_dir}/conditions-contracts-linked.rxbin")
     ll_compile(procedure-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/procedure/contracts.crexx"
@@ -741,7 +771,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/procedure-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/procedure-contracts-linked"
         "${_dir}/procedure-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/procedure-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/procedure-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_procedure_contracts_${_mode}
       DEPENDS "${_dir}/procedure-contracts-linked.rxbin")
     ll_compile(assignment-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/assignment/contracts.crexx"
@@ -749,7 +779,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/assignment-contracts-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/assignment-contracts-linked"
         "${_dir}/assignment-contracts.rxbin" ${_c_drop_inputs}
-      DEPENDS rxlink "${_dir}/assignment-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
+      DEPENDS rxlink ${_ll_compiled_target} "${_dir}/assignment-contracts.rxbin" ${_c_drop_inputs} VERBATIM)
     add_custom_target(llcompiler_c_assignment_contracts_${_mode}
       DEPENDS "${_dir}/assignment-contracts-linked.rxbin")
     foreach(_vm rxbvm rxtvm)
@@ -777,7 +807,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/target-parse-source-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -o "${_dir}/target-parse-source-linked"
         "${_dir}/target-parse-source.rxbin" "${_dir}/llctarget.rxbin" ${_parse_source_runtime}
-      DEPENDS rxlink classlib rxunicode_core "${_dir}/target-parse-source.rxbin"
+      DEPENDS rxlink classlib rxunicode_core ${_ll_compiled_target} "${_dir}/target-parse-source.rxbin"
         "${_dir}/llctarget.rxbin" ${_parse_source_runtime} VERBATIM)
     add_custom_target(llcompiler_target_parse_source_${_mode}
       DEPENDS "${_dir}/target-parse-source-linked.rxbin")
@@ -803,7 +833,7 @@ foreach(_mode opt noopt)
     add_custom_command(OUTPUT "${_dir}/target-context-linked.rxbin"
       COMMAND $<TARGET_FILE:rxlink> -o "${_dir}/target-context-linked"
         "${_dir}/target-context.rxbin" "${_dir}/llctarget.rxbin" ${_target_runtime}
-      DEPENDS rxlink classlib rxunicode_core "${_dir}/target-context.rxbin"
+      DEPENDS rxlink classlib rxunicode_core ${_ll_compiled_target} "${_dir}/target-context.rxbin"
         "${_dir}/llctarget.rxbin" ${_target_runtime} VERBATIM)
     add_custom_target(llcompiler_target_context_${_mode}
       DEPENDS "${_dir}/target-context-linked.rxbin")
@@ -874,7 +904,7 @@ foreach(_mode opt noopt)
   add_custom_command(OUTPUT "${_contracts_dir}/contracts-linked.rxbin"
     COMMAND $<TARGET_FILE:rxlink> -s -o "${_contracts_dir}/contracts-linked"
       "${_contracts_dir}/contracts.rxbin" "${_tests}/lltestfamilies.rxbin" ${_base}
-    DEPENDS rxlink "${_contracts_dir}/contracts.rxbin" "${_tests}/lltestfamilies.rxbin" ${_base} VERBATIM)
+    DEPENDS rxlink ${_ll_compiled_target} "${_contracts_dir}/contracts.rxbin" "${_tests}/lltestfamilies.rxbin" ${_base} VERBATIM)
   add_custom_target(llcompiler_contracts_${_mode} ALL DEPENDS "${_contracts_dir}/contracts-linked.rxbin")
   foreach(_vm rxtvm rxbvm)
     if(TARGET ${_vm})
@@ -904,7 +934,7 @@ foreach(_mode opt noopt)
       ll_compile(${_consumer} "${_source}" "${_dest}" ${_base} ${_allhosts})
       add_custom_command(OUTPUT "${_dest}/${_consumer}-linked.rxbin"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_dest}/${_consumer}-linked" "${_dest}/${_consumer}" ${_allhosts} ${_base}
-        DEPENDS rxlink "${_dest}/${_consumer}.rxbin" ${_allhosts} ${_base} VERBATIM)
+        DEPENDS rxlink ${_ll_compiled_target} "${_dest}/${_consumer}.rxbin" ${_allhosts} ${_base} VERBATIM)
       add_custom_target(llcompiler_${_consumer}_${_mode} ALL DEPENDS "${_dest}/${_consumer}-linked.rxbin")
       if(_consumer STREQUAL "demo")
         foreach(_vm rxtvm rxbvm)
@@ -945,7 +975,7 @@ endforeach()
 if("c" IN_LIST _languages)
   add_custom_command(OUTPUT "${_products}/llctarget.rxbin"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/backend/opt/llctarget.rxbin" "${_products}/llctarget.rxbin"
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/backend/opt/llctarget.rxbin" VERBATIM)
+    DEPENDS llcompiler_target_opt "${CMAKE_CURRENT_BINARY_DIR}/backend/opt/llctarget.rxbin" VERBATIM)
   add_custom_target(llctarget ALL DEPENDS "${_products}/llctarget.rxbin")
   install(FILES "${_products}/llctarget.rxbin" DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
 endif()
@@ -1642,7 +1672,7 @@ if("c" IN_LIST _languages AND TARGET rxbvm)
   add_custom_command(OUTPUT "${_execution_dir}/runtime-contracts-linked.rxbin"
     COMMAND $<TARGET_FILE:rxlink> -s -o "${_execution_dir}/runtime-contracts-linked"
       "${_execution_dir}/runtime-contracts.rxbin" ${_execution_runtime}
-    DEPENDS rxlink classlib rxunicode_core "${_execution_dir}/runtime-contracts.rxbin"
+    DEPENDS rxlink classlib rxunicode_core ${_ll_compiled_target} "${_execution_dir}/runtime-contracts.rxbin"
       ${_execution_runtime} VERBATIM)
   add_custom_target(llcompiler_ir_execution
     DEPENDS "${_execution_dir}/runtime-contracts-linked.rxbin")

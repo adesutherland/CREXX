@@ -403,12 +403,17 @@ elif tool=='rxas':
     assert Path(str(stem)+'.rxas').read_text()=='complete\n', stem
     output=Path(str(stem)+'.rxbin').resolve()
 else:
-    control=Path(args[args.index('-c')+1]).read_text().splitlines()
-    for line in control:
-        if line.startswith('INPUT '):
-            imported=Path(line[6:])
-            assert imported.read_text()=='complete\n', imported
-    output=Path(next(line[7:] for line in control if line.startswith('OUTPUT '))+'.rxbin').resolve()
+    if '-c' in args:
+        control=Path(args[args.index('-c')+1]).read_text().splitlines()
+        inputs=[Path(line[6:]) for line in control if line.startswith('INPUT ')]
+        output=Path(next(line[7:] for line in control if line.startswith('OUTPUT '))+'.rxbin').resolve()
+    else:
+        output_index=args.index('-o')+1
+        output=Path(args[output_index]+'.rxbin').resolve()
+        inputs=[Path(value) if value.endswith('.rxbin') else Path(value+'.rxbin')
+                for value in args[output_index+1:]]
+    for imported in inputs:
+        assert imported.read_text()=='complete\n', imported
 lock=Path(str(output)+'.active')
 descriptor=os.open(lock,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
 os.close(descriptor)
@@ -441,6 +446,8 @@ endforeach()
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin" "${CMAKE_BINARY_DIR}/langtools/common")
 file(WRITE "${CMAKE_BINARY_DIR}/bin/library.rxbin" "complete\\n")
 add_custom_target(library)
+file(WRITE "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin" "complete\\n")
+add_custom_target(fs)
 foreach(module IN ITEMS llrxastext llbinmeta)
   file(WRITE "${CMAKE_BINARY_DIR}/langtools/common/${module}.rxbin" "complete\\n")
   add_custom_target(${module})
@@ -466,9 +473,12 @@ add_subdirectory(sdk)
             for mode in ('opt','noopt'):
                 for directory,name in ((f'common/{mode}','llscalar'),
                                        (f'common/{mode}','llcompilercontracts'),
-                                       (f'clients/{mode}','client')):
+                                       (f'clients/{mode}/first','client'),
+                                       (f'clients/{mode}/second','client'),
+                                       (f'clients/{mode}/command','llrxc-c')):
                     expected.update({('rxc',str(build/'research'/directory/(name+'.rxas'))),
                                      ('rxas',str(build/'research'/directory/(name+'.rxbin')))})
+                expected.add(('rxlink',str(build/'research/clients'/mode/'command/llrxc-c-linked.rxbin')))
         prepare()
         self.assertEqual(events(),Counter({event:1 for event in expected}))
         public_image=build/'bin/rxfnsl.rxbin'
@@ -483,6 +493,8 @@ add_subdirectory(sdk)
         (build/'sdk/llcheck.rxbin').unlink()
         if include_research:
             (build/'research/frontends/llcgrammar.rxbin').unlink()
+            for mode in ('opt','noopt'):
+                (build/'research/common'/mode/'llscalar.rxbin').unlink()
         prepare()
         recovered=events()
         self.assertTrue(recovered)
@@ -492,9 +504,14 @@ add_subdirectory(sdk)
         if include_research:
             required.extend([('rxlang',str(research/'levelc/levelc.rxl')),
                              ('rxas',str(build/'research/frontends/llcgrammar.rxbin'))])
+            for mode in ('opt','noopt'):
+                required.extend([('rxc',str(build/'research/common'/mode/'llscalar.rxas')),
+                                 ('rxas',str(build/'research/common'/mode/'llscalar.rxbin'))])
         for event in required:
             self.assertEqual(recovered[event],1)
         self.assertNotIn(('rxc',str(build/'sdk/llir.rxas')),recovered)
+        prepare()
+        self.assertEqual(events(),recovered,'Recovered preparation must be a warm no-op')
 
     def _level_l_make_research_fixture(self, source):
         compiler=(ROOT/'research/level-l/compilers/CMakeLists.txt').read_text()
@@ -517,15 +534,25 @@ add_subdirectory(sdk)
         research=source/'research'; research.mkdir()
         (research/'levelc').mkdir()
         (research/'levelc/levelc.rxl').write_text('fixture grammar\n')
+        (research/'levelc/llrxc-c.crexx').write_text('fixture command\n')
         (research/'common').mkdir()
         for name in ('llscalar','llcompilercontracts'):
             (research/'common'/(name+'.crexx')).write_text('fixture source\n')
         (research/'client.crexx').write_text('fixture consumer\n')
         (research/'CMakeLists.txt').write_text('set(_languages c)\n'+frontend+'\n'+common+'''
-  set(_dir "${CMAKE_CURRENT_BINARY_DIR}/clients/${_mode}")
-  ll_compile(client "${CMAKE_CURRENT_SOURCE_DIR}/client.crexx" "${_dir}"
+  foreach(_branch first second)
+    set(_dir "${CMAKE_CURRENT_BINARY_DIR}/clients/${_mode}/${_branch}")
+    ll_compile(client "${CMAKE_CURRENT_SOURCE_DIR}/client.crexx" "${_dir}"
+      ${_base} ${_shared} "${_front}/llcgrammar.rxbin")
+    add_custom_target(client_${_mode}_${_branch} ALL DEPENDS "${_dir}/client.rxbin")
+    # Reverting the owner repair must reach the production oracle rather than
+    # fail only because an old ll_compile does not return a target name.
+    if(_ll_compiled_target)
+      add_dependencies(client_${_mode}_${_branch} ${_ll_compiled_target})
+    endif()
+  endforeach()
+  ll_command(c ${_mode} "${CMAKE_CURRENT_BINARY_DIR}/clients/${_mode}/command"
     ${_base} ${_shared} "${_front}/llcgrammar.rxbin")
-  add_custom_target(client_${_mode} ALL DEPENDS "${_dir}/client.rxbin")
 endforeach()
 ''')
         generator=source/'langtools/cmake'; generator.mkdir(parents=True)
