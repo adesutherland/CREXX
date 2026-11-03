@@ -92,6 +92,24 @@ Complete the original full baseline and applicable full Apple/Linux sanitizer ga
 the item open until those platform obligations pass; delete temporary logs
 after extracting this diagnostic.
 
+## SAN-QA-029 — target-foundation tests lack their QA preparation edge
+
+Status: **open**. Owner: Codex, full core sanitizer preparation. The hosted
+Linux x64 full ASan/LSan run at source `369256ef1` built the instrumented
+product and completed `qa-prep`, then six `levell_target_*_rxbvm` tests failed
+immediately because their `target-*-linked.rxbin` files were absent. No memory
+diagnostic was reported in these failures. The target directory registers the
+tests and their `CREXX_PREP_TARGETS`, but does not finalize its QA tiers; those
+producer targets never enter `qa-prep-comprehensive`.
+
+Repair contract: finalize that directory after all its test declarations so
+the normal comprehensive preparation owns each target-foundation image and
+CTest applies its fixture and sanitizer guards. Preserve the tests and their
+oracles. Closure requires a focused configured-graph regression, preparation
+and execution of one representative image, followed by the full hosted gate
+that exposed the missing edge. SAN-014/SAN-015 retain their separate broad
+platform closure requirements.
+
 ## SAN-QA-028 — standalone decimal registration omits framework math linkage
 
 Status: **open**. Owner: Codex, hosted core build-preparation qualification.

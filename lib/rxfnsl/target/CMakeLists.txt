@@ -187,3 +187,7 @@ if(CREXX_BUILD_TARGET_IO)
       "${CMAKE_BINARY_DIR}/research/level-l/toolchain/tests")
   endif()
 endif()
+
+if(BUILD_TESTING)
+  crexx_finalize_directory_qa_tiers()
+endif()

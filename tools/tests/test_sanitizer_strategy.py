@@ -222,6 +222,70 @@ endif()
         self.assertEqual(actual,expected)
         self.assertNotRegex('arg_semantics_scalar_opt_future',pattern)
 
+    @unittest.skipUnless(shutil.which('ninja'), 'Target preparation graph requires Ninja')
+    def test_level_l_target_tests_join_comprehensive_preparation(self):
+        # Configure the owning declarations without running any native producer.
+        # The optional IO child uses a source-root-relative add_subdirectory.
+        source=self.root/'target-source'; source.mkdir()
+        child=source/'research/level-l/toolchain/tests'; child.mkdir(parents=True)
+        shutil.copyfile(ROOT/'research/level-l/toolchain/tests/CMakeLists.txt',
+                        child/'CMakeLists.txt')
+        (source/'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.24)
+project(TargetPreparationContract NONE)
+enable_testing()
+set(BUILD_TESTING ON)
+include("@ROOT@/cmake/CrexxQaTiers.cmake")
+include("@ROOT@/cmake/CrexxQaFixtures.cmake")
+include("@ROOT@/cmake/CrexxImportRoots.cmake")
+set(CREXX_QA_AUDIT_NATIVE_SOURCES TRUE)
+foreach(tier IN ITEMS essential smoke comprehensive qualification stress measurement optimizer-parity)
+  add_custom_target(qa-prep-${tier})
+endforeach()
+foreach(tool IN ITEMS rxc rxas rxlink rxbvm rxlang)
+  add_executable(${tool} IMPORTED)
+  set_target_properties(${tool} PROPERTIES IMPORTED_LOCATION "${CMAKE_COMMAND}")
+endforeach()
+foreach(owner IN ITEMS library rxfnsl rxfnsl_analysis rxfnsl_rxas rxlanglib llrxastext)
+  add_custom_target(${owner})
+endforeach()
+function(crexx_install_bytecode)
+endfunction()
+add_test(NAME sanitizer_fixture_integrity COMMAND "${CMAKE_COMMAND}" -E true)
+set_tests_properties(sanitizer_fixture_integrity PROPERTIES FIXTURES_SETUP qa-fixture-integrity)
+add_subdirectory("@ROOT@/lib/rxfnsl/target" target EXCLUDE_FROM_ALL)
+crexx_finalize_qa_prep_targets()
+get_target_property(dependencies qa-prep-comprehensive MANUALLY_ADDED_DEPENDENCIES)
+file(WRITE "${CMAKE_BINARY_DIR}/prep-dependencies.txt" "${dependencies}")
+'''.replace('@ROOT@',ROOT.as_posix()))
+        tiers={'essential','smoke','comprehensive','qualification','stress','performance-measurement'}
+        for io in ('OFF','ON'):
+            with self.subTest(target_io=io):
+                build=self.root/('target-build-'+io)
+                command('cmake','-S',source,'-B',build,'-G','Ninja',
+                        '-DCREXX_BUILD_TARGET_IO='+io)
+                inventory=json.loads(command('ctest','--test-dir',build,'--show-only=json-v1').stdout)
+                tests={test['name']:{prop['name']:prop['value'] for prop in test['properties']}
+                       for test in inventory['tests'] if test['name']!='sanitizer_fixture_integrity'}
+                self.assertEqual(len(tests),23 if io=='OFF' else 27)
+                for name,properties in tests.items():
+                    labels=set(properties['LABELS'])
+                    self.assertTrue({'level-l','research','target-foundation'} <= labels,name)
+                    self.assertEqual(labels & tiers,{'comprehensive'},name)
+                    self.assertIn('qa-fixture-integrity',properties['FIXTURES_REQUIRED'],name)
+                    self.assertIn('ERROR: (AddressSanitizer|LeakSanitizer):',
+                                  properties['FAIL_REGULAR_EXPRESSION'],name)
+                cfg=tests['levell_target_cfg_rxbvm']
+                self.assertEqual(cfg['PASS_REGULAR_EXPRESSION'],['TARGET_CFG[|]failures=0'])
+                self.assertIn('FAIL:|PANIC:',cfg['FAIL_REGULAR_EXPRESSION'])
+                expected={name.removesuffix('_rxbvm') for name in tests if name.endswith('_rxbvm')}
+                expected.add('rxbvm')
+                if io=='ON':
+                    self.assertIn('levell_foundation_normalize_native',tests)
+                    self.assertIn('levell_rxas_io_service',tests)
+                    expected.update({'rxas','rxlink','levell_rxas_io_test_prep'})
+                actual=set((build/'prep-dependencies.txt').read_text().split(';'))
+                self.assertEqual(actual,expected)
+
     @unittest.skipUnless(os.name != 'nt' and shutil.which('ninja'), 'Cold producer fixture requires executable scripts and Ninja')
     def test_split_runtime_cold_build_prepares_certified_exits(self):
         source = self.root / 'split source'

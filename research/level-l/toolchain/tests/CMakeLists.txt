@@ -36,3 +36,5 @@ if(TARGET rxbvm)
   crexx_register_test_prep_targets(TESTS levell_rxas_io_service
     TARGETS levell_rxas_io_test_prep rxbvm)
 endif()
+
+crexx_finalize_directory_qa_tiers()
