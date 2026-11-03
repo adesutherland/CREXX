@@ -76,6 +76,7 @@ static int inline_duplicate_scope_symbols(Scope *old_scope,
          */
         if (old_symbol->is_arg && !old_symbol->is_ref_arg) {
             new_symbol->is_arg = 0;
+            new_symbol->inline_owned_formal = 1;
         }
 
         if (!inline_append_symbol_map_entry(state, old_symbol, new_symbol)) {

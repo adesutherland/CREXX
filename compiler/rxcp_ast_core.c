@@ -648,6 +648,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
                 new_symbol->is_opt_arg = symbol->is_opt_arg;
                 new_symbol->has_reference_target = symbol->has_reference_target;
                 new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
+                new_symbol->inline_owned_formal = symbol->inline_owned_formal;
 
                 sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
             } else {

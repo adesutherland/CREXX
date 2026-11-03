@@ -4,54 +4,59 @@
 
 .globals=0
 
-main() .locals=3
+main() .locals=4
    .meta "inline_test_mutual_recursive_negative.main"="b" ".int" main() ""
-   .srcstep 7 7 17 "inline_test_mutual_recursive_negative.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 8 8 17 "inline_test_mutual_recursive_negative.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_mutual_recursive_negative.crexx" 4 3 58 "  say \"Starting mutual recursive inline negative test...\""
    say "Starting mutual recursive inline negative test..."
-   .srcstep 4 4 17 "inline_test_mutual_recursive_negative.crexx" 5 3 14 "  say left(3)"
-   .srcstep 3 3 17 "inline_test_mutual_recursive_negative.crexx" 5 7 11 "  say left(3)"
-   .srcstep 2 2 17 "inline_test_mutual_recursive_negative.crexx" 11 3 24 "  return right(val - 1)"
-   load r1,2
-   .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
-   call1 r2,right(),r1
-   .traceevent "F" 4 "R" "I" "r" 2 4 4 0 "right" ""
-   icopy r1,r2
+   .srcstep 5 5 17 "inline_test_mutual_recursive_negative.crexx" 5 3 14 "  say left(3)"
+   .srcstep 4 4 17 "inline_test_mutual_recursive_negative.crexx" 5 7 11 "  say left(3)"
+   .srcstep 2 2 33 "inline_test_mutual_recursive_negative.crexx" 10 7 10 "  arg val = .int"
+   load r0,3
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "val" ""
+   .srcstep 3 3 17 "inline_test_mutual_recursive_negative.crexx" 11 3 24 "  return right(val - 1)"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "val" ""
+   isub r2,r0,1
+   .traceevent "O" 4 "R" "I" "r" 2 5 5 0 "" ""
+   call1 r3,right(),r2
+   .traceevent "F" 4 "R" "I" "r" 3 5 5 0 "right" ""
+   icopy r2,r3
 l43bexprend:
-   itos r1
-   say r1
-   .srcstep 5 5 17 "inline_test_mutual_recursive_negative.crexx" 6 3 56 "  say \"Mutual recursive inline negative test finished.\""
+   itos r2
+   say r2
+   .srcstep 6 6 17 "inline_test_mutual_recursive_negative.crexx" 6 3 56 "  say \"Mutual recursive inline negative test finished.\""
    say "Mutual recursive inline negative test finished."
-   .srcstep 6 6 17 "inline_test_mutual_recursive_negative.crexx" 7 3 11 "  return 0"
+   .srcstep 7 7 17 "inline_test_mutual_recursive_negative.crexx" 7 3 11 "  return 0"
    ret 0
 
 left() .locals=4
    .meta "inline_test_mutual_recursive_negative.left"="b" ".int" left() "val=.int"
-   .srcstep 10 10 17 "inline_test_mutual_recursive_negative.crexx" 9 1 23 "left: procedure = .int"
+   .srcstep 11 11 17 "inline_test_mutual_recursive_negative.crexx" 9 1 23 "left: procedure = .int"
    numsci 18,1,1
-   .srcstep 8 8 17 "inline_test_mutual_recursive_negative.crexx" 10 7 17 "  arg val = .int"
+   .srcstep 9 9 17 "inline_test_mutual_recursive_negative.crexx" 10 7 17 "  arg val = .int"
    .meta "inline_test_mutual_recursive_negative.left.val"="b" ".int" a1
-   .srcstep 9 9 17 "inline_test_mutual_recursive_negative.crexx" 11 3 24 "  return right(val - 1)"
-   .traceevent "V" 6 "R" "I" "a" 1 9 9 0 "val" ""
+   .srcstep 10 10 17 "inline_test_mutual_recursive_negative.crexx" 11 3 24 "  return right(val - 1)"
+   .traceevent "V" 6 "R" "I" "a" 1 10 10 0 "val" ""
    isub r2,a1,1
-   .traceevent "O" 4 "R" "I" "r" 2 9 9 0 "" ""
+   .traceevent "O" 4 "R" "I" "r" 2 10 10 0 "" ""
    call1 r3,right(),r2
-   .traceevent "F" 4 "R" "I" "r" 3 9 9 0 "right" ""
+   .traceevent "F" 4 "R" "I" "r" 3 10 10 0 "right" ""
    ret r3
    .meta "inline_test_mutual_recursive_negative.left.val"
 
 right() .locals=4
    .meta "inline_test_mutual_recursive_negative.right"="b" ".int" right() "val=.int"
-   .srcstep 13 13 17 "inline_test_mutual_recursive_negative.crexx" 13 1 24 "right: procedure = .int"
+   .srcstep 14 14 17 "inline_test_mutual_recursive_negative.crexx" 13 1 24 "right: procedure = .int"
    numsci 18,1,1
-   .srcstep 11 11 17 "inline_test_mutual_recursive_negative.crexx" 14 7 17 "  arg val = .int"
+   .srcstep 12 12 17 "inline_test_mutual_recursive_negative.crexx" 14 7 17 "  arg val = .int"
    .meta "inline_test_mutual_recursive_negative.right.val"="b" ".int" a1
-   .srcstep 12 12 17 "inline_test_mutual_recursive_negative.crexx" 15 3 23 "  return left(val - 1)"
-   .traceevent "V" 6 "R" "I" "a" 1 12 12 0 "val" ""
+   .srcstep 13 13 17 "inline_test_mutual_recursive_negative.crexx" 15 3 23 "  return left(val - 1)"
+   .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "val" ""
    isub r2,a1,1
-   .traceevent "O" 4 "R" "I" "r" 2 12 12 0 "" ""
+   .traceevent "O" 4 "R" "I" "r" 2 13 13 0 "" ""
    call1 r3,left(),r2
-   .traceevent "F" 4 "R" "I" "r" 3 12 12 0 "left" ""
+   .traceevent "F" 4 "R" "I" "r" 3 13 13 0 "left" ""
    ret r3
    .meta "inline_test_mutual_recursive_negative.right.val"

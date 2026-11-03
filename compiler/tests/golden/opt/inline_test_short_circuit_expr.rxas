@@ -4,9 +4,9 @@
 
 .globals=0
 
-main() .locals=8
+main() .locals=6
    .meta "inline_test_short_circuit_expr.main"="b" ".int" main() ""
-   .srcstep 36 36 17 "inline_test_short_circuit_expr.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 39 39 17 "inline_test_short_circuit_expr.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_short_circuit_expr.crexx" 4 3 46 "  say \"Starting short circuit inline test...\""
    say "Starting short circuit inline test..."
@@ -27,88 +27,94 @@ main() .locals=8
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 6 6 0 "calls" ""
    say r0
-   .srcstep 12 12 17 "inline_test_short_circuit_expr.crexx" 15 3 22 "  if \\probe(0, calls) then say \"not-ok\""
-   .srcstep 9 9 17 "inline_test_short_circuit_expr.crexx" 15 7 12 "  if \\probe(0, calls) then say \"not-ok\""
-   .srcstep 7 7 17 "inline_test_short_circuit_expr.crexx" 32 3 20 "  count = count + 1"
-   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "calls" ""
-   iadd r0,r0,1
-   .traceevent "O" 4 "R" "I" "r" 0 7 7 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 7 7 0 "calls" ""
-   .srcstep 8 8 17 "inline_test_short_circuit_expr.crexx" 33 3 14 "  return flag"
+   .srcstep 13 13 17 "inline_test_short_circuit_expr.crexx" 15 3 22 "  if \\probe(0, calls) then say \"not-ok\""
+   .srcstep 10 10 17 "inline_test_short_circuit_expr.crexx" 15 7 12 "  if \\probe(0, calls) then say \"not-ok\""
+   .srcstep 7 7 33 "inline_test_short_circuit_expr.crexx" 31 7 11 "  arg flag = .int, expose count = .int"
    load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
-   icopy r3,r2
+   .traceevent "L" 4 "R" "I" "r" 2 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "flag" ""
+   .srcstep 8 8 17 "inline_test_short_circuit_expr.crexx" 32 3 20 "  count = count + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "calls" ""
+   iadd r0,r0,1
+   .traceevent "O" 4 "R" "I" "r" 0 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 8 8 0 "calls" ""
+   .srcstep 9 9 17 "inline_test_short_circuit_expr.crexx" 33 3 14 "  return flag"
+   .traceevent "V" 6 "R" "I" "r" 2 13 13 0 "flag" ""
 l95bexprend:
-   not r4,r3
-   .traceevent "P" 4 "R" "B" "r" 4 12 12 0 "" ""
-   brf l43iffalse,r4
-   .srcstep 13 13 17 "inline_test_short_circuit_expr.crexx" 15 23 27 "  if \\probe(0, calls) then say \"not-ok\""
-   .srcstep 10 10 17 "inline_test_short_circuit_expr.crexx" 15 28 40 "  if \\probe(0, calls) then say \"not-ok\""
+   not r3,r2
+   .traceevent "P" 4 "R" "B" "r" 3 13 13 0 "" ""
+   brf l43iffalse,r3
+   .srcstep 14 14 17 "inline_test_short_circuit_expr.crexx" 15 23 27 "  if \\probe(0, calls) then say \"not-ok\""
+   .srcstep 11 11 17 "inline_test_short_circuit_expr.crexx" 15 28 40 "  if \\probe(0, calls) then say \"not-ok\""
    say "not-ok"
    br l43ifend
-   .srcstep 14 14 17 "inline_test_short_circuit_expr.crexx" 16 3 7 "  else say \"bad-not\""
+   .srcstep 15 15 17 "inline_test_short_circuit_expr.crexx" 16 3 7 "  else say \"bad-not\""
 l43iffalse:
-   .srcstep 11 11 17 "inline_test_short_circuit_expr.crexx" 16 8 21 "  else say \"bad-not\""
+   .srcstep 12 12 17 "inline_test_short_circuit_expr.crexx" 16 8 21 "  else say \"bad-not\""
    say "bad-not"
 l43ifend:
-   .srcstep 15 15 17 "inline_test_short_circuit_expr.crexx" 17 3 12 "  say calls"
+   .srcstep 16 16 17 "inline_test_short_circuit_expr.crexx" 17 3 12 "  say calls"
    itos r0
-   .traceevent "V" 6 "R" "S" "r" 0 15 15 0 "calls" ""
+   .traceevent "V" 6 "R" "S" "r" 0 16 16 0 "calls" ""
    say r0
-   .srcstep 21 21 17 "inline_test_short_circuit_expr.crexx" 19 3 25 "  if 1 & probe(1, calls) then say \"and-right-ok\""
-   .srcstep 18 18 17 "inline_test_short_circuit_expr.crexx" 19 10 15 "  if 1 & probe(1, calls) then say \"and-right-ok\""
-   .srcstep 16 16 17 "inline_test_short_circuit_expr.crexx" 32 3 20 "  count = count + 1"
-   .traceevent "V" 6 "R" "I" "r" 0 16 16 0 "calls" ""
+   .srcstep 23 23 17 "inline_test_short_circuit_expr.crexx" 19 3 25 "  if 1 & probe(1, calls) then say \"and-right-ok\""
+   .srcstep 20 20 17 "inline_test_short_circuit_expr.crexx" 19 10 15 "  if 1 & probe(1, calls) then say \"and-right-ok\""
+   .srcstep 17 17 33 "inline_test_short_circuit_expr.crexx" 31 7 11 "  arg flag = .int, expose count = .int"
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 17 17 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 17 17 0 "flag" ""
+   .srcstep 18 18 17 "inline_test_short_circuit_expr.crexx" 32 3 20 "  count = count + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 18 18 0 "calls" ""
    iadd r0,r0,1
-   .traceevent "O" 4 "R" "I" "r" 0 16 16 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 16 16 0 "calls" ""
-   .srcstep 17 17 17 "inline_test_short_circuit_expr.crexx" 33 3 14 "  return flag"
-   load r4,1
-   .traceevent "L" 4 "R" "I" "r" 4 21 21 0 "" ""
-   icopy r3,r4
+   .traceevent "O" 4 "R" "I" "r" 0 18 18 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 18 18 0 "calls" ""
+   .srcstep 19 19 17 "inline_test_short_circuit_expr.crexx" 33 3 14 "  return flag"
+   .traceevent "V" 6 "R" "I" "r" 3 23 23 0 "flag" ""
 l107bexprend:
    brf l55iffalse,r3
-   .srcstep 22 22 17 "inline_test_short_circuit_expr.crexx" 19 26 30 "  if 1 & probe(1, calls) then say \"and-right-ok\""
-   .srcstep 19 19 17 "inline_test_short_circuit_expr.crexx" 19 31 49 "  if 1 & probe(1, calls) then say \"and-right-ok\""
+   .srcstep 24 24 17 "inline_test_short_circuit_expr.crexx" 19 26 30 "  if 1 & probe(1, calls) then say \"and-right-ok\""
+   .srcstep 21 21 17 "inline_test_short_circuit_expr.crexx" 19 31 49 "  if 1 & probe(1, calls) then say \"and-right-ok\""
    say "and-right-ok"
    br l55ifend
-   .srcstep 23 23 17 "inline_test_short_circuit_expr.crexx" 20 3 7 "  else say \"bad-and-right\""
+   .srcstep 25 25 17 "inline_test_short_circuit_expr.crexx" 20 3 7 "  else say \"bad-and-right\""
 l55iffalse:
-   .srcstep 20 20 17 "inline_test_short_circuit_expr.crexx" 20 8 27 "  else say \"bad-and-right\""
+   .srcstep 22 22 17 "inline_test_short_circuit_expr.crexx" 20 8 27 "  else say \"bad-and-right\""
    say "bad-and-right"
 l55ifend:
-   .srcstep 24 24 17 "inline_test_short_circuit_expr.crexx" 21 3 12 "  say calls"
+   .srcstep 26 26 17 "inline_test_short_circuit_expr.crexx" 21 3 12 "  say calls"
    itos r0
-   .traceevent "V" 6 "R" "S" "r" 0 24 24 0 "calls" ""
+   .traceevent "V" 6 "R" "S" "r" 0 26 26 0 "calls" ""
    say r0
-   .srcstep 30 30 17 "inline_test_short_circuit_expr.crexx" 23 3 25 "  if 0 | probe(1, calls) then say \"or-right-ok\""
-   .srcstep 27 27 17 "inline_test_short_circuit_expr.crexx" 23 10 15 "  if 0 | probe(1, calls) then say \"or-right-ok\""
-   .srcstep 25 25 17 "inline_test_short_circuit_expr.crexx" 32 3 20 "  count = count + 1"
-   .traceevent "V" 6 "R" "I" "r" 0 25 25 0 "calls" ""
-   iadd r0,r0,1
-   .traceevent "O" 4 "R" "I" "r" 0 25 25 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 25 25 0 "calls" ""
-   .srcstep 26 26 17 "inline_test_short_circuit_expr.crexx" 33 3 14 "  return flag"
+   .srcstep 33 33 17 "inline_test_short_circuit_expr.crexx" 23 3 25 "  if 0 | probe(1, calls) then say \"or-right-ok\""
+   .srcstep 30 30 17 "inline_test_short_circuit_expr.crexx" 23 10 15 "  if 0 | probe(1, calls) then say \"or-right-ok\""
+   .srcstep 27 27 33 "inline_test_short_circuit_expr.crexx" 31 7 11 "  arg flag = .int, expose count = .int"
    load r3,1
-   .traceevent "L" 4 "R" "I" "r" 3 30 30 0 "" ""
-   icopy r7,r3
+   .traceevent "L" 4 "R" "I" "r" 3 27 27 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 27 27 0 "flag" ""
+   .srcstep 28 28 17 "inline_test_short_circuit_expr.crexx" 32 3 20 "  count = count + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 28 28 0 "calls" ""
+   iadd r0,r0,1
+   .traceevent "O" 4 "R" "I" "r" 0 28 28 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 28 28 0 "calls" ""
+   .srcstep 29 29 17 "inline_test_short_circuit_expr.crexx" 33 3 14 "  return flag"
+   .traceevent "V" 6 "R" "I" "r" 3 33 33 0 "flag" ""
 l119bexprend:
-   brf l67iffalse,r7
-   .srcstep 31 31 17 "inline_test_short_circuit_expr.crexx" 23 26 30 "  if 0 | probe(1, calls) then say \"or-right-ok\""
-   .srcstep 28 28 17 "inline_test_short_circuit_expr.crexx" 23 31 48 "  if 0 | probe(1, calls) then say \"or-right-ok\""
+   brf l67iffalse,r3
+   .srcstep 34 34 17 "inline_test_short_circuit_expr.crexx" 23 26 30 "  if 0 | probe(1, calls) then say \"or-right-ok\""
+   .srcstep 31 31 17 "inline_test_short_circuit_expr.crexx" 23 31 48 "  if 0 | probe(1, calls) then say \"or-right-ok\""
    say "or-right-ok"
    br l67ifend
-   .srcstep 32 32 17 "inline_test_short_circuit_expr.crexx" 24 3 7 "  else say \"bad-or-right\""
+   .srcstep 35 35 17 "inline_test_short_circuit_expr.crexx" 24 3 7 "  else say \"bad-or-right\""
 l67iffalse:
-   .srcstep 29 29 17 "inline_test_short_circuit_expr.crexx" 24 8 26 "  else say \"bad-or-right\""
+   .srcstep 32 32 17 "inline_test_short_circuit_expr.crexx" 24 8 26 "  else say \"bad-or-right\""
    say "bad-or-right"
 l67ifend:
-   .srcstep 33 33 17 "inline_test_short_circuit_expr.crexx" 25 3 12 "  say calls"
+   .srcstep 36 36 17 "inline_test_short_circuit_expr.crexx" 25 3 12 "  say calls"
    itos r0
-   .traceevent "V" 6 "R" "S" "r" 0 33 33 0 "calls" ""
+   .traceevent "V" 6 "R" "S" "r" 0 36 36 0 "calls" ""
    say r0
-   .srcstep 34 34 17 "inline_test_short_circuit_expr.crexx" 27 3 44 "  say \"Short circuit inline test finished.\""
+   .srcstep 37 37 17 "inline_test_short_circuit_expr.crexx" 27 3 44 "  say \"Short circuit inline test finished.\""
    say "Short circuit inline test finished."
-   .srcstep 35 35 17 "inline_test_short_circuit_expr.crexx" 28 3 11 "  return 0"
+   .srcstep 38 38 17 "inline_test_short_circuit_expr.crexx" 28 3 11 "  return 0"
    ret 0
    .meta "inline_test_short_circuit_expr.main.calls"

@@ -6,7 +6,7 @@
 .meta "inline_test_object_writable_arg.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=9
+main() .locals=7
    .meta "inline_test_object_writable_arg.main"="b" ".int" main() ""
    .srcstep 27 27 17 "inline_test_object_writable_arg.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -40,33 +40,33 @@ main() .locals=9
    copy r3,r0
    .srcstep 16 16 17 "inline_test_object_writable_arg.crexx" 13 3 24 "  value = .Box(\"local\")"
    .srcstep 10 10 6 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
-   null r5
+   null r4
    .srcstep 11 11 6 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
-   setattrs r5,2
+   setattrs r4,2
    .srcstep 12 12 6 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
-   setobjtype r5,"inline_test_object_writable_arg.box"
+   setobjtype r4,"inline_test_object_writable_arg.box"
    .srcstep 13 13 33 "inline_test_object_writable_arg.crexx" 20 9 16 "    arg initial = .string"
-   load r4,"local"
-   .traceevent "L" 4 "R" "S" "r" 4 13 13 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 4 13 13 0 "initial" ""
+   load r1,"local"
+   .traceevent "L" 4 "R" "S" "r" 1 13 13 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 13 13 0 "initial" ""
    .srcstep 14 14 17 "inline_test_object_writable_arg.crexx" 21 5 19 "    name = initial"
-   .traceevent "V" 6 "R" "S" "r" 4 14 14 0 "initial" ""
-   linkattr1 r6,r5,1
-   scopy r6,r4
-   unlink r6
+   .traceevent "V" 6 "R" "S" "r" 1 14 14 0 "initial" ""
+   linkattr1 r5,r4,1
+   scopy r5,r1
+   unlink r5
    .srcstep 15 15 33 "inline_test_object_writable_arg.crexx" 22 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 5 15 15 0 "§factory" ""
-   copy r3,r5
+   .traceevent "V" 6 "R" "O" "r" 4 15 15 0 "§factory" ""
+   copy r3,r4
    .traceevent "A" 6 "R" "O" "r" 3 15 15 0 "value" ""
    .srcstep 17 17 17 "inline_test_object_writable_arg.crexx" 14 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 3 19 19 0 "value" ""
    settp r3,256
-   call1 r8,§inline_test_object_writable_arg.box.getname(),r3
-   .traceevent "F" 4 "R" "S" "r" 8 19 19 0 "getname" ""
-   scopy r7,r8
+   call1 r1,§inline_test_object_writable_arg.box.getname(),r3
+   .traceevent "F" 4 "R" "S" "r" 1 19 19 0 "getname" ""
+   scopy r6,r1
 l104bexprend:
    endlife r3
-   say r7
+   say r6
    .srcstep 24 24 17 "inline_test_object_writable_arg.crexx" 7 3 18 "  say box.getName()"
    .srcstep 23 23 17 "inline_test_object_writable_arg.crexx" 7 7 10 "  say box.getName()"
    .srcstep 20 20 33 "inline_test_object_writable_arg.crexx" 7 7 10 "  say box.getName()"
@@ -76,12 +76,12 @@ l104bexprend:
    .traceevent "V" 6 "R" "O" "r" 0 24 24 0 "§this" ""
    assertinitialized r0
    .srcstep 22 22 17 "inline_test_object_writable_arg.crexx" 25 5 16 "    return name"
-   linkattr1 r8,r0,1
-   .traceevent "V" 6 "R" "S" "r" 8 24 24 0 "name" ""
-   scopy r7,r8
-   unlink r8
+   linkattr1 r6,r0,1
+   .traceevent "V" 6 "R" "S" "r" 6 24 24 0 "name" ""
+   scopy r5,r6
+   unlink r6
 l133bexprend:
-   say r7
+   say r5
    .srcstep 25 25 17 "inline_test_object_writable_arg.crexx" 8 3 50 "  say \"Object writable-arg inline test finished.\""
    say "Object writable-arg inline test finished."
    .srcstep 26 26 17 "inline_test_object_writable_arg.crexx" 9 3 11 "  return 0"

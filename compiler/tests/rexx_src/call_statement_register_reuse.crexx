@@ -9,7 +9,37 @@ main: procedure = .int
   end
 
   if wrapper.total() <> 528 then return 1
+  original = 41
+  if referenced_value(original) <> 42 then return 2
+  if original <> 41 then return 3
+  if forwarded_value(original) <> 42 then return 4
+  if original <> 41 then return 5
+  if result_value(17) + result_value(19) <> 38 then return 6
   return 0
+
+/* Address-taking captures retain their storage throughout the body. */
+referenced_value: procedure = .int
+  arg value = .int
+  saved = reference value
+  linked = dereference saved
+  return linked + 1
+
+/* A surviving recursive call can forward a capture's address. */
+forwarded_value: procedure = .int
+  arg value = .int
+  call increment_forward(value, 0)
+  return value
+
+increment_forward: procedure = .void
+  arg expose value = .int, depth = .int
+  if depth > 0 then call increment_forward(value, depth - 1)
+  value = value + 1
+  return
+
+/* The first block result remains live while the sibling call is evaluated. */
+result_value: procedure = .int
+  arg value = .int
+  return value + 1
 
 Wrapper: class
   _sink = .Sink

@@ -4,140 +4,160 @@
 
 .globals=0
 
-main() .locals=6
+main() .locals=8
    .meta "inline_test_composed_expr_contexts.main"="b" ".int" main() ""
-   .srcstep 38 38 17 "inline_test_composed_expr_contexts.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 42 42 17 "inline_test_composed_expr_contexts.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_composed_expr_contexts.crexx" 4 3 50 "  say \"Starting composed inline contexts test...\""
    say "Starting composed inline contexts test..."
-   .srcstep 4 4 17 "inline_test_composed_expr_contexts.crexx" 6 3 35 "  say leftValue(3) + rightValue(4)"
-   .srcstep 3 3 17 "inline_test_composed_expr_contexts.crexx" 6 7 16 "  say leftValue(3) + rightValue(4)"
-   .srcstep 2 2 17 "inline_test_composed_expr_contexts.crexx" 28 3 20 "  return value * 10"
-   load r1,30
-   .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
-   icopy r2,r1
+   .srcstep 5 5 17 "inline_test_composed_expr_contexts.crexx" 6 3 35 "  say leftValue(3) + rightValue(4)"
+   .srcstep 4 4 17 "inline_test_composed_expr_contexts.crexx" 6 7 16 "  say leftValue(3) + rightValue(4)"
+   .srcstep 2 2 33 "inline_test_composed_expr_contexts.crexx" 27 7 12 "  arg value = .int"
+   load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "value" ""
+   .srcstep 3 3 17 "inline_test_composed_expr_contexts.crexx" 28 3 20 "  return value * 10"
+   .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "value" ""
+   imult r2,r1,10
+   .traceevent "O" 4 "R" "I" "r" 2 5 5 0 "" ""
+   icopy r3,r2
 l174bexprend:
-   iadd r2,r2,11
-   itos r2
-   .traceevent "O" 4 "R" "S" "r" 2 4 4 0 "" ""
-   say r2
-   .srcstep 10 10 17 "inline_test_composed_expr_contexts.crexx" 7 3 65 "  say \"prefix:\" || labelFor(leftValue(2)) || \":\" || rightText(5)"
-   .srcstep 9 9 17 "inline_test_composed_expr_contexts.crexx" 7 20 28 "  say \"prefix:\" || labelFor(leftValue(2)) || \":\" || rightText(5)"
-   .srcstep 7 7 33 "inline_test_composed_expr_contexts.crexx" 39 7 12 "  arg value = .int"
-   .srcstep 6 6 17 "inline_test_composed_expr_contexts.crexx" 7 29 38 "  say \"prefix:\" || labelFor(leftValue(2)) || \":\" || rightText(5)"
-   .srcstep 5 5 17 "inline_test_composed_expr_contexts.crexx" 28 3 20 "  return value * 10"
-   load r1,20
-   .traceevent "L" 4 "R" "I" "r" 1 7 7 0 "" ""
-   icopy r3,r1
+   iadd r3,r3,11
+   itos r3
+   .traceevent "O" 4 "R" "S" "r" 3 5 5 0 "" ""
+   say r3
+   .srcstep 12 12 17 "inline_test_composed_expr_contexts.crexx" 7 3 65 "  say \"prefix:\" || labelFor(leftValue(2)) || \":\" || rightText(5)"
+   .srcstep 11 11 17 "inline_test_composed_expr_contexts.crexx" 7 20 28 "  say \"prefix:\" || labelFor(leftValue(2)) || \":\" || rightText(5)"
+   .srcstep 9 9 33 "inline_test_composed_expr_contexts.crexx" 39 7 12 "  arg value = .int"
+   .srcstep 8 8 17 "inline_test_composed_expr_contexts.crexx" 7 29 38 "  say \"prefix:\" || labelFor(leftValue(2)) || \":\" || rightText(5)"
+   .srcstep 6 6 33 "inline_test_composed_expr_contexts.crexx" 27 7 12 "  arg value = .int"
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 6 6 0 "value" ""
+   .srcstep 7 7 17 "inline_test_composed_expr_contexts.crexx" 28 3 20 "  return value * 10"
+   .traceevent "V" 6 "R" "I" "r" 2 9 9 0 "value" ""
+   imult r1,r2,10
+   .traceevent "O" 4 "R" "I" "r" 1 9 9 0 "" ""
+   icopy r4,r1
 l196bexprend:
-   icopy r2,r3
-   .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "value" ""
-   .srcstep 8 8 17 "inline_test_composed_expr_contexts.crexx" 40 3 29 "  return \"[\" || value || \"]\""
-   itos r2
-   .traceevent "V" 6 "R" "S" "r" 2 10 10 0 "value" ""
-   concat r3,"[",r2
-   .traceevent "O" 4 "R" "S" "r" 3 10 10 0 "" ""
-   concat r3,r3,"]"
-   .traceevent "O" 4 "R" "S" "r" 3 10 10 0 "" ""
-   scopy r1,r3
+   icopy r3,r4
+   .traceevent "A" 6 "R" "I" "r" 3 9 9 0 "value" ""
+   .srcstep 10 10 17 "inline_test_composed_expr_contexts.crexx" 40 3 29 "  return \"[\" || value || \"]\""
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 12 12 0 "value" ""
+   concat r4,"[",r3
+   .traceevent "O" 4 "R" "S" "r" 4 12 12 0 "" ""
+   concat r4,r4,"]"
+   .traceevent "O" 4 "R" "S" "r" 4 12 12 0 "" ""
+   scopy r2,r4
 l192bexprend:
-   concat r2,"prefix:",r1
-   .traceevent "O" 4 "R" "S" "r" 2 10 10 0 "" ""
-   concat r2,r2,":"
-   .traceevent "O" 4 "R" "S" "r" 2 10 10 0 "" ""
-   concat r2,r2,"5"
-   .traceevent "O" 4 "R" "S" "r" 2 10 10 0 "" ""
-   say r2
-   .srcstep 16 16 17 "inline_test_composed_expr_contexts.crexx" 8 3 43 "  say combine(leftValue(1), rightValue(2))"
-   .srcstep 15 15 17 "inline_test_composed_expr_contexts.crexx" 8 7 14 "  say combine(leftValue(1), rightValue(2))"
-   .srcstep 13 13 33 "inline_test_composed_expr_contexts.crexx" 43 7 11 "  arg left = .int, right = .int"
-   .srcstep 12 12 17 "inline_test_composed_expr_contexts.crexx" 8 15 24 "  say combine(leftValue(1), rightValue(2))"
-   .srcstep 11 11 17 "inline_test_composed_expr_contexts.crexx" 28 3 20 "  return value * 10"
-   load r2,10
+   concat r3,"prefix:",r2
+   .traceevent "O" 4 "R" "S" "r" 3 12 12 0 "" ""
+   concat r3,r3,":"
+   .traceevent "O" 4 "R" "S" "r" 3 12 12 0 "" ""
+   concat r3,r3,"5"
+   .traceevent "O" 4 "R" "S" "r" 3 12 12 0 "" ""
+   say r3
+   .srcstep 20 20 17 "inline_test_composed_expr_contexts.crexx" 8 3 43 "  say combine(leftValue(1), rightValue(2))"
+   .srcstep 19 19 17 "inline_test_composed_expr_contexts.crexx" 8 7 14 "  say combine(leftValue(1), rightValue(2))"
+   .srcstep 16 16 33 "inline_test_composed_expr_contexts.crexx" 43 7 11 "  arg left = .int, right = .int"
+   .srcstep 15 15 17 "inline_test_composed_expr_contexts.crexx" 8 15 24 "  say combine(leftValue(1), rightValue(2))"
+   .srcstep 13 13 33 "inline_test_composed_expr_contexts.crexx" 27 7 12 "  arg value = .int"
+   load r2,1
    .traceevent "L" 4 "R" "I" "r" 2 13 13 0 "" ""
-   icopy r1,r2
+   .traceevent "A" 6 "R" "I" "r" 2 13 13 0 "value" ""
+   .srcstep 14 14 17 "inline_test_composed_expr_contexts.crexx" 28 3 20 "  return value * 10"
+   .traceevent "V" 6 "R" "I" "r" 2 16 16 0 "value" ""
+   imult r1,r2,10
+   .traceevent "O" 4 "R" "I" "r" 1 16 16 0 "" ""
+   icopy r5,r1
 l224bexprend:
-   icopy r3,r1
-   .traceevent "A" 6 "R" "I" "r" 3 13 13 0 "left" ""
-   .srcstep 14 14 17 "inline_test_composed_expr_contexts.crexx" 44 3 22 "  return left + right"
-   .traceevent "V" 6 "R" "I" "r" 3 16 16 0 "left" ""
-   iadd r2,r3,9
-   .traceevent "O" 4 "R" "I" "r" 2 16 16 0 "" ""
-   icopy r1,r2
+   icopy r4,r5
+   .traceevent "A" 6 "R" "I" "r" 4 16 16 0 "left" ""
+   .srcstep 17 17 33 "inline_test_composed_expr_contexts.crexx" 43 20 25 "  arg left = .int, right = .int"
+   load r3,9
+   .traceevent "L" 4 "R" "I" "r" 3 17 17 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 17 17 0 "right" ""
+   .srcstep 18 18 17 "inline_test_composed_expr_contexts.crexx" 44 3 22 "  return left + right"
+   .traceevent "V" 6 "R" "I" "r" 4 20 20 0 "left" ""
+   .traceevent "V" 6 "R" "I" "r" 3 20 20 0 "right" ""
+   iadd r5,r4,r3
+   .traceevent "O" 4 "R" "I" "r" 5 20 20 0 "" ""
+   icopy r2,r5
 l220bexprend:
-   itos r1
-   say r1
-   .srcstep 17 17 17 "inline_test_composed_expr_contexts.crexx" 10 3 12 "  calls = 0"
+   itos r2
+   say r2
+   .srcstep 21 21 17 "inline_test_composed_expr_contexts.crexx" 10 3 12 "  calls = 0"
    .meta "inline_test_composed_expr_contexts.main.calls"="b" ".int" r0
    load r0,0
-   .traceevent "L" 4 "R" "I" "r" 0 17 17 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 17 17 0 "calls" ""
-   .srcstep 18 18 17 "inline_test_composed_expr_contexts.crexx" 12 8 28 "  else say \"and-skip\" calls"
+   .traceevent "L" 4 "R" "I" "r" 0 21 21 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 21 21 0 "calls" ""
+   .srcstep 22 22 17 "inline_test_composed_expr_contexts.crexx" 12 8 28 "  else say \"and-skip\" calls"
    itos r0
-   .traceevent "V" 6 "R" "S" "r" 0 18 18 0 "calls" ""
-   sconcat r3,"and-skip",r0
-   .traceevent "O" 4 "R" "S" "r" 3 18 18 0 "" ""
-   say r3
-   .srcstep 19 19 17 "inline_test_composed_expr_contexts.crexx" 14 31 50 "  if one() | bump(calls) then say \"or-skip\" calls"
-   itos r0
-   .traceevent "V" 6 "R" "S" "r" 0 19 19 0 "calls" ""
-   sconcat r3,"or-skip",r0
-   .traceevent "O" 4 "R" "S" "r" 3 19 19 0 "" ""
-   say r3
-   .srcstep 25 25 17 "inline_test_composed_expr_contexts.crexx" 17 3 25 "  if one() & bump(calls) then say \"and-hit\" calls"
-   .srcstep 22 22 17 "inline_test_composed_expr_contexts.crexx" 17 14 18 "  if one() & bump(calls) then say \"and-hit\" calls"
-   .srcstep 20 20 17 "inline_test_composed_expr_contexts.crexx" 54 3 20 "  count = count + 1"
-   .traceevent "V" 6 "R" "I" "r" 0 20 20 0 "calls" ""
-   iadd r0,r0,1
-   .traceevent "O" 4 "R" "I" "r" 0 20 20 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 20 20 0 "calls" ""
-   .srcstep 21 21 17 "inline_test_composed_expr_contexts.crexx" 55 3 11 "  return 1"
-   load r3,1
-   .traceevent "L" 4 "R" "I" "r" 3 25 25 0 "" ""
-   icopy r2,r3
-l240bexprend:
-   brf l69iffalse,r2
-   .srcstep 26 26 17 "inline_test_composed_expr_contexts.crexx" 17 26 30 "  if one() & bump(calls) then say \"and-hit\" calls"
-   .srcstep 23 23 17 "inline_test_composed_expr_contexts.crexx" 17 31 50 "  if one() & bump(calls) then say \"and-hit\" calls"
+   .traceevent "V" 6 "R" "S" "r" 0 22 22 0 "calls" ""
+   sconcat r5,"and-skip",r0
+   .traceevent "O" 4 "R" "S" "r" 5 22 22 0 "" ""
+   say r5
+   .srcstep 23 23 17 "inline_test_composed_expr_contexts.crexx" 14 31 50 "  if one() | bump(calls) then say \"or-skip\" calls"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 23 23 0 "calls" ""
-   sconcat r1,"and-hit",r0
-   .traceevent "O" 4 "R" "S" "r" 1 23 23 0 "" ""
-   say r1
+   sconcat r5,"or-skip",r0
+   .traceevent "O" 4 "R" "S" "r" 5 23 23 0 "" ""
+   say r5
+   .srcstep 29 29 17 "inline_test_composed_expr_contexts.crexx" 17 3 25 "  if one() & bump(calls) then say \"and-hit\" calls"
+   .srcstep 26 26 17 "inline_test_composed_expr_contexts.crexx" 17 14 18 "  if one() & bump(calls) then say \"and-hit\" calls"
+   .srcstep 24 24 17 "inline_test_composed_expr_contexts.crexx" 54 3 20 "  count = count + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 24 24 0 "calls" ""
+   iadd r0,r0,1
+   .traceevent "O" 4 "R" "I" "r" 0 24 24 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 24 24 0 "calls" ""
+   .srcstep 25 25 17 "inline_test_composed_expr_contexts.crexx" 55 3 11 "  return 1"
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 29 29 0 "" ""
+   icopy r4,r5
+l240bexprend:
+   brf l69iffalse,r4
+   .srcstep 30 30 17 "inline_test_composed_expr_contexts.crexx" 17 26 30 "  if one() & bump(calls) then say \"and-hit\" calls"
+   .srcstep 27 27 17 "inline_test_composed_expr_contexts.crexx" 17 31 50 "  if one() & bump(calls) then say \"and-hit\" calls"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 27 27 0 "calls" ""
+   sconcat r3,"and-hit",r0
+   .traceevent "O" 4 "R" "S" "r" 3 27 27 0 "" ""
+   say r3
    br l69ifend
-   .srcstep 27 27 17 "inline_test_composed_expr_contexts.crexx" 18 3 7 "  else say \"bad-and-hit\""
+   .srcstep 31 31 17 "inline_test_composed_expr_contexts.crexx" 18 3 7 "  else say \"bad-and-hit\""
 l69iffalse:
-   .srcstep 24 24 17 "inline_test_composed_expr_contexts.crexx" 18 8 25 "  else say \"bad-and-hit\""
+   .srcstep 28 28 17 "inline_test_composed_expr_contexts.crexx" 18 8 25 "  else say \"bad-and-hit\""
    say "bad-and-hit"
 l69ifend:
-   .srcstep 33 33 17 "inline_test_composed_expr_contexts.crexx" 20 3 26 "  if zero() | bump(calls) then say \"or-hit\" calls"
-   .srcstep 30 30 17 "inline_test_composed_expr_contexts.crexx" 20 15 19 "  if zero() | bump(calls) then say \"or-hit\" calls"
-   .srcstep 28 28 17 "inline_test_composed_expr_contexts.crexx" 54 3 20 "  count = count + 1"
-   .traceevent "V" 6 "R" "I" "r" 0 28 28 0 "calls" ""
+   .srcstep 37 37 17 "inline_test_composed_expr_contexts.crexx" 20 3 26 "  if zero() | bump(calls) then say \"or-hit\" calls"
+   .srcstep 34 34 17 "inline_test_composed_expr_contexts.crexx" 20 15 19 "  if zero() | bump(calls) then say \"or-hit\" calls"
+   .srcstep 32 32 17 "inline_test_composed_expr_contexts.crexx" 54 3 20 "  count = count + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 32 32 0 "calls" ""
    iadd r0,r0,1
-   .traceevent "O" 4 "R" "I" "r" 0 28 28 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 28 28 0 "calls" ""
-   .srcstep 29 29 17 "inline_test_composed_expr_contexts.crexx" 55 3 11 "  return 1"
-   load r3,1
-   .traceevent "L" 4 "R" "I" "r" 3 33 33 0 "" ""
-   icopy r2,r3
+   .traceevent "O" 4 "R" "I" "r" 0 32 32 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 32 32 0 "calls" ""
+   .srcstep 33 33 17 "inline_test_composed_expr_contexts.crexx" 55 3 11 "  return 1"
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 37 37 0 "" ""
+   icopy r4,r5
 l249bexprend:
-   brf l81iffalse,r2
-   .srcstep 34 34 17 "inline_test_composed_expr_contexts.crexx" 20 27 31 "  if zero() | bump(calls) then say \"or-hit\" calls"
-   .srcstep 31 31 17 "inline_test_composed_expr_contexts.crexx" 20 32 50 "  if zero() | bump(calls) then say \"or-hit\" calls"
+   brf l81iffalse,r4
+   .srcstep 38 38 17 "inline_test_composed_expr_contexts.crexx" 20 27 31 "  if zero() | bump(calls) then say \"or-hit\" calls"
+   .srcstep 35 35 17 "inline_test_composed_expr_contexts.crexx" 20 32 50 "  if zero() | bump(calls) then say \"or-hit\" calls"
    itos r0
-   .traceevent "V" 6 "R" "S" "r" 0 31 31 0 "calls" ""
-   sconcat r1,"or-hit",r0
-   .traceevent "O" 4 "R" "S" "r" 1 31 31 0 "" ""
-   say r1
+   .traceevent "V" 6 "R" "S" "r" 0 35 35 0 "calls" ""
+   sconcat r3,"or-hit",r0
+   .traceevent "O" 4 "R" "S" "r" 3 35 35 0 "" ""
+   say r3
    br l81ifend
-   .srcstep 35 35 17 "inline_test_composed_expr_contexts.crexx" 21 3 7 "  else say \"bad-or-hit\""
+   .srcstep 39 39 17 "inline_test_composed_expr_contexts.crexx" 21 3 7 "  else say \"bad-or-hit\""
 l81iffalse:
-   .srcstep 32 32 17 "inline_test_composed_expr_contexts.crexx" 21 8 24 "  else say \"bad-or-hit\""
+   .srcstep 36 36 17 "inline_test_composed_expr_contexts.crexx" 21 8 24 "  else say \"bad-or-hit\""
    say "bad-or-hit"
 l81ifend:
-   .srcstep 36 36 17 "inline_test_composed_expr_contexts.crexx" 23 3 48 "  say \"Composed inline contexts test finished.\""
+   .srcstep 40 40 17 "inline_test_composed_expr_contexts.crexx" 23 3 48 "  say \"Composed inline contexts test finished.\""
    say "Composed inline contexts test finished."
-   .srcstep 37 37 17 "inline_test_composed_expr_contexts.crexx" 24 3 11 "  return 0"
+   .srcstep 41 41 17 "inline_test_composed_expr_contexts.crexx" 24 3 11 "  return 0"
    ret 0
    .meta "inline_test_composed_expr_contexts.main.calls"

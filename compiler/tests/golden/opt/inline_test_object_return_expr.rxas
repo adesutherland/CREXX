@@ -6,7 +6,7 @@
 .meta "inline_test_object_return_expr.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=9
+main() .locals=8
    .meta "inline_test_object_return_expr.main"="b" ".int" main() ""
    .srcstep 32 32 17 "inline_test_object_return_expr.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -50,9 +50,9 @@ l88bexprend:
    .srcstep 13 13 17 "inline_test_object_return_expr.crexx" 17 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 15 15 0 "value" ""
    settp r0,256
-   call1 r2,§inline_test_object_return_expr.box.getname(),r0
-   .traceevent "F" 4 "R" "S" "r" 2 15 15 0 "getname" ""
-   scopy r6,r2
+   call1 r3,§inline_test_object_return_expr.box.getname(),r0
+   .traceevent "F" 4 "R" "S" "r" 3 15 15 0 "getname" ""
+   scopy r6,r3
 l84bexprend:
    endlife r0
    say r6
@@ -66,37 +66,37 @@ l84bexprend:
    .traceevent "A" 6 "R" "S" "r" 5 16 16 0 "initial" ""
    .srcstep 23 23 17 "inline_test_object_return_expr.crexx" 12 3 24 "  value = .Box(initial)"
    .srcstep 17 17 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
-   null r8
+   null r7
    .srcstep 18 18 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
-   setattrs r8,2
+   setattrs r7,2
    .srcstep 19 19 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
-   setobjtype r8,"inline_test_object_return_expr.box"
+   setobjtype r7,"inline_test_object_return_expr.box"
    .srcstep 20 20 33 "inline_test_object_return_expr.crexx" 23 9 16 "    arg initial = .string"
    .traceevent "V" 6 "R" "S" "r" 5 20 20 0 "initial" ""
-   scopy r7,r5
-   .traceevent "A" 6 "R" "S" "r" 7 20 20 0 "initial" ""
+   scopy r2,r5
+   .traceevent "A" 6 "R" "S" "r" 2 20 20 0 "initial" ""
    .srcstep 21 21 17 "inline_test_object_return_expr.crexx" 24 5 19 "    name = initial"
-   .traceevent "V" 6 "R" "S" "r" 7 21 21 0 "initial" ""
-   linkattr1 r1,r8,1
-   scopy r1,r7
+   .traceevent "V" 6 "R" "S" "r" 2 21 21 0 "initial" ""
+   linkattr1 r1,r7,1
+   scopy r1,r2
    unlink r1
    .srcstep 22 22 33 "inline_test_object_return_expr.crexx" 25 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 8 22 22 0 "§factory" ""
-   copy r2,r8
-   .traceevent "A" 6 "R" "O" "r" 2 22 22 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 7 22 22 0 "§factory" ""
+   copy r3,r7
+   .traceevent "A" 6 "R" "O" "r" 3 22 22 0 "value" ""
    .srcstep 24 24 17 "inline_test_object_return_expr.crexx" 13 3 15 "  return value"
-   .traceevent "V" 6 "R" "O" "r" 2 26 26 0 "value" ""
-   copy r1,r2
+   .traceevent "V" 6 "R" "O" "r" 3 26 26 0 "value" ""
+   copy r2,r3
 l117bexprend:
-   endlife r2
-   copy r6,r1
+   endlife r3
+   copy r6,r2
    .traceevent "A" 6 "R" "O" "r" 6 26 26 0 "value" ""
    .srcstep 27 27 17 "inline_test_object_return_expr.crexx" 17 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 6 29 29 0 "value" ""
    settp r6,256
-   call1 r2,§inline_test_object_return_expr.box.getname(),r6
-   .traceevent "F" 4 "R" "S" "r" 2 29 29 0 "getname" ""
-   scopy r5,r2
+   call1 r3,§inline_test_object_return_expr.box.getname(),r6
+   .traceevent "F" 4 "R" "S" "r" 3 29 29 0 "getname" ""
+   scopy r5,r3
 l113bexprend:
    endlife r6
    say r5

@@ -139,8 +139,17 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
             CONSTANT : "10" (2:4) [Type: .int]
             BLOCK_EXPR : "do" (2:9) [Type: .int]
               INSTRUCTIONS : "" (3:2) [Type: .void]
-                LEAVE_WITH : "leave" (4:16) [Type: .int]
-                  CONSTANT : "10" (4:27) [Type: .int]
+                ASSIGN : "=" (3:2) [Type: .int]
+                  VAR_TARGET : "a" (3:2) [Type: .int]
+                  CONSTANT : "5" (3:6) [Type: .int]
+                IF : "if" (4:2) [Type: .void]
+                  OP_COMPARE_GT : ">" (4:5) [Type: .boolean]
+                    VAR_SYMBOL : "a" (4:5) [Type: .int]
+                    CONSTANT : "0" (4:9) [Type: .int]
+                  LEAVE_WITH : "leave" (4:16) [Type: .int]
+                    OP_MULT : "*" (4:27) [Type: .int]
+                      VAR_SYMBOL : "a" (4:27) [Type: .int]
+                      CONSTANT : "2" (4:31) [Type: .int]
                 LEAVE_WITH : "leave" (5:2) [Type: .int]
                   CONSTANT : "0" (5:13) [Type: .int]
         RETURN : "" (2:67) [Type: .void]
@@ -150,5 +159,5 @@ Scope [0]: Unnamed
     main (Function) -> .void
     Scope [2]: main
       Scope [3]: Unnamed
-        a (Constant) -> .int
+        a (Variable) -> .int
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

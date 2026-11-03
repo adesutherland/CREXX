@@ -175,7 +175,7 @@ main() .locals=14
    .meta "object_reference_regression.smallpayload.setname.label"
    .meta "object_reference_regression.smallpayload.setname.§this"
 
-§object_reference_regression.largepayload.§factory() .locals=10
+§object_reference_regression.largepayload.§factory() .locals=9
    .meta "object_reference_regression.largepayload.§factory"="b" ".object_reference_regression..largepayload" §object_reference_regression.largepayload.§factory() "label=.string"
    .srcstep 69 69 17 "object_reference_regression.crexx" 65 3 13 "  *: factory"
    null r2
@@ -234,26 +234,26 @@ l191doend:
    unlink r7
    .srcstep 59 59 17 "object_reference_regression.crexx" 73 5 45 "    child = .SmallPayload(label || \":child\")"
    .srcstep 53 53 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
-   null r9
+   null r8
    .srcstep 54 54 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
-   setattrs r9,2
+   setattrs r8,2
    .srcstep 55 55 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
-   setobjtype r9,"object_reference_regression.smallpayload"
+   setobjtype r8,"object_reference_regression.smallpayload"
    .srcstep 56 56 33 "object_reference_regression.crexx" 40 9 14 "    arg label = .string"
    .traceevent "V" 6 "R" "S" "a" 1 56 56 0 "label" ""
-   concat r8,a1,":child"
-   .traceevent "O" 4 "R" "S" "r" 8 56 56 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 8 56 56 0 "label" ""
+   concat r7,a1,":child"
+   .traceevent "O" 4 "R" "S" "r" 7 56 56 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 56 56 0 "label" ""
    .srcstep 57 57 17 "object_reference_regression.crexx" 41 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "r" 8 57 57 0 "label" ""
-   linkattr1 r7,r9,1
-   scopy r7,r8
-   unlink r7
+   .traceevent "V" 6 "R" "S" "r" 7 57 57 0 "label" ""
+   linkattr1 r6,r8,1
+   scopy r6,r7
+   unlink r6
    .srcstep 58 58 33 "object_reference_regression.crexx" 42 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 9 58 58 0 "§factory" ""
-   linkattr1 r7,r2,1
-   copy r7,r9
-   unlink r7
+   .traceevent "V" 6 "R" "O" "r" 8 58 58 0 "§factory" ""
+   linkattr1 r6,r2,1
+   copy r6,r8
+   unlink r6
    .srcstep 60 60 17 "object_reference_regression.crexx" 74 5 29 "    marker1 = label || \":m1\""
    .traceevent "V" 6 "R" "S" "a" 1 60 60 0 "label" ""
    concat r6,a1,":m1"
@@ -363,29 +363,29 @@ l191doend:
    .srcstep 82 82 17 "object_reference_regression.crexx" 91 5 42 "    call child.setName(label || \":child\")"
    .srcstep 77 77 6 "object_reference_regression.crexx" 91 10 15 "    call child.setName(label || \":child\")"
    .traceevent "V" 6 "R" "O" "a" 1 0 0 0 "§this" ""
-   linkattr1 r4,a1,1
+   linkattr1 r3,a1,1
    .srcstep 78 78 33 "object_reference_regression.crexx" 48 9 14 "    arg label = .string"
    .traceevent "V" 6 "R" "S" "a" 2 78 78 0 "label" ""
-   concat r5,a2,":child"
-   .traceevent "O" 4 "R" "S" "r" 5 78 78 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 5 78 78 0 "label" ""
+   concat r4,a2,":child"
+   .traceevent "O" 4 "R" "S" "r" 4 78 78 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 78 78 0 "label" ""
    .srcstep 79 79 6 "object_reference_regression.crexx" 47 3 26 "  setName: method = .void"
-   .traceevent "V" 6 "R" "O" "r" 4 0 0 0 "§this" ""
-   assertinitialized r4
+   .traceevent "V" 6 "R" "O" "r" 3 0 0 0 "§this" ""
+   assertinitialized r3
    .srcstep 80 80 17 "object_reference_regression.crexx" 49 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "r" 5 80 80 0 "label" ""
-   linkattr1 r3,r4,1
-   scopy r3,r5
-   unlink r3
+   .traceevent "V" 6 "R" "S" "r" 4 80 80 0 "label" ""
+   linkattr1 r5,r3,1
+   scopy r5,r4
+   unlink r5
    .srcstep 81 81 6 "object_reference_regression.crexx" 91 10 42 "    call child.setName(label || \":child\")"
-   unlink r4
+   unlink r3
    .srcstep 83 83 17 "object_reference_regression.crexx" 92 5 29 "    marker8 = label || \":m8\""
    .traceevent "V" 6 "R" "S" "a" 2 83 83 0 "label" ""
-   concat r3,a2,":m8"
-   .traceevent "O" 4 "R" "S" "r" 3 83 83 0 "" ""
-   linkattr1 r4,a1,9
-   scopy r4,r3
-   unlink r4
+   concat r4,a2,":m8"
+   .traceevent "O" 4 "R" "S" "r" 4 83 83 0 "" ""
+   linkattr1 r5,a1,9
+   scopy r5,r4
+   unlink r5
    .srcstep 84 84 17 "object_reference_regression.crexx" 93 5 11 "    return"
    ret
    .meta "object_reference_regression.largepayload.rename.label"

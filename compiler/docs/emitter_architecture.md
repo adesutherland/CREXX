@@ -57,6 +57,16 @@ RXAS resolves every alias operand directly to the assembler's deduplicated
 binary constant-pool entry; no runtime register, initialization instruction, or
 table copy is introduced.
 
+### Implicit constant initialization
+
+Implicit constant promotion in `implicit_constant_entry_initializer()` requires
+the defining store to be a proven callable-entry initializer. Later stores in
+lowered SELECT/block expressions and cloned by-value argument bindings remain
+runtime work when that bounded proof does not apply. Their values and authored
+control flow must be preserved; a source literal alone does not establish a
+procedure-wide constant. Further path-sensitive folding belongs to compiler
+dataflow optimization, independently of capture-register lifetime/recycling.
+
 ## 3. Logic Categorization (Modular Structure)
 
 ### Core & Marshalling (`rxcp_emit_core.c`)
@@ -143,6 +153,15 @@ table copy is introduced.
 ## 4. Register Allocation (`rxcp_emit_reg.c`)
 
 The register allocation logic is isolated in `rxcp_emit_reg.c`. It performs the first pass over the AST to ensure every node that requires a virtual register has one assigned before code emission begins.
+
+Cloned by-value formals own local capture storage even when the generated
+inline block shares its parent's register namespace. Scalar captures with no
+reference target, exposure, shared alias or use escaping that block through a
+surviving call/assembler operation use the ordinary recyclable pool. They are
+released at that block's allocation boundary; a live block-expression result
+remains reserved for its enclosing expression. Aggregate and unproved escape
+lifetimes retain their existing storage. This changes allocation only: constant
+promotion, runtime clearing, reference expiry and cleanup ordering are separate.
 
 ## 4.1 Argument Copy Semantics
 

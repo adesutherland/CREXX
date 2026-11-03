@@ -696,6 +696,42 @@ static int symbol_uses_scoped_register(Symbol *symbol) {
     return symbol_has_recyclable_local_storage_type(symbol);
 }
 
+/* A generated scope borrows its parent's register namespace, not the lifetime
+ * of every by-value formal. Recycle only owned scalar captures whose uses stay
+ * inside this boundary and cannot expose their storage to surviving calls or
+ * authored assembler. Reference/aggregate and result lifetimes stay separate. */
+static int symbol_uses_inline_capture_register(Symbol *symbol) {
+    ASTNode *owner;
+    size_t i;
+
+    if (!symbol || !symbol->inline_owned_formal ||
+        symbol->symbol_type != VARIABLE_SYMBOL || !symbol->scope ||
+        symbol->scope->type != SCOPE_LOCAL || symbol->value_dims ||
+        symbol->inline_value_alias || symbol->exposed || symbol->is_global_var ||
+        symbol->is_arg || symbol->is_ref_arg || symbol->is_this ||
+        symbol->is_factory || symbol->has_reference_target) return 0;
+    owner = symbol->scope->defining_node;
+    if (!owner || !owner->inherit_parent_reg_scope) return 0;
+    switch (symbol->type) {
+        case TP_BOOLEAN: case TP_INTEGER: case TP_FLOAT:
+        case TP_DECIMAL: case TP_STRING: case TP_BINARY:
+            break;
+        default:
+            return 0;
+    }
+    for (i = 0; i < sym_nond(symbol); ++i) {
+        ASTNode *use = sym_trnd(symbol, i)->node;
+        if (!use) return 0;
+        while (use && use != owner) {
+            if (is_call_node(use) || use->node_type == ASSEMBLER ||
+                use->node_type == OP_REFERENCE) return 0;
+            use = use->parent;
+        }
+        if (use != owner) return 0;
+    }
+    return 1;
+}
+
 /* RXAS has immediate SAY/RETURN forms only for integer, float and string
  * operands.  Other constants (notably binary and decimal values) must retain
  * their allocated register so the expression emitter materialises them with
@@ -731,6 +767,7 @@ static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
                          symbol->scope->defining_node &&
                          symbol->scope->defining_node->node_type == CLASS_DEF)) {
                 if (symbol_uses_scoped_register(symbol) ||
+                    symbol_uses_inline_capture_register(symbol) ||
                     symbol->inline_borrowed_receiver) {
                     symbol->register_num = get_reg(symbol->scope);
                 } else {
@@ -844,6 +881,25 @@ static void release_borrowed_receiver_registers_for_node(ASTNode *node) {
             node->register_num == symbol->register_num) {
             continue;
         }
+        ret_reg(node->scope, symbol->register_num);
+    }
+    free(symbols);
+}
+
+static void release_inline_capture_registers_for_node(ASTNode *node) {
+    Symbol **symbols;
+    size_t i;
+
+    if (!node || !node->scope || node->scope->defining_node != node) return;
+    symbols = scp_syms(node->scope);
+    if (!symbols) return;
+    for (i = 0; symbols[i]; ++i) {
+        Symbol *symbol = symbols[i];
+        if (!symbol_uses_inline_capture_register(symbol) ||
+            symbol->register_type != 'r' || symbol->register_num < 0) continue;
+        /* A BLOCK_EXPR result can still be consumed by its enclosing node. */
+        if (node->register_type == symbol->register_type &&
+            node->register_num == symbol->register_num) continue;
         ret_reg(node->scope, symbol->register_num);
     }
     free(symbols);
@@ -1978,6 +2034,7 @@ walker_result register_walker(walker_direction direction,
 
         release_scoped_registers_for_node(node);
         release_borrowed_receiver_registers_for_node(node);
+        release_inline_capture_registers_for_node(node);
     }
 
     return result_normal;

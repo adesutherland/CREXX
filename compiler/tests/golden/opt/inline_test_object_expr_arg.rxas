@@ -6,7 +6,7 @@
 .meta "inline_test_object_expr_arg.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=8
+main() .locals=6
    .meta "inline_test_object_expr_arg.main"="b" ".int" main() ""
    .srcstep 21 21 17 "inline_test_object_expr_arg.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -46,28 +46,28 @@ l90bexprend:
    .traceevent "V" 6 "R" "O" "r" 0 11 11 0 "box" ""
    .traceevent "A" 6 "R" "O" "r" 0 11 11 0 "§this" ""
    .srcstep 12 12 33 "inline_test_object_expr_arg.crexx" 25 9 14 "    arg value = .string"
-   load r5,"changed"
-   .traceevent "L" 4 "R" "S" "r" 5 12 12 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 5 12 12 0 "value" ""
+   load r4,"changed"
+   .traceevent "L" 4 "R" "S" "r" 4 12 12 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 12 12 0 "value" ""
    .srcstep 13 13 6 "inline_test_object_expr_arg.crexx" 24 3 18 "  setName: method"
    .traceevent "V" 6 "R" "O" "r" 0 19 19 0 "§this" ""
    assertinitialized r0
    .srcstep 14 14 17 "inline_test_object_expr_arg.crexx" 26 5 17 "    name = value"
-   .traceevent "V" 6 "R" "S" "r" 5 14 14 0 "value" ""
-   linkattr1 r4,r0,1
-   scopy r4,r5
-   unlink r4
+   .traceevent "V" 6 "R" "S" "r" 4 14 14 0 "value" ""
+   linkattr1 r2,r0,1
+   scopy r2,r4
+   unlink r2
    .srcstep 15 15 6 "inline_test_object_expr_arg.crexx" 9 8 30 "  call box.setName(\"changed\")"
    .traceevent "V" 6 "R" "O" "r" 0 19 19 0 "§this" ""
    .srcstep 17 17 17 "inline_test_object_expr_arg.crexx" 10 3 21 "  return box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 19 19 0 "box" ""
    settp r0,256
-   call1 r4,§inline_test_object_expr_arg.box.getname(),r0
-   .traceevent "F" 4 "R" "S" "r" 4 19 19 0 "getname" ""
-   scopy r7,r4
+   call1 r2,§inline_test_object_expr_arg.box.getname(),r0
+   .traceevent "F" 4 "R" "S" "r" 2 19 19 0 "getname" ""
+   scopy r5,r2
 l86bexprend:
    endlife r0
-   say r7
+   say r5
    .srcstep 20 20 17 "inline_test_object_expr_arg.crexx" 5 3 11 "  return 0"
    ret 0
 

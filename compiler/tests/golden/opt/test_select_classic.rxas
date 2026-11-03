@@ -4,27 +4,52 @@
 
 .globals=0
 
-main() .locals=0
+main() .locals=3
    .meta "test_select_classic.main"="b" ".void" main() ""
    numsci 18,1,1
-   .srcstep 1 1 17 "test_select_classic.crexx" 7 20 29 "  when a = 10 then say \"Ten\""
+   .meta "test_select_classic.main.scope_var"="b" ".int" r1
+   .srcstep 1 1 17 "test_select_classic.crexx" 52 5 21 "    scope_var = .int"
+   .srcstep 2 2 17 "test_select_classic.crexx" 7 20 29 "  when a = 10 then say \"Ten\""
    .meta "test_select_classic.main.a"="b" ".int" "10"
    say "Ten"
-   .srcstep 2 2 17 "test_select_classic.crexx" 14 13 34 "  otherwise say \"Other Same Line\""
+   .srcstep 3 3 17 "test_select_classic.crexx" 14 13 34 "  otherwise say \"Other Same Line\""
    say "Other Same Line"
-   .srcstep 3 3 17 "test_select_classic.crexx" 20 5 17 "    say \"Other1\""
+   .srcstep 4 4 17 "test_select_classic.crexx" 20 5 17 "    say \"Other1\""
    say "Other1"
-   .srcstep 4 4 17 "test_select_classic.crexx" 21 5 17 "    say \"Other2\""
+   .srcstep 5 5 17 "test_select_classic.crexx" 21 5 17 "    say \"Other2\""
    say "Other2"
-   .srcstep 5 5 17 "test_select_classic.crexx" 27 5 22 "    say \"Other in Do\""
+   .srcstep 6 6 17 "test_select_classic.crexx" 27 5 22 "    say \"Other in Do\""
    say "Other in Do"
-   .srcstep 6 6 17 "test_select_classic.crexx" 42 23 37 "      when b = 5 then say \"Nested 5\""
-   .meta "test_select_classic.main.b"="b" ".int" "5"
+   .srcstep 7 7 17 "test_select_classic.crexx" 38 1 6 "b = 5"
+   .meta "test_select_classic.main.b"="b" ".int" r0
+   load r0,5
+   .traceevent "L" 4 "R" "I" "r" 0 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 7 7 0 "b" ""
+   .srcstep 10 10 6 "test_select_classic.crexx" 41 5 11 "    select"
+   .traceevent "V" 6 "R" "I" "r" 0 10 10 0 "b" ""
+   ieq r2,r0,5
+   .traceevent "O" 4 "R" "B" "r" 2 10 10 0 "" ""
+   brf l132iffalse,r2
+   .srcstep 11 11 17 "test_select_classic.crexx" 42 18 22 "      when b = 5 then say \"Nested 5\""
+   .srcstep 8 8 17 "test_select_classic.crexx" 42 23 37 "      when b = 5 then say \"Nested 5\""
    say "Nested 5"
-   .srcstep 7 7 17 "test_select_classic.crexx" 54 5 28 "    say \"Scope: \" scope_var"
-   .meta "test_select_classic.main.scope_var"="b" ".int" "42"
-   say "Scope:  42"
-   .srcstep 8 8 1 "test_select_classic.crexx" 50 24 24 "  otherwise say \"Other\""
+   br l132ifend
+   .srcstep 12 12 17 "test_select_classic.crexx" 43 7 16 "      otherwise say \"Nested Other\""
+l132iffalse:
+   .srcstep 9 9 17 "test_select_classic.crexx" 43 17 35 "      otherwise say \"Nested Other\""
+   say "Nested Other"
+l132ifend:
+   .srcstep 13 13 17 "test_select_classic.crexx" 53 5 19 "    scope_var = 42"
+   load r1,42
+   .traceevent "L" 4 "R" "I" "r" 1 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 13 13 0 "scope_var" ""
+   .srcstep 14 14 17 "test_select_classic.crexx" 54 5 28 "    say \"Scope: \" scope_var"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 14 14 0 "scope_var" ""
+   sconcat r2,"Scope: ",r1
+   .traceevent "O" 4 "R" "S" "r" 2 14 14 0 "" ""
+   say r2
+   .srcstep 15 15 1 "test_select_classic.crexx" 50 24 24 "  otherwise say \"Other\""
    ret
    .meta "test_select_classic.main.a"
    .meta "test_select_classic.main.b"

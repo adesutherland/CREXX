@@ -259,15 +259,20 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
       ARGS : "" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .void]
         INSTRUCTIONS : ".myclass" (2:0) [Type: .void]
+          ASSEMBLER : "null" (10:4) [Type: .unknown]
+            VAR_TARGET : "\xc2\xa7factory" (10:4) [Type: .object]
           ASSEMBLER : "setattrs" (10:4) [Type: .unknown]
             VAR_TARGET : "\xc2\xa7factory" (10:4) [Type: .object]
             CONSTANT : "2" (10:4) [Type: .int]
           ASSEMBLER : "setobjtype" (10:4) [Type: .unknown]
             VAR_TARGET : "\xc2\xa7factory" (10:4) [Type: .object]
             CONSTANT : "16_classes.myclass" (10:4) [Type: .string]
+          ASSIGN : "initial_value" (11:12) [Type: .int]
+            VAR_TARGET : "initial_value" (11:12) [Type: .int]
+            CONSTANT : "10" (2:14) [Type: .int]
           ASSIGN : "=" (12:8) [Type: .int]
             VAR_TARGET : "val" (12:8) [Type: .int]
-            CONSTANT : "10" (12:14) [Type: .int]
+            VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           ASSIGN : "return" (13:8) [Type: .unknown]
             VAR_TARGET : "var" (2:0) [Type: .object]
             VAR_SYMBOL : "\xc2\xa7factory" (13:14) [Type: .object]
@@ -325,7 +330,7 @@ Scope [0]: Unnamed
       Scope [3]: Unnamed
         §this (Variable) -> .myclass
       Scope [3]: Unnamed
-        initial_value (Constant) -> .int
+        initial_value (Variable) -> .int
         §factory (Variable) -> .myclass
     Scope [2]: myclass
       getvalue (Function) -> .int

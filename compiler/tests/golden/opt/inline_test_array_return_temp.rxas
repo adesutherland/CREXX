@@ -4,66 +4,69 @@
 
 .globals=0
 
-main() .locals=4
+main() .locals=5
    .meta "inline_test_array_return_temp.main"="b" ".int" main() ""
-   .srcstep 8 8 17 "inline_test_array_return_temp.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 9 9 17 "inline_test_array_return_temp.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .meta "inline_test_array_return_temp.main.pair"="b" ".int[2]" r0
    .srcstep 1 1 17 "inline_test_array_return_temp.crexx" 4 3 16 "  pair = .int[2]"
    null r0
-   .srcstep 4 4 17 "inline_test_array_return_temp.crexx" 5 3 24 "  pair = forwardPair(3)"
-   .srcstep 3 3 17 "inline_test_array_return_temp.crexx" 5 10 21 "  pair = forwardPair(3)"
-   .srcstep 2 2 17 "inline_test_array_return_temp.crexx" 12 3 25 "  return buildPair(seed)"
-   load r2,3
-   .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
-   call1 r3,buildPair(),r2
-   .traceevent "F" 4 "R" "I" "r" 3 4 4 0 "buildpair" ""
-   copy r2,r3
+   .srcstep 5 5 17 "inline_test_array_return_temp.crexx" 5 3 24 "  pair = forwardPair(3)"
+   .srcstep 4 4 17 "inline_test_array_return_temp.crexx" 5 10 21 "  pair = forwardPair(3)"
+   .srcstep 2 2 33 "inline_test_array_return_temp.crexx" 11 7 11 "  arg seed = .int"
+   load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "seed" ""
+   .srcstep 3 3 17 "inline_test_array_return_temp.crexx" 12 3 25 "  return buildPair(seed)"
+   .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "seed" ""
+   call1 r4,buildPair(),r1
+   .traceevent "F" 4 "R" "I" "r" 4 5 5 0 "buildpair" ""
+   copy r3,r4
 l69bexprend:
-   copy r0,r2
-   .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "pair" ""
-   .srcstep 5 5 17 "inline_test_array_return_temp.crexx" 6 3 13 "  say pair[1]"
+   copy r0,r3
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "pair" ""
+   .srcstep 6 6 17 "inline_test_array_return_temp.crexx" 6 3 13 "  say pair[1]"
    setattrs r0,2
-   linkattr1 r3,r0,1
-   itos r3
-   .traceevent "V" 6 "R" "S" "r" 3 5 5 0 "pair" ""
-   say r3
-   unlink r3
-   .srcstep 6 6 17 "inline_test_array_return_temp.crexx" 7 3 13 "  say pair[2]"
+   linkattr1 r4,r0,1
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 6 6 0 "pair" ""
+   say r4
+   unlink r4
+   .srcstep 7 7 17 "inline_test_array_return_temp.crexx" 7 3 13 "  say pair[2]"
    setattrs r0,2
-   linkattr1 r3,r0,2
-   itos r3
-   .traceevent "V" 6 "R" "S" "r" 3 6 6 0 "pair" ""
-   say r3
-   unlink r3
-   .srcstep 7 7 17 "inline_test_array_return_temp.crexx" 8 3 11 "  return 0"
+   linkattr1 r4,r0,2
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 7 7 0 "pair" ""
+   say r4
+   unlink r4
+   .srcstep 8 8 17 "inline_test_array_return_temp.crexx" 8 3 11 "  return 0"
    ret 0
    .meta "inline_test_array_return_temp.main.pair"
 
 buildPair() .locals=4
    .meta "inline_test_array_return_temp.buildpair"="b" ".int[2]" buildPair() "seed=.int"
-   .srcstep 22 22 17 "inline_test_array_return_temp.crexx" 14 1 31 "buildPair: procedure = .int[2]"
+   .srcstep 23 23 17 "inline_test_array_return_temp.crexx" 14 1 31 "buildPair: procedure = .int[2]"
    numsci 18,1,1
-   .srcstep 17 17 17 "inline_test_array_return_temp.crexx" 15 7 18 "  arg seed = .int"
+   .srcstep 18 18 17 "inline_test_array_return_temp.crexx" 15 7 18 "  arg seed = .int"
    .meta "inline_test_array_return_temp.buildpair.seed"="b" ".int" a1
    .meta "inline_test_array_return_temp.buildpair.pair"="b" ".int[2]" r0
-   .srcstep 18 18 17 "inline_test_array_return_temp.crexx" 16 3 16 "  pair = .int[2]"
+   .srcstep 19 19 17 "inline_test_array_return_temp.crexx" 16 3 16 "  pair = .int[2]"
    null r0
-   .srcstep 19 19 17 "inline_test_array_return_temp.crexx" 17 3 17 "  pair[1] = seed"
+   .srcstep 20 20 17 "inline_test_array_return_temp.crexx" 17 3 17 "  pair[1] = seed"
    setattrs r0,2
    isetattr1 r0,1,a1
-   .traceevent "V" 6 "R" "I" "a" 1 19 19 0 "seed" ""
-   .traceevent "A" 6 "R" "I" "a" 1 19 19 0 "pair" ""
-   .srcstep 20 20 17 "inline_test_array_return_temp.crexx" 18 3 21 "  pair[2] = seed + 1"
+   .traceevent "V" 6 "R" "I" "a" 1 20 20 0 "seed" ""
+   .traceevent "A" 6 "R" "I" "a" 1 20 20 0 "pair" ""
+   .srcstep 21 21 17 "inline_test_array_return_temp.crexx" 18 3 21 "  pair[2] = seed + 1"
    setattrs r0,2
    linkattr1 r2,r0,2
-   .traceevent "V" 6 "R" "I" "a" 1 20 20 0 "seed" ""
+   .traceevent "V" 6 "R" "I" "a" 1 21 21 0 "seed" ""
    iadd r3,a1,1
-   .traceevent "O" 4 "R" "I" "r" 3 20 20 0 "" ""
+   .traceevent "O" 4 "R" "I" "r" 3 21 21 0 "" ""
    isetunlink r2,r3
-   .traceevent "A" 6 "R" "I" "r" 3 20 20 0 "pair" ""
-   .srcstep 21 21 17 "inline_test_array_return_temp.crexx" 19 3 14 "  return pair"
-   .traceevent "V" 6 "R" "I" "r" 0 21 21 0 "pair" ""
+   .traceevent "A" 6 "R" "I" "r" 3 21 21 0 "pair" ""
+   .srcstep 22 22 17 "inline_test_array_return_temp.crexx" 19 3 14 "  return pair"
+   .traceevent "V" 6 "R" "I" "r" 0 22 22 0 "pair" ""
    ret r0
    .meta "inline_test_array_return_temp.buildpair.pair"
    .meta "inline_test_array_return_temp.buildpair.seed"

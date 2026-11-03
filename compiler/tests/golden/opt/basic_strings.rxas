@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=5
+main() .locals=6
    .meta "basic_strings.main"="b" ".void" main() ""
    numsci 18,1,1
    .srcstep 1 1 17 "basic_strings.crexx" 6 1 6 "say c"
@@ -12,26 +12,31 @@ main() .locals=5
    .meta "basic_strings.main.b"="b" ".string" "World"
    .meta "basic_strings.main.c"="b" ".string" "Hello World"
    say "Hello World"
-   .srcstep 2 2 17 "basic_strings.crexx" 9 1 6 "say d"
-   .meta "basic_strings.main.d"="b" ".string" "Hello   World"
-   say "Hello   World"
-   .srcstep 3 3 17 "basic_strings.crexx" 11 1 14 "say length(c)"
+   .srcstep 2 2 17 "basic_strings.crexx" 8 1 12 "d = a \" \" b"
+   .meta "basic_strings.main.d"="b" ".string" r0
+   load r0,"Hello   World"
+   .traceevent "L" 4 "R" "S" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 2 2 0 "d" ""
+   .srcstep 3 3 17 "basic_strings.crexx" 9 1 6 "say d"
+   .traceevent "V" 6 "R" "S" "r" 0 3 3 0 "d" ""
+   say r0
+   .srcstep 4 4 17 "basic_strings.crexx" 11 1 14 "say length(c)"
    say "11"
-   .srcstep 4 4 17 "basic_strings.crexx" 12 1 20 "say substr(c, 1, 5)"
+   .srcstep 5 5 17 "basic_strings.crexx" 12 1 20 "say substr(c, 1, 5)"
    say "Hello"
-   .srcstep 5 5 17 "basic_strings.crexx" 13 1 20 "say pos(\"World\", c)"
-   load r1,"World"
-   .traceevent "L" 4 "R" "S" "r" 1 5 5 0 "" ""
-   load r2,"Hello World"
-   .traceevent "L" 4 "R" "S" "r" 2 5 5 0 "" ""
-   load r0,3
-   settp r1,768
-   settp r2,256
-   settpcall r4,rxfnsb.pos(),r0,r3,0
-   itos r4
-   .traceevent "F" 4 "R" "S" "r" 4 5 5 0 "pos" ""
-   say r4
-   .srcstep 6 6 17 "basic_strings.crexx" 14 1 7 "return"
+   .srcstep 6 6 17 "basic_strings.crexx" 13 1 20 "say pos(\"World\", c)"
+   load r2,"World"
+   .traceevent "L" 4 "R" "S" "r" 2 6 6 0 "" ""
+   load r3,"Hello World"
+   .traceevent "L" 4 "R" "S" "r" 3 6 6 0 "" ""
+   load r1,3
+   settp r2,768
+   settp r3,256
+   settpcall r5,rxfnsb.pos(),r1,r4,0
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 6 6 0 "pos" ""
+   say r5
+   .srcstep 7 7 17 "basic_strings.crexx" 14 1 7 "return"
    ret
    .meta "basic_strings.main.a"
    .meta "basic_strings.main.b"

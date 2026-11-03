@@ -87,13 +87,22 @@ foreach(level IN ITEMS levelb levelg)
             set(stem "${WORK_DIR}/${level}_${case}_${cc_mode}")
             run_result("${RXC}" -x --no-exe-import --diagnostics raw ${cc_flags}
                     -o "${stem}" "${source}")
-            if(cc_mode STREQUAL "opt")
+            # NUMSCI precedes the rounded value's definition. The bounded
+            # entry-initializer proof may therefore leave this conversion for
+            # the VM even with optimization enabled; successful compilation
+            # still has to fail at the same checked cast below.
+            set(runtime_check FALSE)
+            if(cc_mode STREQUAL "noopt" OR
+               (case STREQUAL "rounded" AND last_result EQUAL 0))
+                set(runtime_check TRUE)
+            endif()
+            if(NOT runtime_check)
                 if(NOT last_result EQUAL 2 OR NOT last_error MATCHES "BAD_CONVERSION")
                     message(FATAL_ERROR "${stem}: expected BAD_CONVERSION, got ${last_result}:\n${last_output}${last_error}")
                 endif()
             else()
                 if(NOT last_result EQUAL 0 OR NOT last_error STREQUAL "")
-                    message(FATAL_ERROR "${stem}: noopt compile failed: ${last_result}\n${last_output}${last_error}")
+                    message(FATAL_ERROR "${stem}: checked runtime compile failed: ${last_result}\n${last_output}${last_error}")
                 endif()
                 foreach(asm_mode IN ITEMS noopt opt)
                     set(asm_flags)

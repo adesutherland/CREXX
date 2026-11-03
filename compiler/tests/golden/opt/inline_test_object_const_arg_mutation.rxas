@@ -6,7 +6,7 @@
 .meta "inline_test_object_const_arg_mutation.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=7
+main() .locals=5
    .meta "inline_test_object_const_arg_mutation.main"="b" ".int" main() ""
    .srcstep 23 23 17 "inline_test_object_const_arg_mutation.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -39,17 +39,17 @@ main() .locals=7
    copy r4,r0
    .traceevent "A" 6 "R" "O" "r" 4 9 9 0 "§this" ""
    .srcstep 10 10 33 "inline_test_object_const_arg_mutation.crexx" 25 9 13 "    arg next = .string"
-   load r5,"changed"
-   .traceevent "L" 4 "R" "S" "r" 5 10 10 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 5 10 10 0 "next" ""
+   load r3,"changed"
+   .traceevent "L" 4 "R" "S" "r" 3 10 10 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 10 10 0 "next" ""
    .srcstep 11 11 6 "inline_test_object_const_arg_mutation.crexx" 24 3 26 "  setName: method = .void"
    .traceevent "V" 6 "R" "O" "r" 4 0 0 0 "§this" ""
    assertinitialized r4
    .srcstep 12 12 17 "inline_test_object_const_arg_mutation.crexx" 26 5 16 "    name = next"
-   .traceevent "V" 6 "R" "S" "r" 5 12 12 0 "next" ""
-   linkattr1 r3,r4,1
-   scopy r3,r5
-   unlink r3
+   .traceevent "V" 6 "R" "S" "r" 3 12 12 0 "next" ""
+   linkattr1 r1,r4,1
+   scopy r1,r3
+   unlink r1
    .srcstep 13 13 6 "inline_test_object_const_arg_mutation.crexx" 13 8 32 "  call value.setName(\"changed\")"
    .traceevent "V" 6 "R" "O" "r" 4 0 0 0 "§this" ""
    copy r0,r4
@@ -65,10 +65,10 @@ main() .locals=7
    .srcstep 18 18 17 "inline_test_object_const_arg_mutation.crexx" 30 5 16 "    return name"
    linkattr1 r3,r0,1
    .traceevent "V" 6 "R" "S" "r" 3 20 20 0 "name" ""
-   scopy r6,r3
+   scopy r1,r3
    unlink r3
 l127bexprend:
-   say r6
+   say r1
    .srcstep 21 21 17 "inline_test_object_const_arg_mutation.crexx" 8 3 56 "  say \"Object const-arg mutation inline test finished.\""
    say "Object const-arg mutation inline test finished."
    .srcstep 22 22 17 "inline_test_object_const_arg_mutation.crexx" 9 3 11 "  return 0"

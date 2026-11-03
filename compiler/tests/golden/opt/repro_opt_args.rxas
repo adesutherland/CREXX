@@ -4,17 +4,101 @@
 
 .globals=0
 
-main() .locals=0
+main() .locals=4
    .meta "repro_opt_args.main"="b" ".int" main() ""
    numsci 18,1,1
-   .srcstep 2 2 17 "repro_opt_args.crexx" 3 1 21 "call test_opt 1, , 3"
-   .srcstep 1 1 17 "repro_opt_args.crexx" 10 3 27 "  say \"a=\" a \"b=\" b \"c=\" c"
-   say "a= 1 b= 20 c= 3"
-   .srcstep 4 4 17 "repro_opt_args.crexx" 4 1 19 "call test_opt 1, 2"
-   .srcstep 3 3 17 "repro_opt_args.crexx" 10 3 27 "  say \"a=\" a \"b=\" b \"c=\" c"
-   say "a= 1 b= 2 c= 30"
-   .srcstep 6 6 17 "repro_opt_args.crexx" 5 1 21 "call test_opt , 2, 3"
-   .srcstep 5 5 17 "repro_opt_args.crexx" 10 3 27 "  say \"a=\" a \"b=\" b \"c=\" c"
-   say "a= 10 b= 2 c= 3"
-   .srcstep 7 7 17 "repro_opt_args.crexx" 6 1 9 "return 0"
+   .srcstep 5 5 17 "repro_opt_args.crexx" 3 1 21 "call test_opt 1, , 3"
+   .srcstep 1 1 33 "repro_opt_args.crexx" 9 7 8 "  arg a=10, b=20, c=30"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "a" ""
+   .srcstep 2 2 33 "repro_opt_args.crexx" 9 13 14 "  arg a=10, b=20, c=30"
+   load r1,20
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "b" ""
+   .srcstep 3 3 33 "repro_opt_args.crexx" 9 19 20 "  arg a=10, b=20, c=30"
+   load r2,3
+   .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "c" ""
+   .srcstep 4 4 17 "repro_opt_args.crexx" 10 3 27 "  say \"a=\" a \"b=\" b \"c=\" c"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 4 4 0 "a" ""
+   sconcat r3,"a=",r0
+   .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
+   sconcat r3,r3,"b="
+   .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 4 4 0 "b" ""
+   sconcat r3,r3,r1
+   .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
+   sconcat r3,r3,"c="
+   .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 4 4 0 "c" ""
+   sconcat r3,r3,r2
+   .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
+   say r3
+   .srcstep 10 10 17 "repro_opt_args.crexx" 4 1 19 "call test_opt 1, 2"
+   .srcstep 6 6 33 "repro_opt_args.crexx" 9 7 8 "  arg a=10, b=20, c=30"
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "a" ""
+   .srcstep 7 7 33 "repro_opt_args.crexx" 9 13 14 "  arg a=10, b=20, c=30"
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "b" ""
+   .srcstep 8 8 33 "repro_opt_args.crexx" 9 19 20 "  arg a=10, b=20, c=30"
+   load r1,30
+   .traceevent "L" 4 "R" "I" "r" 1 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 8 8 0 "c" ""
+   .srcstep 9 9 17 "repro_opt_args.crexx" 10 3 27 "  say \"a=\" a \"b=\" b \"c=\" c"
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 9 9 0 "a" ""
+   sconcat r0,"a=",r3
+   .traceevent "O" 4 "R" "S" "r" 0 9 9 0 "" ""
+   sconcat r0,r0,"b="
+   .traceevent "O" 4 "R" "S" "r" 0 9 9 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 9 9 0 "b" ""
+   sconcat r0,r0,r2
+   .traceevent "O" 4 "R" "S" "r" 0 9 9 0 "" ""
+   sconcat r0,r0,"c="
+   .traceevent "O" 4 "R" "S" "r" 0 9 9 0 "" ""
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 9 9 0 "c" ""
+   sconcat r0,r0,r1
+   .traceevent "O" 4 "R" "S" "r" 0 9 9 0 "" ""
+   say r0
+   .srcstep 15 15 17 "repro_opt_args.crexx" 5 1 21 "call test_opt , 2, 3"
+   .srcstep 11 11 33 "repro_opt_args.crexx" 9 7 8 "  arg a=10, b=20, c=30"
+   load r3,10
+   .traceevent "L" 4 "R" "I" "r" 3 11 11 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 11 11 0 "a" ""
+   .srcstep 12 12 33 "repro_opt_args.crexx" 9 13 14 "  arg a=10, b=20, c=30"
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "b" ""
+   .srcstep 13 13 33 "repro_opt_args.crexx" 9 19 20 "  arg a=10, b=20, c=30"
+   load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 13 13 0 "c" ""
+   .srcstep 14 14 17 "repro_opt_args.crexx" 10 3 27 "  say \"a=\" a \"b=\" b \"c=\" c"
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 14 14 0 "a" ""
+   sconcat r0,"a=",r3
+   .traceevent "O" 4 "R" "S" "r" 0 14 14 0 "" ""
+   sconcat r0,r0,"b="
+   .traceevent "O" 4 "R" "S" "r" 0 14 14 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 14 14 0 "b" ""
+   sconcat r0,r0,r2
+   .traceevent "O" 4 "R" "S" "r" 0 14 14 0 "" ""
+   sconcat r0,r0,"c="
+   .traceevent "O" 4 "R" "S" "r" 0 14 14 0 "" ""
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 14 14 0 "c" ""
+   sconcat r0,r0,r1
+   .traceevent "O" 4 "R" "S" "r" 0 14 14 0 "" ""
+   say r0
+   .srcstep 16 16 17 "repro_opt_args.crexx" 6 1 9 "return 0"
    ret 0

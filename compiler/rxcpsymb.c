@@ -838,6 +838,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->inline_skip_default_initiation = 0;
     symbol->inline_value_alias = 0;
     symbol->inline_borrowed_receiver = 0;
+    symbol->inline_owned_formal = 0;
     symbol->inline_summary = 0;
     symbol->is_inlinable = 0;
     symbol->ast_template = 0;
@@ -1345,6 +1346,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
         new_symbol->has_reference_target = symbol->has_reference_target;
         new_symbol->suppress_metadata = symbol->suppress_metadata;
         new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
+        new_symbol->inline_owned_formal = symbol->inline_owned_formal;
         (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
         sym_copy_constant_alias(new_symbol, symbol);
     } else {
@@ -1369,6 +1371,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
         if (symbol->has_reference_target) new_symbol->has_reference_target = 1;
         if (symbol->suppress_metadata) new_symbol->suppress_metadata = 1;
         if (symbol->inline_borrowed_receiver) new_symbol->inline_borrowed_receiver = 1;
+        if (symbol->inline_owned_formal) new_symbol->inline_owned_formal = 1;
         if (!new_symbol->inline_summary && symbol->inline_summary) {
             (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
         }
@@ -1465,6 +1468,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
     new_symbol->has_reference_target = symbol->has_reference_target;
     new_symbol->inline_skip_default_initiation = symbol->inline_skip_default_initiation;
     new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
+    new_symbol->inline_owned_formal = symbol->inline_owned_formal;
     (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
     sym_copy_constant_alias(new_symbol, symbol);
     new_symbol->is_inlinable = symbol->is_inlinable;

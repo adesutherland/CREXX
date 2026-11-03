@@ -6,7 +6,7 @@
 .meta "inline_test_call_like_arg_expr.box.val"="b" ".int" .attr 1
 .globals=0
 
-main() .locals=10
+main() .locals=9
    .meta "inline_test_call_like_arg_expr.main"="b" ".int" main() ""
    .srcstep 28 28 17 "inline_test_call_like_arg_expr.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -66,25 +66,25 @@ l96bexprend:
    .traceevent "A" 6 "R" "I" "r" 6 16 16 0 "val" ""
    .srcstep 17 17 17 "inline_test_call_like_arg_expr.crexx" 14 3 17 "  return val + 1"
    .traceevent "V" 6 "R" "I" "r" 6 19 19 0 "val" ""
-   iadd r8,r6,1
-   .traceevent "O" 4 "R" "I" "r" 8 19 19 0 "" ""
-   icopy r7,r8
+   iadd r4,r6,1
+   .traceevent "O" 4 "R" "I" "r" 4 19 19 0 "" ""
+   icopy r7,r4
 l127bexprend:
    .traceevent "A" 6 "R" "I" "r" 7 19 19 0 "amount" ""
    .srcstep 20 20 6 "inline_test_call_like_arg_expr.crexx" 24 3 22 "  bump: method = .int"
    .traceevent "V" 6 "R" "O" "r" 0 23 23 0 "§this" ""
    assertinitialized r0
    .srcstep 21 21 17 "inline_test_call_like_arg_expr.crexx" 26 5 24 "    return val + amount"
-   linkattr1 r8,r0,1
-   .traceevent "V" 6 "R" "I" "r" 8 23 23 0 "val" ""
+   linkattr1 r6,r0,1
+   .traceevent "V" 6 "R" "I" "r" 6 23 23 0 "val" ""
    .traceevent "V" 6 "R" "I" "r" 7 23 23 0 "amount" ""
-   iadd r6,r8,r7
-   unlink r8
-   .traceevent "O" 4 "R" "I" "r" 6 23 23 0 "" ""
-   icopy r9,r6
+   iadd r4,r6,r7
+   unlink r6
+   .traceevent "O" 4 "R" "I" "r" 4 23 23 0 "" ""
+   icopy r8,r4
 l120bexprend:
-   itos r9
-   say r9
+   itos r8
+   say r8
 l8doinc:
    .srcstep 4 4 17 "inline_test_call_like_arg_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r1
