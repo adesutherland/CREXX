@@ -10,7 +10,7 @@ add_subdirectory(rxvmplugins)
 # Add the rxvmplugin support library
 add_library(rxvmplugin rxvmplugin_framework.c rxvmplugin.h rxvmplugin_framework.h)
 target_include_directories(rxvmplugin PRIVATE .. ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/binutils/include)
-target_link_libraries(rxvmplugin PUBLIC platform PRIVATE rxvmref Threads::Threads)
+target_link_libraries(rxvmplugin PUBLIC platform PRIVATE rxvmref Threads::Threads ${CREXX_MATH_LIBRARY})
 
 if(BUILD_TESTING AND NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     include(${CMAKE_CURRENT_SOURCE_DIR}/RxvmPluginFunction.cmake)

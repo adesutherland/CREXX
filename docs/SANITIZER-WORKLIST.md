@@ -92,6 +92,27 @@ Complete the original full baseline and applicable full Apple/Linux sanitizer ga
 the item open until those platform obligations pass; delete temporary logs
 after extracting this diagnostic.
 
+## SAN-QA-028 — standalone decimal registration omits framework math linkage
+
+Status: **open**. Owner: Codex, hosted core build-preparation qualification.
+Affected source revision: `7e9034a16`. Linux x64 full ASan preparation fails
+linking `test_decimal_registration`: `librxvmplugin.a` references `floor`, and
+the linker reports `libm.so.6: DSO missing from command line`. The framework
+includes numeric inline helpers from `rxvmvars.h` but does not declare their
+math-library dependency. This is a link-closure defect, not a memory diagnostic.
+
+Repair contract: add the existing platform-selected `CREXX_MATH_LIBRARY` to
+`rxvmplugin`'s private link dependencies. Static consumers inherit the link-only
+requirement; MSVC retains the existing empty math-library selection. Do not add
+a test-only workaround or change numeric/runtime behavior.
+
+Closure: build the existing standalone `test_decimal_registration` target and
+run `decimal_plugin_registration_v3` in normal Linux Debug, then complete the
+hosted full core preparation that exposed the failure. The test links only the
+framework and retains its independent ABI, registration, synchronization and
+teardown checks. SAN-014/SAN-015 retain their separate sanitizer closure gates.
+Extract diagnostics and delete temporary logs; no archive.
+
 ## SAN-QA-027 — full Apple preparation exposes warning closure
 
 Status: **open — repair implemented; hosted core warning gate pending**.
