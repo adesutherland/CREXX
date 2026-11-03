@@ -2324,17 +2324,21 @@ static int rxbin007_pool_read_grow(rxbin007_pool_read *pool, uint32_t needed) {
 }
 
 static void rxbin007_free_pool_reads(rxbin007_pool_read *pools,
-                                     uint32_t pool_count,
-                                     int release_shared) {
+                                     uint32_t pool_count) {
     uint32_t i;
 
     if (!pools) return;
     for (i = 0u; i < pool_count; i++) {
         free(pools[i].records);
         free(pools[i].offsets);
-        if (release_shared && pools[i].shared) {
-            free(pools[i].shared->data);
-            free(pools[i].shared);
+        if (pools[i].shared) {
+            /* The construction table owns one reference independently of
+             * every completed module, including on validation failure. */
+            if (pools[i].shared->refcount) pools[i].shared->refcount--;
+            if (!pools[i].shared->refcount) {
+                free(pools[i].shared->data);
+                free(pools[i].shared);
+            }
         }
     }
     free(pools);
@@ -3020,11 +3024,11 @@ static int rxbin007_materialize_pool(rxbin007_pool_read *pool) {
     }
     pool->shared = (rxbin_shared_constant_pool *)calloc(1u, sizeof(*pool->shared));
     if (!pool->shared) return 0;
+    pool->shared->refcount = 1u; /* pool-read table's construction anchor */
     pool->shared->data = total_size ? (unsigned char *)calloc(total_size, 1u) : 0;
     if (total_size && !pool->shared->data) return 0;
     pool->shared->size = total_size;
     pool->shared->stored_size = total_size;
-    pool->shared->refcount = 0u;
     for (id = 0u; id < pool->record_count; id++) {
         if (!rxbin007_fill_record(pool, id)) {
             rxbin007_set_error("RXBIN 007 cannot materialize record %u (kind %u)",
@@ -3327,7 +3331,7 @@ static int rxbin007_parse_modules(const rxbin007_section_view *module_section,
         state->modules[i] = module;
     }
     for (i = 0u; i < pool_count; i++) {
-        if (!pools[i].shared || !pools[i].shared->refcount) goto error;
+        if (!pools[i].shared || pools[i].shared->refcount <= 1u) goto error;
     }
     *state_out = state;
     return 1;
@@ -3572,7 +3576,7 @@ static int rxbin007_parse_image(const unsigned char *image,
             !rxbin007_validate_inlined_private(state->modules[i]) ||
             !rxbin007_validate_entry_state(state->modules[i]) ||
             !rxbin_validate_inline_exits(state->modules[i])) goto error;
-    rxbin007_free_pool_reads(pools, pool_count, 0);
+    rxbin007_free_pool_reads(pools, pool_count);
     rx_graph_release(&graph);
     rxbin007_free_section_views(sections);
     *state_out = state;
@@ -3581,7 +3585,7 @@ static int rxbin007_parse_image(const unsigned char *image,
 error:
     free(graph_error);
     rxbin007_free_image_state(state);
-    rxbin007_free_pool_reads(pools, pool_count, 1);
+    rxbin007_free_pool_reads(pools, pool_count);
     rx_graph_release(&graph);
     rxbin007_free_section_views(sections);
     if (!rxbin007_error[0]) rxbin007_set_error("RXBIN 007 container validation failed");

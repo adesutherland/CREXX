@@ -508,6 +508,9 @@
     "SAN-014": [
       "recv390_directory_max_userdata"
     ],
+    "SAN-015": [
+      "compact_format_check"
+    ],
     "legacy-keyaccess": [
       "keyaccess_test_noopt",
       "keyaccess_test_opt",

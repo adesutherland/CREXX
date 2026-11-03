@@ -73,6 +73,7 @@ static int decompress_lzss(const unsigned char *input,
 
 static int expand_sections(const char *input,
                            size_t input_size,
+                           uint32_t expand_mask,
                            char **output,
                            size_t *output_size) {
     size_t next_offset;
@@ -86,14 +87,16 @@ static int expand_sections(const char *input,
                   RXBIN007_SECTION_COUNT * RXBIN007_DIRECTORY_ENTRY_SIZE;
     for (section = 0u; section < RXBIN007_SECTION_COUNT; section++) {
         const unsigned char *row;
-        uint64_t expanded_size;
+        uint64_t section_size;
 
         row = (const unsigned char *)input + RXBIN007_HEADER_SIZE +
               (size_t)section * RXBIN007_DIRECTORY_ENTRY_SIZE;
-        expanded_size = read_u64le(row + 32u);
+        section_size = read_u64le(row +
+                ((expand_mask & (1u << section)) ? 32u : 24u));
+        if (next_offset > SIZE_MAX - 7u) return 0;
         next_offset = (next_offset + 7u) & ~(size_t)7u;
-        if (expanded_size > SIZE_MAX || (size_t)expanded_size > SIZE_MAX - next_offset) return 0;
-        next_offset += (size_t)expanded_size;
+        if (section_size > SIZE_MAX || (size_t)section_size > SIZE_MAX - next_offset) return 0;
+        next_offset += (size_t)section_size;
     }
     *output = (char *)calloc(1u, next_offset);
     if (!*output) return 0;
@@ -112,6 +115,7 @@ static int expand_sections(const char *input,
         uint64_t input_offset;
         uint64_t stored_size;
         uint64_t expanded_size;
+        int expand;
 
         input_row = (const unsigned char *)input + RXBIN007_HEADER_SIZE +
                     (size_t)section * RXBIN007_DIRECTORY_ENTRY_SIZE;
@@ -121,24 +125,26 @@ static int expand_sections(const char *input,
         input_offset = read_u64le(input_row + 16u);
         stored_size = read_u64le(input_row + 24u);
         expanded_size = read_u64le(input_row + 32u);
+        expand = flags == RXBIN007_SECTION_LZSS &&
+                 (expand_mask & (1u << section));
         next_offset = (next_offset + 7u) & ~(size_t)7u;
         if (input_offset > input_size || stored_size > input_size - (size_t)input_offset ||
             (flags != 0u && flags != RXBIN007_SECTION_LZSS)) goto error;
-        if (flags == RXBIN007_SECTION_LZSS) {
+        if (expand) {
             if (!decompress_lzss((const unsigned char *)input + (size_t)input_offset,
                                  (size_t)stored_size,
                                  (unsigned char *)*output + next_offset,
                                  (size_t)expanded_size)) goto error;
         } else {
-            if (stored_size != expanded_size) goto error;
+            if (!flags && stored_size != expanded_size) goto error;
             memcpy(*output + next_offset,
                    input + (size_t)input_offset,
                    (size_t)stored_size);
         }
-        write_u32le(output_row + 4u, 0u);
+        write_u32le(output_row + 4u, expand ? 0u : flags);
         write_u64le(output_row + 16u, next_offset);
-        write_u64le(output_row + 24u, expanded_size);
-        next_offset += (size_t)expanded_size;
+        write_u64le(output_row + 24u, expand ? expanded_size : stored_size);
+        next_offset += (size_t)(expand ? expanded_size : stored_size);
     }
     return 1;
 
@@ -147,6 +153,46 @@ error:
     *output = 0;
     *output_size = 0u;
     return 0;
+}
+
+static int image_matches(module_file *expected, char *image, size_t size,
+                         int require_mixed_storage) {
+    module_file *decoded = 0;
+    module_file *extra = 0;
+    char *cursor = image;
+    rxbin_reader reader;
+    uint32_t section;
+    int compressed = 0;
+    int plain = 0;
+    int ok;
+
+    for (section = 0u; section < RXBIN007_SECTION_COUNT; section++) {
+        const unsigned char *row = (const unsigned char *)image +
+                RXBIN007_HEADER_SIZE +
+                (size_t)section * RXBIN007_DIRECTORY_ENTRY_SIZE;
+        if (read_u32le(row + 4u) == RXBIN007_SECTION_LZSS) compressed = 1;
+        else if (read_u32le(row + 4u) == 0u) plain = 1;
+    }
+    if (require_mixed_storage && (!compressed || !plain)) return 0;
+    rxbin_reader_init_mem(&reader, &cursor, image + size);
+    ok = rxbin_reader_next_module(&reader, &decoded) == 0 && decoded &&
+         rxbin_reader_next_module(&reader, &extra) == 1 && !extra;
+    rxbin_reader_close(&reader);
+    if (!ok) {
+        free_module(decoded);
+        free_module(extra);
+        return 0;
+    }
+    ok = cursor == image + size &&
+         expected->header.instruction_size == decoded->header.instruction_size &&
+         expected->header.constant_size == decoded->header.constant_size &&
+         expected->header.section_flags == decoded->header.section_flags &&
+         memcmp(expected->instructions, decoded->instructions,
+                expected->header.instruction_size * sizeof(bin_code)) == 0 &&
+         memcmp(expected->constant, decoded->constant,
+                expected->header.constant_size) == 0;
+    free_module(decoded);
+    return ok;
 }
 
 static int find_record(const unsigned char *section,
@@ -329,7 +375,8 @@ static int imported_start_writer_is_canonical(module_file *module) {
     if (length <= 0 || fseek(file, 0, SEEK_SET)) goto done;
     bytes = (char *)malloc((size_t)length);
     if (!bytes || fread(bytes, 1, (size_t)length, file) != (size_t)length ||
-        !expand_sections(bytes, (size_t)length, &expanded, &expanded_size)) goto done;
+        !expand_sections(bytes, (size_t)length, UINT32_MAX,
+                         &expanded, &expanded_size)) goto done;
     section = (size_t)read_u64le((unsigned char *)expanded + RXBIN007_HEADER_SIZE +
                                 2u * RXBIN007_DIRECTORY_ENTRY_SIZE + 16u);
     if (!find_record((unsigned char *)expanded + section, expanded_size - section,
@@ -386,6 +433,119 @@ static int imported_start_is_normalized(const char *image, size_t size,
     return ok;
 }
 
+/* A later module may fail after an earlier module retained the decoded pool.
+ * Exercise both one shared pool and two independent pools, without keeping a
+ * malformed binary in the repository. The reader must publish no partial
+ * module and release construction/module ownership exactly once (SAN-015). */
+static int linked_error_cleanup(module_file *prototype) {
+    int separate;
+    for (separate = 0; separate < 2; separate++) {
+        module_file second = *prototype;
+        module_file *modules[2];
+        module_file *first_read = 0;
+        module_file *second_read = 0;
+        module_file *unexpected = 0;
+        FILE *file = tmpfile();
+        char *bytes = 0;
+        char *expanded = 0;
+        char *cursor;
+        char *second_pool = 0;
+        size_t expanded_size = 0;
+        size_t module_offset;
+        size_t instruction_row;
+        size_t instruction_size;
+        long length;
+        int ok = 0;
+        int reader_open = 0;
+        int attempt;
+        rxbin_reader reader;
+
+        if (!file) return 0;
+        second.name = "compact_cleanup_second";
+        /* Keep the private instruction carrier without redeclaring module
+         * one's exported callable identity from the shared metadata pool. */
+        second.header.meta_head = -1;
+        second.header.expose_head = -1;
+        if (separate) {
+            second_pool = (char *)malloc(prototype->header.constant_size);
+            if (!second_pool) goto done;
+            memcpy(second_pool, prototype->constant,
+                   prototype->header.constant_size);
+            second.constant = (unsigned char *)second_pool;
+        }
+        modules[0] = prototype;
+        modules[1] = &second;
+        if (write_modules(modules, 2u, 0, file) || fflush(file) ||
+            fseek(file, 0, SEEK_END)) goto done;
+        length = ftell(file);
+        if (length <= 0 || fseek(file, 0, SEEK_SET)) goto done;
+        bytes = (char *)malloc((size_t)length);
+        if (!bytes || fread(bytes, 1u, (size_t)length, file) != (size_t)length ||
+            !expand_sections(bytes, (size_t)length, UINT32_MAX,
+                             &expanded, &expanded_size)) goto done;
+
+        cursor = expanded;
+        rxbin_reader_init_mem(&reader, &cursor, expanded + expanded_size);
+        reader_open = 1;
+        if (rxbin_reader_next_module(&reader, &first_read) ||
+            rxbin_reader_next_module(&reader, &second_read) ||
+            !first_read || !second_read ||
+            ((first_read->shared_constant_pool == second_read->shared_constant_pool)
+                != !separate) ||
+            rxbin_reader_next_module(&reader, &unexpected) != 1 || unexpected)
+            goto done;
+        rxbin_reader_close(&reader);
+        reader_open = 0;
+        free_module(first_read); first_read = 0;
+        free_module(second_read); second_read = 0;
+
+        module_offset = (size_t)read_u64le((unsigned char *)expanded +
+                RXBIN007_HEADER_SIZE + 16u);
+        instruction_row = RXBIN007_HEADER_SIZE + RXBIN007_DIRECTORY_ENTRY_SIZE;
+        instruction_size = (size_t)read_u64le((unsigned char *)expanded +
+                instruction_row + 32u);
+        if (read_u32le((unsigned char *)expanded + 28u) != 2u ||
+            module_offset > expanded_size ||
+            expanded_size - module_offset < 16u + 2u * 88u ||
+            read_u64le((unsigned char *)expanded + module_offset +
+                       16u + 88u + 40u) == 0u) goto done;
+        /* Module one is valid. Module two's nonempty instruction range now
+         * starts at EOF, forcing partial-module cleanup after pool retention. */
+        write_u64le((unsigned char *)expanded + module_offset +
+                    16u + 88u + 32u, instruction_size);
+        for (attempt = 0; attempt < 3; attempt++) {
+            int rc;
+            const char *detail;
+            cursor = expanded;
+            rxbin_reader_init_mem(&reader, &cursor, expanded + expanded_size);
+            reader_open = 1;
+            rc = rxbin_reader_next_module(&reader, &unexpected);
+            detail = rxbin_last_error();
+            if (rc != -1 || unexpected || !detail ||
+                !strstr(detail, "module directory or instructions are invalid"))
+                goto done;
+            rxbin_reader_close(&reader);
+            reader_open = 0;
+        }
+        ok = 1;
+done:
+        if (reader_open) rxbin_reader_close(&reader);
+        free_module(first_read);
+        free_module(second_read);
+        free_module(unexpected);
+        free(second_pool);
+        free(expanded);
+        free(bytes);
+        fclose(file);
+        if (!ok) {
+            fprintf(stderr, "Linked RXBIN partial-module cleanup failed (separate pools=%d): %s\n",
+                    separate, rxbin_last_error() ? rxbin_last_error() : "no detail");
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int main(void) {
     FILE *fp = 0;
     unsigned char raw_header[RXBIN007_HEADER_SIZE];
@@ -394,9 +554,12 @@ int main(void) {
     module_file *from_memory = 0;
     char *buffer = 0;
     char *expanded_buffer = 0;
+    char *mixed_buffer = 0;
     char *cursor = 0;
     size_t buffer_size = 0;
     size_t expanded_buffer_size = 0u;
+    size_t mixed_buffer_size = 0u;
+    uint32_t mixed_expand_mask = 0u;
     size_t compressed_row = SIZE_MAX;
     bin_code *code = 0;
     uint64_t instruction_bytes = 0u;
@@ -455,11 +618,15 @@ int main(void) {
                 saw_uncompressed = 1;
             }
         }
-        if (!saw_compressed || !saw_uncompressed) {
-            fprintf(stderr, "RXBIN 007 fixture did not exercise mixed section storage\n");
+        if (!saw_compressed) {
+            fprintf(stderr, "RXBIN 007 fixture did not exercise compressed section storage\n");
             fclose(fp);
             return 1;
         }
+        /* Compression selection is the writer's choice. If every section
+         * compresses, expand one explicitly and retain the other compressed
+         * sections rather than depending on a one-byte compression margin. */
+        if (!saw_uncompressed) mixed_expand_mask = 1u;
         instruction_bytes = read_u64le(
             directory + RXBIN007_DIRECTORY_ENTRY_SIZE + 24u);
     }
@@ -471,6 +638,11 @@ int main(void) {
         return 1;
     }
     fclose(fp);
+
+    if (!linked_error_cleanup(from_file)) {
+        free_module(from_file);
+        return 1;
+    }
 
     if (instruction_bytes >=
         8u + from_file->header.instruction_size * sizeof(bin_code)) {
@@ -541,11 +713,26 @@ int main(void) {
         return 1;
     }
 
+    if (!expand_sections(buffer, buffer_size, mixed_expand_mask,
+                         &mixed_buffer, &mixed_buffer_size) ||
+        !image_matches(from_file, mixed_buffer, mixed_buffer_size, 1)) {
+        fprintf(stderr, "Mixed RXBIN 007 section storage did not decode equivalently\n");
+        free(mixed_buffer);
+        free_module(from_memory);
+        free(buffer);
+        free_module(from_file);
+        return 1;
+    }
+    free(mixed_buffer);
+
     if (!expand_sections(buffer,
                          buffer_size,
+                         UINT32_MAX,
                          &expanded_buffer,
-                         &expanded_buffer_size)) {
+                         &expanded_buffer_size) ||
+        !image_matches(from_file, expanded_buffer, expanded_buffer_size, 0)) {
         fprintf(stderr, "Could not expand RXBIN 007 sections for corruption tests\n");
+        free(expanded_buffer);
         free_module(from_memory);
         free(buffer);
         free_module(from_file);

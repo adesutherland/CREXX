@@ -18,6 +18,49 @@ findings used focused or selected commands. This establishes value for explicit
 broad qualification, but does not establish that every functional permutation must
 run under ASan each night, or what a different targeted panel would have found.
 
+## SAN-015 — rejected linked RXBIN releases a shared pool twice
+
+Status: **open**. Owner: Codex, hotfix2 native RXAS/core integration gate
+NFX-AC01–03 in `research/level-l/toolchain/PLAN.md`. Affected revision:
+`26725a882` with the native-flow/core integration repairs. The reader detects a
+retired opcode in a later linked module after earlier modules have retained the
+shared constant pool. Partial-module cleanup releases those module references;
+the pool-read table then accesses/frees the same released pool again.
+
+Reproducer: normal `rxdas -g` on the prepared malformed linked
+`rxpa_invocation_inline_sigret-linked.rxbin` aborts; compiler import discovery
+hits the same path in `rxpa_signature_diagnostics`. The standalone malformed
+target reports `RXBIN 007 retired opcode 661` cleanly, whereas the linked image
+reaches an invalid `free(pools[i].shared->data)` in
+`rxbin007_free_pool_reads`. The normal debugger reports a pointer being freed
+that was not allocated. Focused maintained Apple ASan confirms
+`heap-use-after-free` there: allocation in `rxbin007_materialize_pool`, release
+through `free_module`/`rxbin_shared_pool_release` in partial-module cleanup,
+then the pool-read table dereference. Sol 6 owns focused execution and diagnosis;
+Apple LSan is unavailable and Linux retains leak detection.
+
+Repair contract: the pool-read table keeps its own counted pool reference until
+construction and validation finish. Modules retain separate references. Error
+and success cleanup release each owned reference exactly once, including
+partially built multi-module images and shared pools with several modules.
+Retired/malformed instructions remain rejected with no partial output.
+
+Repair implemented: the construction table retains one counted reference from
+materialization through success/error cleanup; completed modules retain their
+own references. The permanent `compact_format_check` creates valid shared- and
+separate-pool linked images, then repeatedly rejects a later module's malformed
+instruction range with no partial output. It also preserves valid mixed/plain
+section decoding independently of automatic compression selection.
+
+The focused normal Debug check and matching maintained Apple ASan check pass
+with original producers; the original linked retired-opcode trigger now rejects
+cleanly in ordinary and instrumented `rxdas`. `SAN-015` is registered against the
+existing component-memory regression. Closure still requires applicable broad
+Apple/Linux SAN-closure gates from `CREXX_ASAN_TESTING.md`, including Linux leak
+detection. Keep this item open while those gates are unverified; delete task
+logs and scratch after extraction. No suppression or leak-off exception is
+approved.
+
 ## SAN-014 — recv390 maximum directory user data overflows display buffer
 
 Status: **open**. Owner: Codex, approved develop baseline qualification.
