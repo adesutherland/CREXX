@@ -96,9 +96,104 @@ compat_context = .RexxBifCallContext("SUBSTR")
 call compat_context.setArguments(compat_args, compat_exists)
 compat_result = rexxclassicbif_call(reference compat_context)
 errors = errors + check(\compat_context.hasError() & compat_result.asString() = "bcd", "deprecated dispatcher compatibility")
+errors = errors + check_context_lifetimes()
 
 if errors = 0 then say "ok"
 return errors
+
+check_context_lifetimes: procedure = .int
+  errors = 0
+  context = prepared_context()
+  owned_pool_ref = context.callerPool()
+  owned_config_ref = context.configReference()
+  errors = errors + check(<refvalid>(owned_pool_ref) & <refvalid>(owned_config_ref), "returned context owns live defaults")
+  owned_pool = dereference owned_pool_ref
+  errors = errors + check(owned_pool.value("owned").asString() = "original", "returned context retains prepared pool")
+  copied_context = context
+  copied_pool_ref = copied_context.callerPool()
+  copied_config_ref = copied_context.configReference()
+  errors = errors + check(\(copied_pool_ref <refsame> owned_pool_ref) & \(copied_config_ref <refsame> owned_config_ref), "prepared context copy binds its own defaults")
+  copied_pool = dereference copied_pool_ref
+  call copied_pool.setString("owned", "copy")
+  call copied_context.useUtf8Profile()
+  errors = errors + check(owned_pool.value("owned").asString() = "original" & copied_pool.value("owned").asString() = "copy", "copied owned pools mutate independently")
+  errors = errors + check(context.characterConfig().isByteProfile() & \copied_context.characterConfig().isByteProfile(), "copied owned configurations mutate independently")
+  context = .RexxBifCallContext("LENGTH")
+  replacement_pool_ref = context.callerPool()
+  replacement_config_ref = context.configReference()
+  errors = errors + check((owned_pool_ref <refsame> replacement_pool_ref) & (owned_config_ref <refsame> replacement_config_ref), "same-layout assignment preserves destination owned storage identities")
+  errors = errors + check(<refvalid>(copied_pool_ref) & <refvalid>(copied_config_ref), "copy retains its independent owned lifetimes")
+  retired_pool_ref = make_retired_owned_pool()
+  retired_config_ref = make_retired_owned_config()
+  errors = errors + check(<refvalid>(retired_pool_ref) = 0 & <refvalid>(retired_config_ref) = 0, "owned references expire after physical owner retirement")
+
+  external_pool = .RexxVariablePool()
+  external_config = .RexxClassicConfig()
+  external_pool_ref = reference external_pool
+  external_config_ref = reference external_config
+  borrowed_context = .RexxBifCallContext("LENGTH")
+  call borrowed_context.setCallerPool(external_pool_ref)
+  call borrowed_context.setConfig(external_config_ref)
+  borrowed_copy = borrowed_context
+  borrowed_pool_ref = borrowed_copy.callerPool()
+  borrowed_config_ref = borrowed_copy.configReference()
+  errors = errors + check((borrowed_pool_ref <refsame> external_pool_ref) & (borrowed_config_ref <refsame> external_config_ref), "copied context preserves explicit borrowed identities")
+  call borrowed_copy.useUtf8Profile()
+  errors = errors + check(\external_config.isByteProfile() & external_pool.unicodeNames(), "borrowed context mutations reach external owners")
+
+  with_expired_config = make_expired_config_context()
+  expired_config_ref = with_expired_config.configReference()
+  expired_config_copy = with_expired_config
+  expired_copy_ref = expired_config_copy.configReference()
+  errors = errors + check(<refvalid>(expired_config_ref) = 0 & <refvalid>(expired_copy_ref) = 0, "expired explicit configuration never falls back to owned default")
+  still_owned_pool_ref = expired_config_copy.callerPool()
+  errors = errors + check(<refvalid>(still_owned_pool_ref), "expired borrowed configuration leaves owned pool live")
+  replacement_config = .RexxClassicConfig("BYTE")
+  call expired_config_copy.setCharacterConfig(replacement_config)
+  repaired_config_ref = expired_config_copy.configReference()
+  errors = errors + check(<refvalid>(repaired_config_ref) & expired_config_copy.characterConfig().isByteProfile(), "explicit owned configuration replaces expired borrowed binding")
+
+  with_expired_pool = make_expired_pool_context()
+  expired_pool_ref = with_expired_pool.callerPool()
+  still_owned_config_ref = with_expired_pool.configReference()
+  errors = errors + check(<refvalid>(expired_pool_ref) = 0 & <refvalid>(still_owned_config_ref), "expired borrowed pool remains expired while owned configuration survives")
+  expression_context = .RexxBifCallContext.expression("expression")
+  expression_pool_ref = expression_context.callerPool()
+  expression_config_ref = expression_context.configReference()
+  errors = errors + check(<refvalid>(expression_pool_ref) = 0 & <refvalid>(expression_config_ref) = 0, "expression context retains absent defaults")
+  return errors
+
+context_retirement_controls: procedure expose CONTEXT_RETIREMENT_CONTROL
+  constant CONTEXT_RETIREMENT_CONTROL = 0
+  return
+
+/* Inspect physical owner retirement, with ordinary calls in both modes. */
+make_retired_owned_pool: procedure = reference .RexxVariablePool expose CONTEXT_RETIREMENT_CONTROL
+  context = .RexxBifCallContext("LENGTH")
+  return context.callerPool()
+
+make_retired_owned_config: procedure = reference .RexxClassicConfig expose CONTEXT_RETIREMENT_CONTROL
+  context = .RexxBifCallContext("LENGTH")
+  return context.configReference()
+
+prepared_context: procedure = .RexxBifCallContext
+  context = .RexxBifCallContext("LENGTH")
+  pool_ref = context.callerPool()
+  pool = dereference pool_ref
+  call pool.setString("owned", "original")
+  return context
+
+make_expired_config_context: procedure = .RexxBifCallContext
+  context = .RexxBifCallContext("LENGTH")
+  config = .RexxClassicConfig()
+  call context.setConfig(reference config)
+  return context
+
+make_expired_pool_context: procedure = .RexxBifCallContext
+  context = .RexxBifCallContext("LENGTH")
+  pool = .RexxVariablePool()
+  call context.setCallerPool(reference pool)
+  return context
 
 check_bif: procedure = .int
   arg name = .string, expected = .string, ... = .string

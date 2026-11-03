@@ -74,16 +74,18 @@ RexxBifCallContext: class
   error_message = .string
   stream_condition_id = .int
   stream_condition_description = .string
+  owns_pool_binding = .boolean
+  owns_config_binding = .boolean
 
   *: factory
     arg name = .string
     bif_name = translate(strip(name))
     bif_arg_count = 0
     owned_pool = .RexxVariablePool()
-    caller_pool_ref = reference owned_pool
     has_caller_pool = 1
     owned_config = .RexxClassicConfig()
-    config_ref = reference owned_config
+    owns_pool_binding = 1
+    owns_config_binding = 1
     has_caller_activation = 0
     error_code = ""
     error_message = ""
@@ -95,8 +97,18 @@ RexxBifCallContext: class
     bif_name = translate(name)
     has_caller_activation = 0
     has_caller_pool = 0
+    owns_pool_binding = 0
+    owns_config_binding = 0
     error_code = ""
     error_message = ""
+    return
+
+  /* A factory/ordinary value copy cannot retain references into its source
+   * receiver. Rebind only owned defaults on the persistent receiver; explicit
+   * borrowed references keep their identity, including expiry. */
+  prepareOwnedReferences: method = .void
+    if owns_pool_binding then caller_pool_ref = reference owned_pool
+    if owns_config_binding then config_ref = reference owned_config
     return
 
   setName: method = .void
@@ -148,13 +160,16 @@ RexxBifCallContext: class
   setCallerPool: method = .void
     arg pool = reference .RexxVariablePool
     caller_pool_ref = pool
+    owns_pool_binding = 0
     has_caller_pool = 1
+    call prepareOwnedReferences()
     config = dereference config_ref
     current = dereference caller_pool_ref
     call current.setUnicodeNames(\config.isByteProfile())
     return
 
   callerPool: method = reference .RexxVariablePool
+    call prepareOwnedReferences()
     return caller_pool_ref
 
   /** Bind compiled clock queries to the current Classic invocation. */
@@ -166,6 +181,7 @@ RexxBifCallContext: class
 
   /** Direct library harnesses retain the existing injectable pool clock. */
   ensureClauseTime: method = .void
+    call prepareOwnedReferences()
     if has_caller_activation then do
       activation = dereference caller_activation_ref
       call activation.ensureClauseTime()
@@ -177,6 +193,7 @@ RexxBifCallContext: class
     return
 
   clauseBaseDay: method = .int
+    call prepareOwnedReferences()
     if has_caller_activation then do
       activation = dereference caller_activation_ref
       return activation.clauseBaseDay()
@@ -185,6 +202,7 @@ RexxBifCallContext: class
     return pool.clauseBaseDay()
 
   clauseLocalMicroseconds: method = .int
+    call prepareOwnedReferences()
     if has_caller_activation then do
       activation = dereference caller_activation_ref
       return activation.clauseLocalMicroseconds()
@@ -193,6 +211,7 @@ RexxBifCallContext: class
     return pool.clauseLocalMicroseconds()
 
   clauseUtcMicroseconds: method = .int
+    call prepareOwnedReferences()
     if has_caller_activation then do
       activation = dereference caller_activation_ref
       return activation.clauseUtcMicroseconds()
@@ -201,6 +220,7 @@ RexxBifCallContext: class
     return pool.clauseUtcMicroseconds()
 
   clauseOffsetMicroseconds: method = .int
+    call prepareOwnedReferences()
     if has_caller_activation then do
       activation = dereference caller_activation_ref
       return activation.clauseOffsetMicroseconds()
@@ -210,6 +230,7 @@ RexxBifCallContext: class
 
   clauseElapsedMicroseconds: method = .int
     arg reset = .boolean
+    call prepareOwnedReferences()
     if has_caller_activation then do
       activation = dereference caller_activation_ref
       return activation.clauseElapsedMicroseconds(reset)
@@ -220,7 +241,8 @@ RexxBifCallContext: class
   setCharacterConfig: method = .void
     arg config = .RexxClassicConfig
     owned_config = config
-    config_ref = reference owned_config
+    owns_config_binding = 1
+    call prepareOwnedReferences()
     if has_caller_pool then do
       pool = dereference caller_pool_ref
       call pool.setUnicodeNames(\config.isByteProfile())
@@ -230,6 +252,8 @@ RexxBifCallContext: class
   setConfig: method = .void
     arg config = reference .RexxClassicConfig
     config_ref = config
+    owns_config_binding = 0
+    call prepareOwnedReferences()
     if has_caller_pool then do
       current = dereference config_ref
       pool = dereference caller_pool_ref
@@ -238,20 +262,24 @@ RexxBifCallContext: class
     return
 
   characterConfig: method = .RexxClassicConfig
+    call prepareOwnedReferences()
     config = .RexxClassicConfig
     config = dereference config_ref
     return config
 
   config: method = .RexxClassicConfig
+    call prepareOwnedReferences()
     config = .RexxClassicConfig
     config = dereference config_ref
     return config
 
   configReference: method = reference .RexxClassicConfig
+    call prepareOwnedReferences()
     return config_ref
 
   /** Validated host BIFs delegate replacement through the configuration owner. */
   invokeHost: method = .RexxClassicHostHookResult
+    call prepareOwnedReferences()
     config = dereference config_ref
     response = config.invokeHost(bif_name,bif_args,bif_exists)
     call config.checkHostResponse(response)
@@ -271,6 +299,7 @@ RexxBifCallContext: class
     return stream_condition_description
 
   useByteProfile: method = .void
+    call prepareOwnedReferences()
     config = dereference config_ref
     call config.useByteProfile()
     if has_caller_pool then do
@@ -280,6 +309,7 @@ RexxBifCallContext: class
     return
 
   useUtf8Profile: method = .void
+    call prepareOwnedReferences()
     config = dereference config_ref
     call config.useUtf8Profile()
     if has_caller_pool then do
@@ -290,12 +320,14 @@ RexxBifCallContext: class
 
   setByteOtherBlanks: method = .void
     arg blanks = .binary
+    call prepareOwnedReferences()
     config = dereference config_ref
     call config.setByteOtherBlanks(blanks)
     return
 
   setTextOtherBlanks: method = .void
     arg blanks = .string
+    call prepareOwnedReferences()
     config = dereference config_ref
     call config.setTextOtherBlanks(blanks)
     return

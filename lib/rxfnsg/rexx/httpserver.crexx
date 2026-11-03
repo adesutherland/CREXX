@@ -39,7 +39,7 @@ import _rxsysb
 
 _http_server_failure: procedure
   arg message = .string
-  call raise "HTTP_SERVER_ERROR", message, ""
+  call raise "CHANNEL_ERROR", message, ""
   return
 
 /** Immutable buffered request passed to one HTTP service task. */
@@ -341,6 +341,7 @@ httpserver: class
 
   _complete_slot: method = .boolean
     arg slot = .int, stop_after = .int
+    task_child = .task
     wire = ''x as .binary
     reply_capacity = _maximum_body_bytes + _maximum_header_bytes + 65536
     reply_endpoint = _reply_endpoints[slot]
@@ -355,6 +356,18 @@ httpserver: class
     if available & completion.succeeded() = 0 then do
       poll_status = completion.error_code()
       if poll_status = 2 | poll_status = 3 | poll_status = 10 | poll_status = 11 then available = 0
+    end
+    /* A handler can fail before dispatch opens its reply writer. Its terminal
+     * task completion is authoritative even while the reply endpoint is empty. */
+    if available = 0 then do
+      task_child = _tasks[slot]
+      task_completion = task_child.completion()
+      if task_completion.available() then do
+        if task_completion.succeeded() = 0 then do
+          completion = task_completion
+          available = 1
+        end
+      end
     end
     now_us = time("us")
     elapsed_us = now_us - _started_us[slot]

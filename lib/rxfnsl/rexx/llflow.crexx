@@ -153,15 +153,17 @@ conditions: class
   _sealed = .int
   _identity = .int
   _error = .string
+  _rootbound = .int
   *: factory
     arg owner = reference .llast..tree, limit = 1000000
     _identity = next_identity(); _count = 0; _limit = limit; _sealed = 0; _error = ''
+    _rootbound = 0
     if limit < 0 then _error = 'LL_FLOW_FACT: condition limit must be nonnegative'
     if <refvalid>(owner) = 0 then _error = 'LL_AST_OWNER: condition tree has expired'
     else do
       tree = dereference owner
       if tree.status() <> 0 then _error = tree.error()
-      _root = tree.root()
+      _root = tree.root(); _rootbound = 1
     end
     return
   fail: method = .void
@@ -169,7 +171,7 @@ conditions: class
     if _error = '' then _error = message
     return
   error: method = .string
-    if initialized(_root) then do
+    if _rootbound then do
       if _root.valid() = 0 then call fail('LL_AST_OWNER: condition tree has expired or been replaced')
     end
     return _error
@@ -255,15 +257,17 @@ graph: class
   _conditionidentity = .int
   _hasconditions = .int
   _ran = .int
+  _rootbound = .int
   *: factory
     arg owner = reference .llast..tree, mapping = .mapping, limit = 1000000
     _identity = next_identity(); _sealed = 0; _building = 0
+    _rootbound = 0
     _owner = owner; _mapping = mapping; _limit = limit; _ran = 0; _error = ''; _hasconditions = 0
     if <refvalid>(owner) = 0 then _error = 'LL_AST_OWNER: flow tree has expired'
     else do
       tree = dereference owner
       if tree.status() <> 0 then _error = tree.error()
-      _root = tree.root()
+      _root = tree.root(); _rootbound = 1
     end
     return
   /** Attach optional facts before the first graph query. The table is borrowed
@@ -510,7 +514,7 @@ graph: class
   error: method = .string
     call build()
     call checkconditions()
-    if initialized(_root) then do
+    if _rootbound then do
       if _root.valid() = 0 then call fail('LL_AST_OWNER: flow tree has expired or been replaced')
     end
     return _error
@@ -596,9 +600,11 @@ result: class
   _initial = .string
   _cells = .int
   _ran = .int
+  _rootbound = .int
   *: factory
     arg owner = reference .graph, assigned = '', cells = 1000000, work = 10000000
     _identity = next_identity()
+    _rootbound = 0
     _graph = owner; _initial = assigned; _cells = cells; _limit = work; _ran = 0; _complete = 0; _error = ''
     if <refvalid>(owner) = 0 then _error = 'LL_FLOW_OWNER: flow graph has expired'
     else do
@@ -608,7 +614,7 @@ result: class
   run: method = .void
     if _ran then return
     if _error <> '' then return
-    _ran = 1; p = .int; v = .int; ok = .int
+    _ran = 1; _rootbound = 0; p = .int; v = .int; ok = .int
     owner = _graph; assigned = _initial; cells = _cells; work = _limit
     _graph = owner; _error = ''; _complete = 0; _work = 0; _limit = work
     if <refvalid>(owner) = 0 then do
@@ -621,7 +627,7 @@ result: class
     if graph.error() <> '' then do
       _error = graph.error(); return
     end
-    _points = graph.points(); _root = graph.node(graph.start())
+    _points = graph.points(); _root = graph.node(graph.start()); _rootbound = 1
     if cells < 0 | work < 0 then do
       _error = 'LL_FLOW_LIMIT: analysis.cells and analysis.work must be nonnegative'; return
     end
@@ -698,7 +704,7 @@ result: class
   error: method = .string
     call run()
     if <refvalid>(_graph) = 0 then _error = 'LL_FLOW_OWNER: flow graph has expired'
-    else if initialized(_root) then do
+    else if _rootbound then do
       graph = dereference _graph
       if graph.accepts(_root) = 0 | graph.identity() <> _graphidentity then _error = 'LL_FLOW_OWNER: flow graph or AST has been replaced'
     end

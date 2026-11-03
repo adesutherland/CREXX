@@ -39,7 +39,7 @@ failing_service: class implements .httpservice .taskwork
 
   handle: method = .httpresponse
     arg request = .httprequest, context = .taskcontext
-    call raise "HTTP_TEST_FAILURE", "expected handler failure", ""
+    call raise "FAILURE", "expected handler failure", ""
     return .httpresponse.text(500, "unreachable")
 
   run: method = .channelvalue
@@ -73,8 +73,20 @@ run_case: procedure = .int
   call server.close()
   return errors
 
+rejects_invalid_server: procedure = .int
+  do
+    invalid = .httpserver.local("127.0.0.1", 0, 0)
+    call invalid.close()
+  on signal channel_error as problem
+    if problem.name() = "CHANNEL_ERROR" &,
+       problem.message() = "HTTP server workers must be 1..256" then return 0
+  end
+  say "FAIL: invalid server configuration did not raise CHANNEL_ERROR"
+  return 1
+
 main: procedure = .int
-  errors = run_case(task .oversize_service(), 8, 2000, 500)
+  errors = rejects_invalid_server()
+  errors = errors + run_case(task .oversize_service(), 8, 2000, 500)
   errors = errors + run_case(task .failing_service(), 1024, 100, 500)
   if errors > 0 then do
     say "FAIL: Level G HTTP handler failure cases" errors

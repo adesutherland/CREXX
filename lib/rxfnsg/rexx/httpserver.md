@@ -44,6 +44,16 @@ handler time are all bounded. Request `Transfer-Encoding` is rejected with
 501; TLS, HTTP/2, WebSockets, detached serving and streaming handlers are not
 part of this surface.
 
+Invalid server/request configuration and controller failures raise the canonical
+`CHANNEL_ERROR` condition with the specific diagnostic message. A catchable
+service task failure produces the bounded HTTP 500 response. An invalid VM
+signal name is terminal instruction misuse, so it must not be used to simulate
+an ordinary service failure.
+The controller polls a failed task completion when no reply is available, so a
+handler failure before opening its reply writer produces 500 rather than waiting
+for the handler deadline. Published replies keep priority; unfinished handlers
+retain the bounded 504 deadline behavior.
+
 The listener is nonblocking. A private connected loopback socket gives the
 controller a portable 1 ms idle wait because receive timeouts are portable here
 while accept timeouts are not. This keeps request deadlines advancing without

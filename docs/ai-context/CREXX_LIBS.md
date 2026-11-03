@@ -94,6 +94,14 @@ old-value/optional-assignment contract over `RexxValue` and
 `RexxVariablePool`. Direct Level C harnesses and compiled lowering call the
 named entries through the shared BIF context, without name-based
 `rexxclassicbif_call` dispatch.
+`RexxBifCallContext` owns its default pool and character configuration. It
+resolves their interior references on the persistent receiver, so an ordinary
+factory return or prepared context copy does not retain a retired source
+receiver. Copies own independent defaults; same-layout COPY assignment preserves
+surviving destination attribute storage identities. Issued references identify
+those slots and expire when their owner storage retires. `setCallerPool` and `setConfig` instead
+select borrowed handles whose exact identity and expiry survive context copies.
+An expired explicit handle never silently selects an owned default.
 The [detailed compatibility layer](../../compiler/docs/levelc_compatibility_layer.md)
 maps each current entry, actual test path and outstanding contract. A same-named
 standalone string wrapper or legacy unit is not automatically the compiled path.
@@ -931,6 +939,14 @@ The VM passes arguments as opaque handles mapped to internal VM registers. The R
   accept one in order to inspect its initialization state.
 
 - `RETURN`: The specific target register designated for the function's return value.
+
+Procedure arguments and `RETURN` are borrowed opaque value handles. `ARG(0)`
+is the first actual argument, or the receiver for a method; it is distinct from
+`RETURN`. Supported setters mutate the pointed-to value. Replacing entries in
+the C argument array is not a supported way to rebind the caller's register
+coordinates. Supported nested calls restore the outer VM context before native
+execution resumes. The fixed `call1` through `call4` bytecode forms do not invoke
+native targets; ordinary counted calls retain the native-provider path.
 
 ### Error Handling
 

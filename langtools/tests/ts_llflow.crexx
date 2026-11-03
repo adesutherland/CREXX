@@ -96,6 +96,13 @@ main: procedure = .int expose language_definition
   failures = failures + check(pos('LL_AST_OWNER',gonegraph.error()) > 0,'flow tree lifetime')
   goneinfo = expiredanalysis()
   failures = failures + check(pos('LL_FLOW_OWNER',goneinfo.error()) > 0,'analysis graph lifetime')
+  expired_tree_ref = expired_tree_owner()
+  invalid_conditions = .llflow..conditions(expired_tree_ref)
+  invalid_graph = flowdemo..execution(expired_tree_ref)
+  invalid_analysis = invalid_graph.definiteassignment()
+  failures = failures + check(pos('LL_AST_OWNER',invalid_conditions.error()) > 0,'invalid condition owner has no bound root')
+  failures = failures + check(pos('LL_AST_OWNER',invalid_graph.error()) > 0,'invalid graph owner has no bound root')
+  failures = failures + check(pos('LL_AST_OWNER',invalid_analysis.error()) > 0,'invalid analysis graph never inspects an unbound root')
 
   graph = flowdemo..execution(reference tree)
   result = graph.definiteassignment('flag')
@@ -243,6 +250,9 @@ expiredanalysis: procedure = .llflow..result
   tree = parseinput(''); graph = flowdemo..execution(reference tree)
   result = graph.definiteassignment(); ok = result.count()
   return result
+expired_tree_owner: procedure = reference .llast..tree expose language_definition
+  tree = parseinput('')
+  return reference tree
 writeif: procedure = .string
   arg enabled = .int
   if enabled then return 'x = 1;'
