@@ -102,20 +102,26 @@ say "OK"
 
 return 0
 
-retire_private_payload: procedure = .int
+physical_frame_controls: procedure expose PHYSICAL_FRAME_CONTROL
+    constant PHYSICAL_FRAME_CONTROL = 0
+    return
+
+/* These assertions inspect physical return/unwind retirement, so retain real
+ * calls in both compiler modes using the existing exposed-control pattern. */
+retire_private_payload: procedure = .int expose PHYSICAL_FRAME_CONTROL
     private_payload = native_payload_make(101)
     if native_payload_id(private_payload) \= 101 then return 0
     return 7
 
-return_private_payload: procedure = .binary
+return_private_payload: procedure = .binary expose PHYSICAL_FRAME_CONTROL
     private_payload = native_payload_make(103)
     return private_payload
 
-return_borrowed_payload: procedure = .binary
+return_borrowed_payload: procedure = .binary expose PHYSICAL_FRAME_CONTROL
     arg borrowed_payload = .binary
     return borrowed_payload
 
-unwind_private_payload: procedure = .void
+unwind_private_payload: procedure = .void expose PHYSICAL_FRAME_CONTROL
     private_payload = native_payload_make(107)
     call throw_signal
     return

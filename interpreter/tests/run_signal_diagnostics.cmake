@@ -67,11 +67,12 @@ run_case(action 30 "action-event PASS" "SIGNAL OTHER" "source: action-call\\.rex
 run_case(pseudo 30 "pseudo-event PASS" "PANIC: initial interruption"
     "source: pseudo-edge\\.rexx:99:1:" "source: pseudo-call\\.rexx:98:2:")
 
-# Existing typed/NUL/object/operand-alias assertions must remain silent when caught.
+# Valid typed/NUL/object/operand-alias requests remain silent when caught.
+# Invalid names/origins are terminal and have dedicated self-error controls.
 execute_process(COMMAND "${RUNNER}" --no-autoload "${ORIGIN_BINARY}"
     RESULT_VARIABLE status OUTPUT_VARIABLE stdout ERROR_VARIABLE stderr TIMEOUT 20)
 string(REPLACE "\r\n" "\n" stdout "${stdout}")
 if(NOT "${status}" STREQUAL "0" OR NOT "${stderr}" STREQUAL "" OR
-   NOT "${stdout}" STREQUAL "invalid-origin-rejected\ninvalid-name-rejected\nPASS: Signal Origin Payload\n")
+   NOT "${stdout}" STREQUAL "PASS: Signal Origin Payload\n")
     message(FATAL_ERROR "caught raw events changed: status=${status}, stdout=[${stdout}], stderr=[${stderr}]")
 endif()

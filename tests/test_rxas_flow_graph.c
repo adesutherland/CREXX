@@ -18,6 +18,41 @@
 #define FIXTURE_MAX_ITEMS 256
 #define FIXTURE_MAX_TOKENS 512
 
+/* Unknown mutations may be leaves or inputs of a may-preserve phi. Require
+ * the actual unknown alternative, rather than accepting any changed kind. */
+static int fixture_value_is_uncertain(const RxasFlowSsaAnalysis *ssa,
+                                     unsigned long epoch,
+                                     const RxasFlowComponentFact *fact) {
+    size_t count, head = 0, tail = 0;
+    size_t *pending;
+    unsigned char *seen;
+    int found = 0;
+    if (fact->kind == RXAS_FLOW_VALUE_UNKNOWN) return 1;
+    count = rxas_flow_value_version_count(ssa, epoch);
+    if (fact->kind != RXAS_FLOW_VALUE_PHI || fact->value_id >= count) return 0;
+    pending = calloc(count, sizeof(*pending));
+    seen = calloc(count, sizeof(*seen));
+    if (!pending || !seen) exit(2);
+    pending[tail++] = fact->value_id;
+    seen[fact->value_id] = 1;
+    while (head < tail && !found) {
+        RxasFlowValueNode node;
+        size_t input;
+        if (!rxas_flow_value_node(ssa, epoch, pending[head++], &node)) break;
+        if (node.kind == RXAS_FLOW_VALUE_UNKNOWN) found = 1;
+        if (node.kind != RXAS_FLOW_VALUE_PHI) continue;
+        for (input = 0; input < node.input_count; input++) {
+            size_t id = rxas_flow_value_input(ssa, epoch, node.id, input);
+            if (id >= count || seen[id]) continue;
+            seen[id] = 1;
+            pending[tail++] = id;
+        }
+    }
+    free(pending);
+    free(seen);
+    return found;
+}
+
 typedef struct FlowFixture {
     instruction_queue items[FIXTURE_MAX_ITEMS];
     size_t item_count;
@@ -1533,7 +1568,7 @@ static void test_propagated_call_failure_state(
                     fixture_local_register(4), RXOP_COMPONENT_INTEGER,
                     &argument_failure) &&
               argument_failure.value_id != argument_before.value_id &&
-              argument_failure.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              fixture_value_is_uncertain(analysis, 26, &argument_failure),
               "counted CALL failure preserved caller-owned argument state");
         check(rxas_flow_component_at_instruction(
                     analysis, 26, call_instruction, 0,
@@ -1549,7 +1584,7 @@ static void test_propagated_call_failure_state(
                     analysis, 26, failure_edge,
                     fixture_local_register(8), RXOP_COMPONENT_INTEGER,
                     &result_failure) &&
-              result_failure.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              fixture_value_is_uncertain(analysis, 26, &result_failure),
               "counted CALL failure omitted a possible partial result write");
         rxas_flow_procedure_destroy(procedure);
     }
@@ -1590,8 +1625,54 @@ static void test_propagated_call_failure_state(
                     fixture_local_register(3), RXOP_COMPONENT_INTEGER,
                     &count_failure) &&
               count_failure.value_id != count_before.value_id &&
-              count_failure.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              fixture_value_is_uncertain(analysis, 27, &count_failure),
               "argument alias did not invalidate the failure count ValueId");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    /* A previous bytecode call can publish MKREF(a1) globally. Reloading the
+     * scalar count preserves that escaped storage; a later initializer can
+     * change it before the second call captures its window. */
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 9);
+    operands[1] = fixture_text_token(&fixture, FUNC, "publish_count_reference");
+    operands[2] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "call1", operands, 3);
+    operands[0] = fixture_register(&fixture, 3);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 5);
+    operands[1] = fixture_integer(&fixture, 23);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 8);
+    operands[1] = fixture_text_token(&fixture, FUNC, "callee");
+    operands[2] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "call", operands, 3);
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 270);
+    check(procedure != 0, "escaped-count fixture construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_ssa_analysis(procedure, 270, 0);
+        call_instruction = rxas_flow_procedure_record(procedure, 270, 4)->instruction_id;
+        check(analysis && rxas_flow_call_window_bounds_at_instruction(
+                    analysis, 270, call_instruction, &base_register, &last_register) &&
+              base_register == 3 && last_register >= 5 &&
+              rxas_flow_component_at_instruction(
+                    analysis, 270, call_instruction, 0,
+                    fixture_local_register(5), RXOP_COMPONENT_INTEGER,
+                    &unrelated_before) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 270, call_instruction, 1,
+                    fixture_local_register(5), RXOP_COMPONENT_INTEGER,
+                    &unrelated_failure) &&
+              unrelated_before.kind == RXAS_FLOW_VALUE_CONSTANT &&
+              fixture_value_is_uncertain(analysis, 270, &unrelated_failure),
+              "escaped count borrowed its pre-initializer constant as a fixed window");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -1808,7 +1889,7 @@ static void test_signal_phase_component_edges(Assembler_Context *context) {
                     fixture_local_register(0), RXOP_COMPONENT_INTEGER,
                     &after_call_value) &&
               after_call_value.value_id != before_call_value.value_id &&
-              after_call_value.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              fixture_value_is_uncertain(analysis, 18, &after_call_value),
               "call preserved a possibly externally mutable component");
         check(signal_analysis &&
               numeric_before_call == numeric_on_call_skip,
@@ -1844,7 +1925,7 @@ static void test_signal_phase_component_edges(Assembler_Context *context) {
                     analysis, 19, skip_edge, fixture_local_register(0),
                     RXOP_COMPONENT_STRING, &skip_value) &&
               normal_value.kind == RXAS_FLOW_VALUE_WRITE &&
-              skip_value.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              fixture_value_is_uncertain(analysis, 19, &skip_value),
               "partial-write signal edge did not invalidate its component");
         rxas_flow_procedure_destroy(procedure);
     }
@@ -1952,8 +2033,10 @@ static void test_derivation_contexts(Assembler_Context *context) {
     RxasFlowComponentFact stale_string;
     RxasFlowComponentFact float_source;
     RxasFlowComponentFact float_string;
-    RxasFlowComponentFact decimal_source;
     RxasFlowComponentFact decimal_string;
+    RxasFlowComponentFact recovered_source;
+    RxasFlowComponentFact recovered_string;
+    RxasFlowComponentFact recovered_stale;
     RxasFlowComponentFact two_register_source;
     RxasFlowComponentFact two_register_float;
     size_t initial_itos;
@@ -1961,17 +2044,14 @@ static void test_derivation_contexts(Assembler_Context *context) {
     size_t ftos_instruction;
     size_t dtos_instruction;
     size_t two_register_itof;
+    size_t recovery_itos;
+    size_t recovery_stale;
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_register(&fixture, 1);
     operands[1] = fixture_float(&fixture, 1.5);
     fixture_op(&fixture, "load", operands, 2);
     operands[0] = fixture_register(&fixture, 1);
     fixture_op(&fixture, "ftos", operands, 1);
-    operands[0] = fixture_register(&fixture, 2);
-    operands[1] = fixture_text_token(&fixture, DECIMAL, "2.5");
-    fixture_op(&fixture, "load", operands, 2);
-    operands[0] = fixture_register(&fixture, 2);
-    fixture_op(&fixture, "dtos", operands, 1);
     operands[0] = fixture_register(&fixture, 0);
     operands[1] = fixture_integer(&fixture, 5);
     fixture_op(&fixture, "load", operands, 2);
@@ -1987,6 +2067,22 @@ static void test_derivation_contexts(Assembler_Context *context) {
     operands[0] = fixture_register(&fixture, 4);
     operands[1] = fixture_register(&fixture, 3);
     fixture_op(&fixture, "itof", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_text_token(&fixture, DECIMAL, "2.5");
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    fixture_op(&fixture, "dtos", operands, 1);
+    /* Conversion providers have no callback-free promise. Restore owned
+     * coordinates explicitly, then establish new scalar facts. */
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "unlink", operands, 1);
+    operands[1] = fixture_integer(&fixture, 11);
+    fixture_op(&fixture, "load", operands, 2);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_integer(&fixture, 21);
+    fixture_op(&fixture, "setnumdgts", operands, 1);
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "itos", operands, 1);
     fixture_op(&fixture, "ret", 0, 0);
     procedure = rxas_flow_procedure_build(context, fixture.items,
                                           fixture.item_count, 20);
@@ -1994,15 +2090,19 @@ static void test_derivation_contexts(Assembler_Context *context) {
     if (procedure) {
         analysis = rxas_flow_require_ssa_analysis(procedure, 20, 0);
         initial_itos = rxas_flow_procedure_record(
-                procedure, 20, 5)->instruction_id;
+                procedure, 20, 3)->instruction_id;
         repeated_itos = rxas_flow_procedure_record(
-                procedure, 20, 7)->instruction_id;
+                procedure, 20, 5)->instruction_id;
         ftos_instruction = rxas_flow_procedure_record(
                 procedure, 20, 1)->instruction_id;
         dtos_instruction = rxas_flow_procedure_record(
-                procedure, 20, 3)->instruction_id;
-        two_register_itof = rxas_flow_procedure_record(
                 procedure, 20, 9)->instruction_id;
+        two_register_itof = rxas_flow_procedure_record(
+                procedure, 20, 7)->instruction_id;
+        recovery_itos = rxas_flow_procedure_record(
+                procedure, 20, 12)->instruction_id;
+        recovery_stale = rxas_flow_procedure_record(
+                procedure, 20, 14)->instruction_id;
         check(analysis && rxas_flow_component_at_instruction(
                     analysis, 20, initial_itos, 1,
                     fixture_local_register(0), RXOP_COMPONENT_INTEGER,
@@ -2040,25 +2140,32 @@ static void test_derivation_contexts(Assembler_Context *context) {
               float_string.signal_dependencies ==
                     RXOP_SIGNAL_DEP_NUMERIC_CONTEXT,
               "FTOS did not retain its source and derivation context");
-        check(rxas_flow_component_at_instruction(
-                    analysis, 20, dtos_instruction, 1,
-                    fixture_local_register(2), RXOP_COMPONENT_DECIMAL,
-                    &decimal_source) &&
+        check((rxop_callback_obligations(OP_DTOS_REG) & RXOP_CALLBACK_UNKNOWN) &&
               rxas_flow_component_at_instruction(
                     analysis, 20, dtos_instruction, 1,
                     fixture_local_register(2), RXOP_COMPONENT_STRING,
                     &decimal_string) &&
-              decimal_string.derivation ==
-                    RXOP_DERIVATION_DECIMAL_TO_STRING &&
-              decimal_string.source_value_id == decimal_source.value_id &&
-              decimal_string.signal_dependencies ==
-                    (RXOP_SIGNAL_DEP_NUMERIC_CONTEXT |
-                     RXOP_SIGNAL_DEP_PLUGIN) &&
-              decimal_string.definition_effects[RXAS_FLOW_EFFECT_PLUGIN] !=
-                    RXAS_FLOW_ID_NONE &&
-              decimal_string.definition_effects[RXAS_FLOW_EFFECT_PLUGIN] ==
-                    decimal_string.current_effects[RXAS_FLOW_EFFECT_PLUGIN],
-              "DTOS did not retain its numeric/plugin derivation contexts");
+              fixture_value_is_uncertain(analysis, 20, &decimal_string),
+              "DTOS borrowed a callback-free guarantee absent from its provider contract");
+        check(rxas_flow_component_at_instruction(
+                    analysis, 20, recovery_itos, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_INTEGER,
+                    &recovered_source) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 20, recovery_itos, 1,
+                    fixture_local_register(0), RXOP_COMPONENT_STRING,
+                    &recovered_string) &&
+              rxas_flow_component_at_instruction(
+                    analysis, 20, recovery_stale, 0,
+                    fixture_local_register(0), RXOP_COMPONENT_STRING,
+                    &recovered_stale) &&
+              recovered_source.kind == RXAS_FLOW_VALUE_CONSTANT &&
+              recovered_string.kind == RXAS_FLOW_VALUE_DERIVED &&
+              recovered_string.source_value_id == recovered_source.value_id &&
+              recovered_string.value_id == recovered_stale.value_id &&
+              recovered_string.definition_numeric_context !=
+                    recovered_stale.current_effects[RXAS_FLOW_EFFECT_NUMERIC_CONTEXT],
+              "UNLINK and explicit scalar definitions did not recover facts after an opaque provider");
         check(rxas_flow_component_at_instruction(
                     analysis, 20, two_register_itof, 1,
                     fixture_local_register(3), RXOP_COMPONENT_INTEGER,
@@ -2086,6 +2193,8 @@ static void test_fused_failure_mappings(Assembler_Context *context) {
     RxasFlowStorageFact before_right;
     RxasFlowStorageFact failure_left;
     RxasFlowStorageFact failure_right;
+    RxasFlowStorageFact success_left;
+    RxasFlowStorageFact success_right;
     RxasFlowStorageFact normal_link;
     RxasFlowStorageFact failure_link;
     RxasFlowComponentFact joined_component;
@@ -2127,14 +2236,23 @@ static void test_fused_failure_mappings(Assembler_Context *context) {
               rxas_flow_storage_on_edge(
                     analysis, 21, skip_edge,
                     fixture_local_register(3), &failure_right) &&
-              failure_left.storage_id == before_right.storage_id &&
-              failure_right.storage_id == before_left.storage_id,
-              "swap-call failure edge did not retain its pre-call swap");
+              failure_left.kind == RXAS_FLOW_STORAGE_UNKNOWN &&
+              failure_right.kind == RXAS_FLOW_STORAGE_UNKNOWN,
+              "combined swap-call failure invented whether the checked prefix ran");
+        check(rxas_flow_storage_at_instruction(
+                    analysis, 21, instruction_id, 1,
+                    fixture_local_register(2), &success_left) &&
+              rxas_flow_storage_at_instruction(
+                    analysis, 21, instruction_id, 1,
+                    fixture_local_register(3), &success_right) &&
+              success_left.storage_id == before_right.storage_id &&
+              success_right.storage_id == before_left.storage_id,
+              "successful swap-call did not retain its exact prefix mapping");
         check(rxas_flow_component_at_instruction(
                     analysis, 21, instruction_id, 1,
                     fixture_local_register(0), RXOP_COMPONENT_INTEGER,
                     &fused_value) &&
-              fused_value.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              fixture_value_is_uncertain(analysis, 21, &fused_value),
               "fused remap/value opcode invented an intra-instruction order");
         rxas_flow_procedure_destroy(procedure);
     }
@@ -3697,6 +3815,7 @@ static void test_callback_execution_control(Assembler_Context *context) {
     const RxasFlowInstruction *setter;
     RxasFlowStorageFact before, after;
     RxasFlowComponentFact entry, result;
+    RxasFlowValueNode alternatives[2];
     RxasFlowPolicyFact policy, policy_before;
     RxasFlowProofResult proved;
     RxasFlowRegister reg;
@@ -3711,6 +3830,9 @@ static void test_callback_execution_control(Assembler_Context *context) {
     operands[0] = fixture_register(&fixture, 2);
     operands[1] = fixture_register(&fixture, 0);
     fixture_op(&fixture, "icopy", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_integer(&fixture, 9);
+    fixture_op(&fixture, "load", operands, 2);
     fixture_op(&fixture, "ret", operands, 0);
     procedure = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 91);
     check(procedure != NULL, "callback execution fixture did not build");
@@ -3750,8 +3872,22 @@ static void test_callback_execution_control(Assembler_Context *context) {
           "COPY from an unknown source invented a literal result");
     reg.number = 0;
     check(rxas_flow_component_at_instruction(ssa, 91, copy, 1, reg,
-              RXOP_COMPONENT_INTEGER, &result) && result.kind == RXAS_FLOW_VALUE_UNKNOWN,
+              RXOP_COMPONENT_INTEGER, &result) && fixture_value_is_uncertain(ssa, 91, &result),
           "normal coordinate preservation incorrectly preserved an unrelated pointee");
+    check(rxas_flow_component_at_instruction(ssa, 91, copy, 0, reg,
+              RXOP_COMPONENT_INTEGER, &entry) &&
+              result.kind == RXAS_FLOW_VALUE_PHI &&
+              rxas_flow_value_node(ssa, 91, rxas_flow_value_input(ssa, 91, result.value_id, 0), &alternatives[0]) &&
+              rxas_flow_value_node(ssa, 91, rxas_flow_value_input(ssa, 91, result.value_id, 1), &alternatives[1]) &&
+              ((alternatives[0].id == entry.value_id && alternatives[1].kind == RXAS_FLOW_VALUE_UNKNOWN) ||
+               (alternatives[1].id == entry.value_id && alternatives[0].kind == RXAS_FLOW_VALUE_UNKNOWN)),
+          "possible callback write lost either the unchanged input or real mutation alternative");
+    check(rxas_flow_component_at_instruction(ssa, 91,
+              rxas_flow_procedure_record(procedure, 91, 4)->instruction_id, 1, reg,
+              RXOP_COMPONENT_INTEGER, &result) &&
+              result.kind == RXAS_FLOW_VALUE_CONSTANT && result.constant_token &&
+              result.constant_token->token_value.integer == 9,
+          "definite scalar write failed to kill prior callback alternatives");
     reg.number = 1;
     edge = fixture_edge_id(procedure, 91, setter->block_id,
               rxas_flow_procedure_handler_root(procedure, 91), RXAS_FLOW_EDGE_HANDLER);
@@ -3787,6 +3923,8 @@ static void test_callback_captured_resources(Assembler_Context *context) {
     RxasFlowComponentFact component;
     RxasFlowCallbackResourceFact resources;
     size_t setter;
+    size_t copy_kind;
+    static const char *clean_copies[] = { "copy", "bcopy" };
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_register(&fixture, 0);
     operands[1] = fixture_register(&fixture, 1);
@@ -3849,6 +3987,65 @@ static void test_callback_captured_resources(Assembler_Context *context) {
     }
     fixture_destroy(&fixture);
 
+    /* A point fact can discharge the source hook without declaring all entry
+     * values clean. Native transformations do not yet consume this predicate.
+     * NULL defines the empty binary view and zero child count; LOAD replaces
+     * the string while preserving that explicitly established empty state. */
+    for (copy_kind = 0; copy_kind < 2; copy_kind++) {
+        unsigned long epoch = 109ul + (unsigned long)copy_kind;
+        memset(&fixture, 0, sizeof(fixture));
+        operands[0] = fixture_register(&fixture, 1);
+        fixture_op(&fixture, "null", operands, 1);
+        operands[1] = fixture_string(&fixture, "clean source");
+        fixture_op(&fixture, "load", operands, 2);
+        operands[0] = fixture_register(&fixture, 0);
+        operands[1] = fixture_register(&fixture, 1);
+        fixture_op(&fixture, clean_copies[copy_kind], operands, 2);
+        fixture_op(&fixture, "ret", NULL, 0);
+        procedure = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, epoch);
+        check(procedure != NULL, "explicit clean COPY source fixture did not build");
+        if (procedure) {
+            setter = rxas_flow_procedure_record(procedure, epoch, 2)->instruction_id;
+            ssa = rxas_flow_require_ssa_analysis(procedure, epoch, 0);
+            check(ssa && rxas_flow_callback_resources_at_instruction(ssa, epoch, setter, 0, &resources) &&
+                      resources.proved && resources.obligations == RXOP_CALLBACK_INPUT &&
+                      resources.unresolved_obligations == 0 &&
+                      resources.checked_resources == (copy_kind ? 1u : 2u),
+                  "explicit native/child absence did not discharge the source COPY hook at its point");
+            check(rxas_flow_component_at_instruction(ssa, epoch, setter, 0,
+                      fixture_local_register(1), RXOP_COMPONENT_ATTRIBUTE_COUNT, &component) &&
+                      component.kind == RXAS_FLOW_VALUE_ABSENT &&
+                      component.presence == RXAS_FLOW_COMPONENT_ABSENT,
+                  "clean source COPY borrowed an unstated zero-child premise");
+            rxas_flow_procedure_destroy(procedure);
+        }
+        fixture_destroy(&fixture);
+    }
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "null", operands, 1);
+    operands[1] = fixture_integer(&fixture, 1);
+    fixture_op(&fixture, "setattrs", operands, 2);
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "copy", operands, 2);
+    fixture_op(&fixture, "ret", NULL, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 111);
+    check(procedure != NULL, "nonempty COPY child source fixture did not build");
+    if (procedure) {
+        setter = rxas_flow_procedure_record(procedure, 111, 2)->instruction_id;
+        ssa = rxas_flow_require_ssa_analysis(procedure, 111, 0);
+        check(ssa && rxas_flow_component_at_instruction(ssa, 111, setter, 0,
+                  fixture_local_register(1), RXOP_COMPONENT_NATIVE_PAYLOAD, &component) &&
+                  component.kind == RXAS_FLOW_VALUE_ABSENT &&
+                  rxas_flow_callback_resources_at_instruction(ssa, 111, setter, 0, &resources) &&
+                  !resources.proved && (resources.unresolved_obligations & RXOP_CALLBACK_INPUT),
+              "nonempty child tree borrowed an unrepresented subtree-absence proof");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_register(&fixture, 0); operands[1] = fixture_integer(&fixture, 5);
     fixture_op(&fixture, "inot", operands, 2);
@@ -3875,7 +4072,9 @@ static void test_callback_fused_invocation(Assembler_Context *context) {
     const RxasFlowSsaAnalysis *ssa;
     const RxasFlowSignalAnalysis *signals;
     RxasFlowStorageFact before, after;
-    RxasFlowPolicyFact policy;
+    RxasFlowPolicyFact policy, before_policy;
+    RxasFlowComponentFact result;
+    RxasFlowCallbackResourceFact resources;
     size_t instruction;
     memset(&fixture, 0, sizeof(fixture));
     operands[0] = fixture_register(&fixture, 0);
@@ -3899,12 +4098,21 @@ static void test_callback_fused_invocation(Assembler_Context *context) {
     check(ssa && rxas_flow_storage_at_instruction(ssa, 92, instruction, 0,
               fixture_local_register(0), &before) && before.storage_id &&
               rxas_flow_storage_at_instruction(ssa, 92, instruction, 1,
-              fixture_local_register(0), &after) && !after.storage_id,
-          "fused invocation bypassed callback normal-state invalidation");
+              fixture_local_register(0), &after) &&
+              after.storage_id == before.storage_id,
+          "fused invocation lost its suspended caller slot coordinates");
+    check(rxas_flow_component_at_instruction(ssa, 92, instruction, 1,
+                  fixture_local_register(1), RXOP_COMPONENT_INTEGER, &result) &&
+              fixture_value_is_uncertain(ssa, 92, &result) &&
+              rxas_flow_callback_resources_at_instruction(ssa, 92, instruction, 0, &resources) &&
+              !resources.proved && (resources.unresolved_obligations & RXOP_CALLBACK_INVOCATION),
+          "fused invocation borrowed a resource-only no-hook or result-value proof");
     signals = rxas_flow_require_signal_analysis(procedure, 92, 0);
-    check(rxas_flow_policy_at_instruction(signals, 92, instruction, 1, "ERROR", &policy) &&
-              policy.state == RXAS_FLOW_POLICY_CLOBBERED,
-          "resource-only policy premise was borrowed by a fused invocation");
+    check(rxas_flow_policy_at_instruction(signals, 92, instruction, 0, "ERROR", &before_policy) &&
+              rxas_flow_policy_at_instruction(signals, 92, instruction, 1, "ERROR", &policy) &&
+              policy.state == RXAS_FLOW_POLICY_INHERITED_UNKNOWN &&
+              policy.version_id == before_policy.version_id,
+          "fused invocation lost the caller's frame-local handler policy");
     rxas_flow_procedure_destroy(procedure);
     fixture_destroy(&fixture);
 }
@@ -4181,7 +4389,7 @@ static void test_entry_policy_growth(Assembler_Context *context) {
                 if (edge->response == RXAS_FLOW_RESPONSE_HANDLED) {
                     handled++;
                     check(rxas_flow_component_on_edge(ssa, epoch, edge_id, fixture_local_register(0),
-                                RXOP_COMPONENT_INTEGER, &value) && value.kind == RXAS_FLOW_VALUE_UNKNOWN &&
+                                RXOP_COMPONENT_INTEGER, &value) && fixture_value_is_uncertain(ssa, epoch, &value) &&
                               rxas_flow_policy_on_edge(rxas_flow_require_signal_analysis(view, epoch, 0),
                                 epoch, edge_id, mode == 3 ? "BREAKPOINT" : "ERROR", &policy) &&
                               policy.state == RXAS_FLOW_POLICY_CLOBBERED,

@@ -9,8 +9,9 @@ support for Level B; it is not a Level C Classic BIF.
 `.signal(name, message="")` creates a message-only `.standard_signal`. Names are
 normalized to uppercase. `code()` maps every VM signal name to its integer
 runtime code; `SYNTAX` is an alias for `ERROR` (code 3), and an unknown name maps
-to `INVALID_SIGNAL_CODE` (code 13). Raising an unknown dynamic name causes the
-VM to deliver `INVALID_SIGNAL_CODE`. The concurrency runtime uses
+to `INVALID_SIGNAL_CODE` (code 13). Raising an unknown dynamic name terminates
+with `INVALID_SIGNAL_CODE` and bypasses handlers; explicitly requesting that
+valid event name remains catchable. The concurrency runtime uses
 `CHANNEL_ERROR` (code 26) for catchable channel/class lifecycle failures and
 `TASK_FAILURE` (code 27) for typed task-result demand failures.
 `CANCEL` (code 18) is the existing catchable task-cancellation event. Typed

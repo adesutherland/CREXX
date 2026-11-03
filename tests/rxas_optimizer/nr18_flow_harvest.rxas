@@ -1,11 +1,15 @@
 * NR-18 post-NR-27 producer-destination and jump-table flow proofs.
 
 forward_integer_result() .locals=3
+    null r0
+    null r1
     load r0,7
     icopy r1,r0
     ret r1
 
 forward_float_result() .locals=4
+    null r2
+    null r3
     load r2,2.5
     fcopy r3,r2
     ret r3
@@ -42,6 +46,8 @@ async_final_observation_caught:
     ret r16
 
 compare_producer_result() .locals=25
+    null r23
+    null r24
     load r22,31
     ieq r23,r22,31
     icopy r24,r23
@@ -89,22 +95,32 @@ jump_table_enables_local_flow() .locals=42
     .jtable nr18_words linear
     load r17,"miss"
     jumpr r17,nr18_words
+    null r18
+    null r19
     load r18,19
     icopy r19,r18
     ret r19
 nr18_hit: .jcase nr18_words "hit"
+    null r20
+    null r21
     load r20,21
     icopy r21,r20
     ret r21
 nr18_second: .jcase nr18_words "second"
+    null r34
+    null r35
     load r34,35
     icopy r35,r34
     ret r35
 nr18_third: .jcase nr18_words "third"
+    null r36
+    null r37
     load r36,37
     icopy r37,r36
     ret r37
 nr18_fourth: .jcase nr18_words "fourth"
+    null r38
+    null r39
     load r38,39
     icopy r39,r38
     ret r39

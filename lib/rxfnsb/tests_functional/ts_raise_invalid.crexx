@@ -1,0 +1,14 @@
+options levelb
+import _rxsysb
+import rxfnsb
+
+main: procedure = .int
+  assembler sigcalla caught_invalid(),"INVALID_SIGNAL_CODE"
+  call raise "NOT_A_SIGNAL", "invalid name", ""
+  say "FAIL: invalid signal name returned"
+  return 1
+
+caught_invalid: procedure = .string
+  arg condition = .runtime_signal_raw
+  say "FAIL: invalid signal name was caught" condition.name()
+  return "__rxsignal_skip"

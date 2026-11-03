@@ -39,20 +39,16 @@ struct RxasFlowProofService {
     size_t *value_marks;
     size_t *value_stack;
     size_t *value_aux;
-    size_t *value_set_marks;
     size_t value_capacity;
     size_t value_generation;
-    size_t value_set_generation;
     size_t *storage_marks;
     size_t *storage_stack;
     size_t storage_capacity;
     size_t storage_generation;
     size_t *effect_marks;
     size_t *effect_stack;
-    size_t *effect_set_marks;
     size_t effect_capacity;
     size_t effect_generation;
-    size_t effect_set_generation;
     FlowProofCacheEntry *cache;
     size_t cache_count;
     size_t cache_capacity;
@@ -247,9 +243,9 @@ static void flow_proof_set_retained_bytes(RxasFlowProofService *service) {
                     sizeof(size_t) +
             (service->visit_queue ? service->block_count : 0) *
                     sizeof(size_t) +
-            service->value_capacity * 4 * sizeof(size_t) +
+            service->value_capacity * 3 * sizeof(size_t) +
             service->storage_capacity * 2 * sizeof(size_t) +
-            service->effect_capacity * 3 * sizeof(size_t) +
+            service->effect_capacity * 2 * sizeof(size_t) +
             service->cache_capacity * sizeof(*service->cache) +
             service->rewrite_capacity * sizeof(*service->rewrites) +
             service->trace_deletion_capacity *
@@ -592,9 +588,9 @@ static int flow_proof_append_cache(RxasFlowProofService *service,
         service->metrics.retained_bytes = sizeof(*service) +
                 (service->block_count * 3 + service->edge_count + 1) *
                         sizeof(size_t) +
-                service->value_capacity * 4 * sizeof(size_t) +
+                service->value_capacity * 3 * sizeof(size_t) +
                 service->storage_capacity * 2 * sizeof(size_t) +
-                service->effect_capacity * 3 * sizeof(size_t) +
+                service->effect_capacity * 2 * sizeof(size_t) +
                 service->cache_capacity * sizeof(*service->cache) +
                 service->rewrite_capacity * sizeof(*service->rewrites) +
                 service->trace_deletion_capacity *
@@ -690,7 +686,6 @@ static int flow_proof_prepare_value_walk(RxasFlowProofService *service) {
     size_t *marks;
     size_t *stack;
     size_t *aux;
-    size_t *set_marks;
     count = rxas_flow_value_version_count(
             service->ssa, service->metrics.epoch);
     if (!count) return 0;
@@ -714,24 +709,15 @@ static int flow_proof_prepare_value_walk(RxasFlowProofService *service) {
         return 0;
     }
     service->value_aux = aux;
-    set_marks = realloc(service->value_set_marks,
-                        count * sizeof(*set_marks));
-    if (!set_marks) {
-        service->metrics.status = RXAS_FLOW_ANALYSIS_OUT_OF_MEMORY;
-        return 0;
-    }
-    service->value_set_marks = set_marks;
     memset(service->value_marks + old_capacity, 0,
            (count - old_capacity) * sizeof(*service->value_marks));
-    memset(service->value_set_marks + old_capacity, 0,
-           (count - old_capacity) * sizeof(*service->value_set_marks));
     service->value_capacity = count;
     service->metrics.retained_bytes = sizeof(*service) +
             (service->block_count * 3 + service->edge_count + 1) *
                     sizeof(size_t) +
-            service->value_capacity * 4 * sizeof(size_t) +
+            service->value_capacity * 3 * sizeof(size_t) +
             service->storage_capacity * 2 * sizeof(size_t) +
-            service->effect_capacity * 3 * sizeof(size_t) +
+            service->effect_capacity * 2 * sizeof(size_t) +
             service->cache_capacity * sizeof(*service->cache) +
             service->rewrite_capacity * sizeof(*service->rewrites) +
             service->trace_deletion_capacity *
@@ -785,9 +771,9 @@ static int flow_proof_prepare_storage_walk(RxasFlowProofService *service) {
     service->metrics.retained_bytes = sizeof(*service) +
             (service->block_count * 3 + service->edge_count + 1) *
                     sizeof(size_t) +
-            service->value_capacity * 4 * sizeof(size_t) +
+            service->value_capacity * 3 * sizeof(size_t) +
             service->storage_capacity * 2 * sizeof(size_t) +
-            service->effect_capacity * 3 * sizeof(size_t) +
+            service->effect_capacity * 2 * sizeof(size_t) +
             service->cache_capacity * sizeof(*service->cache) +
             service->rewrite_capacity * sizeof(*service->rewrites) +
             service->trace_deletion_capacity *
@@ -800,7 +786,6 @@ static int flow_proof_prepare_effect_walk(RxasFlowProofService *service) {
     size_t old_capacity;
     size_t *marks;
     size_t *stack;
-    size_t *set_marks;
     count = rxas_flow_effect_version_count(
             service->signal, service->metrics.epoch);
     if (!count) return 0;
@@ -818,24 +803,15 @@ static int flow_proof_prepare_effect_walk(RxasFlowProofService *service) {
         return 0;
     }
     service->effect_stack = stack;
-    set_marks = realloc(service->effect_set_marks,
-                        count * sizeof(*set_marks));
-    if (!set_marks) {
-        service->metrics.status = RXAS_FLOW_ANALYSIS_OUT_OF_MEMORY;
-        return 0;
-    }
-    service->effect_set_marks = set_marks;
     memset(service->effect_marks + old_capacity, 0,
            (count - old_capacity) * sizeof(*service->effect_marks));
-    memset(service->effect_set_marks + old_capacity, 0,
-           (count - old_capacity) * sizeof(*service->effect_set_marks));
     service->effect_capacity = count;
     service->metrics.retained_bytes = sizeof(*service) +
             (service->block_count * 3 + service->edge_count + 1) *
                     sizeof(size_t) +
-            service->value_capacity * 4 * sizeof(size_t) +
+            service->value_capacity * 3 * sizeof(size_t) +
             service->storage_capacity * 2 * sizeof(size_t) +
-            service->effect_capacity * 3 * sizeof(size_t) +
+            service->effect_capacity * 2 * sizeof(size_t) +
             service->cache_capacity * sizeof(*service->cache) +
             service->rewrite_capacity * sizeof(*service->rewrites) +
             service->trace_deletion_capacity *
@@ -914,106 +890,6 @@ static FlowProofEffectWalkResult flow_proof_unique_effect_leaf(
     if (!have_leaf) return FLOW_PROOF_EFFECT_UNAVAILABLE;
     *leaf_id = leaf;
     return FLOW_PROOF_EFFECT_UNIQUE;
-}
-
-static FlowProofEffectWalkResult flow_proof_effect_leaf_set_walk(
-        RxasFlowProofService *service, size_t effect_id, int record_set,
-        size_t *leaf_count) {
-    RxasFlowEffectNode first;
-    size_t head;
-    size_t tail;
-    if (!leaf_count || !flow_proof_prepare_effect_walk(service) ||
-        !rxas_flow_effect_node(
-                service->signal, service->metrics.epoch,
-                effect_id, &first) || first.id >= service->effect_capacity)
-        return FLOW_PROOF_EFFECT_UNAVAILABLE;
-    service->effect_generation++;
-    if (!service->effect_generation) {
-        memset(service->effect_marks, 0,
-               service->effect_capacity * sizeof(*service->effect_marks));
-        service->effect_generation = 1;
-    }
-    head = 0;
-    tail = 0;
-    *leaf_count = 0;
-    service->effect_marks[first.id] = service->effect_generation;
-    service->effect_stack[tail++] = first.id;
-    while (head < tail) {
-        RxasFlowEffectNode node;
-        size_t input;
-        effect_id = service->effect_stack[head++];
-        if (!rxas_flow_effect_node(
-                    service->signal, service->metrics.epoch,
-                    effect_id, &node) || node.id >= service->effect_capacity ||
-            !flow_proof_consume(service, 1))
-            return FLOW_PROOF_EFFECT_UNAVAILABLE;
-        if (node.kind == RXAS_FLOW_EFFECT_NODE_PHI) {
-            if (!node.input_count) return FLOW_PROOF_EFFECT_UNAVAILABLE;
-            for (input = 0; input < node.input_count; input++) {
-                size_t input_id;
-                RxasFlowEffectNode input_node;
-                input_id = rxas_flow_effect_input(
-                        service->signal, service->metrics.epoch,
-                        node.id, input);
-                if (input_id == RXAS_FLOW_ID_NONE ||
-                    !rxas_flow_effect_node(
-                            service->signal, service->metrics.epoch,
-                            input_id, &input_node) ||
-                    input_node.id >= service->effect_capacity)
-                    return FLOW_PROOF_EFFECT_UNAVAILABLE;
-                if (service->effect_marks[input_node.id] ==
-                        service->effect_generation)
-                    continue;
-                service->effect_marks[input_node.id] =
-                        service->effect_generation;
-                if (tail >= service->effect_capacity)
-                    return FLOW_PROOF_EFFECT_UNAVAILABLE;
-                service->effect_stack[tail++] = input_node.id;
-            }
-            continue;
-        }
-        if (node.kind == RXAS_FLOW_EFFECT_NODE_UNKNOWN)
-            return FLOW_PROOF_EFFECT_UNAVAILABLE;
-        if (record_set) {
-            if (service->effect_set_marks[node.id] !=
-                    service->effect_set_generation) {
-                service->effect_set_marks[node.id] =
-                        service->effect_set_generation;
-                (*leaf_count)++;
-            }
-        }
-        else {
-            if (service->effect_set_marks[node.id] !=
-                    service->effect_set_generation)
-                return FLOW_PROOF_EFFECT_MULTIPLE;
-            (*leaf_count)++;
-        }
-    }
-    return *leaf_count ? FLOW_PROOF_EFFECT_UNIQUE
-                       : FLOW_PROOF_EFFECT_UNAVAILABLE;
-}
-
-static FlowProofEffectWalkResult flow_proof_equivalent_effect_leaf_set(
-        RxasFlowProofService *service, size_t left_id, size_t right_id) {
-    FlowProofEffectWalkResult walk;
-    size_t left_count;
-    size_t right_count;
-    if (!flow_proof_prepare_effect_walk(service))
-        return FLOW_PROOF_EFFECT_UNAVAILABLE;
-    service->effect_set_generation++;
-    if (!service->effect_set_generation) {
-        memset(service->effect_set_marks, 0,
-               service->effect_capacity * sizeof(*service->effect_set_marks));
-        service->effect_set_generation = 1;
-    }
-    walk = flow_proof_effect_leaf_set_walk(
-            service, left_id, 1, &left_count);
-    if (walk != FLOW_PROOF_EFFECT_UNIQUE) return walk;
-    walk = flow_proof_effect_leaf_set_walk(
-            service, right_id, 0, &right_count);
-    if (walk != FLOW_PROOF_EFFECT_UNIQUE) return walk;
-    return left_count == right_count ? FLOW_PROOF_EFFECT_UNIQUE
-                                     : FLOW_PROOF_EFFECT_MULTIPLE;
 }
 
 typedef enum FlowProofEffectReduceResult {
@@ -1121,8 +997,9 @@ static FlowProofEffectWalkResult flow_proof_equivalent_effect(
             return left_leaf == right_leaf ? FLOW_PROOF_EFFECT_UNIQUE
                                            : FLOW_PROOF_EFFECT_MULTIPLE;
     }
-    return flow_proof_equivalent_effect_leaf_set(
-            service, left_id, right_id);
+    /* Equal unordered leaves do not correlate a phi's selected edge or
+     * loop iteration. Unsupported multileaf correspondence is unproved. */
+    return FLOW_PROOF_EFFECT_MULTIPLE;
 }
 
 /* A loop-carried storage phi denotes one storage when every non-cyclic leaf
@@ -1398,126 +1275,6 @@ static FlowProofValueWalkResult flow_proof_value_leaves_match(
                       : FLOW_PROOF_VALUE_UNAVAILABLE;
 }
 
-static FlowProofValueWalkResult flow_proof_value_leaf_set_walk(
-        RxasFlowProofService *service, size_t value_id, int record_set,
-        size_t *leaf_count) {
-    RxasFlowValueNode first;
-    size_t head;
-    size_t tail;
-    if (!leaf_count || !flow_proof_prepare_value_walk(service) ||
-        !rxas_flow_value_node(
-                service->ssa, service->metrics.epoch,
-                value_id, &first) || first.id >= service->value_capacity)
-        return FLOW_PROOF_VALUE_UNAVAILABLE;
-    service->value_generation++;
-    if (!service->value_generation) {
-        memset(service->value_marks, 0,
-               service->value_capacity * sizeof(*service->value_marks));
-        service->value_generation = 1;
-    }
-    head = 0;
-    tail = 0;
-    *leaf_count = 0;
-    service->value_marks[first.id] = service->value_generation;
-    service->value_stack[tail++] = first.id;
-    while (head < tail) {
-        RxasFlowValueNode node;
-        size_t input;
-        value_id = service->value_stack[head++];
-        if (!rxas_flow_value_node(
-                    service->ssa, service->metrics.epoch,
-                    value_id, &node) || node.id >= service->value_capacity ||
-            !flow_proof_consume(service, 1))
-            return FLOW_PROOF_VALUE_UNAVAILABLE;
-        if (node.kind == RXAS_FLOW_VALUE_PHI) {
-            if (!node.input_count) return FLOW_PROOF_VALUE_UNAVAILABLE;
-            for (input = 0; input < node.input_count; input++) {
-                size_t input_id;
-                RxasFlowValueNode input_node;
-                input_id = rxas_flow_value_input(
-                        service->ssa, service->metrics.epoch,
-                        node.id, input);
-                if (input_id == RXAS_FLOW_ID_NONE ||
-                    !rxas_flow_value_node(
-                            service->ssa, service->metrics.epoch,
-                            input_id, &input_node) ||
-                    input_node.id >= service->value_capacity)
-                    return FLOW_PROOF_VALUE_UNAVAILABLE;
-                if (service->value_marks[input_node.id] ==
-                        service->value_generation)
-                    continue;
-                service->value_marks[input_node.id] =
-                        service->value_generation;
-                if (tail >= service->value_capacity)
-                    return FLOW_PROOF_VALUE_UNAVAILABLE;
-                service->value_stack[tail++] = input_node.id;
-            }
-            continue;
-        }
-        if (node.kind == RXAS_FLOW_VALUE_COPY) {
-            RxasFlowValueNode source;
-            if (node.source_value_id == RXAS_FLOW_ID_NONE ||
-                !rxas_flow_value_node(
-                        service->ssa, service->metrics.epoch,
-                        node.source_value_id, &source) ||
-                source.id >= service->value_capacity)
-                return FLOW_PROOF_VALUE_UNAVAILABLE;
-            if (service->value_marks[source.id] !=
-                    service->value_generation) {
-                service->value_marks[source.id] = service->value_generation;
-                if (tail >= service->value_capacity)
-                    return FLOW_PROOF_VALUE_UNAVAILABLE;
-                service->value_stack[tail++] = source.id;
-            }
-            continue;
-        }
-        if (node.kind == RXAS_FLOW_VALUE_UNKNOWN)
-            return FLOW_PROOF_VALUE_UNAVAILABLE;
-        if (record_set) {
-            if (service->value_set_marks[node.id] !=
-                    service->value_set_generation) {
-                service->value_set_marks[node.id] =
-                        service->value_set_generation;
-                (*leaf_count)++;
-            }
-        }
-        else {
-            if (service->value_set_marks[node.id] !=
-                    service->value_set_generation)
-                return FLOW_PROOF_VALUE_MULTIPLE;
-            (*leaf_count)++;
-        }
-    }
-    return *leaf_count ? FLOW_PROOF_VALUE_UNIQUE
-                       : FLOW_PROOF_VALUE_UNAVAILABLE;
-}
-
-/* Under the caller's dominance/storage proof, two phi SCCs with exactly the
- * same write-once leaves represent unchanged storage contents even when the
- * sparse state graph materialises distinct join nodes at two program points. */
-static FlowProofValueWalkResult flow_proof_equivalent_value_leaf_set(
-        RxasFlowProofService *service, size_t left_id, size_t right_id) {
-    FlowProofValueWalkResult walk;
-    size_t left_count;
-    size_t right_count;
-    if (!flow_proof_prepare_value_walk(service))
-        return FLOW_PROOF_VALUE_UNAVAILABLE;
-    service->value_set_generation++;
-    if (!service->value_set_generation) {
-        memset(service->value_set_marks, 0,
-               service->value_capacity * sizeof(*service->value_set_marks));
-        service->value_set_generation = 1;
-    }
-    walk = flow_proof_value_leaf_set_walk(
-            service, left_id, 1, &left_count);
-    if (walk != FLOW_PROOF_VALUE_UNIQUE) return walk;
-    walk = flow_proof_value_leaf_set_walk(
-            service, right_id, 0, &right_count);
-    if (walk != FLOW_PROOF_VALUE_UNIQUE) return walk;
-    return left_count == right_count ? FLOW_PROOF_VALUE_UNIQUE
-                                     : FLOW_PROOF_VALUE_MULTIPLE;
-}
-
 typedef enum FlowProofValueReduceResult {
     FLOW_PROOF_VALUE_REDUCE_UNAVAILABLE = 0,
     FLOW_PROOF_VALUE_REDUCE_NO,
@@ -1667,12 +1424,9 @@ static FlowProofValueWalkResult flow_proof_equivalent_value(
             return FLOW_PROOF_VALUE_UNIQUE;
         }
     }
-    walk = flow_proof_equivalent_value_leaf_set(
-            service, left.id, right.id);
-    if (walk != FLOW_PROOF_VALUE_UNIQUE) return walk;
-    *root_id = left.id;
-    *root_node = left;
-    return FLOW_PROOF_VALUE_UNIQUE;
+    /* A repeated static writer can contribute to different phi choices
+     * or loop phases. Shared leaves alone establish no value equality. */
+    return FLOW_PROOF_VALUE_MULTIPLE;
 }
 
 /* A result phi may contain the same pure derivation produced at different
@@ -2094,12 +1848,10 @@ void rxas_flow_proof_service_destroy(struct RxasFlowProofService *service) {
     free(service->value_marks);
     free(service->value_stack);
     free(service->value_aux);
-    free(service->value_set_marks);
     free(service->storage_marks);
     free(service->storage_stack);
     free(service->effect_marks);
     free(service->effect_stack);
-    free(service->effect_set_marks);
     free(service->cache);
     free(service->rewrites);
     free(service->trace_deletions);
@@ -2290,6 +2042,8 @@ static FlowProofValueWalkResult flow_proof_guard_operand_equivalent(
     RxasFlowRegister candidate_register;
     RxasFlowComponentFact local_generator_fact;
     RxasFlowComponentFact local_candidate_fact;
+    RxasFlowValueNode root;
+    size_t root_id;
     if (!generator_fact) generator_fact = &local_generator_fact;
     if (!candidate_fact) candidate_fact = &local_candidate_fact;
     memset(generator_fact, 0, sizeof(*generator_fact));
@@ -2318,8 +2072,9 @@ static FlowProofValueWalkResult flow_proof_guard_operand_equivalent(
         return FLOW_PROOF_VALUE_UNAVAILABLE;
     if (generator_fact->value_id == candidate_fact->value_id)
         return FLOW_PROOF_VALUE_UNIQUE;
-    return flow_proof_equivalent_value_leaf_set(
-            service, generator_fact->value_id, candidate_fact->value_id);
+    return flow_proof_equivalent_value(
+            service, generator_fact->value_id, candidate_fact->value_id,
+            &root_id, &root);
 }
 
 static int flow_proof_guard_constant_token(
@@ -2457,7 +2212,7 @@ static FlowProofValueWalkResult flow_proof_guard_type_producer_leaves(
                 producer_item->operandCount != 2 ||
                 producer->signal.state != RXOP_SIGNAL_STATE_NONE ||
                 rxop_component_writes(producer->op->opcode, 0) !=
-                        RXOP_COMPONENT_ATTRIBUTES ||
+                        (RXOP_COMPONENT_OBJECT_TYPE | RXOP_COMPONENT_ATTRIBUTES) ||
                 (candidate_kind == FLOW_PROOF_GUARD_TYPE &&
                  !flow_proof_same_constant(
                          flow_proof_operand(producer_item, 1),
@@ -3517,9 +3272,9 @@ complete:
     service->metrics.retained_bytes = sizeof(*service) +
             (service->block_count * 3 + service->edge_count + 1) *
                     sizeof(size_t) +
-            service->value_capacity * 4 * sizeof(size_t) +
+            service->value_capacity * 3 * sizeof(size_t) +
             service->storage_capacity * 2 * sizeof(size_t) +
-            service->effect_capacity * 3 * sizeof(size_t) +
+            service->effect_capacity * 2 * sizeof(size_t) +
             service->cache_capacity * sizeof(*service->cache) +
             service->rewrite_capacity * sizeof(*service->rewrites) +
             service->trace_deletion_capacity *
@@ -4947,21 +4702,8 @@ int rxas_flow_prove_compare_branch_fusion(
     size_t use_index;
     size_t all_use_count;
     size_t all_use_index;
-    size_t cleanup_index;
     size_t trace_deletion_start;
     int externally_visible;
-    unsigned int cleanup_components;
-    static const unsigned int cleanup_bits[] = {
-        RXOP_COMPONENT_INTEGER,
-        RXOP_COMPONENT_FLOAT,
-        RXOP_COMPONENT_STRING,
-        RXOP_COMPONENT_DECIMAL,
-        RXOP_COMPONENT_BINARY,
-        RXOP_COMPONENT_ATTRIBUTES,
-        RXOP_COMPONENT_REFERENCE,
-        RXOP_COMPONENT_NATIVE_PAYLOAD,
-        RXOP_COMPONENT_ATTRIBUTE_COUNT
-    };
     if (!plan) return 0;
     flow_proof_compare_branch_plan_init(
             plan, compare_instruction, branch_instruction);
@@ -5037,6 +4779,7 @@ int rxas_flow_prove_compare_branch_fusion(
         compare->effects.implicit != RXOP_IMPLICIT_NONE ||
         compare->effects.semantics != RXOP_SEM_NONE ||
         compare->signal.state != RXOP_SIGNAL_STATE_NONE ||
+        rxop_callback_obligations(compare->op->opcode) != RXOP_CALLBACK_NONE ||
         rxop_context_writes(compare->op->opcode) != RXOP_CONTEXT_NONE ||
         rxop_component_writes(compare->op->opcode, 0) !=
                 RXOP_COMPONENT_INTEGER ||
@@ -5169,39 +4912,15 @@ int rxas_flow_prove_compare_branch_fusion(
         plan->reason = RXAS_FLOW_PROOF_DESTINATION_OBSERVABLE;
         goto complete;
     }
-    cleanup_components = rxop_component_clears(compare->op->opcode, 0);
-    for (cleanup_index = 0;
-        cleanup_index < sizeof(cleanup_bits) / sizeof(cleanup_bits[0]);
-         cleanup_index++) {
-        RxasFlowComponentFact cleanup;
-        RxasFlowValueNode rejected_leaf;
-        if (!(cleanup_components & cleanup_bits[cleanup_index])) continue;
-        memset(&cleanup, 0, sizeof(cleanup));
-        cleanup.value_id = RXAS_FLOW_ID_NONE;
-        memset(&rejected_leaf, 0, sizeof(rejected_leaf));
-        rejected_leaf.id = RXAS_FLOW_ID_NONE;
-        rejected_leaf.defining_instruction = RXAS_FLOW_ID_NONE;
-        if (!rxas_flow_component_at_instruction(
-                    service->ssa, expected_epoch, compare_instruction, 0,
-                    result_register, cleanup_bits[cleanup_index], &cleanup) ||
-            !flow_proof_local_component_absent(
-                    service, expected_epoch, &cleanup,
-                    result_before.storage_id, &rejected_leaf)) {
-            plan->rejected_component = cleanup_bits[cleanup_index];
-            plan->rejected_component_kind = cleanup.kind;
-            plan->rejected_component_presence = cleanup.presence;
-            plan->rejected_component_value_id = cleanup.value_id;
-            plan->rejected_leaf_kind = rejected_leaf.kind;
-            plan->rejected_leaf_presence = rejected_leaf.presence;
-            plan->rejected_leaf_value_id = rejected_leaf.id;
-            plan->rejected_leaf_defining_instruction =
-                    rejected_leaf.defining_instruction;
-            plan->reason = service->metrics.status ==
-                        RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED
-                    ? RXAS_FLOW_PROOF_BUDGET_EXHAUSTED
-                    : RXAS_FLOW_PROOF_CLEANUP_REQUIRED;
-            goto complete;
-        }
+    /* The removed setter only retires descriptor/native ownership. Its
+     * canonical callback inventory is empty, and the remaining proof checks
+     * that the local result cannot be observed through aliases, uses, TRACE,
+     * signals or call windows. Cleanup may wait for physical retirement;
+     * dirty entry contents are not thereby declared absent. */
+    if (rxop_component_clears(compare->op->opcode, 0) &
+            ~(RXOP_COMPONENT_REFERENCE | RXOP_COMPONENT_NATIVE_PAYLOAD)) {
+        plan->reason = RXAS_FLOW_PROOF_CLEANUP_REQUIRED;
+        goto complete;
     }
     if (!rxas_flow_component_at_instruction(
                 service->ssa, expected_epoch, compare_instruction, 1,
@@ -5413,9 +5132,9 @@ complete:
     service->metrics.retained_bytes = sizeof(*service) +
             (service->block_count * 3 + service->edge_count + 1) *
                     sizeof(size_t) +
-            service->value_capacity * 4 * sizeof(size_t) +
+            service->value_capacity * 3 * sizeof(size_t) +
             service->storage_capacity * 2 * sizeof(size_t) +
-            service->effect_capacity * 3 * sizeof(size_t) +
+            service->effect_capacity * 2 * sizeof(size_t) +
             service->cache_capacity * sizeof(*service->cache) +
             service->rewrite_capacity * sizeof(*service->rewrites) +
             service->trace_deletion_capacity *

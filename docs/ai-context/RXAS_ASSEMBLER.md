@@ -832,6 +832,20 @@ existing handlers and do not change VM or RXBIN semantics.
   so it adds no callback cause at numeric setters or call ingress. Zero proves
   no Rexx callback; a
   nonzero mask is an obligation, not permission to discard or reorder work.
+  Return-source COPY and root external copyback retain real hooks, but their
+  pending events dispatch after departure in the resumed parent or external
+  context. A return therefore has no same-procedure post-RET skip or handler
+  continuation; outward uncertainty and normal return remain represented.
+  The native C point query `rxas_flow_callback_resources_at_instruction()` can
+  prove native-payload and zero-child absence for an explicitly cleared source.
+  Native transformations currently retain their conservative hook effects;
+  they do not consume this point predicate to refine SSA or signal edges.
+  COPY/BCOPY-dependent reuse therefore remains unproved at that boundary,
+  while the shared Level L flow owns its more precise conditional effects.
+  Counted-call bounds likewise require an owned local count and unchanged
+  entry alias/reference effects to exclude initializer mutation. A later
+  scalar write does not restore that coarse no-escape proof; encoded fixed
+  calls retain their exact actual window without this count premise.
   Reviewed raw numeric-context getters can have an empty inventory while
   remaining opaque for other optimizer purposes. SAY/SAYX retain host routes.
   `rxop_callback_preserves_signal_policy()` and generated catalogue
@@ -1218,8 +1232,12 @@ dominated successful repetition, equivalent scalar-constant writes,
 speculatability, loop must-execute and loop component invariance.  Proof keys
 name symbolic `StorageId`s; result records
 name the generator/candidate `ValueId`s, effect identities and a stable failure
-reason.  Value and effect phis are compared through conservative reduction and
-equivalent leaf sets rather than numeric identity or source order.  Stale
+reason. Value and effect equality retains exact identities, proven wrapper
+reductions and a common single leaf. Equal unordered sets of static writers do
+not prove correlated edge selection or loop iteration; unsupported multileaf
+correspondence remains unproved. The finite changed-key runtime control keeps
+successive `Key.2`/`Key.3` materializations distinct in optimized and ordinary
+assembly. Stale
 epochs, invalid control, unsupported signal dependencies, allocation failure
 and work-budget exhaustion return an unavailable or rejected proof and cannot
 enable a rewrite.
@@ -1304,9 +1322,10 @@ displaced components, redirectable result uses, and compatible call, signal,
 context, reference, metadata and TRACE observations. The consumer validates
 the complete plan, retargets the derivation to the original source, redirects
 all proved result uses, removes only matching derived-value TRACE events, and
-deletes the copy as one transaction. The first production case is
-`dcopy temporary,source` followed by `dtos temporary`; the mechanism is
-component- and derivation-metadata driven rather than mnemonic-specific.
+deletes the copy as one transaction. Integer/float copies followed by
+`itos`/`ftos` provide the current no-hook positive controls. Decimal-provider
+operations retain their published unknown callbacks and are not admitted by
+this proof. The mechanism remains component- and derivation-metadata driven.
 Reference objects are a separate observation from register-to-storage aliases:
 an earlier `mkref` may keep either storage visible even when the register alias
 census is one. X01 therefore rejects a placement when such a reference-creation
@@ -1347,9 +1366,22 @@ barrier.  `call1` through `call4` create unknown component definitions for
 their explicit actual arguments.  A range call records its local call-window
 base and uses a statically constant count when available; an unknown count
 conservatively covers every later local.  Storage outside the argument window
-may remain provably unchanged.  Normal and failure continuations use the same
+may remain provably unchanged. Normal and failure continuations use the same
 argument exposure rule, so signal edges cannot recover a value the callee may
-have changed.
+have changed. Constant bounds additionally require an owned local count with
+no preceding alias/reference escape effect: module initialization runs before
+the VM captures that count. Without that precision the window remains open;
+a scalar reload alone does not revoke an escaped reference.
+
+Ordinary calls use their canonical actual/result, prefix and frame contracts
+through callback uncertainty. They preserve the suspended caller's slot
+coordinates and frame-local policy while advancing reference/external/provider
+effects and clobbering exposed values. A combined fused-call failure cannot
+promise its prefix ran when target validation can fail first; successful
+continuations retain the exact mapping. Delivered returning handlers retain
+their separate conservative effects. Opaque decimal-provider operations remain
+unknown; explicit `unlink` followed by a scalar definition can recover owned
+base facts without assuming provider purity.
 
 The NR-27 register universe distinguishes local (`r`), argument (`a`) and
 global (`g`) register classes and tracks integer, float, string, decimal,
@@ -1390,6 +1422,12 @@ does not invent a normal numeric-context write for an otherwise classified
 opcode. A register-backed TRACE event observes only the component named by its
 value type; the event remains present and does not automatically observe every
 representation inside the value.
+Possible callback, alias and call-window writes retain the prior component as
+one input of an ordinary value phi, alongside an unknown mutation. They do not
+prove that the old definition is dead. The same rule covers captured CALL
+actuals and results (a void return can leave the result unchanged). Definite
+setters and field writes still replace the component. This keeps sparse
+liveness conservative without treating every callback as a rewrite veto.
 
 TRACE observation is profile-sensitive. In an optimised assembly, a rewrite
 may omit, combine or relocate an event when it removes or moves the operation
@@ -1423,7 +1461,11 @@ The first larger-domain case is `itod`. Both bundled decimal plugins implement
 integer-to-decimal conversion for every integer, with allocation failure
 handled by the VM panic convention. `itod` and the same-function `btod`
 therefore clear stale backend diagnostics and are total non-signalling
-operations; their values still depend on numeric context and plugin identity.
+intrinsic operations; their values still depend on numeric context and plugin
+identity. This does not certify arbitrary provider callbacks as non-reentrant
+or non-signalling. Their unknown execution effects remain, so the native
+repetition consumer retains them; ABI-3 purity applies only to numeric-context
+synchronization.
 Signalling conversion families remain rejected where the first successful
 continuation does not dominate the repetition. `btoi` and `itob` remain
 rejected pending a distinct proof that repeating their same-component
@@ -1488,10 +1530,15 @@ fact engine:
 - a repeated one-register `itos` is removed only under the storage-identity,
   integer/string-component and numeric-context proof described above;
 - unreachable instructions, TRACE records and source-step records are removed
-  only when the entire procedure CFG is complete; and
-- dead-result deletion remains disabled because a nominal numeric destination
-  write may release hidden reference or native-payload state even when its
-  numeric result is dead.
+  only when the entire procedure CFG is complete;
+- exact integer compare/branch fusion may discard its unobserved local result
+  setter after the unique/unescaped storage, complete use, TRACE, signal and
+  call-window proofs pass. The canonical callback inventory must be empty;
+  descriptor/native cleanup may wait for physical retirement without declaring
+  dirty components absent. Source COPY and unknown callback routes remain
+  effects; and
+- general dead-result deletion remains disabled: numeric liveness alone does
+  not establish those storage, observation and cleanup obligations.
 
 Every admitted rewrite removes at least one executable instruction and inserts
 none, so fixed-point iteration terminates by a strictly decreasing instruction
@@ -1512,9 +1559,9 @@ Scalar producers such as `load` and integer comparisons release reference and
 native-payload state, whereas `icopy`/`fcopy` write only their typed component.
 Producer forwarding therefore also proves that every component cleared by the
 producer is already absent in both the discarded temporary and the final
-destination. Fresh local entry storage supplies a known empty state;
-arguments, globals, aliases and unknown or previously populated storage fail
-closed. This hidden-cleanup condition is part of opcode metadata and prevents
+destination. Explicit component clears can establish known empty cleanup state;
+dirty local entry alone does not. Arguments, globals, aliases and unknown or
+previously populated storage fail closed. This hidden-cleanup condition is part of opcode metadata and prevents
 typed liveness alone from changing lifetime behaviour.
 
 Copy rewrites proved from one graph may be applied in the same iteration only
@@ -1537,8 +1584,9 @@ opcodes to be total and context-neutral, and the local result storage to be
 unaliased. A source may share that storage only when it is the same physical
 result register and component SSA supplies the exact pre-write integer
 `ValueId`; the fused branch then reads that incoming value rather than the
-materialized Boolean. Every reference/native payload cleared by materializing
-the Boolean must already be absent. The result integer `ValueId` may have only
+materialized Boolean. Its complete callback inventory must be empty, and only
+cleanup of reference/native ownership may be deferred to physical retirement;
+the proof does not declare dirty values absent. The result integer `ValueId` may have only
 the branch read and, under the selected TRACE
 policy, any number of precisely matching result events between compare and
 branch. The immutable plan records and revalidates those events, deletes them

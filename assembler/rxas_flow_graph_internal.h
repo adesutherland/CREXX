@@ -10,6 +10,11 @@ typedef struct RxasFlowLabelSlot {
     size_t record_id;
 } RxasFlowLabelSlot;
 
+/* Ordinary invocation has its own captured actual/result and frame contract.
+ * Its callbacks must not bypass that transfer with a whole-frame clobber. */
+int rxas_flow_instruction_has_known_call_contract(
+        const RxasFlowInstruction *instruction);
+
 struct RxasFlowStructuralAnalysis;
 struct RxasFlowSignalAnalysis;
 struct RxasFlowSsaAnalysis;

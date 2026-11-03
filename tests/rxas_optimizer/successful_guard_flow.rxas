@@ -2,19 +2,21 @@
 
 direct_object_guards() .locals=3
     setobjtype r0,"successful_guard_flow.box"
-    copy r1,r0
+    link r1,r0
     assertinitialized r1
     asserttype r1,"successful_guard_flow.box"
     asserttype r1,"successful_guard_flow.other"
     ret
 
 direct_object_guard_after_attr_store() .locals=3
+    null r0
     setattrs r0,1
     setobjtype r0,"successful_guard_flow.box"
     load r2,7
     isetattr1 r0,1,r2
-    copy r1,r0
-    assertinitialized r1
+    * Full COPY retains its real source-hook uncertainty for a nonempty tree.
+    copy r2,r0
+    assertinitialized r2
     ret
 
 direct_object_guard_after_igetunlink() .locals=4

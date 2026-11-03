@@ -1,0 +1,35 @@
+/* H01 must keep Key.2 and Key.3 distinct across successive loop updates.
+ * The only observations between materializations are retargetable TRACE
+ * records and the authored stem write; one iteration makes the result finite.
+ */
+main() .locals=10
+    null r4
+    load r8,"target-value"
+    load r9,"Key.3"
+    stemset r4,r9,r8
+    load r1,1
+    load r6,0
+    load r3,"seed-value"
+joined_loop:
+    brt joined_done,r6
+    iadd r1,r1,1
+    itos r1
+    concat r5,"Key.",r1
+    .traceevent "C" 4 "R" "S" "r" 5 1 1 0 "seed-key" ""
+    stemset r4,r5,r3
+    iadd r1,r1,1
+    itos r1
+    concat r2,"Key.",r1
+    .traceevent "C" 4 "R" "S" "r" 2 2 2 0 "candidate-key" ""
+    stemget r0,r4,r2
+    load r6,1
+    br joined_loop
+joined_done:
+    seq r7,r0,"target-value"
+    brf failed,r7
+    say "PASS: H01 changed-key runtime"
+    ret 0
+failed:
+    say "FAIL: H01 reused a changed key"
+    say r0
+    ret 1

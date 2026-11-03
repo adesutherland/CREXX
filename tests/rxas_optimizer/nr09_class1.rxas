@@ -77,6 +77,8 @@ null4() .locals=8
     ret
 
 loadcopy() .locals=8
+    null r0
+    null r1
     load r0,10
     icopy r1,r0
     say r1

@@ -1,8 +1,8 @@
 # Level L target-toolchain research
 
 **Status: phase 1 VM preparation and phase 2 shared Level L foundation are
-implemented and locally qualified; new inliner2 implementation/qualification
-remains open.** This is the single
+implemented and locally qualified. Native RXAS/core ordinary functional
+qualification is complete; actual SAN acceptance and inliner2 remain open.** This is the single
 authoritative plan. The [inlining architecture](doc/inlining.md) owns the detailed
 mapping and exit contracts; this file owns outcomes, steps and completion gates.
 
@@ -321,11 +321,151 @@ effects; cleanup-only conforming finalizers do not acquire Rexx callback edges.
 Unknown facts reduce optional optimization or leave a specific semantic duty
 unproved; they do not authorize absent effects or broad callback vetoes.
 
-The separate native C assembler flow/proof implementation remains unqualified
-on pre-existing call, policy, register-window, attribute, numeric and alias
-cases. Its owner is native assembler flow/proof; closure requires independent
-VM/fixture classification of those cases and a green broad native flow graph
-suite. The shared Level L foundation does not confer that qualification.
+### Native RXAS repair and core integration gate
+
+The existing C-written RXAS flow/proof repairs cover call, policy,
+register-window, attribute, numeric and alias contracts. This is a separate
+follow-up to the locally qualified shared Level L foundation. Review
+each failure against the published VM and canonical opcode contracts before
+changing code or an oracle; tests are evidence rather than intended semantics.
+Repair shared causes at their owner and retain independent positive and negative
+controls. This work does not start inliner2 or introduce a second proof engine.
+Phi value/effect equality must preserve the control edge and iteration selecting
+each definition. Equal unordered sets of static leaves alone are insufficient.
+Repair equality at its shared owner, retain sound identical/reduced cases, and
+leave unsupported correlation explicitly unproved. A finite joined-key runtime
+control with initialized owned storage must distinguish successive suffix values
+against an independent expected result in optimized and unoptimized assembly.
+Comprehensive preparation also owns its actual dependency/publication defects.
+Public Level L package images must follow the existing Classic/class-library
+publication pattern: link to a private image, stage the complete image outside
+public binary discovery, then atomically rename it into `bin`. Apply the same
+contract to the core, analysis, RXAS, target and target-I/O owners as execute,
+so the discovered analysis race is repaired coherently rather than one package
+at a time. A failed producer retains the last good public image and already-open
+readers retain a consistent image.
+Consumers that only discover an unrelated package need no artificial dependency
+or global serialization. Keep the private linked image and publication inputs
+explicit in the build graph; verify the reader/replacement mechanism and the
+affected producers and maintained exact package-closure controls before resuming
+the comprehensive gate.
+The UI ANSI edge fixture must use the existing exact staged import-root owner
+for its declared driver probe, UI and library images. A whole fixture-output
+directory is not that import closure: it exposes concurrently generated sibling
+images to discovery. Preserve public outputs, runtime working directories and
+intentional matrix concurrency; do not add a global publication or serializing
+framework for this fixture dependency defect.
+Syntax/Unicode generation that preserves byte-identical RXAS must use the
+existing success-stamp/declared-byproduct ownership pattern. A successful
+unchanged generation records freshness without touching the equal source;
+Make consumers wait for the owner and the existing missing-output guard restores
+deleted byproducts. Preserve strict immediate-no-op and recovery controls.
+The core integration repair also covers producer/runtime defects exposed by
+that panel. Native B inline scalar captures may use the existing recyclable
+register pool only when their generated scope owns them and existing use,
+exposure, reference and result-lifetime facts establish the release boundary;
+retaining a parent register namespace does not make every capture permanent.
+Keep unresolved escapes/aggregate lifetimes conservative without weakening the
+entry-initializer constant proof or adding runtime clears.
+The shared Classic call context must retain owned default values rather than
+references into a temporary factory receiver. Resolve owned interior handles
+on the persistent receiver, including prepared copies; explicitly borrowed
+handles keep their exact identity and expiry. Repair that B owner rather than
+extending VM lifetimes or reordering frontend setters.
+Shared Level L error queries must track whether a node was bound explicitly;
+the VM object-initialized flag is not evidence that an early failure assigned a
+valid node layout. Conditions, graph and result owners retain named failure
+reasons without dereferencing an unbound root.
+SAN-015 covers the malformed linked-image reader cleanup found by this gate.
+The pool-read table retains a counted ownership anchor while modules are built
+and validated; success/error paths release each table/module reference once.
+Preserve clean rejection, atomic reader output and multi-module/shared-pool
+coverage. The sanitizer worklist owns the focused and platform closure gates.
+Tests retain their intended coverage: valid catchable signal requests are
+separate from terminal invalid-name misuse, instrumentation fixtures include
+an actual ordinary call, and mixed RXBIN section decoding is constructed
+explicitly rather than depending on the writer's incidental compression ratio.
+Physical-retirement finalizer controls must retain real call/return/unwind
+frames; accepted inline timing differences do not weaken their once-only
+physical-retirement oracle.
+Dead comparison-result setters may defer known no-hook destination cleanup
+after the existing unique/unescaped storage, complete use, TRACE, signal and
+call-observation obligations pass. This is a rewrite-specific duty; do not
+redefine dirty entry as empty or globally weaken component-absence facts used
+by other rewrites. Real source COPY and unknown callback routes remain effects.
+Complete the canonical no-hook inventory for BTOF, FTOB and STOB after checking
+their intrinsic arithmetic/string implementations. Preserve their component
+and signal contracts and describe their direct field writers. BCHECKRANGE's
+intrinsic binary-range predicate also has no hook; retain its OUT_OF_RANGE
+signal and source-mutation controls. This grants no purity to decimal providers
+or COPY hooks.
+Expose the existing SETATTRS literal operand as an attribute-count definition
+through the canonical literal getters. Keep computed count forms separate;
+range proofs still require an exact constant and successful control path.
+JUMPR's read-only table lookup has no callback. Describe its existing
+RXBIN_CORRUPTION checks as before-write static signal alternatives with no
+register/context writes; retain their actual catchable policy routes rather
+than inventing terminal behavior or discarding the error alternatives.
+The native C solver still conservatively transfers source-COPY hook operations;
+its existing point resource predicate does not yet refine transformation state.
+Qualify known-clean and dirty-source fact queries independently, retain genuine
+hook effects in shape controls, and do not claim conditional hook elimination.
+Further integration belongs to the native flow/proof owner or the later shared
+Level L optimizer, with callback-aware state invalidation and negative controls.
+The native counted-window bound currently requires entry alias/reference effect
+identities. Even a cleanup-only reference effect can therefore leave that bound
+unproved. Retain such optional rewrite negatives explicitly and preserve a fixed
+CALL1 window positive; do not pretend the count is captured before initialization
+or erase prior reference escape. More precise per-storage escape facts belong
+to the shared analysis owner, not a call-form exception in the rewrite.
+Possible mutation is not a definite value kill. Native SSA callback/call
+clobbers must preserve the prior definition as a possible incoming value so
+dependent liveness cannot erase a boolean or other value still read after a
+callback that may leave it unchanged. Repair this provenance at the shared
+state/value owner, retaining genuine unknown mutation and definite-write kills;
+do not add a comparison-specific callback veto. A finite initialized live-result
+runtime control must distinguish correct and incorrectly fused code.
+Return/departure COPY hooks retain their observation and signal obligations,
+but the VM dispatches their pending events after activating the parent or ending
+the root invocation. Canonical return continuations must not invent a same-frame
+post-RET skip or handler entry; repair that shared contract rather than adding
+an opcode-specific reachability exception.
+HTTP server validation uses the existing canonical `CHANNEL_ERROR` condition;
+ordinary failing-service controls use `FAILURE` and retain their required 500
+response. Invalid arbitrary VM names remain terminal programming errors, not
+recoverable stand-ins for an ordinary handler failure.
+When no reply is available, the HTTP controller observes the existing
+nonblocking service-task completion. An available failed task uses the existing
+500 path immediately; valid published replies keep priority and unfinished
+tasks retain their deadline/504 behavior. Preserve endpoint request settlement,
+release and closure; no new API or inflated deadline is required.
+Reconcile goldens only after source/behavior/code-shape review and the producer
+repair, preserving the bounded constant-initializer contract. Retirement of the
+native Classic frontend is acceptable in principle if needed, but this gate
+does not retire the B bootstrap compiler or silently drop frontend coverage;
+replacement and delivery boundaries require an explicit decision.
+
+| Criterion | Observable completion condition | State |
+|---|---|---|
+| **NFX-AC01 — native flow semantics** | All outstanding native flow failures are classified against VM/database contracts; material implementation defects and stale oracles are repaired. The complete native flow graph contract and directly affected metadata/callback/policy controls pass on frozen inputs. | done — reviewed native contracts, runtime/codegen controls and affected L projections locally qualified |
+| **NFX-AC02 — core correctness integration** | After NFX-AC01, prepare the existing normal Debug `qa-comprehensive` closure, repair/replay failures, freeze inputs and run the complete selected ordinary correctness panel once green. Reuse its optimizer-parity coverage rather than running a duplicate panel. | done — complete selected ordinary panel qualified on frozen inputs |
+| **NFX-AC03 — reviewed local baseline** | Owning contracts/known limits are current, warning-free changed inputs and representative emitted RXAS reviewed, task scratch removed, and the repair committed. Formal acceptance also follows the repository's actual-SAN closure rule. Install/package, stress, measurement and hosted qualification remain separate. | open — local review, documentation and commits delivered; actual SAN platform/original-producer closure remains outstanding |
+
+| Step | State and dependency |
+|---|---|
+| **NFX-STEP01 — classify and repair** | done: independent VM/database review, coherent shared repairs and affected executable controls complete; serves AC01. |
+| **NFX-STEP02 — comprehensive integration** | done: maintained comprehensive preparation and the complete ordinary correctness panel pass on frozen inputs after affected repairs; serves AC02. |
+| **NFX-STEP03 — document and commit** | local delivery done, formal acceptance open: guides/limits and reviewed commits are delivered; actual SAN closure remains outstanding under AC03. |
+
+The ordinary functional repair and local commits do not close SAN-014, SAN-015,
+SAN-QA-026 or SAN-QA-027. Their owners and original-producer/platform closure
+checks remain in the [sanitizer worklist](../../../docs/SANITIZER-WORKLIST.md).
+Formal NFX phase acceptance requires those applicable gates or Adrian's explicit
+assignment of outstanding platform proof to a named release QA gate; such an
+assignment would not itself close the SAN items. No additional sanitizer campaign,
+publication or inliner2 implementation is implicitly commissioned here.
+
+### Shared Level L baseline status
 
 | Baseline criterion | Observable completion condition | State |
 |---|---|---|

@@ -191,6 +191,38 @@ crexx_add_rxas_optimizer_check(redundant_self_copy_flow_noopt redundant_self_cop
 crexx_add_rxas_optimizer_check(successful_guard_flow successful_guard_flow.rxas successful_guard_flow RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(successful_guard_flow_noopt successful_guard_flow.rxas successful_guard_flow_noopt RXAS_FLAGS -n)
 
+add_custom_target(joined_key_changed_runtime ALL)
+crexx_add_rxas_opt_matrix(
+        NAME joined_key_changed_runtime_rxvm
+        SOURCE ${RXAS_OPTIMIZER_DIR}/joined_key_changed_runtime
+        TARGET_GROUP joined_key_changed_runtime
+        RUNNER rxvm
+        DEPENDS ${RXAS_OPTIMIZER_DIR}/joined_key_changed_runtime.rxas rxas rxvm rxlink
+        TEST_LABELS "rxas;optimizer;runtime"
+)
+foreach(_joined_key_mode IN ITEMS noopt opt)
+    set_tests_properties(joined_key_changed_runtime_rxvm_${_joined_key_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: H01 changed-key runtime"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+
+add_custom_target(compare_live_callback_runtime ALL)
+crexx_add_rxas_opt_matrix(
+        NAME compare_live_callback_runtime_rxvm
+        SOURCE ${RXAS_OPTIMIZER_DIR}/compare_live_callback_runtime
+        TARGET_GROUP compare_live_callback_runtime
+        RUNNER rxvm
+        DEPENDS ${RXAS_OPTIMIZER_DIR}/compare_live_callback_runtime.rxas rxas rxvm rxlink
+        TEST_LABELS "rxas;optimizer;runtime"
+)
+foreach(_compare_live_mode IN ITEMS noopt opt)
+    set_tests_properties(compare_live_callback_runtime_rxvm_${_compare_live_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: live bool"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+
 add_custom_target(whole_procedure_runtime ALL)
 foreach(_nr27_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(

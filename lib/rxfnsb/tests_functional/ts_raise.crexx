@@ -12,7 +12,7 @@ main: procedure = .int expose handled failures
   call raise "SYNTAX", "Error 40.28", "BAD"
   call raise "syntax", "plain message", ""
   call raise "error", "lower error", "context"
-  call raise "NOT_A_SIGNAL", "ignored", "ignored"
+  call raise "INVALID_SIGNAL_CODE", "requested event", ""
 
   failures = failures + check(handled = 4, "all signals handled")
   if failures = 0 then say "PASS: Level B raise"
@@ -35,7 +35,8 @@ handle_raise: procedure = .string expose handled failures
     failures = failures + check(condition.message() = "lower error context", "lowercase ERROR message")
   end
   else if handled = 4 then do
-    failures = failures + check(condition.name() = "INVALID_SIGNAL_CODE", "unknown signal validation")
+    failures = failures + check(condition.name() = "INVALID_SIGNAL_CODE", "explicit requested validation event")
+    failures = failures + check(condition.message() = "requested event", "requested validation event message")
   end
   else failures = failures + 1
 

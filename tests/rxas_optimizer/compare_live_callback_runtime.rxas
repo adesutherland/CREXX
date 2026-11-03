@@ -1,0 +1,16 @@
+* A possible callback mutation cannot kill a still-live comparison result.
+main() .locals=4
+    load r0,0
+    load r1,32
+    ieq r0,r1,32
+    brt joined,r0
+    load r0,0
+joined:
+    load r3,0
+    say r3
+    brt success,r0
+    say "FAIL: lost live bool"
+    ret 1
+success:
+    say "PASS: live bool"
+    ret 0

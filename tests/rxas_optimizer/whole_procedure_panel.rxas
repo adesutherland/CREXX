@@ -128,6 +128,8 @@ copy_before_endlife() .locals=43
     ret r42
 
 relevant_register_metadata() .locals=46
+    null r43
+    null r44
     load r43,97
     icopy r44,r43
     .meta "nr27.relevant"="b" ".int" r44
@@ -136,6 +138,8 @@ relevant_register_metadata() .locals=46
     .meta "nr27.relevant"
 
 unrelated_register_metadata() .locals=49
+    null r46
+    null r47
     load r46,101
     icopy r47,r46
     .meta "nr27.unrelated"="b" ".int" r48

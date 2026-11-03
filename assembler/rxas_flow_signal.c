@@ -258,7 +258,9 @@ static unsigned int flow_signal_instruction_effect_mask(
     unsigned int mask;
     unsigned int alias_semantics;
     unsigned int mutation_semantics;
-    if (!instruction || !instruction->op || instruction->callback_obligations)
+    if (!instruction || !instruction->op ||
+        (instruction->callback_obligations &&
+         !rxas_flow_instruction_has_known_call_contract(instruction)))
         return flow_signal_all_effects();
     /* Signal-set/dependency uncertainty belongs to exceptional-edge state.
      * It does not turn a classified normal instruction transfer into a write
@@ -518,8 +520,10 @@ static size_t flow_signal_policy_transfer(
     const char *name;
     int callback_preserves_policy;
     if (!instruction) return current;
-    callback_preserves_policy = instruction->op &&
-            rxop_callback_normal_preserves_frame(instruction->op->opcode);
+    callback_preserves_policy =
+            rxas_flow_instruction_has_known_call_contract(instruction) ||
+            (instruction->op &&
+             rxop_callback_normal_preserves_frame(instruction->op->opcode));
     contract = callback_preserves_policy ? &instruction->intrinsic_signal : &instruction->signal;
     /* An unknown signal set is not an unknown handler-policy transfer.  In
      * particular, a CALL may signal and mutate pointer-bound argument values,
@@ -597,10 +601,12 @@ static int flow_signal_set_edge_state(
             : rxas_flow_procedure_instruction(
                     analysis->procedure, analysis->metrics.epoch,
                     instruction_id);
-    contract = instruction ? (edge->cause == RXAS_FLOW_CAUSE_INTRINSIC
+    contract = instruction ? ((edge->cause == RXAS_FLOW_CAUSE_INTRINSIC ||
+            rxas_flow_instruction_has_known_call_contract(instruction))
             ? &instruction->intrinsic_signal : &instruction->signal) : 0;
     intrinsic_callback_prefix = instruction && edge->cause == RXAS_FLOW_CAUSE_INTRINSIC &&
             instruction->callback_obligations &&
+            !rxas_flow_instruction_has_known_call_contract(instruction) &&
             !(instruction->op && rxop_callback_postwrite_operand(instruction->op->opcode) &&
               contract->phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES);
     policy = block_policy;

@@ -22,6 +22,8 @@ join_nonzero:
     ret r2
 
 typed_copy_source_changed() .locals=4
+    null r0
+    null r1
     load r0,7
     icopy r1,r0
     load r0,8

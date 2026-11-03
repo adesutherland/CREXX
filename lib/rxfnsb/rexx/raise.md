@@ -17,13 +17,17 @@ blank, then `parm1`; a blank `parm1` delivers `code` unchanged.
 The procedure retains its internal compatibility result `.int`. Normally the
 signal transfers control and no result is observed. A signal handler may
 explicitly skip the signal, in which case the helper returns zero to its caller.
-An unknown `type` is rejected by the VM as `INVALID_SIGNAL_CODE`.
+An unknown `type` terminates with `INVALID_SIGNAL_CODE`, bypassing installed
+handlers. An explicit request for the valid name `INVALID_SIGNAL_CODE` remains
+catchable like other requested events.
 
 ## Coverage and performance
 
 `lib/rxfnsb/tests_functional/ts_raise.crexx` verifies the delivered signal name
-and message, the blank-context case, and VM validation of an unknown signal
-name in optimized and unoptimized selector overlays.
+and message, the blank-context case, and an explicitly requested
+`INVALID_SIGNAL_CODE` event. `ts_raise_invalid.crexx` separately verifies terminal
+invalid-name rejection and handler bypass. Both use optimized and unoptimized
+selector overlays.
 
 The helper performs no output and no scan. It builds at most one diagnostic
 string and executes one dynamic-name `signal` instruction.

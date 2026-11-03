@@ -457,6 +457,8 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
         return RXOP_COMPONENT_NONE;
     if ((opcode == OP_SAY_REG || opcode == OP_SAYX_REG) && operand_index == 0)
         return RXOP_COMPONENT_STRING;
+    if (opcode == OP_JUMPR_REG_BINARY && operand_index == 0)
+        return RXOP_COMPONENT_STRING;
     if (opcode == OP_SETOBJTYPE_REG_STRING && operand_index == 0)
         return RXOP_COMPONENT_ATTRIBUTES;
     if ((opcode == OP_ASSERTTYPE_REG_STRING ||
@@ -1934,6 +1936,18 @@ RxOpSignalContract rxop_execution_signal_contract(int opcode) {
     result.failure_context_writes = RXOP_CONTEXT_NUMERIC;
     result.dependencies |= RXOP_SIGNAL_DEP_UNKNOWN;
     result.continuations = RXOP_SIGNAL_CONT_ALL;
+    {
+        RxOpEffects effects = rxop_effects(opcode);
+        if (effects.flow == FLOW_TERM &&
+            (effects.semantics & RXOP_SEM_RETURN)) {
+            /* Return COPY hooks run before departure, root copyback after it,
+             * but pending events are dispatched only in the resumed parent
+             * or external context. They cannot resume after RET or enter a
+             * handler in the departed procedure. */
+            result.continuations &= ~(RXOP_SIGNAL_CONT_SKIP |
+                                      RXOP_SIGNAL_CONT_HANDLER);
+        }
+    }
     result.properties &= ~RXOP_SIGNAL_PROP_SUCCESS_STABLE;
     result.properties |= RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE |
                          RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE |
@@ -2298,6 +2312,7 @@ unsigned int rxop_literal_operand(int opcode) {
         case OP_LOAD_REG_STRING:
         case OP_LOAD_REG_DECIMAL:
         case OP_LOAD_REG_BINARY:
+        case OP_SETATTRS_REG_INT:
         case OP_LOADSETTP_REG_INT_INT:
         case OP_LOADSETTP_REG_FLOAT_INT:
         case OP_LOADSETTP_REG_STRING_INT: return 2;
@@ -2315,6 +2330,7 @@ unsigned int rxop_literal_components(int opcode) {
         case OP_LOADSETTP_REG_STRING_INT: return RXOP_COMPONENT_STRING;
         case OP_LOAD_REG_DECIMAL: return RXOP_COMPONENT_DECIMAL;
         case OP_LOAD_REG_BINARY: return RXOP_COMPONENT_BINARY;
+        case OP_SETATTRS_REG_INT: return RXOP_COMPONENT_ATTRIBUTE_COUNT;
         default: return RXOP_COMPONENT_NONE;
     }
 }

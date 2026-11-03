@@ -5,6 +5,8 @@
 .globals=0
 
 main() .locals=6
+    /* Ordinary calls and signal-handler entries have distinct transitions. */
+    call ordinary_call()
     sigignore "OTHER"
     say "1. Should not signal"
     signal "OTHER"
@@ -42,6 +44,9 @@ main() .locals=6
     say " ... And then branch"
     br continue2
 
+
+ordinary_call() .locals=0
+    ret
 
 sighandler() .locals=1
     say " ... Signal Function Handler"

@@ -27,7 +27,9 @@ main: procedure = .int
   numericop = catalog.find('numsci','III')
   failures = failures + check(catalog.contextwrites(numericop) = 1 & catalog.contextwrites(stringop) = 0 & catalog.contextreads(loadop) = 0,'context masks distinguish numeric setup from ordinary instructions')
   addop = catalog.find('iadd','RRR')
-  failures = failures + check(catalog.field(addop,15) = '2','native unknown signal stays unknown')
+  failures = failures + check(catalog.signalstate(addop) = 1 & catalog.signalphase(addop) = 1 & catalog.signalnames(addop) = 'OVERFLOW_UNDERFLOW','checked integer addition signals before writing')
+  sayop = catalog.find('say','R')
+  failures = failures + check(catalog.signalstate(sayop) = 2,'native unknown host signal stays unknown')
 
   target = .llrxas..program(5,4)
   call target.record('demo()','.locals=5 .expose=sample',7)

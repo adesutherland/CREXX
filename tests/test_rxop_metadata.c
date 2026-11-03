@@ -628,9 +628,8 @@ static void check_value_writer_inventory(void) {
         opcode = stem_outputs[stem];
         check(rxop_value_writer(opcode, 0) == RXOP_VALUE_WRITER_UNKNOWN &&
                   rxop_component_clears(opcode, 0) == RXOP_COMPONENT_NONE &&
-                  !rxop_callback_outputs(opcode, 0) &&
-                  (rxop_callback_obligations(opcode) & RXOP_CALLBACK_UNKNOWN),
-              "selected stem child aliasing remains unknown without inventing a finalizer callback",
+                  !rxop_callback_outputs(opcode, 0),
+              "selected stem child keeps alias-conditional writer facts without a finalizer callback",
               &op_table[opcode]);
     }
     check(rxop_value_writer(OP_IAND_REG_REG_INT, 0) == RXOP_VALUE_WRITER_SETTER &&
@@ -759,7 +758,12 @@ static void check_callback_execution_contracts(void) {
             check(execution.state == RXOP_SIGNAL_STATE_UNKNOWN &&
                       execution.phase == RXOP_SIGNAL_PHASE_UNKNOWN &&
                       execution.source == RXOP_SIGNAL_SOURCE_UNKNOWN &&
-                      execution.continuations == RXOP_SIGNAL_CONT_ALL &&
+                      execution.continuations ==
+                          ((effects.flow == FLOW_TERM &&
+                            (effects.semantics & RXOP_SEM_RETURN))
+                              ? RXOP_SIGNAL_CONT_NORMAL | RXOP_SIGNAL_CONT_UNWIND |
+                                    RXOP_SIGNAL_CONT_TERMINAL
+                              : RXOP_SIGNAL_CONT_ALL) &&
                       execution.policy_effect == RXOP_POLICY_EFFECT_UNKNOWN,
                   "possible hook carries independent unknown execution control", &op_table[opcode]);
         else
@@ -785,7 +789,16 @@ static void check_callback_execution_contracts(void) {
                   !!(obligations & RXOP_CALLBACK_ABI) ==
                       (opcode == OP_RET_REG),
               "complete RET inventory retains departure and conditional result hooks", &op_table[opcode]);
+        execution = rxop_execution_signal_contract(opcode);
+        check(execution.state == RXOP_SIGNAL_STATE_UNKNOWN &&
+                  execution.continuations == (RXOP_SIGNAL_CONT_NORMAL |
+                      RXOP_SIGNAL_CONT_UNWIND | RXOP_SIGNAL_CONT_TERMINAL),
+              "return hooks dispatch after departure without a local skip or handler route", &op_table[opcode]);
     }
+    check(rxop_execution_signal_contract(OP_COPY_REG_REG).continuations ==
+              RXOP_SIGNAL_CONT_ALL &&
+              (rxop_callback_obligations(OP_COPY_REG_REG) & RXOP_CALLBACK_INPUT),
+          "ordinary COPY retains its in-frame hook continuations", NULL);
     {
         static const int pure[] = {
             OP_BPON_FUNC, OP_BPON, OP_BPOFF, OP_SIGIGNORE_STRING,
@@ -811,11 +824,12 @@ static void check_callback_execution_contracts(void) {
                       execution.policy_effect == intrinsic.policy_effect,
                   "reviewed COW policy/raw-field/pointer recipe has no hidden value hook", &op_table[code]);
         }
-        check(rxop_callback_obligations(OP_CONCAT_REG_STRING_REG) &&
-                  rxop_callback_obligations(OP_ILOADSETUNLINK_REG_INT) &&
-                  rxop_callback_obligations(OP_SETATTRS_REG_INT) &&
+        check((rxop_callback_obligations(OP_ILOADSETUNLINK_REG_INT) & RXOP_CALLBACK_UNKNOWN) &&
+                  (rxop_callback_obligations(OP_DTOS_REG) & RXOP_CALLBACK_UNKNOWN) &&
+                  !rxop_callback_obligations(OP_CONCAT_REG_STRING_REG) &&
+                  !rxop_callback_obligations(OP_SETATTRS_REG_INT) &&
                   !rxop_callback_obligations(OP_NULL_REG),
-              "unreviewed alias/compound/resize routes remain unknown while known NULL cleanup has no callback", NULL);
+              "unreviewed routes remain unknown while reviewed string/resize cleanup has no callback", NULL);
     }
     intrinsic = rxop_signal_contract(OP_LOAD_REG_INT);
     execution = rxop_execution_signal_contract(OP_LOAD_REG_INT);
@@ -1531,16 +1545,20 @@ int main(void) {
               rxop_value_writer(OP_STEMGET_REG_REG_REG, 0) == RXOP_VALUE_WRITER_UNKNOWN &&
               rxop_component_clears(OP_STEMGET_REG_REG_REG, 0) == RXOP_COMPONENT_NONE &&
               !rxop_callback_outputs(OP_STEMGET_REG_REG_REG, 0) &&
-              (rxop_callback_obligations(OP_STEMGET_REG_REG_REG) & RXOP_CALLBACK_UNKNOWN),
-          "native stem string write retains alias-conditional payload release",
+              !rxop_callback_obligations(OP_STEMGET_REG_REG_REG),
+          "native stem string write keeps alias-conditional release without a source COPY hook",
           &op_table[OP_STEMGET_REG_REG_REG]);
     check(rxop_component_writes(OP_SETATTRS_REG_INT, 0) ==
                   RXOP_COMPONENT_ATTRIBUTE_COUNT &&
+              rxop_literal_operand(OP_SETATTRS_REG_INT) == 2 &&
+              rxop_literal_components(OP_SETATTRS_REG_INT) == RXOP_COMPONENT_ATTRIBUTE_COUNT &&
+              !rxop_literal_operand(OP_SETATTRS_REG_INT_INT) &&
+              !rxop_literal_operand(OP_SETATTRS_REG_REG_INT) &&
               rxop_component_reads(OP_LINKATTR1_REG_REG_INT, 1) ==
                   RXOP_COMPONENT_ATTRIBUTE_COUNT &&
               rxop_component_reads(OP_GETATTRS_REG_REG, 1) ==
                   RXOP_COMPONENT_ATTRIBUTE_COUNT,
-          "attribute-count component metadata regression",
+          "attribute-count and direct literal metadata regression",
           &op_table[OP_SETATTRS_REG_INT]);
     check(rxop_signal_contract(OP_SETATTRS_REG_INT).state ==
                   RXOP_SIGNAL_STATE_NONE &&
@@ -1548,6 +1566,33 @@ int main(void) {
                   RXOP_SIGNAL_STATE_NONE,
           "total SETATTRS/BCOPY signal metadata regression",
           &op_table[OP_SETATTRS_REG_INT]);
+    signal = rxop_signal_contract(OP_JUMPR_REG_BINARY);
+    check(rxop_effects(OP_JUMPR_REG_BINARY).callback_inventory_complete &&
+              !rxop_callback_obligations(OP_JUMPR_REG_BINARY) &&
+              rxop_component_reads(OP_JUMPR_REG_BINARY, 0) == RXOP_COMPONENT_STRING &&
+              rxop_observed_components(OP_JUMPR_REG_BINARY, 0) == RXOP_COMPONENT_STRING &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names && !strcmp(signal.static_names, "RXBIN_CORRUPTION") &&
+              signal.failure_writes == RXOP_OP_NONE &&
+              signal.failure_component_writes == RXOP_COMPONENT_NONE &&
+              signal.failure_context_writes == RXOP_CONTEXT_NONE &&
+              signal.dependencies == RXOP_SIGNAL_DEP_NONE &&
+              signal.continuations == RXOP_SIGNAL_CONT_ALL &&
+              !(signal.properties & RXOP_SIGNAL_PROP_STATIC_NAMES_TERMINAL),
+          "JUMPR retains malformed-table delivery alternatives without invented value writes or callbacks",
+          &op_table[OP_JUMPR_REG_BINARY]);
+    signal = rxop_signal_contract(OP_BCHECKRANGE_REG_REG_REG);
+    check(rxop_effects(OP_BCHECKRANGE_REG_REG_REG).callback_inventory_complete &&
+              !rxop_callback_obligations(OP_BCHECKRANGE_REG_REG_REG) &&
+              rxop_effects(OP_BCHECKRANGE_REG_REG_REG).writes == RXOP_OP_NONE &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names && !strcmp(signal.static_names, "OUT_OF_RANGE") &&
+              signal.failure_writes == RXOP_OP_NONE &&
+              signal.failure_component_writes == RXOP_COMPONENT_NONE,
+          "binary range predicate retains its bounds failure without an invented callback or write",
+          &op_table[OP_BCHECKRANGE_REG_REG_REG]);
 
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
         size_t operand_index;
@@ -2238,6 +2283,35 @@ int main(void) {
               signal.failure_context_writes == RXOP_CONTEXT_NONE,
           "numeric fuzz signal phase regression",
           &op_table[OP_SETNUMFUZ_INT]);
+    {
+        /* These helpers resize/clear owned storage, move string bytes or use
+         * stdio. F5 cleanup does not acquire a Rexx COPY callback route. */
+        static const int no_callback_helpers[] = {
+            OP_SETATTRS_REG_REG, OP_SETATTRS_REG_INT,
+            OP_SETATTRS_REG_REG_INT, OP_SETATTRS_REG_INT_INT,
+            OP_CONCAT_REG_REG_REG, OP_CONCAT_REG_REG_STRING,
+            OP_CONCAT_REG_STRING_REG, OP_SCONCAT_REG_REG_REG,
+            OP_SCONCAT_REG_REG_STRING, OP_SCONCAT_REG_STRING_REG,
+            OP_STEMGET_REG_REG_REG, OP_STEMSET_REG_REG_REG,
+            OP_FREADCDPT_REG_REG,
+            OP_LINKSETATTRSLINKADD_REG_REG_INT_INT_REG_REG_INT
+        };
+        size_t helper;
+        for (helper = 0; helper < sizeof(no_callback_helpers) / sizeof(*no_callback_helpers); ++helper) {
+            int code = no_callback_helpers[helper];
+            check(rxop_effects(code).callback_inventory_complete &&
+                      rxop_callback_obligations(code) == RXOP_CALLBACK_NONE,
+                  "reviewed string/storage helpers retain no invented cleanup callback",
+                  &op_table[code]);
+        }
+        check((rxop_callback_obligations(OP_DTOS_REG) & RXOP_CALLBACK_UNKNOWN) &&
+                  (rxop_callback_obligations(OP_LOAD_REG_DECIMAL) & RXOP_CALLBACK_UNKNOWN),
+              "decimal conversion providers retain their unresolved callback contract", NULL);
+        check(rxop_callback_inputs(OP_COPY_REG_REG, 1) &&
+                  rxop_callback_inputs(OP_BCOPY_REG_REG, 1) &&
+                  !rxop_callback_inputs(OP_ACOPY_REG_REG, 1),
+              "COPY/BCOPY retain source hooks while ACOPY copies status flags only", NULL);
+    }
     signal = rxop_signal_contract(OP_FREADCDPT_REG_REG);
     check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
               signal.phase == RXOP_SIGNAL_PHASE_PARTIAL_WRITES &&
@@ -2661,6 +2735,18 @@ int main(void) {
                   !rxop_callback_obligations(OP_ITOF_REG) &&
                   !rxop_component_clears(OP_ITOF_REG, 0),
               "unary ITOF is a direct field write without a native hook or release", &op_table[OP_ITOF_REG]);
+        {
+            static const int scalar_boolean[] = { OP_BTOF_REG, OP_FTOB_REG, OP_STOB_REG };
+            for (ordinal = 0; ordinal < sizeof(scalar_boolean) / sizeof(scalar_boolean[0]); ++ordinal) {
+                int code = scalar_boolean[ordinal];
+                check(rxop_effects(code).callback_inventory_complete &&
+                          !rxop_callback_obligations(code) &&
+                          rxop_value_writer(code, 0) == RXOP_VALUE_WRITER_FIELD &&
+                          !rxop_component_clears(code, 0) &&
+                          rxop_signal_contract(code).state == RXOP_SIGNAL_STATE_NONE,
+                      "scalar boolean conversion uses only intrinsic fields without a provider or COPY hook", &op_table[code]);
+            }
+        }
     }
     /* Bitwise and logical operations are a single typed integer family even
      * when a source is immediate. Every register read must be observable as

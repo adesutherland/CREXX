@@ -236,8 +236,10 @@ link_result_for_call:
     call r8,consume_bool(),r3
     ret
 
-* With instruction-level retry retired, the count is read once at the CALL.
-* The exact one-register window is r4, so r5 is not observed.
+* These counted windows remain unproved: the native count analysis requires
+* entry alias/reference effects to exclude initializer changes, and the prior
+* comparison advances its coarse lifetime effect. A scalar LOAD is not a new
+* no-escape proof, so the possible window includes the result in r5.
 case_call_count_exact_window() .locals=9
     ieq r5,r1,41
     brt call_count_preserved,r5
@@ -246,8 +248,7 @@ call_count_preserved:
     call r8,consume_bool(),r3
     ret
 
-* An argument may alias the count storage, but the count is consumed before
-* the call can write through r4.  With no retry the exact window remains r4.
+* A count linked to an actual does not acquire an initializer-stability proof.
 case_call_count_argument_alias() .locals=9
     ieq r5,r1,42
     brt call_count_argument_alias,r5
@@ -257,15 +258,22 @@ call_count_argument_alias:
     call r8,consume_bool(),r3
     ret
 
-* A native call may partially write its result before signalling.  The call
-* has already consumed the count, so result/count aliasing cannot widen the
-* argument window when there is no instruction-level retry.
+* Result/count aliasing also cannot supply the missing capture-phase proof.
 case_call_count_result_alias() .locals=9
     ieq r5,r1,43
     brt call_count_result_alias,r5
 call_count_result_alias:
     load r3,1
     call r3,consume_bool(),r3
+    ret
+
+* The encoded fixed window needs no count-stability proof. Only r4 is an
+* actual and r8 is the result; the unescaped comparison result in r5 is dead.
+case_fixed_call_outside_window() .locals=9
+    ieq r5,r1,44
+    brt fixed_call_outside_window,r5
+fixed_call_outside_window:
+    call1 r8,consume_bool(),r4
     ret
 
 * An unresolved write target is an opaque write barrier for component proofs,
@@ -321,12 +329,15 @@ leave_in_place_loop:
 case_compare_destination_source_overlap_live() .locals=5
     ieq r0,r0,r1
     brt preserve_live_overlap,r0
+    itos r0
     say r0
     ret
 preserve_live_overlap:
     ret
 
-case_compare_hidden_reference_cleanup() .locals=5
+* Releasing a dead, unescaped descriptor is cleanup-only. The fused branch
+* retains its incoming integer read and physical retirement releases the owner.
+case_compare_cleanup_only_reference() .locals=5
     mkref r0,r3
     ieq r0,r0,r2
     brt preserve_reference_cleanup,r0

@@ -1,6 +1,7 @@
 * Attribute paths follow owner StorageIds through register aliases.
 
 main() .locals=8
+    sighalt "OUT_OF_RANGE"
     setattrs r0,1
     linkattr1 r5,r0,1
     load r6,"payload"

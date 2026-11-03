@@ -14,6 +14,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+int rxas_flow_instruction_has_known_call_contract(
+        const RxasFlowInstruction *instruction) {
+    return instruction && instruction->op &&
+            instruction->effects.state == RXOP_EFFECT_CLASSIFIED &&
+            instruction->effects.callback_inventory_complete &&
+            rxop_call_invokes(instruction->op->opcode) &&
+            rxop_call_frame_control_state(instruction->op->opcode) ==
+                    RXOP_CALL_FRAME_KNOWN;
+}
+
 static OperandType flow_graph_operand_type(const Assembler_Token *token) {
     if (!token) return OP_NONE;
     switch (token->token_type) {

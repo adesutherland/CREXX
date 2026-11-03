@@ -124,6 +124,7 @@ set(REXXBINS
         ts_objectarrayprepend.rxbin
         ts_qwordlength.rxbin
         ts_raise.rxbin
+        ts_raise_invalid.rxbin
         ts_rxsystem.rxbin
         ts_rxsystem_exit.rxbin
         ts_rxqueue.rxbin
@@ -301,9 +302,16 @@ foreach(_binfile ${REXXBINS})
     endif()
     set(_expected_exit_code)
     set(_expected_failure_description)
+    set(_required_output_regex)
+    set(_forbidden_output_regex)
     if("${_basename}" STREQUAL "ts_rxsystem_exit")
         set(_expected_exit_code 7)
         set(_expected_failure_description "Level B _exit must preserve the requested process status")
+    elseif("${_basename}" STREQUAL "ts_raise_invalid")
+        set(_expected_exit_code 13)
+        set(_expected_failure_description "Invalid dynamic signal names are terminal instruction misuse")
+        set(_required_output_regex "VM ERROR:.*INVALID_SIGNAL_CODE")
+        set(_forbidden_output_regex "FAIL:")
     endif()
     set(_extra_depends)
     set(_runtime_args ${LIBRPATH})
@@ -328,6 +336,8 @@ foreach(_binfile ${REXXBINS})
             RUNTIME_ARGS ${_runtime_args}
             EXPECTED_EXIT_CODE "${_expected_exit_code}"
             EXPECTED_FAILURE_DESCRIPTION "${_expected_failure_description}"
+            REQUIRED_OUTPUT_REGEX ${_required_output_regex}
+            FORBIDDEN_OUTPUT_REGEX ${_forbidden_output_regex}
             ${_pass_test_name_argument}
     )
 endforeach()

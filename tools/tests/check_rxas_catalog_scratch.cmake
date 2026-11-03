@@ -72,12 +72,12 @@ function(check_frame_row prefix suffix)
     message(FATAL_ERROR "Catalogue ${prefix} has incorrect frame preparation fields")
   endif()
 endfunction()
-set(entry_known "plugins,parent-borrowed;pluginowners,none;invocation,empty;scope,empty;handlers,empty;policy,parent-borrowed-cow;references,unmarked;interrupt,parent-inherited;action,off;callerwindow,none")
+set(entry_known "plugins,parent-borrowed;pluginowners,none;invocation,empty;scope,none;handlers,empty;policy,parent-borrowed-cow;references,unmarked;interrupt,parent-inherited;action,off;callerwindow,none")
 set(entry_none "plugins,none;pluginowners,none;invocation,none;scope,none;handlers,none;policy,none;references,none;interrupt,none;action,none;callerwindow,none")
 set(entry_unknown "plugins,unknown;pluginowners,unknown;invocation,unknown;scope,unknown;handlers,unknown;policy,unknown;references,unknown;interrupt,unknown;action,unknown;callerwindow,unknown")
 check_frame_row("call3 RPRRR"
   "known value-init a0-original-backing active-tree reused-frame relink-original a0-original-backing unknown known ${entry_known} known 832")
-check_frame_row("load RI" "none none none none none none none unknown none ${entry_none} known 256")
+check_frame_row("load RI" "none none none none none none none none none ${entry_none} known 0")
 check_frame_row("say R" "none none none none none none none bytes-snapshot none ${entry_none} known 768")
 check_frame_row("sayx S" "none none none none none none none bytes-snapshot none ${entry_none} known 768")
 check_frame_row("getnumdgts R" "none none none none none none none none none ${entry_none} known 0")
@@ -105,7 +105,7 @@ string(FIND "${catalog}" "${expected}" found)
 if(found LESS 0)
   message(FATAL_ERROR "Catalogue callbackvaluesurface lost its column or invalid-opcode guard")
 endif()
-foreach(mode root-return:6 root-sigreturn:7 root-unwind:8 execution-finish:9)
+foreach(mode root-return:6 reserved-root-sigreturn:7 root-unwind:8 execution-finish:9)
   string(REPLACE ":" ";" parts "${mode}")
   list(GET parts 0 name)
   list(GET parts 1 ordinal)
@@ -114,6 +114,10 @@ foreach(mode root-return:6 root-sigreturn:7 root-unwind:8 execution-finish:9)
     message(FATAL_ERROR "Catalogue lost native root mode ${name}")
   endif()
 endforeach()
+string(FIND "${catalog}" "    if mode = 'root-sigreturn' then" active_sigreturn)
+if(NOT active_sigreturn LESS 0)
+  message(FATAL_ERROR "Catalogue resurrected the retired active root SIGRET mode")
+endif()
 string(FIND "${catalog}" "    if mode = 'frame-retire' then selected = 10\n" found)
 if(found LESS 0)
   message(FATAL_ERROR "Catalogue lost ordinary frame-retirement mode")
@@ -123,8 +127,8 @@ foreach(step IN ITEMS
     "copy-root-argument root-copyback root-active-argument external-argument active-tree full-capacity root-external-copyback copyback-arguments"
     "capture-root-count root-free-count root-original-a0 root-free-count top top root-physical-return once"
     "free-root-argument-unbind root-argument-free root-original-argument none full-capacity none root-external-copied saved-root-arguments"
-    "reset-storage root-signal-clear none root-signal-diagnostic none active-tree root-physical-return once"
-    "leave-frame-scopes retire-scopes frame-scopes none none none retiring-frame once"
+    "restore-native-policy retire-native-policy parent-policy active-policy none none retiring-private-child once"
+    "finalize-frame-payloads retire-payloads frame-owned-backing none full-capacity none retiring-frame once"
     "clear-frame-handlers retire-handlers frame-handlers none none none retiring-frame once"
     "release-frame-policy retire-policy frame-private-policy none none none retiring-frame once"
     "release-frame-references retire-references frame-references none none none frame-references-marked once"
@@ -139,6 +143,14 @@ foreach(step IN ITEMS
   string(FIND "${rows}" "${step_hex}" found)
   if(found LESS 0)
     message(FATAL_ERROR "Catalogue lost typed root ABI step: ${step}")
+  endif()
+endforeach()
+foreach(retired_step IN ITEMS "reset-storage root-signal-clear" "leave-frame-scopes retire-scopes")
+  string(HEX "${retired_step}" retired_step_hex)
+  string(TOUPPER "${retired_step_hex}" retired_step_hex)
+  string(FIND "${rows}" "${retired_step_hex}" retired_step_found)
+  if(NOT retired_step_found LESS 0)
+    message(FATAL_ERROR "Catalogue resurrected retired ABI program: ${retired_step}")
   endif()
 endforeach()
 set(expected "  observationmask: method = .int\n    arg name = .string\n    if name = 'frame' then return 256\n    if name = 'module' then return 512\n    if name = 'code' then return 1024\n    if name = 'debug' then return 2048\n    if name = 'unknown' then return 4096\n    return 0\n")
