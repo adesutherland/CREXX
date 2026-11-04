@@ -1,0 +1,33 @@
+##MACRO UI_GUI_HOST app_namespace,delegate_namespace,delegate_factory,gui_namespace,session_factory
+  app_namespace = unquote(app_namespace)
+  delegate_namespace = unquote(delegate_namespace)
+  delegate_factory = unquote(delegate_factory)
+  gui_namespace = unquote(gui_namespace)
+  .section gui_host_component macro_component: class implements .uicomponent
+  .section gui_host_component   _delegate = .uicomponent
+  .section gui_host_component   _controller = .&gui_namespace..controller_component
+  .section gui_host_component   *: factory
+  .section gui_host_component     arg caps = .uicapabilities
+  .section gui_host_component     _delegate = .&delegate_namespace..&delegate_factory(caps.has("ui.dialog"))
+  .section gui_host_component     _controller = .&gui_namespace..controller_component(_delegate)
+  .section gui_host_component     return
+  .section gui_host_component   update: method = .uieffects
+  .section gui_host_component     arg event = .uimessage
+  .section gui_host_component     return &gui_namespace..dispatch_application(_controller, event)
+  .section gui_host_component   view: method = .uiview
+  .section gui_host_component     return _controller.view()
+  .section gui_host_session &session_factory: procedure = .uisession
+  .section gui_host_session   arg id = .string, caps = .uicapabilities
+  .section gui_host_session   session = .uisession(id, caps)
+  .section gui_host_session   rc = session.add_component("root", .macro_component(caps))
+  .section gui_host_session   if rc < 0 then do
+  .section gui_host_session     say "UI GUI host: add_component failed rc=" || rc
+  .section gui_host_session     exit 1
+  .section gui_host_session   end
+  .section gui_host_session   rc = &gui_namespace..register_gui(session)
+  .section gui_host_session   if rc < 0 then do
+  .section gui_host_session     say "UI GUI host: register_gui failed rc=" || rc
+  .section gui_host_session     exit 1
+  .section gui_host_session   end
+  .section gui_host_session   return session
+##MEND

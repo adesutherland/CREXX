@@ -37,7 +37,7 @@ import rexxscript
 import precomp
 import rxfnsb
 import system
-namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text source_mcall_depth callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias dalias_handler rxpp_build_mode fortran_bind_count fortran_bind_target fortran_bind_host fortran_bindings_declared fortran_export_count fortran_export_target fortran_export_host fortran_exports_declared fortran_call_insert_at rxpp_stats_directives rxpp_stats_includes rxpp_stats_include_duplicates rxpp_stats_suppressed rxpp_stats_pass1_lines rxpp_stats_pass2_links
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text source_mcall_depth callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias dalias_handler handler_lines handler_line_store handler_block_start handler_block_count handler_block_counter rxpp_build_mode fortran_bind_count fortran_bind_target fortran_bind_host fortran_bindings_declared fortran_export_count fortran_export_target fortran_export_host fortran_exports_declared fortran_call_insert_at rxpp_stats_directives rxpp_stats_includes rxpp_stats_include_duplicates rxpp_stats_suppressed rxpp_stats_pass1_lines rxpp_stats_pass2_links
 
 /* ------------------------------------------------------------------
  * CREXX Pre Compiler
@@ -61,6 +61,11 @@ arg command=.string[]
   cnext   = .string
   dalias  = .string
   dalias_handler = .stem()
+  handler_lines = .string[]
+  handler_line_store = .string[]
+  handler_block_start = .int[]
+  handler_block_count = .int[]
+  handler_block_counter = 0
   rexx_version = .string
   rxpp_build_timestamp = 'RXPP_BUILD_TIMESTAMP'
   rxpp_timing_mark = .int
@@ -2334,6 +2339,8 @@ return
  */
 CMD_data_alias: procedure
   arg line_no=.int,line=.string
+  handler_block_id=.int
+  handler_line_count=.int
   /*
    * Mark the opening line as an RXPP data directive.
    */
@@ -2404,7 +2411,13 @@ CMD_data_alias: procedure
   endMarker2 = 'END 'alias
   endMarker3 = '##END'
   j = 0
-  handler_body = ''
+   handler_body = ''
+   if handler <> '' then do
+      handler_block_counter = handler_block_counter + 1
+      handler_block_id = handler_block_counter
+      handler_block_start[handler_block_id] = handler_line_store[0] + 1
+      handler_line_count = 0
+   end
   foundEnd = 0
   i = .int
   /*
@@ -2427,8 +2440,8 @@ CMD_data_alias: procedure
      end
      else do
        line = changestr('"',line,'__RXPP_QUOTE__')
-        if handler_body = '' then handler_body = line
-        else handler_body = handler_body || '~' || line
+        handler_line_count = handler_line_count + 1
+        handler_line_store[handler_line_store[0] + 1] = line
         source.i = ''
         stype.i = 'D'
      end
@@ -2448,7 +2461,8 @@ CMD_data_alias: procedure
    * directive.
    */
   if handler <> '' then do
-        source.i = '##'handler' BLOCK 'array' "' || handler_body || '"'
+         handler_block_count[handler_block_id] = handler_line_count
+         source.i = '##'handler' BLOCK 'array' __RXPP_HANDLER_'handler_block_id'__'
      stype.i = ' '
   end
   else if callback = '' then stype.i = 'D'
@@ -2677,7 +2691,7 @@ return line
  * expand new Macros: Expands one macro occurrence by parsing arguments and substituting into the macro body.
  * ------------------------------------------------------------------
  */
-newMacros:  procedure=.string
+newMacros:  procedure=.string expose handler_lines handler_line_store handler_block_start handler_block_count
   arg macname=.string,line=.string,linnum=.int,ipi=.int,suppress_call_comment=.int
   original_call=.string
   source_len=.int
@@ -2716,6 +2730,16 @@ newMacros:  procedure=.string
      forward_text=changestr(d2c(2),forward_text,' ')
   end
   subparm=translate(subparm,,',')
+   handler_token=word(subparm,3)
+   if pos('__RXPP_HANDLER_',handler_token)=1 then do
+      handler_block_id=substr(handler_token,16,length(handler_token)-17)
+      handler_lines=.string[]
+      handler_line_start=handler_block_start[handler_block_id]
+      handler_line_count=handler_block_count[handler_block_id]
+      do handler_line_index=1 to handler_line_count
+         handler_lines[handler_lines[0] + 1] = handler_line_store[handler_line_start + handler_line_index - 1]
+      end
+   end
   inparms=''
   original_call=source[linnum]
   if printgen_flags='none' then suppress_call_comment=1
@@ -2785,10 +2809,10 @@ newMacros:  procedure=.string
    _file=getvar('rxpp_rexx')
    _module=rxmodule
    if pos(' maclog',cflags)>0 then do
-      REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _macro_calls, _file, _module, _date, _time, _macro, _mline, _mlino, _mcalls OUTPUT out RESULT result debug
+       REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _macro_calls, _file, _module, _date, _time, _macro, _mline, _mlino, _mcalls, handler_lines OUTPUT out RESULT result debug
    end
    else do
-     REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _macro_calls, _file, _module, _date, _time, _macro, _mline, _mlino, _mcalls OUTPUT out RESULT result /* DEBUG */
+      REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _macro_calls, _file, _module, _date, _time, _macro, _mline, _mlino, _mcalls, handler_lines OUTPUT out RESULT result /* DEBUG */
    end
    script_error=.int
    script_error=0

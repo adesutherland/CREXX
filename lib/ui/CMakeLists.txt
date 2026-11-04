@@ -13,7 +13,7 @@ file(REMOVE "${CMAKE_BINARY_DIR}/bin/ui_compat.rxbin")
 # same UI vocabulary as graph builds.
 set(CREXX_UI_RXPP_MACRO_DIR "${CMAKE_BINARY_DIR}/bin/ui")
 set(CREXX_UI_RXPP_MACRO_OUTPUTS)
-foreach(_crexx_ui_rxpp_macro IN ITEMS ui_command ui_gui ui_launcher ui_node)
+foreach(_crexx_ui_rxpp_macro IN ITEMS ui_command ui_gui ui_gui_host ui_launcher ui_node)
     set(_crexx_ui_rxpp_source
             "${CMAKE_CURRENT_SOURCE_DIR}/rxpp/ui/${_crexx_ui_rxpp_macro}.rxpm")
     set(_crexx_ui_rxpp_output

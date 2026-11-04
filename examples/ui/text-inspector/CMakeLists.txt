@@ -32,7 +32,7 @@ endforeach()
 set(_text_inspector_ui_macros)
 # Retire only the formerly generated alias; never touch authored macro files.
 file(REMOVE "${_text_inspector_rxpp_root}/ui/ui_session_launcher.rxpm")
-foreach(macro IN ITEMS ui_node ui_command ui_launcher)
+foreach(macro IN ITEMS ui_node ui_command ui_launcher ui_gui ui_gui_host)
     list(APPEND _text_inspector_ui_macros
             "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui/${macro}.rxpm")
     configure_file("${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui/${macro}.rxpm"
