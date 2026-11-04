@@ -1,0 +1,11 @@
+/* Batch IVP: a non-inlined call into the matching LIBRARY. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args=.string[]
+  if args.0<>1 then return 8
+  if args.1<>"SHARED" then return 8
+  text=changestr("old","old payload","new")
+  if text<>"new payload" then return 42
+  say "cREXX BATCH IVP OK:" text
+  return 0
