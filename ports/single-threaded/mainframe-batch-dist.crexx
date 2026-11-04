@@ -1,0 +1,143 @@
+/* Host preparation/final archive only. Native XMIT and qualification are
+ * operator work; do not rebuild the already qualified application payload. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args=.string[]
+  if args.0<>5 then do
+    say 'usage: mainframe-batch-dist.crexx prepare|zip SOURCE PAYLOAD SDK OUT'
+    return 2
+  end
+  mode=args.1; source=args.2; payload=args.3; sdk=args.4; out=args.5
+  i=.int; file=.string; name=.string
+  if mode<>'prepare' & mode<>'zip' then return 2
+  if left(source,1)<>'/' | pos('..',source)>0 then return 2
+  if out<>source||'/build/zos-batch-dist' then return 2
+  address crexx 'run test ! -L :out'
+  if rc<>0 then return 2
+  address crexx 'run mkdir -p :out'
+  if rc<>0 then return rc
+  templates=source||'/ports/single-threaded/zos-batch'
+  recipe=source||'/ports/single-threaded/mainframe-batch-dist.crexx'
+  expected=.string[]; inputs=.string[]
+  expected[1]='ade37744b16fbdd9d27d5e10fc105422334b43a38f543160764a5d2615474f12'
+  expected[2]='241bb6ebb38cc269f129fd7d6598e14d1a1fa8fe28c1c4111b3977d9b0e3ea4a'
+  expected[3]='ed3433e2a61a0de9d46d4ed318b0b5f5222c865cd2b923cfb2e1d22724e9e5eb'
+  expected[4]='5bcef91da6d98acfa2f7f8b8178a345c27bee50fbca21588ebea4381e0a17c86'
+  expected[5]='c109db035e9c0b9578a9bafb5d85b353de5b70c9cc4c52ada475df84353a0906'
+  expected[6]='0891b5f10858b9a90af89d9ca54e795caec7c6406a33866db9027ba3ab6822a7'
+  expected[7]='199ff8a8f171d69e38bf2f6034062d76d0e738d65778884108a9cdd3ae33df2a'
+  expected[8]='99077f35d6fee5683c47ac6f9efb515a80be287b4d124b129aa7a29b34ed6228'
+  do i=1 to 4
+    name=word('RXC RXAS RXLINK RXVM',i)
+    inputs[i]=payload||'/'||name||'/'||name||'.XMI'
+    inputs[i+4]=payload||'/shared/'||word('library rxcexits rxfnsc rxfnsg',i)||'.rxbin'
+  end
+  do i=1 to 8
+    file=inputs[i]; digest=.string[]
+    address crexx 'run shasum -a 256 :file' output digest
+    if rc<>0 then return rc
+    if digest.0<>1 then return 2
+    if word(digest[1],1)<>expected[i] then do
+      say 'Qualified payload identity mismatch:' file
+      return 2
+    end
+  end
+  if mode='prepare' then do
+    textfiles='INSTALL.rexx EXPORT.rexx INSTALL.jcl procs/CRXC.jcl procs/CRXCG.jcl procs/CRXCL.jcl procs/CRXLGO.jcl source/HELLO.crexx source/BAD.crexx jcl/IVP.jcl jcl/CG.jcl jcl/BAD.jcl jcl/C.jcl jcl/CL.jcl'
+    do i=1 to words(textfiles)
+      file=templates||'/'||word(textfiles,i)
+      address crexx 'run test -f :file'
+      if rc<>0 then return rc
+      header=''; body=''
+      do while lines(file)>0
+        line=linein(file)
+        if length(line)>80 then do
+          say 'FB80 input is too long:' file
+          return 2
+        end
+        if pos('jcl/',word(textfiles,i))>0 & pos("DSN='",line)>0 then do
+          say 'Use ordinary unquoted DD DSNs in example JCL:' file
+          return 2
+        end
+        if body='' & pos(' EXEC ',line)=0 then header=header||line||' '
+        else body=body||line||' '
+      end
+      if pos('procs/',word(textfiles,i))>0 then do
+        do parameter=1 to 6
+          symbol=word('ROOT RXLIB FLAGS OUT ARGS WORK',parameter)
+          if pos(symbol||'=',header)>0 & pos('&'||symbol,body)=0 then do
+            say 'Unused PROC symbolic parameter:' symbol file
+            return 2
+          end
+        end
+      end
+      inputs[inputs.0+1]=file
+    end
+    inputs[inputs.0+1]=templates||'/README.md'
+    inputs[inputs.0+1]=recipe
+    destination=out||'/templates'
+    address crexx 'run cmake -E copy_directory :templates :destination'
+    if rc<>0 then return rc
+    do i=1 to 2
+      name=word('README.md INSTALL.jcl',i)
+      original=templates||'/'||name; destination=out||'/'||name
+      address crexx 'run cmake -E copy :original :destination'
+      if rc<>0 then return rc
+    end
+    notices=out||'/notices'
+    address crexx 'run mkdir -p :notices'
+    if rc<>0 then return rc
+    original=templates||'/notices'
+    address crexx 'run cmake -E copy_directory :original :notices'
+    if rc<>0 then return rc
+    inputs[inputs.0+1]=original||'/CREXX-COMPONENTS.txt'
+    inputs[inputs.0+1]=original||'/ICU-license.html'
+    original=source||'/LICENSE'; destination=notices||'/CREXX-LICENSE'
+    address crexx 'run cmake -E copy :original :destination'
+    if rc<>0 then return rc
+    do i=1 to 2
+      original=sdk||'/notices'
+      if i=2 then original=sdk||'/sysroots/tso-zos31-v1/notices'
+      address crexx 'run cmake -E copy_directory :original :notices'
+      if rc<>0 then return rc
+    end
+    hashes=.string[]
+    address crexx 'run shasum -a 256 :inputs[]' output hashes
+    if rc<>0 then return rc
+    freeze=out||'/input-freeze.sha256'
+    address crexx 'run test ! -L :freeze'
+    if rc<>0 then return 2
+    address crexx 'run rm -f :freeze'
+    if rc<>0 then return rc
+    do i=1 to hashes.0
+      call lineout freeze,hashes[i]
+    end
+    call lineout freeze
+    say 'Prepared frozen inputs. Native package/recipient IVP remain required.'
+    return 0
+  end
+  xmi=out||'/CREXXB.XMI'; note=out||'/DELIVERY.md'
+  address crexx 'run test -s :xmi'
+  if rc<>0 then return 2
+  address crexx 'run test -s :note'
+  if rc<>0 then return 2
+  sums=.string[]
+  address crexx 'run cmake -E chdir :out shasum -a 256 CREXXB.XMI INSTALL.jcl README.md DELIVERY.md' output sums
+  if rc<>0 then return rc
+  file=out||'/SHA256SUMS'
+  address crexx 'run test ! -L :file'
+  if rc<>0 then return 2
+  address crexx 'run rm -f :file'
+  if rc<>0 then return rc
+  do i=1 to sums.0
+    call lineout file,sums[i]
+  end
+  call lineout file
+  archive='crexx-tso31-batch-poc.zip'; old=out||'/'||archive
+  address crexx 'run test ! -L :old'
+  if rc<>0 then return 2
+  address crexx 'run rm -f :old'
+  if rc<>0 then return rc
+  address crexx 'run cmake -E chdir :out zip -X -q -r :archive CREXXB.XMI INSTALL.jcl README.md DELIVERY.md SHA256SUMS notices'
+  return rc
