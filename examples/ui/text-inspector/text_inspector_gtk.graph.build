@@ -5,11 +5,20 @@
  *   cmake --build cmake-build-ui-gtk --target example_text_inspector_artifacts rxvm --parallel 10
  *
  * The graph runner does not invoke CMake; it consumes the RXPP macro library
- * and GTK/native artifacts produced by these commands. */
-GTK_BUILD = "cmake-build-ui-gtk";
+ * and GTK/native artifacts produced by these commands.
+ */
+
+ /* run-text-inspector-gtk-macro */
+
+
+GTK_BUILD = "cmake-build-release";
 GRAPH_BUILD = ".crexx-build/ui-graph";
 
 RULE run_gtk
+  ACTION = "RUN"
+END RULE;
+
+RULE run_probe
   ACTION = "RUN"
 END RULE;
 
@@ -24,15 +33,19 @@ END RULE;
 BUILD "${GRAPH_BUILD}/text_inspector_gui_macro.crexx"
   RULE = compile_rxpp
   INPUT = "examples/ui/text-inspector/text_inspector_gui_macro.rxpp"
+    DEPENDS_ON = "${GTK_BUILD}/examples/ui/text-inspector/rxpp/ui/ui_gui.rxpm"
+  DEPENDS_ON = "${GTK_BUILD}/examples/ui/text-inspector/rxpp/ui/ui_gui_host.rxpm"
   DEPENDS_ON = "${GTK_BUILD}/examples/ui/text-inspector/rxpp/maclib.rexx"
 END BUILD;
 
-BUILD "${GRAPH_BUILD}/text_inspector_gui_macro.rxbin"
+BUILD "${GRAPH_BUILD}/TextInspector.rxbin"
   RULE = compile_gtk_program
   INPUT = "${GRAPH_BUILD}/text_inspector_gui_macro.crexx"
+  DEPENDS_ON = "${GRAPH_BUILD}/text_inspector_gui_macro.crexx"
   DEPENDS_ON = "${GTK_BUILD}/bin/ui.rxbin"
   DEPENDS_ON = "${GTK_BUILD}/bin/ui_contract.rxbin"
   DEPENDS_ON = "${GTK_BUILD}/bin/library.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/examples/ui/text-inspector/text_inspector.rxbin"
 END BUILD;
 
 BUILD "${GRAPH_BUILD}/text_inspector_gtk.rxbin"
@@ -45,6 +58,91 @@ BUILD "${GRAPH_BUILD}/text_inspector_gtk.rxbin"
   DEPENDS_ON = "${GTK_BUILD}/bin/ui_catalog.rxbin"
   DEPENDS_ON = "${GTK_BUILD}/bin/ui.rxbin"
   DEPENDS_ON = "${GTK_BUILD}/bin/library.rxbin"
+END BUILD;
+
+BUILD "${GRAPH_BUILD}/text_inspector_gui_macro_test.rxbin"
+  RULE = compile_gtk_program
+  INPUT = "examples/ui/text-inspector/text_inspector_gui_macro_test.crexx"
+  DEPENDS_ON = "${GRAPH_BUILD}/TextInspector.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui_contract.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/library.rxbin"
+END BUILD;
+
+BUILD "${GRAPH_BUILD}/text_inspector_gui_macro_gtk.crexx"
+  RULE = compile_rxpp
+  INPUT = "examples/ui/text-inspector/text_inspector_gui_macro_gtk.rxpp"
+  DEPENDS_ON = "${GTK_BUILD}/examples/ui/text-inspector/rxpp/maclib.rexx"
+END BUILD;
+
+BUILD "${GRAPH_BUILD}/text_inspector_gui_macro_gtk.rxbin"
+  RULE = compile_gtk_program
+  INPUT = "${GRAPH_BUILD}/text_inspector_gui_macro_gtk.crexx"
+  DEPENDS_ON = "${GRAPH_BUILD}/text_inspector_gui_macro_gtk.crexx"
+  DEPENDS_ON = "${GRAPH_BUILD}/TextInspector.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/examples/ui/text-inspector/rxpp/maclib.rexx"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui_gtk.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui_contract.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/library.rxbin"
+END BUILD;
+
+BUILD "run-text-inspector-gtk-macro"
+  BUILD_NAME = run_text_inspector_gtk_macro
+  RULE = run_gtk
+  INPUT = "${GRAPH_BUILD}/text_inspector_gui_macro_gtk.rxbin"
+  DEPENDS_ON = "${GRAPH_BUILD}/text_inspector_gui_macro_gtk.rxbin"
+  WORK_DIR = "."
+  DEPENDS_ON = "${GTK_BUILD}/bin/rx_ui_gtk_native.rxplugin"
+  DEPENDS_ON = "${GRAPH_BUILD}/TextInspector.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/examples/ui/text-inspector/text_inspector.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui_gtk.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui_local_resources.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui_contract.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui_catalog.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/library.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/rx_ui_gtk_native"
+  RUNTIME_ARGUMENT = "${GRAPH_BUILD}/TextInspector.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/examples/ui/text-inspector/text_inspector.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui_gtk.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui_local_resources.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui_contract.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui_catalog.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/library.rxbin"
+END BUILD;
+
+BUILD "run-text-inspector-gtk-macro-test"
+  BUILD_NAME = run_text_inspector_gtk_macro_test
+  RULE = run_gtk
+  INPUT = "${GRAPH_BUILD}/text_inspector_gui_macro_test.rxbin"
+  DEPENDS_ON = "${GRAPH_BUILD}/text_inspector_gui_macro_test.rxbin"
+  DEPENDS_ON = "${GRAPH_BUILD}/text_inspector_gui_macro.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui_contract.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/library.rxbin"
+  WORK_DIR = "."
+  RUNTIME_ARGUMENT = "${GRAPH_BUILD}/TextInspector.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui_contract.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/library.rxbin"
+END BUILD;
+
+/* Backend-neutral generated-controller probe. */
+BUILD "run-text-inspector-gui-probe"
+  BUILD_NAME = run_text_inspector_gui_probe
+  RULE = run_probe
+  INPUT = "${GRAPH_BUILD}/text_inspector_gui_macro_test.rxbin"
+  DEPENDS_ON = "${GRAPH_BUILD}/text_inspector_gui_macro_test.rxbin"
+  DEPENDS_ON = "${GRAPH_BUILD}/TextInspector.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/ui_contract.rxbin"
+  DEPENDS_ON = "${GTK_BUILD}/bin/library.rxbin"
+  WORK_DIR = "."
+  RUNTIME_ARGUMENT = "${GRAPH_BUILD}/TextInspector.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui_contract.rxbin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/library.rxbin"
 END BUILD;
 
 BUILD "run-text-inspector-gtk"
@@ -61,7 +159,7 @@ BUILD "run-text-inspector-gtk"
   DEPENDS_ON = "${GTK_BUILD}/bin/ui_catalog.rxbin"
   DEPENDS_ON = "${GTK_BUILD}/bin/ui.rxbin"
   DEPENDS_ON = "${GTK_BUILD}/bin/library.rxbin"
-  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/rx_ui_gtk_native.rxplugin"
+  RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/rx_ui_gtk_native"
   RUNTIME_ARGUMENT = "${GTK_BUILD}/examples/ui/text-inspector/text_inspector.rxbin"
   RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui_gtk.rxbin"
   RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/ui_local_resources.rxbin"
@@ -71,4 +169,4 @@ BUILD "run-text-inspector-gtk"
   RUNTIME_ARGUMENT = "${GTK_BUILD}/bin/library.rxbin"
 END BUILD;
 
-DEFAULT_BUILD = run_text_inspector_gtk;
+DEFAULT_BUILD = run_text_inspector_gtk_macro;

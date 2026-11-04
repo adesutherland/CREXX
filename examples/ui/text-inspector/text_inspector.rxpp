@@ -87,6 +87,8 @@ text_inspector_component: class implements .uicomponent
     resource = .uiresource
 
     if name = "ui.ready" then _status = "Ready"
+    if name = "document.filter.requested" then _status = "Filter: " || body.text("value")
+    if name = "document.refresh.requested" then _status = "Refresh requested"
     /* The feature specifies purpose; the driver chooses the actual chooser. */
     if name = "document.open.requested" then do
       _status = "Choose a text file"

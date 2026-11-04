@@ -26,6 +26,13 @@ import text_inspector
 
 DEFINE-GUI TextInspector
 
+  MENU file "File"
+    ITEM open_menu "Open..." ACTION document.open
+    ITEM clear_menu "Clear" ACTION document.clear
+    SEPARATOR
+    ITEM quit_menu "Quit" ACTION document.quit
+  END MENU
+
   /*
    * Header and current file.
    */
