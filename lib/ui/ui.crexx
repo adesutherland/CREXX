@@ -16,7 +16,8 @@ uiview: interface
   /** @return number of logical nodes */
   count: method = .int
   /** @param index one-based node index
-   * @return `label`, `line`, `input`, `button`, `choice`, or `integer`
+   * @return `label`, `statusbar`, `line`, `input`, `button`, `checkbox`,
+   * `progress`, `choice`, `combo`, or `integer`
    */
   node_kind: method = .string
     arg index = .int
@@ -133,6 +134,14 @@ uiview_impl: class implements .uiview
     call place_current relation, anchor
     return
 
+  /** Append a single-message status bar. Drivers may use a native statusbar
+   * or render the value as an ordinary status line. */
+  add_statusbar: method = .void
+    arg id = .string, text = .string, relation = "below", anchor = ""
+    call add_label(id, text, relation, anchor)
+    _kinds[_count] = "statusbar"
+    return
+
   /** Append a horizontal visual separator.
    * @param id stable node identity
    * @param relation placement relative to the anchor
@@ -181,6 +190,22 @@ uiview_impl: class implements .uiview
     _values[_count] = text
     return
 
+  /** Append a boolean checkbox. The value is `0` or `1`. */
+  add_checkbox: method = .void
+    arg id = .string, text = .string, checked = "0", relation = "below", anchor = ""
+    call add_label(id, text, relation, anchor)
+    _kinds[_count] = "checkbox"
+    _values[_count] = checked
+    return
+
+  /** Append a display-only percentage progress control. */
+  add_progress: method = .void
+    arg id = .string, value = "0", relation = "below", anchor = ""
+    call add_label(id, value, relation, anchor)
+    _kinds[_count] = "progress"
+    _values[_count] = value
+    return
+
   /** Append one exclusive choice using stable item IDs.
    * @param id stable control identity
    * @param option_ids distinct nonempty item IDs (maximum 64)
@@ -219,6 +244,13 @@ uiview_impl: class implements .uiview
       _option_texts[_option_total] = option_texts[i]
     end
     return 1
+
+  /** Append a dropdown selection using the same item contract as choice. */
+  add_combo: method = .int
+    arg id = .string, option_ids = .string[], option_texts = .string[], selected = .string, relation = "below", anchor = ""
+    rc = add_choice(id, option_ids, option_texts, selected, relation, anchor)
+    if rc = 1 then _kinds[_count] = "combo"
+    return rc
 
   /** Append a bounded integer editor, preserving text during editing.
    * @param id stable control identity
@@ -280,6 +312,9 @@ uiview_impl: class implements .uiview
     if shortcut = "none" then shortcut = ""
     if anchor = "none" then anchor = ""
     if kind = "label" then call add_label(id, text, relation, anchor)
+    else if kind = "statusbar" then call add_statusbar(id, text, relation, anchor)
+    else if kind = "checkbox" then call add_checkbox(id, text, "0", relation, anchor)
+    else if kind = "progress" then call add_progress(id, text, relation, anchor)
     else if kind = "input" then call add_input(id, text, relation, anchor)
     else if kind = "line" then call add_line(id, relation, anchor)
     else if kind = "button" then call add_button(id, text, action, shortcut, relation, anchor)

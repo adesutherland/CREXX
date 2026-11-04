@@ -60,7 +60,11 @@ gtkdriver: class implements .uidriver
       kind = view.node_kind(index)
       rc = 0
       if kind = "label" then rc = add_label(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index))
+      else if kind = "statusbar" then rc = ui_gtk_native..add_statusbar(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index))
       else if kind = "line" then rc = add_line(view.node_id(index), view.node_column(index), view.node_row(index))
+      else if kind = "input" then rc = ui_gtk_native..add_input(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index))
+      else if kind = "checkbox" then rc = ui_gtk_native..add_checkbox(view.node_id(index), view.node_text(index), view.node_value(index) = "1", view.node_column(index), view.node_row(index))
+      else if kind = "progress" then rc = ui_gtk_native..add_progress(view.node_id(index), view.node_value(index), view.node_column(index), view.node_row(index))
       else if kind = "button" then rc = add_button(view.node_id(index), view.node_text(index), view.node_action(index), view.node_column(index), view.node_row(index))
       else if kind = "choice" then do
         option_ids = .string[]
@@ -72,6 +76,17 @@ gtkdriver: class implements .uidriver
           option_texts[option] = view.node_option_text(index, option)
         end
         rc = ui_gtk_native..add_choice(view.node_id(index), option_ids, option_texts, view.node_value(index), view.node_column(index), view.node_row(index))
+      end
+      else if kind = "combo" then do
+        option_ids = .string[]
+        option_texts = .string[]
+        call arraydrop option_ids
+        call arraydrop option_texts
+        do option = 1 to view.node_option_count(index)
+          option_ids[option] = view.node_option_id(index, option)
+          option_texts[option] = view.node_option_text(index, option)
+        end
+        rc = ui_gtk_native..add_combo(view.node_id(index), option_ids, option_texts, view.node_value(index), view.node_column(index), view.node_row(index))
       end
       else if kind = "integer" then rc = ui_gtk_native..add_integer(view.node_id(index), view.node_value(index), view.node_minimum(index), view.node_maximum(index), view.node_step(index), view.node_column(index), view.node_row(index))
       if rc \= 1 then _error = "Unsupported or invalid GTK view node: " || kind
@@ -114,7 +129,7 @@ gtkdriver: class implements .uidriver
       rc = _session.invoke(payload)
       rc = 0
     end
-    else if (action = "selection.changed" | action = "value.changed" | action = "value.committed") & \_modal & \_closing then
+    else if (action = "selection.changed" | action = "checked.changed" | action = "value.changed" | action = "value.committed") & \_modal & \_closing then
       rc = _session.post(.uimessage("widget." || action, .uipayload(payload)))
     else if action = "close.requested" & \_closing then rc = _session.post(.uimessage("ui.close.requested", .uipayload()))
     else if action = "dialog.accepted" | action = "dialog.cancelled" then do
@@ -236,6 +251,17 @@ gtkdriver: class implements .uidriver
           option_texts[option] = view.node_option_text(index, option)
         end
         if ui_gtk_native..set_choice(view.node_id(index), option_ids, option_texts, view.node_value(index)) \= 1 then _error = "GTK choice projection failed"
+      end
+      else if kind = "combo" then do
+        option_ids = .string[]
+        option_texts = .string[]
+        call arraydrop option_ids
+        call arraydrop option_texts
+        do option = 1 to view.node_option_count(index)
+          option_ids[option] = view.node_option_id(index, option)
+          option_texts[option] = view.node_option_text(index, option)
+        end
+        if ui_gtk_native..set_combo(view.node_id(index), option_ids, option_texts, view.node_value(index)) \= 1 then _error = "GTK combo projection failed"
       end
       else if kind = "integer" then do
         if ui_gtk_native..set_integer(view.node_id(index), view.node_value(index)) \= 1 then _error = "GTK integer projection failed"

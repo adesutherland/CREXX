@@ -155,7 +155,7 @@ ansidriver: class implements .uidriver
     if _modal then view = _dialog.view()
     do index = 1 to view.count()
       kind = view.node_kind(index)
-      if wordpos(kind, "label line input button choice integer") = 0 then do
+      if wordpos(kind, "label statusbar line input button checkbox progress choice combo integer") = 0 then do
         _error = "Unsupported terminal view node: " || kind
         return
       end

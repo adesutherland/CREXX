@@ -270,7 +270,7 @@ tuidriver: class implements .uidriver
     maximum_column = 0
     do position_index = 1 to view.count()
       kind = view.node_kind(position_index)
-      if kind \= "label" & kind \= "line" & kind \= "button" & kind \= "choice" & kind \= "integer" then do
+      if kind \= "label" & kind \= "statusbar" & kind \= "line" & kind \= "button" & kind \= "checkbox" & kind \= "progress" & kind \= "choice" & kind \= "combo" & kind \= "integer" then do
         _error = "Unsupported line view node: " || kind
         return
       end
