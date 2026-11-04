@@ -16,6 +16,7 @@ buildnameword: token
 defaultbuildword: token
 workdirword: token
 argumentword: token
+runtimeargumentword: token
 stdinword: token
 endword: token
 identifier: token
@@ -48,7 +49,7 @@ parse: parser semantics contextfree input tokens start program
   description.attribute: rule = descriptionword equals string
   build.statement: rule = buildword string build.attributes endword buildword terminator
   build.attributes: rule = build.attribute*
-  build.attribute: rule = rule.reference.attribute | build.name.attribute | input.attribute | depends.attribute | depends.build.attribute | workdir.attribute | argument.attribute | stdin.attribute
+  build.attribute: rule = rule.reference.attribute | build.name.attribute | input.attribute | depends.attribute | depends.build.attribute | workdir.attribute | argument.attribute | runtime.argument.attribute | stdin.attribute
   rule.reference.attribute: rule = ruleword equals identifier
   build.name.attribute: rule = buildnameword equals identifier
   input.attribute: rule = inputword equals string
@@ -56,6 +57,7 @@ parse: parser semantics contextfree input tokens start program
   depends.build.attribute: rule = dependsbuildword equals identifier
   workdir.attribute: rule = workdirword equals string
   argument.attribute: rule = argumentword equals string string
+  runtime.argument.attribute: rule = runtimeargumentword equals string
   stdin.attribute: rule = stdinword equals string
   default.statement: rule = defaultword string terminator
   default.build.statement: rule = defaultbuildword equals identifier terminator
@@ -97,6 +99,9 @@ classify: tokenstage start 1
   word.argument:
     transform stage classify state 1
       take identifier text "ARGUMENT" emit argumentword next 1
+  word.runtime.argument:
+    transform stage classify state 1
+      take identifier text "RUNTIME_ARGUMENT" emit runtimeargumentword next 1
   word.stdin:
     transform stage classify state 1
       take identifier text "STDIN" emit stdinword next 1

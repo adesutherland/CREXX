@@ -132,6 +132,7 @@ collect_graph: procedure = .int
       workdir = ''
       argument = ''
       argument_value = ''
+      runtime_args = .string[]
       stdin = ''
       do j = 1 to tree.count(node)
         child = tree.child(node,j)
@@ -151,6 +152,7 @@ collect_graph: procedure = .int
               argument = substitute_value(unquote(tree.text(tree.child(attr,3))),variables)
               argument_value = substitute_value(unquote(tree.text(tree.child(attr,4))),variables)
             end
+            if tree.name(attr) = 'runtime.argument.attribute' then call append_path runtime_args,substitute_value(unquote(tree.text(tree.child(attr,3))),variables)
             if tree.name(attr) = 'stdin.attribute' then stdin = substitute_value(unquote(tree.text(tree.child(attr,3))),variables)
           end
         end
@@ -160,7 +162,7 @@ collect_graph: procedure = .int
       if build_name <> '' & name = build_name then return graph_error('BUILD_NAME must differ from its physical output ' || name)
       if build_name <> '' & target_name_index(targets,build_name) <> 0 then return graph_error('duplicate BUILD_NAME ' || build_name)
       if target_index(targets,name) <> 0 then return graph_error('duplicate target ' || name)
-      call append_target targets,name,build_name,rule,join_paths(inputs),join_paths(deps),join_paths(logical_deps),workdir,argument,argument_value,stdin
+      call append_target targets,name,build_name,rule,join_paths(inputs),join_paths(deps),join_paths(logical_deps),workdir,argument,argument_value,stdin,join_paths(runtime_args)
     end
     else if kind = 'default.statement' then do
       value = substitute_value(unquote(tree.text(tree.child(node,2))),variables)
@@ -183,12 +185,12 @@ build_target: procedure = .int
   if t = 0 then return graph_error('unknown target ' || name)
   i = .int
   visiting[visiting[0] + 1] = name
-  rule_name = targets[(t - 1) * 10 + 3]
+  rule_name = targets[(t - 1) * 11 + 3]
   rule_i = rule_index(rules,rule_name)
   if rule_i = 0 then return graph_error('unknown rule ' || rule_name || ' for ' || name)
   action = upper(rules[(rule_i - 1) * 3 + 2])
-  physical_deps = split_paths(targets[(t - 1) * 10 + 5])
-  logical_deps = split_paths(targets[(t - 1) * 10 + 6])
+  physical_deps = split_paths(targets[(t - 1) * 11 + 5])
+  logical_deps = split_paths(targets[(t - 1) * 11 + 6])
   deps = .string[]
   do i = 1 to physical_deps[0]
     if member(deps,physical_deps[i]) then return graph_error('duplicate dependency ' || physical_deps[i] || ' for ' || name)
@@ -197,7 +199,7 @@ build_target: procedure = .int
   do i = 1 to logical_deps[0]
     logical_target = target_name_index(targets,logical_deps[i])
     if logical_target = 0 then return graph_error('Unknown build target name: ' || logical_deps[i])
-    logical_output = targets[(logical_target - 1) * 10 + 1]
+    logical_output = targets[(logical_target - 1) * 11 + 1]
     if logical_output = name then return graph_error('target refers to itself: ' || name)
     if member(deps,logical_output) then return graph_error('duplicate dependency ' || logical_deps[i] || ' for ' || name)
     deps[deps[0] + 1] = logical_output
@@ -210,11 +212,12 @@ build_target: procedure = .int
     end
     else if .rxfs..isfile(project_path(dep)) = 0 then return graph_error('missing dependency ' || dep || ' for ' || name)
   end
-  inputs = split_paths(targets[(t - 1) * 10 + 4])
-  workdir = targets[(t - 1) * 10 + 7]
-  argument = targets[(t - 1) * 10 + 8]
-  argument_value = targets[(t - 1) * 10 + 9]
-  stdin = targets[(t - 1) * 10 + 10]
+  inputs = split_paths(targets[(t - 1) * 11 + 4])
+  workdir = targets[(t - 1) * 11 + 7]
+  argument = targets[(t - 1) * 11 + 8]
+  argument_value = targets[(t - 1) * 11 + 9]
+  stdin = targets[(t - 1) * 11 + 10]
+  runtime_args = split_paths(targets[(t - 1) * 11 + 11])
   do i = 1 to inputs[0]
     if .rxfs..isfile(project_path(inputs[i])) = 0 then return graph_error('missing input ' || inputs[i] || ' for ' || name)
   end
@@ -222,9 +225,9 @@ build_target: procedure = .int
   if action = 'CREATE EXE' then output = native_executable_path(output)
 
   if action = 'RUN' then do
-    if verbose <> 0 then call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,'run'
+    if verbose <> 0 then call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,runtime_args,'run'
     if inputs[0] <> 1 then return graph_error('RUN requires exactly one INPUT for ' || name)
-    rc = run_program(inputs[1],workdir,argument,argument_value,stdin)
+    rc = run_program(inputs[1],workdir,argument,argument_value,stdin,runtime_args)
     if rc <> 0 then return rc
     say 'RXBUILD: ran ' || inputs[1]
     visiting[visiting[0]] = ''
@@ -242,17 +245,21 @@ build_target: procedure = .int
     end
     do i = 1 to deps[0]
       if member(rebuilt,deps[i]) then stale = 1
+      if .rxfs..isfile(project_path(deps[i])) \= 0 then do
+        if modified(project_path(deps[i])) > modified(output) then stale = 1
+      end
     end
   end
   if verbose <> 0 then do
-    if stale <> 0 then call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,'build'
-    else call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,'up-to-date'
+    if stale <> 0 then call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,runtime_args,'build'
+    else call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,runtime_args,'up-to-date'
   end
   if stale <> 0 then do
     if inputs[0] <> 1 then return graph_error(action || ' requires exactly one INPUT for ' || name)
     dir = dirname(name)
     output_name = basename_no_suffix(name)
-    if action = 'COMPILE PROGRAM' then rc = compile_program(dir,inputs[1],output_name)
+    if action = 'COMPILE RXPP' then rc = compile_rxpp(name,inputs[1],deps)
+    else if action = 'COMPILE PROGRAM' then rc = compile_program(dir,inputs[1],output_name,deps)
     else if action = 'COMPILE GRAMMAR' then rc = compile_grammar(dir,inputs[1],output_name)
     else if action = 'COMPILE READER' then do
       if deps[0] <> 1 then return graph_error('COMPILE READER requires one grammar dependency for ' || name)
@@ -277,12 +284,12 @@ build_target: procedure = .int
 resolve_target: procedure = .string
   arg targets = .string[], requested = .string
   logical = target_name_index(targets,requested)
-  if logical <> 0 then return targets[(logical - 1) * 10 + 1]
+  if logical <> 0 then return targets[(logical - 1) * 11 + 1]
   if target_index(targets,requested) <> 0 then return requested
   return ''
 
 report_target: procedure
-  arg name = .string, action = .string, inputs = .string[], deps = .string[], workdir = .string, argument = .string, argument_value = .string, stdin = .string, state = .string
+  arg name = .string, action = .string, inputs = .string[], deps = .string[], workdir = .string, argument = .string, argument_value = .string, stdin = .string, runtime_args = .string[], state = .string
   i = .int
   line = 'RXBUILD VERBOSE: action=' || action || ' target=' || name || ' state=' || state
   say line
@@ -298,6 +305,9 @@ report_target: procedure
     if workdir = '' then say '  workdir=' || project_path(dirname(inputs[1]))
     else say '  workdir=' || project_path(workdir)
     if argument <> '' then say '  argument=' || argument || ' ' || argument_value
+    do i = 1 to runtime_args[0]
+      say '  runtime_argument=' || project_path(runtime_args[i])
+    end
     if stdin <> '' then say '  stdin=' || stdin
   end
 
@@ -308,7 +318,7 @@ native_output_path: procedure = .string
   return output
 
 compile_program: procedure = .int
-  arg dir = .string, source = .string, output = .string
+  arg dir = .string, source = .string, output = .string, deps = .string[]
   rc = ensure_directory_tree(project_path(dir))
   if rc <> 0 then return rc
   argv = .string[]
@@ -318,13 +328,37 @@ compile_program: procedure = .int
   argv[4] = project_path(source)
   argv[5] = '-i'
   argv[6] = project_path(dir)
-  input_lines = .string[]
-  address crexx "run :argv[]" input input_lines output captured error errors
-  if rc <> 0 then do
-    say 'RXBUILD: COMPILE PROGRAM failed'
-    return rc
+  arg_index = 7
+  do i = 1 to deps[0]
+    include_dir = dirname(deps[i])
+    if include_dir <> '' then do
+      argv[arg_index] = '-i'
+      argv[arg_index + 1] = project_path(include_dir)
+      arg_index = arg_index + 2
+    end
   end
-  return 0
+  input_lines = .string[]
+  return run_command('COMPILE PROGRAM', argv, input_lines)
+
+compile_rxpp: procedure = .int
+  arg target = .string, source = .string, deps = .string[]
+  rc = ensure_directory_tree(project_path(dirname(target)))
+  if rc <> 0 then return rc
+  argv = .string[]
+  argv[1] = tool('rxpp')
+  argv[2] = 'rxprecomp'
+  argv[3] = '-I'
+  argv[4] = project_path(source)
+  argv[5] = '-o'
+  argv[6] = project_path(target)
+  macro_lib = project_path('preprocessor/Maclib.rexx')
+  do i = 1 to deps[0]
+    if right(lower(deps[i]),11) = 'maclib.rexx' then macro_lib = project_path(deps[i])
+  end
+  argv[7] = '-m'
+  argv[8] = macro_lib
+  input_lines = .string[]
+  return run_command('RXPP',argv,input_lines)
 
 create_exe: procedure = .int
   arg name = .string, source = .string
@@ -348,7 +382,7 @@ create_exe: procedure = .int
   return copy_binary(generated,output)
 
 run_program: procedure = .int
-  arg program = .string, workdir = .string, argument = .string, argument_value = .string, stdin = .string
+  arg program = .string, workdir = .string, argument = .string, argument_value = .string, stdin = .string, runtime_args = .string[]
   argv = .string[]
   argv[1] = tool('rxvm')
   argv[2] = '-l'
@@ -358,6 +392,10 @@ run_program: procedure = .int
   if argument <> '' then do
     argv[5] = argument
     argv[6] = argument_value
+  end
+  do i = 1 to runtime_args[0]
+    if argument = '' then argv[4 + i] = project_path(runtime_args[i])
+    else argv[6 + i] = project_path(runtime_args[i])
   end
   input_lines = .string[]
   if stdin <> '' then input_lines[1] = stdin
@@ -488,7 +526,7 @@ append_rule: procedure
   rules[rules[0] + 1] = description
 
 append_target: procedure
-  arg expose targets = .string[], name = .string, build_name = .string, rule = .string, inputs = .string, deps = .string, logical_deps = .string, workdir = .string, argument = .string, argument_value = .string, stdin = .string
+  arg expose targets = .string[], name = .string, build_name = .string, rule = .string, inputs = .string, deps = .string, logical_deps = .string, workdir = .string, argument = .string, argument_value = .string, stdin = .string, runtime_args = .string
   targets[targets[0] + 1] = name
   targets[targets[0] + 1] = build_name
   targets[targets[0] + 1] = rule
@@ -499,6 +537,7 @@ append_target: procedure
   targets[targets[0] + 1] = argument
   targets[targets[0] + 1] = argument_value
   targets[targets[0] + 1] = stdin
+  targets[targets[0] + 1] = runtime_args
 
 append_path: procedure
   arg expose values = .string[], value = .string
@@ -538,15 +577,15 @@ rule_index: procedure = .int
 
 target_index: procedure = .int
   arg targets = .string[], name = .string
-  do i = 1 to targets[0] by 10
-    if targets[i] = name then return ((i - 1) / 10) + 1
+  do i = 1 to targets[0] by 11
+    if targets[i] = name then return ((i - 1) / 11) + 1
   end
   return 0
 
 target_name_index: procedure = .int
   arg targets = .string[], name = .string
-  do i = 1 to targets[0] by 10
-    if targets[i + 1] = name then return ((i - 1) / 10) + 1
+  do i = 1 to targets[0] by 11
+    if targets[i + 1] = name then return ((i - 1) / 11) + 1
   end
   return 0
 

@@ -28,6 +28,7 @@ struct ui_gtk_node {
     char *id;
     char *action;
     GtkWidget *widget;
+    guint status_context;
     ui_gtk_option *options;
     int option_count;
     gboolean owns_widget;
@@ -42,6 +43,7 @@ typedef struct ui_gtk_loop {
 } ui_gtk_loop;
 
 static GtkWidget *ui_window;
+static GtkWidget *ui_root;
 static GtkWidget *ui_grid;
 static ui_gtk_node ui_nodes[UI_GTK_MAX_NODES];
 static int ui_node_count;
@@ -214,6 +216,40 @@ static void ui_gtk_integer_fact(ui_gtk_node *node, const char *action) {
     g_string_free(payload, TRUE);
 }
 
+static void ui_gtk_input_fact(ui_gtk_node *node, const char *action) {
+    GString *payload;
+    if (ui_rendering || !node || !node->widget) return;
+    payload = g_string_new("{\"node\":");
+    ui_gtk_quote(payload, node->id);
+    g_string_append(payload, ",\"value\":");
+    ui_gtk_quote(payload, gtk_entry_get_text(GTK_ENTRY(node->widget)));
+    g_string_append_c(payload, '}');
+    ui_gtk_enqueue(action, payload->str);
+    g_string_free(payload, TRUE);
+}
+
+static void ui_gtk_input_changed(GtkEditable *editable, gpointer data) {
+    (void)editable;
+    ui_gtk_input_fact((ui_gtk_node *)data, "value.changed");
+}
+
+static void ui_gtk_input_committed(GtkEntry *entry, gpointer data) {
+    (void)entry;
+    ui_gtk_input_fact((ui_gtk_node *)data, "value.committed");
+}
+
+static void ui_gtk_checkbox_toggled(GtkToggleButton *button, gpointer data) {
+    ui_gtk_node *node = (ui_gtk_node *)data;
+    GString *payload;
+    if (ui_rendering || !node) return;
+    payload = g_string_new("{\"node\":");
+    ui_gtk_quote(payload, node->id);
+    g_string_append_printf(payload, ",\"checked\":%s}",
+                           gtk_toggle_button_get_active(button) ? "true" : "false");
+    ui_gtk_enqueue("checked.changed", payload->str);
+    g_string_free(payload, TRUE);
+}
+
 static void ui_gtk_integer_changed(GtkEditable *editable, gpointer data) {
     (void)editable;
     ui_gtk_integer_fact((ui_gtk_node *)data, "value.changed");
@@ -249,6 +285,7 @@ static void ui_gtk_destroy(GtkWidget *widget, gpointer data) {
     (void)data;
     if (widget == ui_window) {
         ui_window = NULL;
+        ui_root = NULL;
         ui_grid = NULL;
         ui_gtk_clear_nodes();
         ui_gtk_enqueue("closed", "");
@@ -276,15 +313,19 @@ PROCEDURE(create) {
     ui_gtk_clear_nodes();
     ui_rendering = 0;
     ui_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    ui_root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     ui_grid = gtk_grid_new();
-    if (!ui_window || !ui_grid) RETURNINTX(0);
+    if (!ui_window || !ui_root || !ui_grid) RETURNINTX(0);
 
     gtk_window_set_title(GTK_WINDOW(ui_window), title);
     gtk_window_set_default_size(GTK_WINDOW(ui_window), width, height);
-    gtk_container_set_border_width(GTK_CONTAINER(ui_window), 16);
+    gtk_widget_set_margin_top(ui_grid, 16);
+    gtk_widget_set_margin_start(ui_grid, 16);
+    gtk_widget_set_margin_end(ui_grid, 16);
     gtk_grid_set_row_spacing(GTK_GRID(ui_grid), 8);
     gtk_grid_set_column_spacing(GTK_GRID(ui_grid), 16);
-    gtk_container_add(GTK_CONTAINER(ui_window), ui_grid);
+    gtk_box_pack_start(GTK_BOX(ui_root), ui_grid, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(ui_window), ui_root);
     g_signal_connect(ui_window, "delete-event", G_CALLBACK(ui_gtk_delete), NULL);
     g_signal_connect(ui_window, "destroy", G_CALLBACK(ui_gtk_destroy), NULL);
     RETURNINT(1);
@@ -310,6 +351,45 @@ PROCEDURE(add_label) {
     gtk_widget_set_halign(node->widget, GTK_ALIGN_START);
     g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
     gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(add_statusbar) {
+    ui_gtk_node *node;
+    GtkWidget *frame;
+    GtkWidget *message_area;
+    const char *id = GETSTRING(ARG0);
+    const char *text = GETSTRING(ARG1);
+    int column = GETINT(ARG2);
+    int row = GETINT(ARG3);
+
+    if (!ui_grid || column < 0 || row < 0 ||
+        ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) {
+        RETURNINTX(0);
+    }
+    node = &ui_nodes[ui_node_count++];
+    node->id = g_strdup(id);
+    node->action = g_strdup("");
+    node->widget = gtk_statusbar_new();
+    node->status_context = gtk_statusbar_get_context_id(GTK_STATUSBAR(node->widget), id);
+    gtk_statusbar_push(GTK_STATUSBAR(node->widget), node->status_context, text);
+    message_area = gtk_statusbar_get_message_area(GTK_STATUSBAR(node->widget));
+    gtk_widget_set_margin_top(message_area, 0);
+    gtk_widget_set_margin_bottom(message_area, 0);
+    gtk_widget_set_margin_start(message_area, 4);
+    gtk_widget_set_margin_end(message_area, 4);
+    gtk_widget_set_hexpand(node->widget, TRUE);
+    gtk_widget_set_halign(node->widget, GTK_ALIGN_FILL);
+    gtk_widget_set_size_request(node->widget, -1, 14);
+    g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
+    frame = gtk_frame_new(NULL);
+    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_ETCHED_IN);
+    gtk_container_add(GTK_CONTAINER(frame), node->widget);
+    gtk_widget_set_hexpand(frame, TRUE);
+    gtk_widget_set_halign(frame, GTK_ALIGN_FILL);
+    gtk_widget_set_size_request(frame, -1, 18);
+    gtk_box_pack_end(GTK_BOX(ui_root), frame, FALSE, FALSE, 0);
     RETURNINT(1);
     ENDPROC
 }
@@ -353,6 +433,73 @@ PROCEDURE(add_button) {
     node->widget = gtk_button_new_with_label(text);
     g_signal_connect(node->widget, "clicked", G_CALLBACK(ui_gtk_button_clicked), node);
     gtk_widget_set_halign(node->widget, GTK_ALIGN_START);
+    g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(add_input) {
+    ui_gtk_node *node;
+    const char *id = GETSTRING(ARG0);
+    const char *value = GETSTRING(ARG1);
+    int column = GETINT(ARG2);
+    int row = GETINT(ARG3);
+
+    if (!ui_grid || column < 0 || row < 0 ||
+        ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) {
+        RETURNINTX(0);
+    }
+    node = &ui_nodes[ui_node_count++];
+    node->id = g_strdup(id);
+    node->action = g_strdup("");
+    node->widget = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(node->widget), value);
+    gtk_entry_set_width_chars(GTK_ENTRY(node->widget), 24);
+    gtk_widget_set_hexpand(node->widget, TRUE);
+    g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
+    g_signal_connect(node->widget, "changed", G_CALLBACK(ui_gtk_input_changed), node);
+    g_signal_connect(node->widget, "activate", G_CALLBACK(ui_gtk_input_committed), node);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(add_checkbox) {
+    ui_gtk_node *node;
+    const char *id = GETSTRING(ARG0), *text = GETSTRING(ARG1);
+    gboolean checked = GETINT(ARG2) != 0;
+    int column = GETINT(ARG3), row = GETINT(ARG4);
+    if (!ui_grid || !*id || column < 0 || row < 0 ||
+        ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) RETURNINTX(0);
+    node = &ui_nodes[ui_node_count++];
+    node->id = g_strdup(id);
+    node->action = g_strdup("");
+    node->widget = gtk_check_button_new_with_label(text);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(node->widget), checked);
+    gtk_widget_set_halign(node->widget, GTK_ALIGN_START);
+    g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
+    g_signal_connect(node->widget, "toggled", G_CALLBACK(ui_gtk_checkbox_toggled), node);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(add_progress) {
+    ui_gtk_node *node;
+    const char *id = GETSTRING(ARG0);
+    double value = g_ascii_strtod(GETSTRING(ARG1), NULL) / 100.0;
+    int column = GETINT(ARG2), row = GETINT(ARG3);
+    if (!ui_grid || !*id || column < 0 || row < 0 ||
+        ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) RETURNINTX(0);
+    if (value < 0.0) value = 0.0;
+    if (value > 1.0) value = 1.0;
+    node = &ui_nodes[ui_node_count++];
+    node->id = g_strdup(id);
+    node->action = g_strdup("");
+    node->widget = gtk_progress_bar_new();
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(node->widget), value);
+    gtk_widget_set_hexpand(node->widget, TRUE);
     g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
     gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
     RETURNINT(1);
@@ -404,6 +551,67 @@ PROCEDURE(add_choice) {
     for (index = 0; index < count; ++index)
         if (strcmp(node->options[index].id, selected) == 0)
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(node->options[index].widget), TRUE);
+    --ui_rendering;
+    RETURNINT(1);
+    ENDPROC
+}
+
+static void ui_gtk_combo_changed(GtkComboBox *combo, gpointer data) {
+    ui_gtk_node *node = (ui_gtk_node *)data;
+    int index;
+    GString *payload;
+    if (ui_rendering || !node) return;
+    index = gtk_combo_box_get_active(combo);
+    if (index < 0 || index >= node->option_count) return;
+    payload = g_string_new("{\"node\":");
+    ui_gtk_quote(payload, node->id);
+    g_string_append(payload, ",\"items\":[");
+    ui_gtk_quote(payload, node->options[index].id);
+    g_string_append(payload, "]}");
+    ui_gtk_enqueue("selection.changed", payload->str);
+    g_string_free(payload, TRUE);
+}
+
+PROCEDURE(add_combo) {
+    const char *id = GETSTRING(ARG0), *selected = GETSTRING(ARG3);
+    size_t count = GETARRAYHI(ARG1), index;
+    ui_gtk_node *node;
+    GtkComboBoxText *combo;
+    int active = -1;
+    if (!ui_grid || !*id || count < 1 || count > 64 || count != GETARRAYHI(ARG2) ||
+        ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) RETURNINTX(0);
+    node = &ui_nodes[ui_node_count++];
+    node->id = g_strdup(id);
+    node->action = g_strdup("");
+    node->option_count = (int)count;
+    node->options = g_new0(ui_gtk_option, count);
+    combo = GTK_COMBO_BOX_TEXT(gtk_combo_box_text_new());
+    node->widget = GTK_WIDGET(combo);
+    for (index = 0; index < count; ++index) {
+        node->options[index].id = g_strdup(GETSARRAY(ARG1, index));
+        node->options[index].owner = node;
+        gtk_combo_box_text_append(combo, node->options[index].id, GETSARRAY(ARG2, index));
+        if (strcmp(node->options[index].id, selected) == 0) active = (int)index;
+    }
+    if (active < 0) RETURNINTX(0);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(combo), active);
+    g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, GETINT(ARG4), GETINT(ARG5), 1, 1);
+    g_signal_connect(node->widget, "changed", G_CALLBACK(ui_gtk_combo_changed), node);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(set_combo) {
+    ui_gtk_node *node = ui_gtk_find_node(GETSTRING(ARG0));
+    const char *selected = GETSTRING(ARG3);
+    int index;
+    if (!node || !GTK_IS_COMBO_BOX(node->widget)) RETURNINTX(0);
+    for (index = 0; index < node->option_count; ++index)
+        if (strcmp(node->options[index].id, selected) == 0) break;
+    if (index >= node->option_count) RETURNINTX(0);
+    ++ui_rendering;
+    gtk_combo_box_set_active(GTK_COMBO_BOX(node->widget), index);
     --ui_rendering;
     RETURNINT(1);
     ENDPROC
@@ -487,8 +695,24 @@ PROCEDURE(set_text) {
     if (!node || !node->widget) RETURNINTX(0);
     if (GTK_IS_LABEL(node->widget)) {
         gtk_label_set_text(GTK_LABEL(node->widget), text);
+    } else if (GTK_IS_STATUSBAR(node->widget)) {
+        gtk_statusbar_pop(GTK_STATUSBAR(node->widget), node->status_context);
+        gtk_statusbar_push(GTK_STATUSBAR(node->widget), node->status_context, text);
+    } else if (GTK_IS_PROGRESS_BAR(node->widget)) {
+        double value = g_ascii_strtod(text, NULL) / 100.0;
+        if (value < 0.0) value = 0.0;
+        if (value > 1.0) value = 1.0;
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(node->widget), value);
+    } else if (GTK_IS_CHECK_BUTTON(node->widget)) {
+        gtk_button_set_label(GTK_BUTTON(node->widget), text);
     } else if (GTK_IS_BUTTON(node->widget)) {
         gtk_button_set_label(GTK_BUTTON(node->widget), text);
+    } else if (GTK_IS_ENTRY(node->widget)) {
+        if (strcmp(gtk_entry_get_text(GTK_ENTRY(node->widget)), text) != 0) {
+            ++ui_rendering;
+            gtk_entry_set_text(GTK_ENTRY(node->widget), text);
+            --ui_rendering;
+        }
     } else {
         RETURNINTX(0);
     }
@@ -586,6 +810,7 @@ PROCEDURE(cleanup) {
     }
     if (ui_window) gtk_widget_destroy(ui_window);
     ui_window = NULL;
+    ui_root = NULL;
     ui_grid = NULL;
     ui_gtk_clear_nodes();
     ENDPROC
@@ -599,14 +824,26 @@ LOADFUNCS
             "title=.string,width=.int,height=.int");
     ADDPROC(add_label, "ui_gtk_native.add_label", "b", ".int",
             "id=.string,text=.string,column=.int,row=.int");
+    ADDPROC(add_statusbar, "ui_gtk_native.add_statusbar", "b", ".int",
+            "id=.string,text=.string,column=.int,row=.int");
     ADDPROC(add_line, "ui_gtk_native.add_line", "b", ".int",
             "id=.string,column=.int,row=.int");
     ADDPROC(add_button, "ui_gtk_native.add_button", "b", ".int",
             "id=.string,text=.string,action=.string,column=.int,row=.int");
+    ADDPROC(add_input, "ui_gtk_native.add_input", "b", ".int",
+            "id=.string,text=.string,column=.int,row=.int");
+    ADDPROC(add_checkbox, "ui_gtk_native.add_checkbox", "b", ".int",
+            "id=.string,text=.string,checked=.int,column=.int,row=.int");
+    ADDPROC(add_progress, "ui_gtk_native.add_progress", "b", ".int",
+            "id=.string,value=.string,column=.int,row=.int");
     ADDPROC(set_text, "ui_gtk_native.set_text", "b", ".int",
             "id=.string,text=.string");
     ADDPROC(add_choice, "ui_gtk_native.add_choice", "b", ".int",
             "id=.string,option_ids=.string[],option_texts=.string[],selected=.string,column=.int,row=.int");
+    ADDPROC(add_combo, "ui_gtk_native.add_combo", "b", ".int",
+            "id=.string,option_ids=.string[],option_texts=.string[],selected=.string,column=.int,row=.int");
+    ADDPROC(set_combo, "ui_gtk_native.set_combo", "b", ".int",
+            "id=.string,option_ids=.string[],option_texts=.string[],selected=.string");
     ADDPROC(set_choice, "ui_gtk_native.set_choice", "b", ".int",
             "id=.string,option_ids=.string[],option_texts=.string[],selected=.string");
     ADDPROC(add_integer, "ui_gtk_native.add_integer", "b", ".int",

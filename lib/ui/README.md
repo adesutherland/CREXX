@@ -90,8 +90,10 @@ Limits and terminal-specific qualifications are in [TERMINAL.md](TERMINAL.md).
 ## Logical view, RXPP and builders
 
 Nodes have stable IDs; buttons contain **command IDs**, not native signals or
-event handlers. The current vocabulary is `label`, `line`, `button`, and
-`input` (the ANSI dialog editor), `choice` and bounded `integer`.
+event handlers. The current vocabulary is `label`, `statusbar`, `line`, `button`,
+and `input` (the ANSI dialog editor), `choice` and bounded `integer`.
+`statusbar` is a single-message status display: GTK uses `GtkStatusbar`, while
+terminal hosts render the same value as a normal status line.
 Relative `root`/`below`/`right` placement
 resolves to logical rows/columns. GTK uses a grid, line TUI groups rows, and ANSI
 projects cells. Unknown anchors/relations currently fall back below the previous

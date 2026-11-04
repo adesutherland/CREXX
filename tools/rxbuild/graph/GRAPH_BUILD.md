@@ -138,6 +138,7 @@ BUILD "run-demo"
   DEPENDS_ON = "${BUILD_DIR}/demo.rxbin"
   WORK_DIR = "."
   ARGUMENT = "-a" "tools/rxbuild/graph/example.graph.build"
+  RUNTIME_ARGUMENT = "tools/rxbuild/graph/README.md"
   STDIN = ""
 END BUILD;
 ```
@@ -145,7 +146,8 @@ END BUILD;
 `CREATE EXE` stages the source before invoking `crexx --native`, so the
 original source directory is not modified. `RUN` is a logical target: its
 input must be an existing RXBIN, and it executes whenever selected. `RUN`
-also accepts optional `WORK_DIR`, two-value `ARGUMENT`, and `STDIN`
+also accepts optional `WORK_DIR`, two-value `ARGUMENT`, repeatable
+`RUNTIME_ARGUMENT`, and `STDIN`
 attributes, matching the current PHP `setup.build` run parameters.
 
 ## Current behavior
@@ -170,7 +172,9 @@ attributes, matching the current PHP `setup.build` run parameters.
 - `RUN` takes one RXBIN input and executes it with `rxtvm`. Its target name is
   a logical graph name and does not need to be a file; `RUN` executes whenever
   the target is selected. Optional `WORK_DIR`, `ARGUMENT = "name" "value"`,
-  and `STDIN` attributes are passed to the VM.
+  repeated `RUNTIME_ARGUMENT = "path"`, and `STDIN` attributes are passed to
+  the VM. Runtime arguments are appended after the program and resolved
+  relative to the project root.
 - The graph file is parsed by the separate `graph.levell` grammar compiled
   into the packaged graph reader.
 - `BUILD_NAME` is an optional logical alias for a physical output target.

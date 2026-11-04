@@ -808,6 +808,21 @@ the `settings.` stem and invokes `load_config settings` after the complete
 block has been collected. `##DALIAS` only registers names; it does not emit a
 data array by itself.
 
+For a free-form block, one alias may dispatch the completed block to a
+scripted macro:
+
+```rexx
+##DALIAS DEFINE-GUI HANDLER UI_GUI
+DEFINE-GUI TextInspector
+  LABEL path "File: (none)"
+END DEFINE-GUI
+```
+
+Here `HANDLER` is part of the declaration and `UI_GUI` is the macro name; it
+is not registered as a second alias. The handler receives the phase, namespace
+and collected block, allowing a separate DSL implementation to interpret its
+contents. Handler declarations require exactly one alias.
+
 ### `##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`
 
 `##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE` are thin aliases for
