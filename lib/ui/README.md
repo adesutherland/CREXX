@@ -203,13 +203,14 @@ pointer events can drive graph edits or map selection.
 The same Level G graph or map feature should drive all three delivery hosts.
 GTK and browser may offer 2D projections; ANSI can expose a labeled node/edge
 list or bounded cell map with keyboard selection and actions. Each operation
-needs a declared native, semantic fallback or unsupported support level. The
-application chooses its alternative view and command availability. A proposed
-preflight/refusal contract must return an unsupported required view or scene to
-the application before partial projection, so the user receives a specific
-reason or a usable fallback. Current v0 effect capability failures already
-reach the feature, but an unsupported view node currently fails the host render
-path; application-visible view refusal remains design work. The [plan](PLAN.md)
+needs precise declared host support. The application chooses its named semantic
+fallback and command availability. The approved direction checks a complete
+view or scene before projection and returns an unexpected unsupported request
+to the application as a typed refusal, leaving the last valid frame intact.
+The user then receives a specific reason or a usable fallback. Current v0
+effect capability failures already reach the feature, but an unsupported view
+node currently fails the host render path; application-visible view refusal
+remains design work. The [plan](PLAN.md)
 gates this contract and requires equivalent domain transitions across hosts,
 not identical pixels.
 

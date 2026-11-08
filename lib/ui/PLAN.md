@@ -86,22 +86,24 @@ additional line-mode coverage is selected only when a feature needs it.
 | Strategy map | Native 2D terrain/unit projection with pan/zoom and selection | Bounded cell viewport and unit/terrain detail/actions where usable | Canvas 2D projection with pan/zoom and selection | Same rules, turns and stale-input handling; unavailable precision or interaction is declared. |
 | Application services | Correlated native or hosted effects | Correlated native or hosted effects | Correlated effects through the selected browser session; hosted RAG first, local database/RAG/inference separate options | Same result and cancellation semantics, with provider and storage limits stated per host. |
 
-Support is declared per operation and required presentation, not inferred from
-the broad `ui.widgets` or `ui.pointer` family. The proposed contract distinguishes
-native presentation, a named semantic fallback, and unsupported. The feature
-or its application composition chooses the alternative view and which commands
-to enable. A driver validates a proposed view or scene before projecting it;
-an unsupported required node, gesture or precision must yield a structured,
-correlated refusal to that application owner, without partial painting, a
-silent no-op or a second authoritative model. The owner can then render a
-fallback or explain why the action is unavailable. Required capability checks
-also happen at session setup, before the first view. Specify the exact refusal
-message/API, retry limit, state and close behavior at the public contract gate;
-the current render errors do not yet supply this behavior.
+The approved support direction combines capability discovery with render
+preflight. A host advertises precise widget, scene, input and limit support at
+session composition, not only broad families such as `ui.widgets` or
+`ui.pointer`. The feature or application composition chooses a named semantic
+fallback and which commands to enable. Before projecting each complete view or
+scene, the driver validates its required operations and limits. An unexpected
+unsupported request returns a typed, correlated refusal to the application
+owner, leaving the last valid frame intact. The owner may render an alternative
+or explain why the action is unavailable; retries must be bounded. This does
+not move application state or fallback policy into the driver. Specify the
+exact manifest, refusal API, retry count and state/close behavior at the public
+contract gate; current render errors do not yet supply this behavior.
 
-Capabilities are stable during a v0 session. A later contract may define
-capability-change events for device/context loss; until then, a host must use
-an explicit failure or restart path and preserve the application-owned state.
+Capabilities are stable during a v0 session. The extended contract must decide
+whether support can change during a live session and how device/context loss
+reaches the application. Until that decision is implemented, a v0 host uses its
+existing failure or restart path and must not silently change its advertised
+support.
 Terminal fallbacks need meaningful keyboard commands and readable labels, not
 a promise that freehand dragging or dense graphical maps work in cells. For
 operations with no useful fallback, the application disables or rejects the
@@ -204,7 +206,8 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-D02** | For a local query option, prove matching `rxsqlite`/`rxvector` Wasm builds and sidecar identity. Before promising persistence, also prove SQLite VFS, multi-tab/storage behavior, export and recovery. | open; conditional on D01 |
 | **UIX-D03** | Choose browser embedding/generation provider and whether WebGPU is required or optional using a real small model, compatible embedding identity, device/memory inventory, CPU/hosted control and failure policy. | open |
 | **UIX-D04** | Select GPU rendering, vector search and inference independently from representative correctness and cost; do not infer one from another. | open |
-| **UIX-D05** | Define per-operation view/scene support, application-visible preflight/refusal, fallback selection, capability lifetime and host-loss behavior. Prove the API can reject a whole unsupported snapshot without changing feature state or leaving a partial new projection. | open; public core contract gate |
+| **UIX-D05** | Approved direction: precise host support at composition plus complete-view/scene preflight, application-owned fallback and command availability, and typed correlated refusal that preserves the last valid frame with bounded retry. Specify the exact API and prove refusal leaves no partial new projection or additional feature state mutation. | direction approved; API/proof open |
+| **UIX-D06** | Choose capability lifetime and host-loss behavior: whether support changes inside a live session, how device/context loss is reported, and how application state survives restoration or restart. | open; public core contract gate |
 
 ## Acceptance criteria
 
@@ -224,7 +227,7 @@ unselected until a specific offline product outcome is agreed.
 | ID | Work, dependency and criteria served | Status |
 | --- | --- | --- |
 | **UIX-STEP01** | Trace the direct Text Inspector feature through session, view, commands and effect outcomes on GTK and ANSI, retaining the line TUI regression. Use handwritten graph/map sketches to identify missing dynamic layout, scene, input and fallback contracts; AC01/04–06/08. | open |
-| **UIX-STEP02** | Agree the core view, scene, normalized input and per-operation support/refusal contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Decide D05, preserve v0 consumers and test a rejected whole snapshot and alternative view; AC01/04–06/08. | open; public core contract gate |
+| **UIX-STEP02** | Agree the core view, scene, normalized input and per-operation support/refusal contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Apply D05, decide D06, preserve v0 consumers and test a rejected whole snapshot and alternative view; AC01/04–06/08. | open; public core contract gate |
 | **UIX-STEP03** | Implement the shared scene owner and bounded graph/map model-first fixtures. Build the initial GTK 2D and ANSI semantic graph projections against the same feature, including keyboard paths and explicit refusals; AC04/06/08. Keep editing, undo and game rules in the feature. Depends on STEP02; may proceed alongside STEP04. | open |
 | **UIX-STEP04** | Select local Wasm or hosted browser session and its packaging, runtime cohort, owner-turn API and bounded bridge or transport protocol. For local Wasm, choose a matching UI VM image and owner-turn/step or qualified suspend/resume route for `uidriver.run`; for hosted use, define authentication and reconnect/revision ownership. Implement a handwritten Text Inspector browser consumer with the same forms-stage transitions and focused lifecycle/async/refusal tests; AC03/06/08. Keep a separate asynchronous application-service route for later RAG/database/inference effects. Depends on STEP02; may proceed alongside STEP03. | open; browser host/API gate |
 | **UIX-STEP05** | Complete the graph stage across GTK 2D, ANSI semantic/cell and browser SVG projections, then the map stage across GTK 2D, ANSI bounded viewport and browser Canvas 2D. At each stage compare the same domain journal, keyboard/input paths and fallback/refusal behavior before moving on. Evaluate culling and measured thresholds before WebGL2; AC04–06/08. Depends on STEP03–04. | open |
