@@ -185,16 +185,21 @@ would also have to replace its current process/WAL worker and recovery
 arrangements. Editable graph and map applications may need databases
 too, but each keeps its own schema and transaction owner behind effects.
 
-WebGPU can serve compute as well as graphics. Browser embeddings and small
-generative models may use a separate WebGPU inference provider while the
-cREXX feature retains request, citation and result policy. The existing native
-`llama` CPU/Metal/CUDA/Vulkan provider is not itself a browser WebGPU backend.
-Keep model preparation and inference off the UI owner turn, with explicit
-device/memory admission, cancellation, loss and CPU/hosted fallback. A WebGPU
-map renderer, vector scorer and inference provider are separate capabilities;
-the [UI expansion plan](PLAN.md) records their decision gates. Browser-local
-SQLite remains conditional on a proved VFS and export/recovery path: OPFS is
-origin-scoped storage subject to browser quota and clearing.
+Small-LLM answer generation targets both native/hosted and browser-local
+providers behind one application-service contract, separately from query
+embeddings. If local generation proves infeasible within reasonable effort,
+discuss the concrete implementation work before using the approved
+native/hosted-only fallback. WebGPU can serve compute as well as graphics;
+browser-local embedding and generation engines may use it, but their backends
+remain unselected. The cREXX feature retains request, citation and result
+policy. The existing native `llama` CPU/Metal/CUDA/Vulkan provider is not
+itself a browser WebGPU backend. Keep model preparation and inference off the
+UI owner turn, with explicit device/memory admission, cancellation, loss and
+provider fallback. A WebGPU map renderer, vector scorer and inference provider
+are separate capabilities; the [UI expansion plan](PLAN.md) records their
+decision gates. Browser-local SQLite remains conditional on a proved VFS and
+export/recovery path: OPFS is origin-scoped storage subject to browser quota
+and clearing.
 
 For 2D work, add a semantic scene beside the current flat widget view only
 after defining its public contract. The candidate scene contains stable IDs,

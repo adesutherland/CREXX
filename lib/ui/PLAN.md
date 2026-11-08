@@ -4,7 +4,10 @@ Status: design and implementation plan; both browser execution routes are
 selected, but no browser or 2D driver has been delivered. RAG query integration
 targets hosted and browser-local read-only routes, with hosted-only fallback
 conditional on implementation evidence and an agreed reasonable-effort judgment.
-Full local RAG, other application databases and GPU compute remain option gates.
+Small-LLM answer generation likewise targets browser-local and native/hosted
+providers behind one application service, with a conditional native/hosted-only
+fallback after an effort discussion informed by implementation. Full local RAG,
+other application databases and GPU workload choices remain option gates.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not add these capabilities to an
@@ -217,24 +220,25 @@ available. UI persistence for editable graphs/maps uses the same effect pattern
 but has separate domain transactions and undo rules.
 
 WebGPU is relevant beyond drawing. It exposes compute pipelines, so a browser
-embedding model or small generative model could be an application service
-behind the existing embedding/generation concepts. This requires a browser
-provider or a separately selected inference engine; the native `llama` GPU
-backends do not automatically run through WebGPU. Keep heavy compute in a
-compute Worker and return bounded results to the UI session owner; never make
-`update()` wait for a model. Evaluate model format/identity, download and cache,
+embedding model or small generative model could serve the selected local
+provider targets behind application-owned embedding/generation contracts. This
+requires a browser provider or a separately selected inference engine; the
+native `llama` GPU backends do not automatically run through WebGPU. Keep heavy
+compute in a compute Worker and return bounded results to the UI session owner;
+never make `update()` wait for a model. Evaluate model format/identity, download and cache,
 device memory, request limits, cancellation, device loss, privacy, numerical
-compatibility and fallback to CPU or a hosted provider. GPU vector scoring is
-another optional workload, selected only against the existing deterministic
-CPU `rxvector` result/order contract and measured corpus sizes. A WebGPU map
+compatibility and provider fallback. A local generation engine and its CPU/Wasm
+or WebGPU backend are implementation choices, not established by this direction.
+GPU vector scoring is another optional workload, selected only against the
+existing deterministic CPU `rxvector` result/order contract and measured corpus sizes. A WebGPU map
 renderer, vector scorer and LLM provider may share device discovery policy,
 but each needs its own capability and qualification.
 
-| Browser inference route | What it would reuse | Proof before selection |
+| Browser inference route | What it would reuse | Proof before provider selection |
 | --- | --- | --- |
-| Native/hosted `.llm` and `.embedding` drivers | Current cREXX provider concepts and server/native execution. | Async browser effect adapter, credentials/privacy route, bounded streaming and cancellation. |
-| Browser WebGPU engine behind a new provider | cREXX application request/result policy, with an engine such as WebLLM as a comparison candidate. | Exact model and embedding compatibility, JS/Wasm bridge ownership, Worker lifecycle, device loss, local asset/cache policy and supported browsers. |
-| Port of the existing native inference engine | Potentially its model formats and selected CPU code. | A real Wasm/WebGPU backend and package/ABI proof; Metal/CUDA/Vulkan paths alone do not provide it. |
+| Native/hosted `.llm` and `.embedding` drivers | Current cREXX provider concepts and server/native execution; selected generation and embedding service route. | Async browser effect adapter, credentials/privacy route, bounded streaming and cancellation. |
+| Browser WebGPU engine behind a new provider | cREXX application request/result policy; candidate for the selected local generation target, with an engine such as WebLLM for comparison. | Model and output contract, JS/Wasm bridge ownership, Worker lifecycle, device loss, local asset/cache policy and supported browsers; embedding compatibility separately for D03. |
+| Port of the existing native inference engine | Potentially its model formats and selected CPU code; another candidate for local generation. | A real Wasm/backend and package/ABI proof; Metal/CUDA/Vulkan paths alone do not provide it. |
 
 [WebLLM's project](https://github.com/mlc-ai/web-llm) shows that browser-local
 WebGPU generation is feasible, but is not a chosen cREXX provider or proof of
@@ -260,7 +264,7 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-D09** | Approved: an initial full snapshot establishes the replica; bounded versioned deltas apply atomically from an expected base to a resulting revision. On synchronization error or route restart, pause scene input and replace the replica from a full authoritative snapshot, with bounded retries and typed failure. Define exact message shapes, stable IDs, limits and verification for GTK, ANSI and both browser routes. | direction approved; API/proof open |
 | **UIX-D10** | Approved: use bounded fixed-point integer world coordinates shared by GTK and both browser routes; keep map tile identities separate and convert to pixels for painting. Define ticks per world unit, exact wire range, viewport rounding, checked arithmetic and terminal mapping; prove identical picking and explicit overflow rejection before freezing the API. | direction approved; scale/API proof open |
 | **UIX-D11** | Approved: GTK 3 drawing area/Cairo for graph and map, browser SVG/HTML for editable graph and Canvas 2D for bounded map through both browser routes, and ANSI semantic/cell alternatives. Add culling/batching first; select accelerated rendering only after representative scene size, interaction latency and memory evidence against agreed targets. GPU compute is a separate decision. | direction approved; host/proof open |
-| **UIX-D12** | Choose whether small-LLM answer generation is hosted/native, browser-local, both, or deferred; keep it separate from D03 query embeddings and from the GPU renderer/vector-scoring decisions. Define evidence, privacy, device and fallback policy before selecting a provider. | open; application-service gate |
+| **UIX-D12** | Approved conditional target: browser-local and native/hosted small-LLM answer generation share one application-service request/result contract. If local generation proves infeasible within reasonable effort, discuss the concrete implementation evidence and effort then use native/hosted generation only. Select the local engine/backend and define model identity, evidence/citation, privacy, device and failure policy during implementation; D03 query embeddings and D04 GPU workloads remain separate decisions. | direction approved; local provider/proof open |
 
 ## Acceptance criteria
 
@@ -276,6 +280,7 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-AC08** | At each forms, graph and map stage, one handwritten Level G feature drives GTK, ANSI and both browser routes. Common actions have matching expected domain transitions and close policy; host-specific capability and effect outcomes are explicit. Record each host's native, semantic fallback or unsupported operations; verify supported paths and a representative application-visible refusal on each route without claiming visual equivalence. | open; parallel host gate |
 | **UIX-AC09** | A browser feature issues the same bounded `rag.query` effect through hosted and targeted local read-only executors and receives cited results with corpus/evidence identity, compatible query embedding, cancellation and stale-result handling. Compare representative lexical/vector/graph evidence with native RAG. If local feasibility is later declined under D01–02, document the concrete blocker and agreed effort judgment; hosted cited-query acceptance remains required. | open; conditional local route |
 | **UIX-AC10** | The same query-embedding request/result contract supports hosted and targeted browser-local compatible models. For a representative corpus profile, verify model/input identity, dimensions, vector compatibility, cancellation, provider failure and privacy route; compare resulting cited retrieval to the native control. If local model support is later declined under D03, record the blocker and agreed effort judgment; hosted embedding remains required. | open; conditional local embedding route |
+| **UIX-AC11** | The same application-service generation request/result contract supports native/hosted and targeted browser-local small-LLM providers, independently of query embedding and UI rendering. Verify bounded input/output or streaming, model identity, privacy route, cancellation, stale completion, provider/device failure and application-owned result policy. For cited RAG answers, preserve the owning RAG evidence and citation validation. If local generation is later declined under D12, record the concrete blocker and agreed effort judgment; native/hosted generation remains required. | open; conditional local generation route |
 
 ## Stable implementation steps and gates
 
@@ -289,13 +294,15 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-STEP06** | After direct consumers prove the core contract, reconcile the experimental `DEFINE-GUI` macro and its missing graph inputs. Decide its grammar/dynamic-value mapping, generate only layout, typed bindings, command/schema wiring and static routing, and run focused source-map/negative checks; AC01–02. Depends on STEP02–05; Peter may own this increment. | open; later RXPP design gate |
 | **UIX-STEP07** | Qualify selected application/host and generated-authoring combinations across GTK, ANSI and both browser routes, including fallback/refusal, failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–08. Depends on selected preceding steps. | open; milestone/scope gate |
 | **UIX-STEP08** | After the core application-service boundary exists, define one `rag.query` effect and implement the hosted adapter plus a browser-local read-only feasibility/consumer path against one validated corpus bundle. Keep RAG retrieval and evidence policy with its product owner; resolve D02 and the D03 local embedding backend during implementation. Qualify query and embedding routes against AC09–10 or record the D01/D03 conditional hosted-only fallbacks after their agreed effort discussions. This application integration does not block STEP01–07. | open; separate RAG integration gate |
+| **UIX-STEP09** | After the core application-service boundary exists, define the D12 generation request/result contract and implement native/hosted and browser-local small-LLM consumer paths. Keep answer/evidence policy with its application or RAG owner; choose and prove the local engine/backend during implementation. Qualify both routes against AC11 or record the conditional native/hosted-only fallback after discussing concrete local effort. This application integration does not block STEP01–07 and need not wait for full local RAG. | open; separate generation integration gate |
 
 At RAG implementation start, add retrieval/provider delivery criteria to the
 owning RAG plan and reference them from STEP08; AC09–10 own only the UI effect,
-embedding-provider and cross-route consumer boundaries. If small-LLM generation
-is selected later, give it its own owning-plan criteria. The core UI milestone
-does not become an implicit database, embedding or GPU-inference qualification
-gate.
+embedding-provider and cross-route consumer boundaries. At generation
+implementation start, place provider and answer-policy criteria with the owning
+application or RAG plan and reference them from STEP09; AC11 owns the shared
+service and cross-route consumer boundary. The core UI milestone does not
+become an implicit database, embedding or generation qualification gate.
 
 For each development step, use the smallest changed-component build and
 behavior/contract checks, inspect representative RXAS for changed cREXX paths
