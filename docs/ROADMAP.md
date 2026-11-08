@@ -1001,9 +1001,10 @@ prototype has been qualified by this roadmap update.
   browser-local providers through one application service, with native/hosted
   fallback if local generation proves infeasible within reasonable effort
   discussed during implementation. Local model engines/backends remain open.
-  Full local RAG ingestion and authoritative browser storage remain separate
-  choices; UI effects integrate these services without moving their policy
-  into the driver.
+  Native/hosted RAG retains corpus writes. Browser-local ingestion receives a
+  separate feasibility assessment after read-only query and persistence work;
+  full local writes need a later implementation decision. UI effects integrate
+  these services without moving their policy into the driver.
 - First-class source provenance, shared Classic BIF behavior, and variable-pool
   integration are carried by Level C and RexxScript before becoming independent
   programmes.

@@ -183,8 +183,12 @@ behavior as a separate conditional stage. If local embedding or retrieval
 proves infeasible within reasonable effort, discuss the concrete work then use
 the authorized hosted embedding or hosted query fallback respectively. A full
 local RAG port would also have to replace its current process/WAL worker and
-recovery arrangements. Editable graph and map applications may need databases
-too, but each keeps its own schema and transaction owner behind effects.
+recovery arrangements. Native/hosted RAG retains corpus writes while the
+browser route proves read-only queries and evaluates persistence. Assess
+browser-local ingestion, embedding, review and publication after those stages;
+its implementation needs a separate decision. Editable graph and map
+applications may need databases too, but each keeps its own schema and
+transaction owner behind effects.
 
 Small-LLM answer generation targets both native/hosted and browser-local
 providers behind one application-service contract, separately from query
