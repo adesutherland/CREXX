@@ -10,20 +10,24 @@ unapproved Release 1 baseline.
 ## Vision and boundaries
 
 Keep application state, transitions, commands, and effect decisions in Level G
-components. Let the same application present forms and interactive 2D scenes
-through supported desktop and browser hosts. An RXPP declaration may shorten
-view, layout, and command wiring, but generated code must use the ordinary UI
-contract and leave application behavior with its feature owner. A browser
-version should execute that owner in a matching cREXX WebAssembly runtime where
+components. Develop the GTK desktop, ANSI full-screen terminal and browser
+hosts as parallel projections of the same application contract, stage by stage.
+Let the same application present forms and interactive 2D scenes where supported,
+and choose semantic alternatives or refuse unavailable operations elsewhere.
+An RXPP declaration may shorten view, layout, and command wiring, but generated
+code must use the ordinary UI contract and leave application behavior with its
+feature owner. A browser version should execute that owner in a matching cREXX
+WebAssembly runtime where
 feasible. Browser API access still needs a small host bridge.
 
 The intended examples are an editable UML-like graph and a pan/zoom strategy
 map with selectable units and terrain. They are acceptance workloads, not a
-request to put UML or game rules into the UI library. Terminal hosts may provide
-a documented list or viewport fallback; pixel-equivalent graphics across every
-host are not required. Existing UI contract v0 and the three reference hosts
-must keep working. Public scene, input, ABI, packaging, and target-platform
-choices remain explicit design gates before product implementation.
+request to put UML or game rules into the UI library. ANSI may provide a
+documented list or cell viewport fallback; pixel-equivalent graphics across
+every host are not required. The existing line TUI remains a compatibility host,
+not a second full-screen graphics target. Existing UI contract v0 and all three
+reference hosts must keep working. Public scene, input, ABI, packaging, and
+target-platform choices remain explicit design gates before product implementation.
 
 Sequence the core contract and handwritten consumers first. Extend Peter's
 RXPP façade only after the capabilities it describes have stable semantics and
@@ -59,6 +63,50 @@ proceeds.
   preview demonstrate a matching Worker/runtime cohort. They do not implement
   `uidriver` or qualify this UI library in a browser. THE owns its editor UI;
   this plan can reuse host lessons without making THE an application shell.
+- Existing host capability sets describe service families and are fixed when a
+  v0 session is constructed. Absent effect capabilities already produce a
+  correlated `ui.effect.failed` result. An unsupported widget currently fails
+  its host's render path; this is not yet an application-visible choice of
+  alternative presentation. The 2D contract must close that gap deliberately.
+
+## Parallel host coverage and refusal contract
+
+GTK, ANSI and browser are delivery tracks for each selected application stage.
+The same Level G feature owns transitions and effects; host-specific views may
+differ. A stage is complete only when each track has its stated projection or
+fallback working and explicitly refuses any unavailable optional operation
+with a reason visible to the application and user. The line TUI retains its
+existing widget checks;
+additional line-mode coverage is selected only when a feature needs it.
+
+| Stage | GTK desktop | ANSI full-screen terminal | Browser | Shared check |
+| --- | --- | --- | --- | --- |
+| Forms and dynamic widgets | Native controls and current session routing | Cell controls, keyboard and supported pointer input | Matching cREXX feature through a selected local Wasm or hosted session, with semantic HTML controls | Same command/effect/close transitions; host-specific views and failure paths. |
+| Editable graph | Native 2D projection with keyboard and pointer editing | Semantic node/edge list or bounded cell viewport; edit/connect by stable ID where usable | SVG projection with keyboard and pointer editing | Same graph model, selection and undo history; unsupported gestures refuse explicitly. |
+| Strategy map | Native 2D terrain/unit projection with pan/zoom and selection | Bounded cell viewport and unit/terrain detail/actions where usable | Canvas 2D projection with pan/zoom and selection | Same rules, turns and stale-input handling; unavailable precision or interaction is declared. |
+| Application services | Correlated native or hosted effects | Correlated native or hosted effects | Correlated effects through the selected browser session; hosted RAG first, local database/RAG/inference separate options | Same result and cancellation semantics, with provider and storage limits stated per host. |
+
+Support is declared per operation and required presentation, not inferred from
+the broad `ui.widgets` or `ui.pointer` family. The proposed contract distinguishes
+native presentation, a named semantic fallback, and unsupported. The feature
+or its application composition chooses the alternative view and which commands
+to enable. A driver validates a proposed view or scene before projecting it;
+an unsupported required node, gesture or precision must yield a structured,
+correlated refusal to that application owner, without partial painting, a
+silent no-op or a second authoritative model. The owner can then render a
+fallback or explain why the action is unavailable. Required capability checks
+also happen at session setup, before the first view. Specify the exact refusal
+message/API, retry limit, state and close behavior at the public contract gate;
+the current render errors do not yet supply this behavior.
+
+Capabilities are stable during a v0 session. A later contract may define
+capability-change events for device/context loss; until then, a host must use
+an explicit failure or restart path and preserve the application-owned state.
+Terminal fallbacks need meaningful keyboard commands and readable labels, not
+a promise that freehand dragging or dense graphical maps work in cells. For
+operations with no useful fallback, the application disables or rejects the
+command with a specific reason. Test the successful alternative and its
+refusal path against the same domain transition journal on every host.
 
 ## Options and recommended sequence
 
@@ -156,6 +204,7 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-D02** | For a local query option, prove matching `rxsqlite`/`rxvector` Wasm builds and sidecar identity. Before promising persistence, also prove SQLite VFS, multi-tab/storage behavior, export and recovery. | open; conditional on D01 |
 | **UIX-D03** | Choose browser embedding/generation provider and whether WebGPU is required or optional using a real small model, compatible embedding identity, device/memory inventory, CPU/hosted control and failure policy. | open |
 | **UIX-D04** | Select GPU rendering, vector search and inference independently from representative correctness and cost; do not infer one from another. | open |
+| **UIX-D05** | Define per-operation view/scene support, application-visible preflight/refusal, fallback selection, capability lifetime and host-loss behavior. Prove the API can reject a whole unsupported snapshot without changing feature state or leaving a partial new projection. | open; public core contract gate |
 
 ## Acceptance criteria
 
@@ -163,23 +212,24 @@ unselected until a specific offline product outcome is agreed.
 | --- | --- | --- |
 | **UIX-AC01** | A handwritten Level G feature/session handles equivalent commands, events, effects, dynamic values and close outcomes on two existing hosts, with one authoritative model. Compare independent expected transition journals and views. | open |
 | **UIX-AC02** | Once the core contracts are stable, RXPP generates declarations that reproduce the direct consumer's current dynamic values and routing without a second authoritative model. It rejects malformed/unknown controls, duplicate IDs, inconsistent command definitions and invalid event/binding references with source locations; multiple controls may share one command. Generated code has no named Text Inspector special cases. Inspect representative cREXX/RXAS and run positive/negative and regeneration checks. | open; later authoring increment |
-| **UIX-AC03** | A browser host runs a matching cREXX UI image in one Worker, serializes owner turns, projects current controls, returns normalized input and correlated async outcomes, and closes or fails without leaked authority. Check browser interaction, one bounded synthetic application-service result, cancellation, stale/duplicate messages and Worker restart; no DB/model handle enters a view. | open; target and packaging choice unselected |
-| **UIX-AC04** | A versioned 2D scene contract renders and edits a representative graph: create/move/connect/delete, zoom/pan, selection, keyboard operation, undo/redo and readable semantic alternatives. Check model state, chosen coordinate precision and stable picking under resize and scale. | open; scene API decision required |
-| **UIX-AC05** | A representative strategy map renders terrain and units, supports pan/zoom, selection and turn actions, and keeps rules/state in the feature. Check bounded tiles, clipping/culling, pointer coordinate conversion and stale input; measure before selecting an accelerated renderer. | open |
-| **UIX-AC06** | Unsupported capabilities, malformed assets/messages, context loss, resize, cancellation and setup/teardown failures have explicit behavior; browser resource grants cannot be forged from display text. Run focused host and scene lifecycle/negative checks. | open |
-| **UIX-AC07** | Selected host/renderer has documented build cohort, browser/platform coverage, accessibility limits, package contents and a reproducible consumer route. Complete the agreed integration/milestone QA separately from each development increment. | open; milestone scope unselected |
+| **UIX-AC03** | A browser host runs a matching cREXX feature/session in the selected local Wasm Worker or hosted native route. It serializes owner turns, projects current controls, returns normalized input and correlated async outcomes, and closes or fails without leaked authority. Check browser interaction, one bounded synthetic application-service result, cancellation, stale/duplicate messages and Worker restart or hosted reconnect as applicable; no DB/model handle enters a view. | open; target and packaging choice unselected |
+| **UIX-AC04** | A versioned 2D scene contract edits a representative graph: create/move/connect/delete, zoom/pan, selection, keyboard operation and undo/redo. GTK and browser project the 2D scene; ANSI offers a tested semantic node/edge alternative or refuses a specific unavailable operation. Compare shared model state and check chosen coordinate precision, stable picking under resize/scale and keyboard access. | open; scene API decision required |
+| **UIX-AC05** | A representative strategy map renders terrain and units, supports pan/zoom, selection and turn actions, and keeps rules/state in the feature. GTK and browser provide 2D projections; ANSI supplies a bounded cell viewport and detail/actions where usable, with explicit refusal for unavailable interactions. Compare shared turn/state results; check bounded tiles, clipping/culling, pointer coordinate conversion and stale input on graphical hosts. Measure before selecting an accelerated renderer. | open |
+| **UIX-AC06** | Unsupported view/scene operations are declared at application composition or returned as structured refusals before partial projection, and the feature selects a fallback or a specific rejection. Absent effect capabilities retain correlated failures. Malformed assets/messages, context loss, resize, cancellation and setup/teardown failures have explicit behavior; browser resource grants cannot be forged from display text. Run focused host and scene lifecycle/negative checks. | open |
+| **UIX-AC07** | GTK, ANSI and browser tracks have documented build cohorts, platform/browser coverage, accessibility limits, package contents and reproducible consumer routes for their selected support levels. Complete agreed integration/milestone QA separately from each development increment. | open; milestone scope unselected |
+| **UIX-AC08** | At each forms, graph and map stage, one handwritten Level G feature drives GTK, ANSI and browser. Common actions have matching expected domain transitions and close policy; host-specific capability and effect outcomes are explicit. Record each host's native, semantic fallback or unsupported operations; verify supported paths and one application-visible refusal per stage without claiming visual equivalence. | open; parallel host gate |
 
 ## Stable implementation steps and gates
 
 | ID | Work, dependency and criteria served | Status |
 | --- | --- | --- |
-| **UIX-STEP01** | Trace the direct Text Inspector feature through session, view, commands and effect outcomes on existing hosts. Use handwritten graph/map sketches to identify missing dynamic layout, scene and input contracts; AC01/04–05. | open |
-| **UIX-STEP02** | Agree the core view, scene and normalized input contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Preserve v0 consumers; AC01/04–06. | open; public core contract gate |
-| **UIX-STEP03** | Implement the shared scene owner and bounded graph/map model-first fixtures, then one simple desktop projection. Keep editing, undo and game rules in the feature; AC04–06. Depends on STEP02. | open |
-| **UIX-STEP04** | Select browser packaging, matching UI VM image, an owner-turn API or qualified suspend/resume path for `uidriver.run`, and a bounded Worker/main-thread protocol. Implement a handwritten Text Inspector browser consumer and focused lifecycle/async tests; AC03/06. Keep a separate asynchronous application-service route for later RAG/database/inference effects. Depends on the core host boundary in STEP02; scene rendering may follow. | open; browser host/API gate |
-| **UIX-STEP05** | Add SVG graph and Canvas 2D map projections against the stable scene contract, including browser input and a desktop consumer where feasible. Evaluate culling and measured thresholds before WebGL2; AC04–06. Depends on STEP03–04. | open |
+| **UIX-STEP01** | Trace the direct Text Inspector feature through session, view, commands and effect outcomes on GTK and ANSI, retaining the line TUI regression. Use handwritten graph/map sketches to identify missing dynamic layout, scene, input and fallback contracts; AC01/04–06/08. | open |
+| **UIX-STEP02** | Agree the core view, scene, normalized input and per-operation support/refusal contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Decide D05, preserve v0 consumers and test a rejected whole snapshot and alternative view; AC01/04–06/08. | open; public core contract gate |
+| **UIX-STEP03** | Implement the shared scene owner and bounded graph/map model-first fixtures. Build the initial GTK 2D and ANSI semantic graph projections against the same feature, including keyboard paths and explicit refusals; AC04/06/08. Keep editing, undo and game rules in the feature. Depends on STEP02; may proceed alongside STEP04. | open |
+| **UIX-STEP04** | Select local Wasm or hosted browser session and its packaging, runtime cohort, owner-turn API and bounded bridge or transport protocol. For local Wasm, choose a matching UI VM image and owner-turn/step or qualified suspend/resume route for `uidriver.run`; for hosted use, define authentication and reconnect/revision ownership. Implement a handwritten Text Inspector browser consumer with the same forms-stage transitions and focused lifecycle/async/refusal tests; AC03/06/08. Keep a separate asynchronous application-service route for later RAG/database/inference effects. Depends on STEP02; may proceed alongside STEP03. | open; browser host/API gate |
+| **UIX-STEP05** | Complete the graph stage across GTK 2D, ANSI semantic/cell and browser SVG projections, then the map stage across GTK 2D, ANSI bounded viewport and browser Canvas 2D. At each stage compare the same domain journal, keyboard/input paths and fallback/refusal behavior before moving on. Evaluate culling and measured thresholds before WebGL2; AC04–06/08. Depends on STEP03–04. | open |
 | **UIX-STEP06** | After direct consumers prove the core contract, reconcile the experimental `DEFINE-GUI` macro and its missing graph inputs. Decide its grammar/dynamic-value mapping, generate only layout, typed bindings, command/schema wiring and static routing, and run focused source-map/negative checks; AC01–02. Depends on STEP02–05; Peter may own this increment. | open; later RXPP design gate |
-| **UIX-STEP07** | Qualify selected application/host and generated-authoring combinations, failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–07. Depends on selected preceding steps. | open; milestone/scope gate |
+| **UIX-STEP07** | Qualify selected application/host and generated-authoring combinations across GTK, ANSI and browser, including fallback/refusal, failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–08. Depends on selected preceding steps. | open; milestone/scope gate |
 
 If a browser RAG or local inference outcome is selected, add its own numbered
 delivery criteria in the owning RAG/LLM plan and reference them here. The UI

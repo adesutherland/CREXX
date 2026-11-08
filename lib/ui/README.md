@@ -128,18 +128,21 @@ A builder can generate view/layout, command descriptors, schemas and composition
 Handwritten feature logic stays separate and survives regeneration. It must not
 generate terminal escapes, GTK handles or browser DOM calls into a feature.
 
-## Proposed browser and 2D architecture
+## Proposed GTK, terminal, browser and 2D architecture
 
 The [UI expansion plan](PLAN.md) records options, open decisions and acceptance
 criteria. This section describes the proposed boundary; no browser driver,
-scene API or general graphics renderer is implemented in this library.
+scene API or general graphics renderer is implemented in this library. GTK,
+ANSI full-screen terminal and browser are parallel implementation tracks for
+forms, editable graphs and strategy maps. The line TUI keeps its existing
+compatibility role.
 
 ```text
 Level G feature: model, update(event), view() / proposed scene()
           | semantic commands, messages and effects
 uisession: validation, owner routing, queues, correlation and close
           | view or scene snapshot                 ^ normalized input/outcome
-host adapter: GTK / terminal / proposed browser / proposed scene renderer
+host adapter: GTK / ANSI terminal / proposed browser / proposed scene renderer
           | native widgets, SVG/Canvas, I/O, device and event loop
           + application effects -> RAG / database / inference executors
 ```
@@ -196,6 +199,19 @@ the returned scene. A stale event must not mutate a newer scene. Existing
 establish scene hit testing or rendering behavior. The scene contract must
 select coordinate precision and define CSS/device/world conversion before
 pointer events can drive graph edits or map selection.
+
+The same Level G graph or map feature should drive all three delivery hosts.
+GTK and browser may offer 2D projections; ANSI can expose a labeled node/edge
+list or bounded cell map with keyboard selection and actions. Each operation
+needs a declared native, semantic fallback or unsupported support level. The
+application chooses its alternative view and command availability. A proposed
+preflight/refusal contract must return an unsupported required view or scene to
+the application before partial projection, so the user receives a specific
+reason or a usable fallback. Current v0 effect capability failures already
+reach the feature, but an unsupported view node currently fails the host render
+path; application-visible view refusal remains design work. The [plan](PLAN.md)
+gates this contract and requires equivalent domain transitions across hosts,
+not identical pixels.
 
 An SVG projection is the first candidate for editable UML-like graphs because
 individual shapes can keep stable element identities and text/focus overlays.

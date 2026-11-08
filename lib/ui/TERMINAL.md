@@ -5,6 +5,15 @@ the GTK and line-TUI tracer. It adds a standard confirmation dialog and an
 Open/Save file selector. This is a bounded first terminal UI, not a complete curses
 replacement, debugger frontend, or finished cross-platform GUI toolkit.
 
+The [UI expansion plan](PLAN.md) treats this ANSI host as the full-screen
+terminal track alongside GTK and a proposed browser host. Graph editing may
+use a labeled node/edge list or bounded cell viewport, and a strategy map may
+use a bounded cell viewport with keyboard selection and actions. These are
+planned semantic alternatives, not implemented 2D graphics. The application
+must receive an explicit unsupported result when an operation has no usable
+terminal path; the current view renderer does not yet provide that refusal
+contract.
+
 ## Responsibilities and lifecycle
 
 | Layer | Owns | Does not own |
