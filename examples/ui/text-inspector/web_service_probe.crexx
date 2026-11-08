@@ -1,0 +1,50 @@
+/* Test consumer for application-owned service effects on both browser routes. */
+options levelg
+namespace web_service_probe
+import ui
+import ui_contract
+import ui_web
+
+main: procedure = .int
+  arg arguments = .string[]
+  if arguments[0] < 1 then return 2
+  caps = ui_web..capabilities()
+  call caps.enable("probe.service")
+  session = .uisession(arguments[1], caps)
+  if session.add_component("root", .probe_component()) < 0 then return 3
+  if session.register_event("probe.start") < 0 then return 3
+  if session.register_event("probe.unavailable.start") < 0 then return 3
+  if session.register_event("probe.completed", '{"value":{"type":"string","required":true,"maxLength":64}}', "completion") < 0 then return 3
+  if session.register_effect("probe.fetch", "probe.service", '{"key":{"type":"string","required":true,"maxLength":32}}', "probe.completed") < 0 then return 3
+  if session.register_effect("probe.unavailable.fetch", "probe.unavailable", '{}', "probe.completed") < 0 then return 3
+  if session.register_command(.uicommand("probe.run", "Run", "root", "probe.start", "r")) < 0 then return 3
+  if session.register_command(.uicommand("probe.unsupported", "Unsupported", "root", "probe.unavailable.start", "u")) < 0 then return 3
+  driver = .webdriver()
+  return driver.run(session)
+
+probe_component: class implements .uicomponent
+  _status = .string
+  *: factory
+    _status = "Ready"
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    result = .uieffects()
+    if event.name() = "probe.start" then do
+      request = .uipayload()
+      call request.put_text("key", "alpha")
+      call result.add(.uimessage("probe.fetch", request, event.target(), "effect"))
+    end
+    if event.name() = "probe.unavailable.start" then
+      call result.add(.uimessage("probe.unavailable.fetch", .uipayload(), event.target(), "effect"))
+    if event.name() = "probe.completed" then _status = "Result: " || event.body().text("value")
+    if event.name() = "ui.effect.failed" then _status = "Failed: " || event.body().text("code")
+    if event.name() = "ui.close.requested" then
+      call result.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))
+    return result
+  view: method = .uiview
+    view = .ui..uiview_impl("Service probe")
+    call view.add_label("status", _status, "root")
+    call view.add_button("run", "Run", "probe.run", "r", "below", "status")
+    call view.add_button("unsupported", "Unsupported", "probe.unsupported", "u", "below", "run")
+    return view

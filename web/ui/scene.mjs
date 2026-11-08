@@ -87,17 +87,23 @@ export function renderScene(node, replica, input) {
     const ratio = window.devicePixelRatio || 1;
     element.width = Math.ceil(width * ratio);
     element.height = Math.ceil(height * ratio);
-    const context = element.getContext('2d');
-    context.scale(ratio, ratio);
-    context.clearRect(0, 0, width, height);
-    for (const item of replica.items) {
-      const x = toX(item.x), y = toY(item.y), w = item.w / scale, h = item.h / scale;
-      if (x + w < 0 || y + h < 0 || x > width || y > height) continue;
-      context.fillStyle = item.kind === 'tile' ? '#bed9ad' : '#dcad74';
-      context.fillRect(x, y, w, h);
-      context.strokeStyle = '#40536c'; context.strokeRect(x, y, w, h);
-      context.fillStyle = '#172336'; context.fillText(item.label, x + 4, y + 17);
-    }
+    const draw = () => {
+      const context = element.getContext('2d');
+      if (!context) throw new Error('Map canvas context unavailable');
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, width, height);
+      for (const item of replica.items) {
+        const x = toX(item.x), y = toY(item.y), w = item.w / scale, h = item.h / scale;
+        if (x + w < 0 || y + h < 0 || x > width || y > height) continue;
+        context.fillStyle = item.kind === 'tile' ? '#bed9ad' : '#dcad74';
+        context.fillRect(x, y, w, h);
+        context.strokeStyle = '#40536c'; context.strokeRect(x, y, w, h);
+        context.fillStyle = '#172336'; context.fillText(item.label, x + 4, y + 17);
+      }
+    };
+    element.addEventListener('contextlost', event => event.preventDefault());
+    element.addEventListener('contextrestored', draw);
+    draw();
   } else {
     element.setAttribute('viewBox', `0 0 ${width} ${height}`);
     for (const item of replica.items) {

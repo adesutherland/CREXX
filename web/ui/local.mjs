@@ -14,7 +14,13 @@ export class LocalRoute {
       this.worker.onmessage = ({data}) => {
         if (data.type === 'frame') {
           try { onFrame(data.frame); if (!ready && data.frame.type === 'view') { ready = true; resolve(); } }
-          catch (error) { reject(error); this.stop(); }
+          catch (error) {
+            try {
+              if (ready) onFrame({version: 1, type: 'refusal', session, revision: 0,
+                result: {code: 'invalid_frame', operation: 'browser', message: String(error)}});
+              else reject(error);
+            } finally { this.stop(); }
+          }
         } else if (data.type === 'failure') {
           if (ready) onFrame({version: 1, type: 'refusal', session, revision: 0,
             result: {code: 'host_error', operation: 'browser', message: data.message}});

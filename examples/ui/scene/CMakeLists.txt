@@ -66,6 +66,26 @@ if(UNIX)
     add_custom_target(example_ui_scene_ansi DEPENDS "${_scene_ansi}")
 endif()
 
+install(FILES "${_scene_example}" "${_scene_editors}"
+        "${CMAKE_CURRENT_BINARY_DIR}/graph_web.rxbin"
+        "${CMAKE_CURRENT_BINARY_DIR}/map_web.rxbin"
+        DESTINATION examples/ui/scene)
+set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
+        example_ui_scene example_ui_scene_editor_artifacts)
+if(UNIX)
+    install(FILES "${_scene_ansi}"
+            "${CMAKE_CURRENT_BINARY_DIR}/graph_editor_ansi.rxbin"
+            "${CMAKE_CURRENT_BINARY_DIR}/map_editor_ansi.rxbin"
+            DESTINATION examples/ui/scene)
+    set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
+            example_ui_scene_ansi)
+endif()
+if(ENABLE_GTK)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/graph_editor_gtk.rxbin"
+            "${CMAKE_CURRENT_BINARY_DIR}/map_editor_gtk.rxbin"
+            DESTINATION examples/ui/scene)
+endif()
+
 if(BUILD_TESTING)
     add_custom_target(example_ui_scene_tests)
     crexx_add_rexx_opt_matrix(

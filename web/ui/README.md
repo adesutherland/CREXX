@@ -11,7 +11,7 @@ and a full authoritative snapshot for reconnect and resync.
 ## Build and serve
 
 ~~~sh
-cmake --build cmake-build-ui --target rxvm ui_web text_inspector_web_artifact example_ui_scene_editor_artifacts --parallel 6
+cmake --build cmake-build-ui --target rxvm ui_web text_inspector_web_artifact web_service_probe_artifact example_ui_scene_editor_artifacts --parallel 6
 source /path/to/emsdk/emsdk_env.sh
 emcmake cmake -S ports/ui-web-wasm -B cmake-build-ui-wasm -G Ninja \
   -DCMAKE_BUILD_TYPE=MinSizeRel -DCREXX_GENERATED_DIR="$PWD/cmake-build-ui/generated"
@@ -29,6 +29,22 @@ termination and user authorization outside this development relay. The
 package manifest hashes every copied asset; the hosted process still uses the
 native RXBIN build path.
 
+The selected core development support profile is macOS ARM64 with Chrome 156,
+GTK 3.24 and an ANSI `xterm-256color` terminal. The same site package runs
+local Wasm and hosted native sessions in Chrome; the hosted build can be a
+staged `cmake --install` tree. Linux, Windows, Firefox and Safari are separate
+platform/browser qualification gates. This development relay is loopback only;
+it is not a public deployment profile.
+
+The site package contains its manifest, HTML/JavaScript projection and route
+bridges, the Wasm VM, core UI RXBIN modules and the Text Inspector, graph, map
+and service-probe RXBIN consumers. `test-package.mjs` verifies the complete
+asset list and SHA-256 hashes. The native install tree supplies the VM, GTK
+provider, UI modules and GTK/ANSI/Web example RXBINs. The service probe
+exercises a registered application effect and a missing-capability result
+through both browser routes. Hosted sessions are released on close/stop and
+expire after 30 seconds without polling.
+
 The browser profile supports labels, lines, buttons and one scene per session.
 Text Inspector admits text files up to 128 KiB. A Worker restart creates a new
 session epoch; a hosted reconnect replays the last full view. Unsupported
@@ -36,11 +52,21 @@ controls return a typed refusal. Scene input carries its epoch and revision;
 stale input cannot mutate a newer scene. The local Worker has no dynamic
 plugins or ambient filesystem access.
 
+Forms use native GTK widgets, ANSI cell controls or semantic HTML buttons and
+labels. Browser graph/map scenes are focusable with keyboard actions and a
+scene-level accessible name; individual objects and map cells do not yet have
+screen-reader navigation or editable accessibility semantics. GTK scenes have
+the same item-level limitation. ANSI graph lists and the bounded map cell
+viewport are semantic alternatives, with unavailable pointer operations
+reported explicitly. These are the accessibility limits of this profile.
+
 ## Focused checks
 
 ~~~sh
 node web/ui/test-protocol.mjs cmake-build-ui
 node web/ui/test-scene.mjs
+node web/ui/test-hosted.mjs
+node web/ui/test-package.mjs cmake-build-ui-web-site
 CREXX_PLAYWRIGHT=/path/to/playwright/index.mjs \
   CREXX_CHROME=/path/to/chrome \
   CREXX_UI_TOKEN=your-private-token-at-least-16-characters \
@@ -48,5 +74,6 @@ CREXX_PLAYWRIGHT=/path/to/playwright/index.mjs \
 ~~~
 
 The browser check covers both routes' forms, graph and map interactions,
-file selection, close, Worker restart and hosted reconnect. Supported browser
-and platform qualification belongs to STEP07 of the [UI plan](../../lib/ui/PLAN.md).
+application-service results and capability refusal, file selection, close,
+Worker restart, hosted reconnect and authentication. The selected support
+profile and later platform gates are in the [UI plan](../../lib/ui/PLAN.md).

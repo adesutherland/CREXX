@@ -13,9 +13,10 @@ const wasm = resolve(process.argv[3]);
 const output = resolve(process.argv[4]);
 const source = fileURLToPath(new URL('.', import.meta.url));
 const names = ['library', 'ui', 'ui_catalog', 'ui_contract', 'ui_scene', 'ui_web',
-  'text_inspector', 'text_inspector_web', 'scene_editors', 'graph_web', 'map_web'];
+  'text_inspector', 'text_inspector_web', 'web_service_probe',
+  'scene_editors', 'graph_web', 'map_web'];
 const assets = [];
-for (const name of names) assets.push({source: name.startsWith('text_') ?
+for (const name of names) assets.push({source: name.startsWith('text_') || name === 'web_service_probe' ?
   join(native, 'examples/ui/text-inspector', `${name}.rxbin`) :
   ['scene_editors', 'graph_web', 'map_web'].includes(name) ?
   join(native, 'examples/ui/scene', `${name}.rxbin`) :

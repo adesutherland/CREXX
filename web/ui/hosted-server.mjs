@@ -16,8 +16,9 @@ const applications = {
   text: ['text_inspector_web', 'text_inspector'],
   graph: ['graph_web', 'scene_editors'],
   map: ['map_web', 'scene_editors'],
+  probe: ['web_service_probe'],
 };
-const image = name => join(build, name.startsWith('text_') ?
+const image = name => join(build, name.startsWith('text_') || name === 'web_service_probe' ?
   'examples/ui/text-inspector' : ['graph_web', 'map_web', 'scene_editors'].includes(name) ?
   'examples/ui/scene' : 'bin', `${name}.rxbin`);
 const sessions = new Map();
@@ -48,7 +49,8 @@ function createSession(app) {
   const id = `hosted-${randomUUID()}`;
   const process = spawn(vm, [...applications[app], ...common].map(image).concat('-a', id),
     {stdio: ['pipe', 'pipe', 'pipe']});
-  const session = {id, process, frames: [], sequence: 0, latest: null, ended: false};
+  const session = {id, process, frames: [], sequence: 0, latest: null,
+    ended: false, lastTouched: Date.now()};
   sessions.set(id, session);
   const decoder = new StringDecoder('utf8');
   let pending = '';
@@ -106,7 +108,13 @@ const server = createServer(async (request, response) => {
     const match = /^\/api\/sessions\/([a-z0-9-]+)(\/input)?$/.exec(url.pathname);
     const session = match && sessions.get(match[1]);
     if (!session) return reply(response, 404, {error: 'Unknown session'});
+    if (request.method === 'DELETE' && !match[2]) {
+      sessions.delete(session.id);
+      if (!session.ended) session.process.kill();
+      return reply(response, 200, {closed: true});
+    }
     if (request.method === 'GET' && !match[2]) {
+      session.lastTouched = Date.now();
       const after = Number(url.searchParams.get('after') ?? 0);
       if (!Number.isSafeInteger(after) || after < 0) return reply(response, 400, {error: 'Invalid cursor'});
       const old = session.frames.length && after < session.frames[0].sequence - 1;
@@ -116,6 +124,7 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === 'POST' && match[2]) {
       if (session.ended) return reply(response, 410, {error: 'Session ended'});
+      session.lastTouched = Date.now();
       const input = await body(request);
       if (input.version !== 1 || input.session !== session.id ||
           !Number.isSafeInteger(input.base) || input.base < 0)
@@ -127,6 +136,14 @@ const server = createServer(async (request, response) => {
   } catch (error) { return reply(response, 400, {error: String(error)}); }
 });
 server.listen(Number(process.env.CREXX_UI_PORT ?? 8787), '127.0.0.1');
+setInterval(() => {
+  const now = Date.now();
+  for (const session of sessions.values()) {
+    if (session.ended || now - session.lastTouched <= 30000) continue;
+    sessions.delete(session.id);
+    session.process.kill();
+  }
+}, 5000).unref();
 function shutdown() {
   for (const session of sessions.values()) session.process.kill();
   server.close();

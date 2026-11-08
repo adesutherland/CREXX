@@ -161,6 +161,17 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_web.rxbin"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
 add_custom_target(text_inspector_web_artifact
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_web.rxbin")
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/web_service_probe.rxbin"
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import
+                -i "${CMAKE_CURRENT_BINARY_DIR}" -i "${CMAKE_BINARY_DIR}/bin"
+                -o web_service_probe "${CMAKE_CURRENT_SOURCE_DIR}/web_service_probe.crexx"
+        COMMAND $<TARGET_FILE:rxas> -o web_service_probe web_service_probe
+        DEPENDS rxc rxas compiler_exit_bin ui_web ui_contract ui
+                "${CMAKE_CURRENT_SOURCE_DIR}/web_service_probe.crexx"
+        BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/web_service_probe.rxas"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+add_custom_target(web_service_probe_artifact
+        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/web_service_probe.rxbin")
 if(BUILD_TESTING)
     add_custom_target(text_inspector_gui_macro_tests)
     add_test(NAME text_inspector_gui_macro_validation
@@ -224,6 +235,11 @@ if(BUILD_TESTING)
             FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     find_program(CREXX_UI_NODE_EXECUTABLE NAMES node)
     if(CREXX_UI_NODE_EXECUTABLE)
+        add_test(NAME text_inspector_web_hosted_lifecycle
+                COMMAND "${CREXX_UI_NODE_EXECUTABLE}"
+                        "${CMAKE_SOURCE_DIR}/web/ui/test-hosted.mjs")
+        set_tests_properties(text_inspector_web_hosted_lifecycle PROPERTIES TIMEOUT 30
+                LABELS "examples;ui;browser;effects;contract")
         add_test(NAME text_inspector_web_protocol
                 COMMAND "${CREXX_UI_NODE_EXECUTABLE}"
                         "${CMAKE_SOURCE_DIR}/web/ui/test-protocol.mjs" "${CMAKE_BINARY_DIR}")
@@ -416,6 +432,7 @@ install(FILES
         "${_text_inspector_tui}"
         "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_ansi.rxbin"
         "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_web.rxbin"
+        "${CMAKE_CURRENT_BINARY_DIR}/web_service_probe.rxbin"
         "${_text_inspector_gui_module}"
         "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_gui_macro_ansi.rxbin"
         DESTINATION examples/ui/text-inspector)
@@ -428,7 +445,7 @@ endif()
 crexx_finalize_directory_qa_tiers()
 
 set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
-    text_inspector_module_artifact text_inspector_tui_artifact text_inspector_ansi_artifact text_inspector_web_artifact
+    text_inspector_module_artifact text_inspector_tui_artifact text_inspector_ansi_artifact text_inspector_web_artifact web_service_probe_artifact
     text_inspector_gui_macro_artifact text_inspector_gui_macro_ansi_artifact)
 if(ENABLE_GTK)
     set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS

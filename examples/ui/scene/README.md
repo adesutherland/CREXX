@@ -27,3 +27,10 @@ ctest --test-dir cmake-build-ui -R '^ui_scene_(editors|editors_gtk|editors_ansi_
 The earlier scene_examples.crexx fixture remains a small contract example,
 including a GTK application-visible refusal and full resync probe. See the
 [UI plan](../../../lib/ui/PLAN.md) for acceptance criteria and later gates.
+
+`cmake --build cmake-build-ui --target stage-product` prepares the selected
+native install. `cmake --install cmake-build-ui --prefix <destination>` places
+`scene_editors.rxbin`, both web launchers, the graph ANSI fixture and the
+graph/map ANSI and GTK launchers in `examples/ui/scene/` alongside the shared
+UI modules and host providers under `bin/`. Browser packaging is described in
+the [browser route guide](../../../web/ui/README.md).

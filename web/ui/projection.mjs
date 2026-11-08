@@ -51,6 +51,7 @@ export class BrowserUI {
       this.files.clear();
       this.seenEffects.clear();
       this.root.replaceChildren();
+      void this.route.stop();
     } else if (frame.type === 'refusal') {
       this.root.dispatchEvent(new CustomEvent('ui-refusal', {detail: frame.result}));
     } else throw new Error('Unknown UI frame');

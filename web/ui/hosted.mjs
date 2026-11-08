@@ -1,4 +1,5 @@
 /* Authenticated hosted relay. Reconnect fetches a full authoritative view. */
+class ProjectionFailure extends Error {}
 export class HostedRoute {
   constructor(token, base = '', app = 'text') {
     this.token = token;
@@ -22,7 +23,8 @@ export class HostedRoute {
     this.session = created.session;
     this.cursor = 0;
     this.stopped = false;
-    await this.pollUntilView();
+    try { await this.pollUntilView(); }
+    catch (error) { await this.stop(); throw error; }
     this.loop();
   }
   async pollUntilView() {
@@ -38,16 +40,32 @@ export class HostedRoute {
     const frames = result.frames.map(entry => entry.frame);
     for (const entry of result.frames) {
       this.cursor = Math.max(this.cursor, entry.sequence);
-      this.onFrame(entry.frame);
+      try { this.onFrame(entry.frame); }
+      catch (error) { throw new ProjectionFailure(String(error)); }
       if (entry.frame.type === 'closed') this.stopped = true;
     }
     return frames;
   }
   async loop() {
+    let failures = 0;
     while (!this.stopped) {
-      try { await this.poll(); }
-      catch (error) { this.onFrame({version: 1, type: 'refusal', session: this.session,
-        revision: 0, result: {code: 'transport', operation: 'browser', message: String(error)}}); }
+      try { await this.poll(); failures = 0; }
+      catch (error) {
+        if (this.stopped) break;
+        if (error instanceof ProjectionFailure) {
+          try { this.onFrame({version: 1, type: 'refusal', session: this.session,
+            revision: 0, result: {code: 'invalid_frame', operation: 'browser', message: String(error)}}); }
+          finally { await this.stop(); }
+          break;
+        }
+        failures++;
+        if (failures >= 3) {
+          try { this.onFrame({version: 1, type: 'refusal', session: this.session,
+            revision: 0, result: {code: 'transport', operation: 'browser', message: String(error)}}); }
+          finally { await this.stop(); }
+          break;
+        }
+      }
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
@@ -59,5 +77,14 @@ export class HostedRoute {
     this.cursor = 0;
     await this.pollUntilView();
   }
-  stop() { this.stopped = true; }
+  async stop() {
+    if (this.stopped && !this.session) return;
+    this.stopped = true;
+    const session = this.session;
+    this.session = '';
+    if (session) {
+      try { await this.request(`/api/sessions/${encodeURIComponent(session)}`, {method: 'DELETE'}); }
+      catch { /* the server lease also expires an abandoned session */ }
+    }
+  }
 }

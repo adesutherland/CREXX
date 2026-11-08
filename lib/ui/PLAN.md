@@ -1,8 +1,7 @@
 # UI architecture and capability expansion
 
-Status: STEP01–06 development increments done; core milestone QA remains.
-Initiative acceptance criteria remain open until STEP07 verifies the selected
-core scope.
+Status: STEP01–07 done for the selected macOS ARM64 development profile;
+AC01–08 verified in that profile. AC09–15 and public delivery gates remain open.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not change that baseline.
@@ -50,7 +49,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP04** Browser forms | STEP02; parallel with STEP03 | Build one browser projection and local/hosted adapters (D07); prove handwritten Text Inspector forms, owner turns, one async effect, restart and reconnect. | AC03, AC06, AC08 | done |
 | **UIX-STEP05** Graph then map | STEP03–04 | Complete graph then map on GTK, ANSI and both browser routes; compare domain journals and scene lifecycle at each stage, measuring before acceleration. | AC04–06, AC08 | done |
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | done |
-| **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | todo |
+| **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | done |
 | **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Add `rag.query`, the hosted adapter and local transient read-only proof; compare cited evidence and compatible embeddings under D01–03. | AC09–10 | todo |
 | **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
 | **UIX-STEP10** RAG cache | STEP08 transient local query proof | Prove D13 OPFS cache identity, reload, export/re-import, quota/eviction, multi-tab and cleanup, or record the conditional transient fallback. | AC12 | todo |
@@ -73,14 +72,14 @@ sanitizer and delivery QA belong to named milestones under repository policy.
 
 | ID | Observable pass condition and verification | Status |
 | --- | --- | --- |
-| **UIX-AC01** | A handwritten Level G feature/session handles equivalent commands, events, effects, dynamic values and close outcomes on two existing hosts, with one authoritative model. Compare independent expected transition journals and views. | open |
-| **UIX-AC02** | Once the core contracts are stable, RXPP generates declarations that reproduce the direct consumer's current dynamic values and routing without a second authoritative model. It rejects malformed/unknown controls, duplicate IDs, inconsistent command definitions and invalid event/binding references with source locations; multiple controls may share one command. Generated code has no named Text Inspector special cases. Inspect representative cREXX/RXAS and run positive/negative and regeneration checks. | open; later authoring increment |
-| **UIX-AC03** | Both a matching local Wasm Worker and hosted native session run the same cREXX feature behind one browser projection and versioned view/input/effect envelope. Each serializes owner turns, projects current controls, returns normalized input and correlated async outcomes, and closes or fails without leaked authority. Check both routes against the same browser interactions and one bounded synthetic application-service result; check cancellation and stale/duplicate messages, Worker restart, and hosted authentication/reconnect/revision handling. No DB/model handle enters a view. | open; route implementation and packaging unproved |
-| **UIX-AC04** | A versioned 2D scene contract edits a representative graph: create/move/connect/delete, zoom/pan, selection, keyboard operation and undo/redo. GTK 3 drawing area and browser SVG through both routes project initial snapshot and atomic deltas; ANSI offers a tested semantic node/edge alternative or refuses a specific unavailable operation. Compare shared model state and check fixed-point precision, overflow refusal, stable picking under resize/scale, resync and keyboard access. | open; scene API decision required |
-| **UIX-AC05** | A representative strategy map renders terrain and units, supports pan/zoom, selection and turn actions, and keeps rules/state in the feature. GTK 3 drawing area and browser Canvas 2D through both routes project bounded deltas; ANSI supplies a bounded cell viewport and detail/actions where usable, with explicit refusal for unavailable interactions. Compare shared turn/state results; check bounded tiles, clipping/culling, pointer coordinate conversion, stale input and full resync on graphical hosts. Measure before selecting an accelerated renderer. | open |
-| **UIX-AC06** | Unsupported view/scene operations are declared at application composition or returned as structured refusals before partial projection, and the feature selects a fallback or a specific rejection. Scene deltas validate and commit atomically; gaps, conflicting duplicates, invalid changes and route restart trigger full resync, while stale scene input is refused and retries are bounded. Absent effect capabilities retain correlated failures. Malformed assets/messages, context loss, resize, cancellation and setup/teardown failures have explicit behavior; browser resource grants cannot be forged from display text. Run focused host and scene lifecycle/negative checks. | open |
-| **UIX-AC07** | GTK, ANSI and both browser routes have documented build cohorts, platform/browser coverage, accessibility limits, package contents and reproducible consumer routes for their selected support levels. Complete agreed integration/milestone QA separately from each development increment. | open; milestone scope unselected |
-| **UIX-AC08** | At each forms, graph and map stage, one handwritten Level G feature drives GTK, ANSI and both browser routes. Common actions have matching expected domain transitions and close policy; host-specific capability and effect outcomes are explicit. Record each host's native, semantic fallback or unsupported operations; verify supported paths and a representative application-visible refusal on each route without claiming visual equivalence. | open; parallel host gate |
+| **UIX-AC01** | A handwritten Level G feature/session handles equivalent commands, events, effects, dynamic values and close outcomes on two existing hosts, with one authoritative model. Compare independent expected transition journals and views. | verified in selected macOS ARM64 profile |
+| **UIX-AC02** | Once the core contracts are stable, RXPP generates declarations that reproduce the direct consumer's current dynamic values and routing without a second authoritative model. It rejects malformed/unknown controls, duplicate IDs, inconsistent command definitions and invalid event/binding references with source locations; multiple controls may share one command. Generated code has no named Text Inspector special cases. Inspect representative cREXX/RXAS and run positive/negative and regeneration checks. | verified in selected macOS ARM64 profile |
+| **UIX-AC03** | Both a matching local Wasm Worker and hosted native session run the same cREXX feature behind one browser projection and versioned view/input/effect envelope. Each serializes owner turns, projects current controls, returns normalized input and correlated async outcomes, and closes or fails without leaked authority. Check both routes against the same browser interactions and one bounded synthetic application-service result; check cancellation and stale/duplicate messages, Worker restart, and hosted authentication/reconnect/revision handling. No DB/model handle enters a view. | verified in selected macOS ARM64 profile |
+| **UIX-AC04** | A versioned 2D scene contract edits a representative graph: create/move/connect/delete, zoom/pan, selection, keyboard operation and undo/redo. GTK 3 drawing area and browser SVG through both routes project initial snapshot and atomic deltas; ANSI offers a tested semantic node/edge alternative or refuses a specific unavailable operation. Compare shared model state and check fixed-point precision, overflow refusal, stable picking under resize/scale, resync and keyboard access. | verified in selected macOS ARM64 profile |
+| **UIX-AC05** | A representative strategy map renders terrain and units, supports pan/zoom, selection and turn actions, and keeps rules/state in the feature. GTK 3 drawing area and browser Canvas 2D through both routes project bounded deltas; ANSI supplies a bounded cell viewport and detail/actions where usable, with explicit refusal for unavailable interactions. Compare shared turn/state results; check bounded tiles, clipping/culling, pointer coordinate conversion, stale input and full resync on graphical hosts. Measure before selecting an accelerated renderer. | verified in selected macOS ARM64 profile |
+| **UIX-AC06** | Unsupported view/scene operations are declared at application composition or returned as structured refusals before partial projection, and the feature selects a fallback or a specific rejection. Scene deltas validate and commit atomically; gaps, conflicting duplicates, invalid changes and route restart trigger full resync, while stale scene input is refused and retries are bounded. Absent effect capabilities retain correlated failures. Malformed assets/messages, context loss, resize, cancellation and setup/teardown failures have explicit behavior; browser resource grants cannot be forged from display text. Run focused host and scene lifecycle/negative checks. | verified in selected macOS ARM64 profile |
+| **UIX-AC07** | GTK, ANSI and both browser routes have documented build cohorts, platform/browser coverage, accessibility limits, package contents and reproducible consumer routes for their selected support levels. Complete agreed integration/milestone QA separately from each development increment. | verified in selected macOS ARM64 profile |
+| **UIX-AC08** | At each forms, graph and map stage, one handwritten Level G feature drives GTK, ANSI and both browser routes. Common actions have matching expected domain transitions and close policy; host-specific capability and effect outcomes are explicit. Record each host's native, semantic fallback or unsupported operations; verify supported paths and a representative application-visible refusal on each route without claiming visual equivalence. | verified in selected macOS ARM64 profile |
 | **UIX-AC09** | A browser feature issues the same bounded `rag.query` effect through hosted and targeted local read-only executors and receives cited results with corpus/evidence identity, compatible query embedding, cancellation and stale-result handling. Compare representative lexical/vector/graph evidence with native RAG. If local feasibility is later declined under D01–02, document the concrete blocker and agreed effort judgment; hosted cited-query acceptance remains required. | open; conditional local route |
 | **UIX-AC10** | The same query-embedding request/result contract supports hosted and targeted browser-local compatible models. For a representative corpus profile, verify model/input identity, dimensions, vector compatibility, cancellation, provider failure and privacy route; compare resulting cited retrieval to the native control. If local model support is later declined under D03, record the blocker and agreed effort judgment; hosted embedding remains required. | open; conditional local embedding route |
 | **UIX-AC11** | The same application-service generation request/result contract supports native/hosted and targeted browser-local small-LLM providers, independently of query embedding and UI rendering. Verify bounded input/output or streaming, model identity, privacy route, cancellation, stale completion, provider/device failure and application-owned result policy. For cited RAG answers, preserve the owning RAG evidence and citation validation. If local generation is later declined under D12, record the concrete blocker and agreed effort judgment; native/hosted generation remains required. | open; conditional local generation route |
@@ -135,12 +134,11 @@ which route must still pass after any agreed fallback.
   CMake builds GTK/ANSI generated launchers, while `rxBuild` retains the
   independently runnable graph recipe after its missing inputs were restored.
 - CREXX's single-threaded Emscripten profile and THE's separate browser
-  preview establish useful Worker/runtime precedent. THE owns its editor UI;
-  neither it nor the current cREXX profile supplies this library's browser
-  `uidriver`. Existing host capabilities are broad service families fixed at
-  session construction. An absent effect yields correlated `ui.effect.failed`,
-  while an unsupported widget currently fails rendering. STEP02 must make the
-  latter application-visible before general scenes use it.
+  preview provided Worker/runtime precedent. THE owns its editor UI. STEP04
+  supplies this library's own browser `uidriver`. Host capabilities remain
+  fixed at session construction. An absent effect yields correlated
+  `ui.effect.failed`; unsupported views yield application-visible
+  `ui.view.refused` before partial projection.
 
 #### STEP01 control and gap inventory
 
@@ -198,6 +196,15 @@ routes at each selected stage. Their presentation may differ:
 | Editable graph | Drawing area/Cairo with keyboard and pointer editing. | Node/edge list or bounded cell viewport with stable-ID actions. | SVG plus HTML text/focus controls. |
 | Strategy map | Drawing area/Cairo terrain and units. | Bounded cell viewport, detail and turn actions. | Canvas 2D terrain/units with pan, zoom and selection. |
 
+STEP07's selected development profile is macOS ARM64, GTK 3.24, ANSI
+`xterm-256color`, and Chrome 156 for both browser routes. Its native install
+contains the UI modules, GTK provider and form/graph/map example images; the
+browser package has a hashed Wasm VM, projection/route assets and the same
+consumer images. [Browser delivery](../../web/ui/README.md) records the package
+and accessibility limits. Linux, Windows, Firefox and Safari require separate
+platform/browser qualification before support claims. This profile does not
+freeze the public scene/input ABI or change Release 1 delivery gates.
+
 D05–06 govern host support. Composition sees precise widget, scene, input and
 limit support beyond broad `ui.widgets` or `ui.pointer` families; the feature
 enables commands and selects alternatives. Before projecting a complete view
@@ -205,10 +212,9 @@ or scene, the host validates required operations.
 Unexpected refusal leaves the last valid frame and returns a typed outcome to
 the feature. Support stays fixed during a session. A host may recover internally
 while preserving its advertised semantics; otherwise it reports host loss and
-a new session starts from application-owned saved state. Exact APIs, bounds and
-snapshot handoff remain STEP02 gates. ANSI fallbacks need usable keyboard
-commands and labels; unavailable gestures receive a specific application
-refusal. The line TUI retains its existing checks and gains coverage only when
+a new session starts from application-owned saved state. ANSI fallbacks need
+usable keyboard commands and labels; unavailable gestures receive a specific
+application refusal. The line TUI retains its existing checks and gains coverage only when
 an application needs a line-mode operation. The catalogue's
 `ui.capabilities.changed` remains future vocabulary; the first extension keeps
 capabilities fixed for each session.
@@ -222,8 +228,8 @@ route keeps the native session on a server and uses an authenticated transport.
 Both routes serialize owner turns and share browser semantics. Worker restart
 and hosted reconnect have distinct transport recovery checks. Wasm geometry or
 painting through Canvas/WebGL remains an optional optimization after the
-semantic projection works. STEP04 must select an owner-turn/step or qualified
-suspend/resume path for local `uidriver.run`.
+semantic projection works. The local Worker uses Asyncify only for suspended
+stdin reads between serialized owner turns.
 
 #### STEP04 browser form implementation contract
 
@@ -312,9 +318,8 @@ existing `node_value()` method, preserving the v0 `uiview` interface. The GTK
 driver validates packets in its Level G replica, then paints bounded primitives
 through a GTK 3 drawing area/Cairo. A feature receiving an ANSI operation
 profile builds a semantic node/edge list and stable-ID commands using existing
-controls. Both use the same feature transitions. This step proves a bounded
-graph fixture and a small map state fixture; full graph gestures/undo and map
-rendering across all hosts remain STEP05.
+controls. Both use the same feature transitions. STEP03 proves bounded
+fixtures; STEP05 adds graph gestures/undo and map rendering across all hosts.
 
 The GTK drawing-area renderer uses full repaint after an accepted
 delta. It keeps a native copy only of approved drawing primitives, no domain
