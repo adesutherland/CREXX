@@ -43,7 +43,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 
 | Step | Depends on | Deliverable | Criteria | Status |
 | --- | --- | --- | --- | --- |
-| **UIX-STEP01** Baseline | — | Trace handwritten Text Inspector through GTK/ANSI, retain the line regression, and sketch graph/map gaps with independent transition expectations. | AC01, AC04–06, AC08 | todo |
+| **UIX-STEP01** Baseline | — | Trace handwritten Text Inspector through GTK/ANSI, retain the line regression, and sketch graph/map gaps with independent transition expectations. | AC01, AC04–06, AC08 | done |
 | **UIX-STEP02** Core contracts | STEP01 | Freeze direct-consumer view, scene, input and support contracts (D05–06, D08–10); preserve v0 and prove refusal, delta/resync and representative RXAS. | AC01, AC04–06, AC08 | todo |
 | **UIX-STEP03** GTK/ANSI scene | STEP02; parallel with STEP04 | Build the Level G scene owner and bounded graph/map fixtures, then GTK/ANSI graph projections with keyboard, delta/resync and refusal checks. | AC04–06, AC08 | todo |
 | **UIX-STEP04** Browser forms | STEP02; parallel with STEP03 | Build one browser projection and local/hosted adapters (D07); prove handwritten Text Inspector forms, owner turns, one async effect, restart and reconnect. | AC03, AC06, AC08 | todo |
@@ -147,6 +147,44 @@ which route must still pass after any agreed fallback.
   session construction. An absent effect yields correlated `ui.effect.failed`,
   while an unsupported widget currently fails rendering. STEP02 must make the
   latter application-visible before general scenes use it.
+
+#### STEP01 control and gap inventory
+
+The handwritten `text_inspector_component` owns the five display values and
+reduces semantic messages. `make_text_inspector_session` registers its commands
+and schemas once. The line and GTK drivers consume that session through
+`uidriver.run`; ANSI consumes the same factory and `uiview` without an alternate
+feature. The test-only `driver_probe` observes the feature's event journal; it
+does not implement its policy. The existing scripted line regression remains
+the deterministic input control, while the GTK signal and ANSI PTY checks cover
+their respective host boundaries.
+
+Independent expected transitions for the common form scenario:
+
+| Input or outcome | Expected feature state and next work |
+| --- | --- |
+| Ready | Empty path, zero counts, ready status. |
+| Open, then selected two-record fixture | Chooser request, then read request; path is the grant's display name; counts become 2 lines, 5 words and 26 Unicode scalar values. |
+| Clear, then cancel | Counts and path retained; status says clear cancelled. |
+| Clear, then accept | Path and counts reset. |
+| Open, then cancel | No read request; status says open cancelled. |
+| First close request in the host probe | Veto: no close effect and no `ui.closed`. |
+| Second close request | `ui.close` effect, native cleanup, then `ui.closed`. |
+
+The graph consumer needs stable object IDs, world geometry, edges, selection,
+viewport and undo that the flat `uiview` cannot express. The map consumer also
+needs separate tile IDs, bounded terrain/unit updates, culling and turn actions.
+Neither consumer should encode its domain records in the UI catalogue. Both
+need a scene snapshot/delta boundary, normalized pointer/keyboard input and
+operation-level host support before graphical and semantic hosts can share the
+same feature. These are STEP02 contract obligations; graph/map state and
+transition fixtures belong to STEP03, not this baseline.
+
+Peter's ISPF-style menu prototype is an application/form dialect over GTK.
+René's requested panel selection, variable exchange and table output are useful
+consumer cases for the generic form controls and application-owned effects.
+ISPF-specific variable-pool and panel conventions belong in a later adapter;
+they do not define the core UI model or scene protocol.
 
 ### Ownership, host coverage and failure
 
