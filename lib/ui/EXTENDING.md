@@ -78,6 +78,13 @@ behavior across its selected hosts. The [UI expansion plan](PLAN.md) holds the
 multi-application extension and versioning proof before its public contract is
 frozen.
 
+For distribution, each application gets a versioned package declaration. It
+will name the entry composition, compatible UI contract, required/optional
+operations, dependencies and assets. Build native and browser variants as
+needed, and preflight declared requirements before starting a session. The
+format and installer are pending implementation; runtime hot loading is a
+separate gate.
+
 ## Add a driver: Peter's checklist
 
 - Implement `uidriver.run(session)` and a namespace-level `capabilities()`.

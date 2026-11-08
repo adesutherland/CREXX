@@ -991,6 +991,9 @@ prototype has been qualified by this roadmap update.
   The shared registered-effect lifecycle supports separately authored
   applications; each team owns its repository, schema evolution, transactions
   and local/hosted storage policy without adding a global graph/map data model.
+  Applications target versioned package declarations with contract, capability
+  and dependency preflight; native and browser artifacts may be assembled
+  differently. Runtime hot loading remains a separate proof.
   RAG queries target hosted and browser-local read-only routes through one
   application effect, with hosted-only fallback if local implementation proves
   infeasible within an effort judgment discussed after implementation evidence.

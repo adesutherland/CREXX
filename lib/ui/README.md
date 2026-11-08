@@ -156,6 +156,12 @@ Graph and map features are independent example consumers, not a common domain
 schema. An application-only service does not require a UI-core or global
 catalogue edit; exact cross-route compatibility rules remain a design gate in
 the [UI expansion plan](PLAN.md).
+The selected delivery direction gives each application a versioned package
+declaration for its entry composition, UI contract compatibility, required and
+optional operations, dependencies and assets. Native and browser assemblies
+may differ; each must check the declaration before starting a session. This
+package format and its build/install proof are planned, not implemented.
+Runtime loading of new applications into an active host is a separate choice.
 
 The browser track implements two routes in parallel: a local Emscripten Worker
 and a hosted native cREXX session. Both run the same feature and use one
