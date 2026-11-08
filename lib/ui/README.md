@@ -194,11 +194,13 @@ For 2D work, add a semantic scene beside the current flat widget view only
 after defining its public contract. The candidate scene contains stable IDs,
 bounded geometry, layers and z-order, world coordinates, a viewport transform,
 style and accessible labels. Application features retain graph/map objects,
-selection, edit transactions, undo/redo and strategy rules. One reusable scene
-owner should resolve picking and scene revisions; drivers translate physical
-pointer, keyboard and touch input into its coordinate/event contract and paint
-the returned scene. A stale event must not mutate a newer scene. Existing
-`ui.pointer`, viewport and gesture names are vocabulary only; they do not yet
+selection, edit transactions, undo/redo and strategy rules. The approved design
+places world geometry, picking and scene revisions in one reusable Level G owner;
+drivers translate physical pointer, keyboard and touch input into logical
+viewport units and paint the returned scene. The ANSI renderer keeps its own
+cell/control hit areas and uses stable IDs for semantic graph/map actions. A
+stale event must not mutate a newer scene. Existing `ui.pointer`, viewport and
+gesture names are vocabulary only; they do not yet
 establish scene hit testing or rendering behavior. The scene contract must
 select coordinate precision and define CSS/device/world conversion before
 pointer events can drive graph edits or map selection.

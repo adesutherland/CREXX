@@ -140,12 +140,15 @@ The application owns graph nodes/edges, map cells/units, selection, edit
 transactions, undo/redo and game rules. A proposed reusable scene contract
 would own stable element IDs, bounded geometry, z-order, world coordinates,
 viewport transform, style and semantic labels. The host owns painting, physical
-input, device-pixel conversion and browser/native resources. Define whether
-shared scene hit testing lives in Level G or a single reusable lower-level
-module; drivers must not each invent application picking rules. Stable IDs and
-scene revision must make stale pointer events rejectable. Start with bounded
-full snapshots and profile a real graph/map before choosing deltas or binary
-transfer. No scene API shape is approved by this planning record.
+input, device-pixel conversion and browser/native resources. One reusable
+Level G scene module owns world geometry, transforms and scene-object hit
+testing across GTK and both browser routes. Hosts convert physical input into
+declared logical viewport units; ANSI retains its own displayed cell/control
+hit areas and can address semantic objects by stable ID. This does not move
+graph editing or game rules out of the application. Stable IDs and scene
+revision must make stale pointer events rejectable. Bounded full snapshots
+remain a candidate; choose the scene data contract before product edits and
+profile a real graph/map before choosing deltas or binary transfer.
 
 ## Browser data, retrieval and compute options
 
@@ -220,7 +223,8 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-D05** | Approved direction: precise host support at composition plus complete-view/scene preflight, application-owned fallback and command availability, and typed correlated refusal that preserves the last valid frame with bounded retry. Specify the exact API and prove refusal leaves no partial new projection or additional feature state mutation. | direction approved; API/proof open |
 | **UIX-D06** | Approved direction: support is fixed for a session. Hosts may recover internally while preserving advertised semantics; otherwise report typed host loss and recompose a new session from application-owned saved model state. Specify failure, in-flight work, snapshot and restart APIs and prove state continuity before promising automatic recovery. | direction approved; API/proof open |
 | **UIX-D07** | Approved: implement local cREXX Wasm Worker and hosted native browser sessions in parallel, sharing one browser projection and versioned view/input/effect envelope. Prove matching runtime packaging and owner-turn behavior locally, plus authentication, reconnect and revision ownership for hosted execution. | direction approved; both route proofs open |
-| **UIX-D08** | Choose the shared scene geometry and hit-testing owner: Level G scene module, one lower-level reusable module, or host-specific implementations. Preserve one coordinate/identity contract across GTK, ANSI and both browser routes. | open; scene contract gate |
+| **UIX-D08** | Approved: one reusable Level G scene module owns world geometry, transforms and scene-object hit testing. Hosts map physical input to logical viewport units and paint; ANSI retains displayed cell/control hit areas and uses stable semantic object IDs. Preserve one coordinate/identity contract across GTK, ANSI and both browser routes. | direction approved; scene API/proof open |
+| **UIX-D09** | Choose the scene data contract: bounded versioned full snapshots, retained mutable scene plus deltas, or drawing command stream. Define stable IDs, semantics, transfer bounds and revision handling for both browser routes before implementation. | open; scene contract gate |
 
 ## Acceptance criteria
 
@@ -240,7 +244,7 @@ unselected until a specific offline product outcome is agreed.
 | ID | Work, dependency and criteria served | Status |
 | --- | --- | --- |
 | **UIX-STEP01** | Trace the direct Text Inspector feature through session, view, commands and effect outcomes on GTK and ANSI, retaining the line TUI regression. Use handwritten graph/map sketches to identify missing dynamic layout, scene, input and fallback contracts; AC01/04–06/08. | open |
-| **UIX-STEP02** | Agree the core view, scene, normalized input and per-operation support/refusal contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Apply D05–06, decide D08, preserve v0 consumers and test a rejected whole snapshot and alternative view; AC01/04–06/08. | open; public core contract gate |
+| **UIX-STEP02** | Agree the core view, scene, normalized input and per-operation support/refusal contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Apply D05, D06 and D08; decide D09, preserve v0 consumers and test a rejected whole snapshot and alternative view; AC01/04–06/08. | open; public core contract gate |
 | **UIX-STEP03** | Implement the shared scene owner and bounded graph/map model-first fixtures. Build the initial GTK 2D and ANSI semantic graph projections against the same feature, including keyboard paths and explicit refusals; AC04/06/08. Keep editing, undo and game rules in the feature. Depends on STEP02; may proceed alongside STEP04. | open |
 | **UIX-STEP04** | Apply D07: build one browser projection and versioned envelope with local Worker and hosted transport adapters. Select matching runtime packaging and an owner-turn/step or qualified suspend/resume route for local `uidriver.run`; define hosted authentication and reconnect/revision ownership. Implement the handwritten Text Inspector feature through both browser routes with the same forms-stage transitions and focused lifecycle/async/refusal tests; AC03/06/08. Keep a separate asynchronous application-service route for later RAG/database/inference effects. Depends on STEP02; may proceed alongside STEP03. | open; two browser host/API gates |
 | **UIX-STEP05** | Complete the graph stage across GTK 2D, ANSI semantic/cell and browser SVG projections through both browser routes, then the map stage across GTK 2D, ANSI bounded viewport and browser Canvas 2D through both routes. At each stage compare the same domain journal, keyboard/input paths and fallback/refusal behavior before moving on. Evaluate culling and measured thresholds before WebGL2; AC04–06/08. Depends on STEP03–04. | open |
