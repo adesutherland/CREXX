@@ -201,9 +201,15 @@ viewport units and paint the returned scene. The ANSI renderer keeps its own
 cell/control hit areas and uses stable IDs for semantic graph/map actions. A
 stale event must not mutate a newer scene. Existing `ui.pointer`, viewport and
 gesture names are vocabulary only; they do not yet establish scene hit testing
-or rendering behavior. The scene contract must
-select coordinate precision and define CSS/device/world conversion before
-pointer events can drive graph edits or map selection.
+or rendering behavior. The scene contract must define fixed-point scale and
+CSS/device/world conversion before pointer events can drive graph edits or map
+selection.
+
+World geometry will use bounded fixed-point integer coordinates. The shared
+scene contract must state the scale, range, rounding and overflow checks; map
+tile identities remain separate. Browser numeric transport must preserve every
+accepted coordinate exactly, while hosts convert world positions to physical
+pixels for painting. The [plan](PLAN.md) keeps these API details open.
 
 The selected scene update direction starts with a full versioned snapshot and
 then sends bounded deltas against the last applied revision. The host
