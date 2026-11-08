@@ -141,6 +141,7 @@ uisession: validation, owner routing, queues, correlation and close
           | view or scene snapshot                 ^ normalized input/outcome
 host adapter: GTK / terminal / proposed browser / proposed scene renderer
           | native widgets, SVG/Canvas, I/O, device and event loop
+          + application effects -> RAG / database / inference executors
 ```
 
 The browser candidate keeps the cREXX VM, UI image, session and component in
@@ -159,6 +160,29 @@ Emscripten profile and THE's separate browser preview are feasibility inputs,
 not a working `uidriver` for this library. A hosted native-session/browser-renderer
 path is also possible when central resources or collaboration justify its authentication and
 reconnection contract.
+
+The browser host also needs a route for application services. cREXX-RAG is a
+useful stress case: its SQLite library owns corpus, graph and embedding truth,
+while immutable vector sidecars accelerate cited lookup. A browser feature
+could issue a bounded query effect and display the returned passages without
+owning SQLite handles, model secrets or retrieval policy. The first integration
+candidate is an authenticated native RAG service adapter; a local read-only
+Wasm RAG bundle is a separate option requiring `rxsqlite`, `rxvector`, a
+matching query embedding model and persistent browser storage proof. A full
+local RAG port would also have to replace its current process/WAL worker and
+recovery arrangements. Editable graph and map applications may need databases
+too, but each keeps its own schema and transaction owner behind effects.
+
+WebGPU can serve compute as well as graphics. Browser embeddings and small
+generative models may use a separate WebGPU inference provider while the
+cREXX feature retains request, citation and result policy. The existing native
+`llama` CPU/Metal/CUDA/Vulkan provider is not itself a browser WebGPU backend.
+Keep model preparation and inference off the UI owner turn, with explicit
+device/memory admission, cancellation, loss and CPU/hosted fallback. A WebGPU
+map renderer, vector scorer and inference provider are separate capabilities;
+the [UI expansion plan](PLAN.md) records their decision gates. Browser-local
+SQLite remains conditional on a proved VFS and export/recovery path: OPFS is
+origin-scoped storage subject to browser quota and clearing.
 
 For 2D work, add a semantic scene beside the current flat widget view only
 after defining its public contract. The candidate scene contains stable IDs,
@@ -204,6 +228,10 @@ The rendering options use the browser's
 [WebGL](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API) and
 [WebGPU](https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API) capabilities;
 their support and cost must be checked against the selected targets.
+Browser data and compute options draw on
+[SQLite's OPFS guidance](https://www.sqlite.org/wasm/doc/trunk/persistence.md),
+[browser storage limits](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria),
+and [WebGPU Worker/compute support](https://developer.mozilla.org/en-US/docs/Web/API/WorkerNavigator/gpu).
 
 For native packaging, GTK supplies a stable RXPA provider ID and the ordinary
 dynamic/static pair. Its V2 capability query remains conservative (zero); it

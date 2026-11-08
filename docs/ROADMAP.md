@@ -983,7 +983,9 @@ prototype has been qualified by this roadmap update.
   accelerated map rendering. It keeps application state in Level G, treats
   Peter's RXPP façade as a later authoring layer after direct core consumers,
   and holds public scene/browser contracts behind explicit design and
-  January-freeze scope gates.
+  January-freeze scope gates. Browser RAG lookup, local SQLite/vector storage,
+  and WebGPU inference are separate application/provider options; UI effects
+  may integrate them without moving their policy into the driver.
 - First-class source provenance, shared Classic BIF behavior, and variable-pool
   integration are carried by Level C and RexxScript before becoming independent
   programmes.
