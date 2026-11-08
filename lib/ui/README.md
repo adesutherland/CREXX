@@ -175,12 +175,14 @@ owning SQLite handles, model secrets or retrieval policy. The selected target
 has two query executors behind that effect: an authenticated native RAG service
 adapter and a browser-local read-only Wasm route using a validated SQLite and
 vector-sidecar bundle. The local route requires `rxsqlite`, `rxvector` and a
-compatible query embedding route; transient import can be proved before
-persistent browser storage. If concrete implementation evidence shows local
-retrieval infeasible within reasonable effort, the selected fallback is hosted
-query only; the effort judgment will be discussed then. A full local RAG port
-would also have to replace its current process/WAL worker and
-recovery arrangements. Editable graph and map applications may need databases
+compatible query embedding route. Both hosted and browser-local compatible
+query embedding providers are targeted behind one contract; the local CPU/Wasm
+or WebGPU backend remains unproved. Transient import can be proved before
+persistent browser storage. If local embedding or retrieval proves infeasible
+within reasonable effort, discuss the concrete work then use the authorized
+hosted embedding or hosted query fallback respectively. A full local RAG port
+would also have to replace its current process/WAL worker and recovery
+arrangements. Editable graph and map applications may need databases
 too, but each keeps its own schema and transaction owner behind effects.
 
 WebGPU can serve compute as well as graphics. Browser embeddings and small
