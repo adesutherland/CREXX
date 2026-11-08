@@ -68,6 +68,16 @@ code drives the shape of the API.
 each host demonstrates deferred completion. Subscriptions/progress are exercised
 by session tests, not yet by a production worker or streaming-file executor.
 
+For an application repository, register namespaced save, load, journal or other
+operations in that application's composition. Reuse the common request and
+outcome lifecycle; keep serialization, schema evolution, transactions, undo,
+conflict handling and the choice of local or hosted storage with the application
+team. A new application should be able to add its executor without editing the
+UI core or global catalogue. Check schema compatibility and failure/cancel
+behavior across its selected hosts. The [UI expansion plan](PLAN.md) holds the
+multi-application extension and versioning proof before its public contract is
+frozen.
+
 ## Add a driver: Peter's checklist
 
 - Implement `uidriver.run(session)` and a namespace-level `capabilities()`.

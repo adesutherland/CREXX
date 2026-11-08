@@ -147,6 +147,16 @@ host adapter: GTK / ANSI terminal / proposed browser / proposed scene renderer
           + application effects -> RAG / database / inference executors
 ```
 
+This is a platform for applications authored by different teams. Composition
+registers each application's namespaced effects, schemas and commands, then
+wires its executors. The shared session handles capability checks, correlation,
+cancellation and outcomes; application teams own their repository contracts,
+data formats, migration, transaction and conflict rules, and storage routes.
+Graph and map features are independent example consumers, not a common domain
+schema. An application-only service does not require a UI-core or global
+catalogue edit; exact cross-route compatibility rules remain a design gate in
+the [UI expansion plan](PLAN.md).
+
 The browser track implements two routes in parallel: a local Emscripten Worker
 and a hosted native cREXX session. Both run the same feature and use one
 versioned view/input/effect envelope and one main-thread projection. The local

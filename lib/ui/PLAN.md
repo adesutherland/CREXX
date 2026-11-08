@@ -29,6 +29,9 @@ code must use the ordinary UI contract and leave application behavior with its
 feature owner. The browser track runs the same feature in both a matching cREXX
 WebAssembly Worker and a hosted native session, using one browser view/input
 contract. Browser API access still needs a small host bridge.
+The UI library must support multiple independently authored applications over
+time: common session/effect lifecycle and host mechanisms are shared, while
+each application owns its model, service contracts, repository and evolution.
 
 The intended examples are an editable UML-like graph and a pan/zoom strategy
 map with selectable units and terrain. They are acceptance workloads, not a
@@ -194,7 +197,7 @@ deployment of `crexxrag`.
 | Hosted RAG query | An authenticated adapter calls the existing native `crexxrag` query path and returns bounded cited results to a browser feature through an application-owned effect. | Define the service adapter, authorization, corpus/session identity, cancellation, result size and failure contract. The present CLI/JSON/MCP adapters are not an HTTP service by themselves. | selected; required fallback route |
 | Local read-only RAG | A matching Wasm Worker opens an imported, validated SQLite snapshot plus compatible immutable vector sidecars and performs lexical/vector/graph queries locally. Prove a bounded transient import first, then target a validated OPFS snapshot cache as a separate stage. | Cross-compile the needed Level G modules, `rxsqlite` and `rxvector`; prove bundle identity, sidecar verification, query-embedding provider, memory limits and reload, then qualify the selected persistence stage. A native provider's existence is not proof of a Wasm build. | selected query target; staged cache target conditional on feasibility |
 | Full local RAG | Potential browser-local ingestion, embeddings, index publication, review and maintenance after the read-only and persistence stages provide evidence. Native/hosted RAG continues to own corpus writes meanwhile. | RAG currently uses independent VM processes, WAL connections, leases and transactional publication; a browser profile needs a separate ownership and recovery design. | later feasibility stage selected; implementation unselected |
-| Other application databases | A graph editor or map game stores its own domain model behind an application repository/effect. | Select schema, transactions, import/export and sync policy per application; do not couple those domains to RAG's SQLite schema or put SQL in the UI driver. | application-specific option |
+| Application repositories | Graph, map and future applications register their own namespaced service effects and repository executors through composition, using the shared session lifecycle. | Select schema, transactions, migration, import/export, storage route and sync policy per application; do not couple those domains to RAG's SQLite schema or put SQL in the UI driver. | shared extension direction selected; application policies remain their owners' decisions |
 
 The two selected query routes share one application-owned `rag.query` effect and
 bounded cited-result contract, with route and evidence-snapshot identity. Local
@@ -221,8 +224,13 @@ handles, paths and provider secrets must not cross the view or Worker message
 boundary. A query embedding must use a compatible model, dimensions and input
 representation; an unrelated small LLM cannot silently replace it. Lexical
 retrieval remains a possible capability when no matching embedding provider is
-available. UI persistence for editable graphs/maps uses the same effect pattern
-but has separate domain transactions and undo rules.
+available. Persistence for editable graphs, maps and later applications uses
+the same correlated effect lifecycle. The UI layer validates registered
+message shapes, routes results and reports capability, cancellation and failure
+outcomes. Each application owns its effect vocabulary, data format, transaction
+and undo rules, compatibility/migration, storage choice and conflict policy.
+Host renderers do not interpret domain records, and application-only services
+need no global UI catalogue entry.
 
 WebGPU is relevant beyond drawing. It exposes compute pipelines, so a browser
 embedding model or small generative model could serve the selected local
@@ -277,6 +285,7 @@ product outcome and implementation scope remain to be agreed.
 | **UIX-D12** | Approved conditional target: browser-local and native/hosted small-LLM answer generation share one application-service request/result contract. If local generation proves infeasible within reasonable effort, discuss the concrete implementation evidence and effort then use native/hosted generation only. Select the local engine/backend and define model identity, evidence/citation, privacy, device and failure policy during implementation; D03 query embeddings and D04 GPU workloads remain separate decisions. | direction approved; local provider/proof open |
 | **UIX-D13** | Approved staged persistence target for browser-local read-only RAG: first prove bounded transient import of a validated SQLite/vector bundle, then add an OPFS snapshot cache with bundle identity, export/re-import recovery and multi-tab behavior. If persistent caching proves infeasible within reasonable effort, discuss concrete implementation evidence and effort before retaining transient import as the local route. This does not select browser-local ingestion or make persistence a prerequisite for the first query proof. | direction approved; cache VFS/proof open |
 | **UIX-D14** | Approved: retain native/hosted corpus writes while the browser route proves read-only queries and evaluates persistence. After those stages provide evidence, assess browser-local ingestion, embedding, index publication, review and recovery as a separate capability. Record the feasible scope, product need, ownership and effort before a new implementation decision; this approval does not select full local writes. | staged assessment approved; implementation decision open |
+| **UIX-D15** | Approved: use the common registered-effect lifecycle as an extension point for many independently authored applications. The platform supplies namespaced registration, schema validation, capability/refusal, correlation, cancellation and terminal outcomes; application teams own persistence/service vocabulary, data format, repository, migrations, transactions, conflicts and local/hosted policy. Do not impose a shared graph/map/RAG schema or require UI-core edits for an application-only service. Define exact compatibility/versioning rules with direct consumers. | direction approved; extension contract proof open |
 
 ## Acceptance criteria
 
@@ -295,6 +304,7 @@ product outcome and implementation scope remain to be agreed.
 | **UIX-AC11** | The same application-service generation request/result contract supports native/hosted and targeted browser-local small-LLM providers, independently of query embedding and UI rendering. Verify bounded input/output or streaming, model identity, privacy route, cancellation, stale completion, provider/device failure and application-owned result policy. For cited RAG answers, preserve the owning RAG evidence and citation validation. If local generation is later declined under D12, record the concrete blocker and agreed effort judgment; native/hosted generation remains required. | open; conditional local generation route |
 | **UIX-AC12** | After a validated transient bundle supports local read-only cited queries, the targeted OPFS cache reloads that same corpus/evidence version across browser restarts without weakening SQLite/sidecar validation. Verify quota or eviction failure, clearing/re-import, export, multi-tab access/locking and bounded cleanup. If persistence is later declined under D13, record the concrete blocker and agreed effort judgment; the transient local query route remains the fallback. | open; conditional persistent cache |
 | **UIX-AC13** | After the read-only query and persistence stages yield implementation evidence, an owning RAG assessment maps source ingestion, provider/model identity, worker/lease behavior, review, transactional SQLite and `.rxvec` publication, multi-tab ownership and crash recovery to a browser profile. Identify the smallest representative proof and remaining risks, then record a separate implementation decision with scope and effort; native/hosted ingestion remains available throughout. | open; later feasibility decision gate |
+| **UIX-AC14** | Two independently structured Level G example applications register distinct namespaced repository/service effects and compatible payload schemas through composition without editing the UI core or global catalogue. Each receives correlated success, cancellation, failure and unsupported-capability outcomes; stale/conflicting domain writes remain application-owned. Use graph save/load and map turn persistence as different verification operations, preserving their respective model/undo or rule state without prescribing product storage policies; hosts do not inspect domain records. | open; multi-application extension gate |
 
 ## Stable implementation steps and gates
 
@@ -311,6 +321,7 @@ product outcome and implementation scope remain to be agreed.
 | **UIX-STEP09** | After the core application-service boundary exists, define the D12 generation request/result contract and implement native/hosted and browser-local small-LLM consumer paths. Keep answer/evidence policy with its application or RAG owner; choose and prove the local engine/backend during implementation under D04 without requiring a GPU path. Qualify both routes against AC11 or record the conditional native/hosted-only fallback after discussing concrete local effort. This application integration does not block STEP01–07 and need not wait for full local RAG. | open; separate generation integration gate |
 | **UIX-STEP10** | After STEP08 proves a transient validated local corpus, implement the D13 OPFS cache through a qualified SQLite VFS and bundle-sidecar storage boundary. Prove versioned reload, export/re-import recovery, quota/eviction, multi-tab locking and cleanup against AC12; if the cache is infeasible within reasonable effort, discuss concrete evidence and retain transient import. This storage stage does not block STEP01–09 or the initial local query proof. | open; separate persistence gate |
 | **UIX-STEP11** | After STEP08 and STEP10 produce read-only and storage evidence, assess D14 with the RAG owner against AC13. Use a bounded critical-path proof where architecture evidence alone cannot settle a blocker, then decide separately whether to implement browser-local corpus writes and on what scope. Do not fold writable ingestion into STEP08/10 or the core UI milestone. | open; later ingestion feasibility gate |
+| **UIX-STEP12** | Apply D15 at the application-service boundary: specify namespacing, schema compatibility and common outcome/capability behavior using the existing effect registry, then exercise independent graph and map repository consumers against AC14. Keep each repository's storage route, domain schema and conflict policy with its application owner; add only missing generic lifecycle mechanisms to UI core. Depends on STEP02–05 and may run alongside application-service integrations. | open; multi-application extension gate |
 
 At RAG implementation start, add retrieval/provider delivery criteria to the
 owning RAG plan and reference them from STEP08; AC09–10 own only the UI effect,

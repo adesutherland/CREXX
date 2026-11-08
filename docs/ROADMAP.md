@@ -988,6 +988,9 @@ prototype has been qualified by this roadmap update.
   local model providers. Application state stays in Level G; Peter's
   RXPP façade follows direct core consumers. Public scene/browser and support
   contracts remain behind explicit design and January-freeze scope gates.
+  The shared registered-effect lifecycle supports separately authored
+  applications; each team owns its repository, schema evolution, transactions
+  and local/hosted storage policy without adding a global graph/map data model.
   RAG queries target hosted and browser-local read-only routes through one
   application effect, with hosted-only fallback if local implementation proves
   infeasible within an effort judgment discussed after implementation evidence.
