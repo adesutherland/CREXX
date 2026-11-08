@@ -981,8 +981,9 @@ prototype has been qualified by this roadmap update.
   approved Release 1 baseline. The [UI expansion plan](../lib/ui/PLAN.md)
   compares a local Wasm Worker host with a hosted session, and SVG/Canvas with
   accelerated map rendering. It keeps application state in Level G, treats
-  Peter's RXPP façade as an authoring layer, and holds public scene/browser
-  contracts behind explicit design and January-freeze scope gates.
+  Peter's RXPP façade as a later authoring layer after direct core consumers,
+  and holds public scene/browser contracts behind explicit design and
+  January-freeze scope gates.
 - First-class source provenance, shared Classic BIF behavior, and variable-pool
   integration are carried by Level C and RexxScript before becoming independent
   programmes.

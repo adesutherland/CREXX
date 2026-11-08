@@ -185,8 +185,9 @@ functional list or viewport rather than a pixel-equivalent drawing.
 Peter's `DEFINE-GUI` remains an authoring layer over these logical contracts.
 Its current generated controller and `node|value` store are experimental: a
 generated setter can change display text separately from the feature model,
-and the macro currently contains Text Inspector-specific dispatch. The next
-design must specify how dynamic labels are computed from the feature's current
+and the macro currently contains Text Inspector-specific dispatch. First prove
+new core capabilities with handwritten Level G consumers. A later RXPP increment
+must specify how dynamic labels are computed from the feature's current
 `view()` on every render, and how static routing forwards exactly one semantic
 event through the session. Generated scene declarations may describe layers,
 styles and action IDs, but cannot own a graph editor's or game's model. The

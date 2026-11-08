@@ -24,6 +24,13 @@ host are not required. Existing UI contract v0 and the three reference hosts
 must keep working. Public scene, input, ABI, packaging, and target-platform
 choices remain explicit design gates before product implementation.
 
+Sequence the core contract and handwritten consumers first. Extend Peter's
+RXPP façade only after the capabilities it describes have stable semantics and
+at least one direct consumer. Peter may own that later authoring increment; its
+ownership and timing do not block core UI development. Keep the existing
+experimental macro available, with its limits documented, while the core work
+proceeds.
+
 ## Current baseline and review findings
 
 - `ui_contract.crexx` supplies session routing, bounded queues, capabilities,
@@ -82,8 +89,8 @@ transfer. No scene API shape is approved by this planning record.
 
 | ID | Observable pass condition and verification | Status |
 | --- | --- | --- |
-| **UIX-AC01** | One ordinary Level G feature/session handles equivalent commands, events, effects and close outcomes on two existing hosts; generated declarations reproduce its current dynamic values without a second authoritative model. Compare independent expected transition journals and views. | open |
-| **UIX-AC02** | RXPP rejects malformed/unknown controls, duplicate IDs, inconsistent command definitions and invalid event/binding references with source locations; multiple controls may intentionally share one command. Generated controller contains no named Text Inspector special cases. Inspect representative generated cREXX/RXAS and run positive/negative and regeneration checks. | open |
+| **UIX-AC01** | A handwritten Level G feature/session handles equivalent commands, events, effects, dynamic values and close outcomes on two existing hosts, with one authoritative model. Compare independent expected transition journals and views. | open |
+| **UIX-AC02** | Once the core contracts are stable, RXPP generates declarations that reproduce the direct consumer's current dynamic values and routing without a second authoritative model. It rejects malformed/unknown controls, duplicate IDs, inconsistent command definitions and invalid event/binding references with source locations; multiple controls may share one command. Generated code has no named Text Inspector special cases. Inspect representative cREXX/RXAS and run positive/negative and regeneration checks. | open; later authoring increment |
 | **UIX-AC03** | A browser host runs a matching cREXX UI image in one Worker, serializes owner turns, projects current controls, returns normalized input and correlated async outcomes, and closes or fails without leaked authority. Check browser interaction, cancellation, stale/duplicate messages and Worker restart. | open; target and packaging choice unselected |
 | **UIX-AC04** | A versioned 2D scene contract renders and edits a representative graph: create/move/connect/delete, zoom/pan, selection, keyboard operation, undo/redo and readable semantic alternatives. Check model state, chosen coordinate precision and stable picking under resize and scale. | open; scene API decision required |
 | **UIX-AC05** | A representative strategy map renders terrain and units, supports pan/zoom, selection and turn actions, and keeps rules/state in the feature. Check bounded tiles, clipping/culling, pointer coordinate conversion and stale input; measure before selecting an accelerated renderer. | open |
@@ -94,15 +101,17 @@ transfer. No scene API shape is approved by this planning record.
 
 | ID | Work, dependency and criteria served | Status |
 | --- | --- | --- |
-| **UIX-STEP01** | Reconcile the current macro example with its actual graph inputs; trace one generated command, one dynamic label and one effect outcome through the single session. Record the owning application/model boundary; AC01–02. | open |
-| **UIX-STEP02** | Decide the declarative grammar and dynamic-value contract. Generate only layout, typed view bindings, command/schema wiring and static routing; keep edit buffers transient and feature values authoritative. Repair missing graph sources and add focused negative/source-map checks; AC01–02. | open; syntax/ownership design gate |
-| **UIX-STEP03** | Select browser packaging, matching UI VM image, an owner-turn API or qualified suspend/resume path for the synchronous `uidriver.run` boundary, and a bounded Worker/main-thread protocol. Implement the smallest Text Inspector browser host and focused lifecycle/async tests; AC03/06. | open; browser host/API gate |
-| **UIX-STEP04** | Agree a versioned scene and input contract using the graph and map fixtures, including IDs, geometry, transforms, hit testing, accessibility and capacity. Implement shared scene owner and one simple renderer, with model-first tests; AC04–06. | open; public scene contract gate |
-| **UIX-STEP05** | Add SVG graph projection and a Canvas 2D map projection. Reuse the same semantic input and scene contracts on one desktop host where feasible; evaluate culling and measured renderer thresholds before WebGL2; AC04–06. | open |
-| **UIX-STEP06** | Qualify the selected application/host combinations, resource and failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–07. | open; milestone/scope gate |
+| **UIX-STEP01** | Trace the direct Text Inspector feature through session, view, commands and effect outcomes on existing hosts. Use handwritten graph/map sketches to identify missing dynamic layout, scene and input contracts; AC01/04–05. | open |
+| **UIX-STEP02** | Agree the core view, scene and normalized input contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Preserve v0 consumers; AC01/04–06. | open; public core contract gate |
+| **UIX-STEP03** | Implement the shared scene owner and bounded graph/map model-first fixtures, then one simple desktop projection. Keep editing, undo and game rules in the feature; AC04–06. Depends on STEP02. | open |
+| **UIX-STEP04** | Select browser packaging, matching UI VM image, an owner-turn API or qualified suspend/resume path for `uidriver.run`, and a bounded Worker/main-thread protocol. Implement a handwritten Text Inspector browser consumer and focused lifecycle/async tests; AC03/06. Depends on the core host boundary in STEP02; scene rendering may follow. | open; browser host/API gate |
+| **UIX-STEP05** | Add SVG graph and Canvas 2D map projections against the stable scene contract, including browser input and a desktop consumer where feasible. Evaluate culling and measured thresholds before WebGL2; AC04–06. Depends on STEP03–04. | open |
+| **UIX-STEP06** | After direct consumers prove the core contract, reconcile the experimental `DEFINE-GUI` macro and its missing graph inputs. Decide its grammar/dynamic-value mapping, generate only layout, typed bindings, command/schema wiring and static routing, and run focused source-map/negative checks; AC01–02. Depends on STEP02–05; Peter may own this increment. | open; later RXPP design gate |
+| **UIX-STEP07** | Qualify selected application/host and generated-authoring combinations, failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–07. Depends on selected preceding steps. | open; milestone/scope gate |
 
 For each development step, use the smallest changed-component build and
-behavior/contract checks, inspect a representative generated source/RXAS early,
-then freeze and report local evidence. Full browser/platform, sanitizer and
-delivery gates occur only when selected under the repository lifecycle. No
-publication or platform scope expansion is implied here.
+behavior/contract checks, inspect representative RXAS for changed cREXX paths
+and RXPP output when STEP06 begins, then freeze and report local evidence.
+Full browser/platform, sanitizer and delivery gates occur only when selected
+under the repository lifecycle. No publication or platform scope expansion is
+implied here.
