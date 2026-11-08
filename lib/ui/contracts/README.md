@@ -4,6 +4,9 @@ The v0 forms, message and session contract described here remains available.
 The additive version 1 scene, normalized pointer and precise host-operation
 surface is documented in [`../README.md`](../README.md#additive-scene-and-host-support-contract)
 and [`../PLAN.md`](../PLAN.md). It does not reinterpret the v0 catalogue.
+The catalogue has two additive input events for adopted hosts:
+`ui.view.refused` carries a typed operation refusal, and `ui.scene.resync`
+requests a full authoritative snapshot after a revision error.
 
 The cREXX UI framework lets you write an application's behaviour in Level G and
 present it through different user interfaces. You describe the information to

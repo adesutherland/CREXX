@@ -163,8 +163,9 @@ if(ENABLE_GTK)
                     -i "${CMAKE_BINARY_DIR}/bin"
                     -o ui_gtk "${CMAKE_CURRENT_SOURCE_DIR}/ui_gtk.crexx"
             COMMAND $<TARGET_FILE:rxas> -o "${CMAKE_BINARY_DIR}/bin/ui_gtk" ui_gtk
-            DEPENDS rxc rxas library compiler_exit_bin ui _ui_gtk_native ui_contract ui_local_resources
+            DEPENDS rxc rxas library compiler_exit_bin ui ui_scene _ui_gtk_native ui_contract ui_local_resources
                     "${CREXX_UI_CORE_IMAGE}" "$<TARGET_FILE:_ui_gtk_native>"
+                    "${CMAKE_BINARY_DIR}/bin/ui_scene.rxbin"
                     "${CMAKE_BINARY_DIR}/bin/ui_contract.rxbin"
                     "${CMAKE_BINARY_DIR}/bin/ui_local_resources.rxbin"
                     "${CMAKE_CURRENT_SOURCE_DIR}/ui_gtk.crexx"

@@ -52,9 +52,9 @@ if(ENABLE_GTK)
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_ui_gtk_controls.crexx
             TARGET_GROUP ui_functional_tests
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-            DEPENDS ui ui_contract ui_gtk _ui_gtk_native _ui_gtk_test
+            DEPENDS ui ui_contract ui_scene ui_gtk _ui_gtk_native _ui_gtk_test
             RUNTIME_ARGS $<TARGET_FILE:_ui_gtk_native> $<TARGET_FILE:_ui_gtk_test>
-                    ${CMAKE_BINARY_DIR}/bin/ui_gtk ${CMAKE_BINARY_DIR}/bin/ui_local_resources
+                    ${CMAKE_BINARY_DIR}/bin/ui_gtk ${CMAKE_BINARY_DIR}/bin/ui_scene ${CMAKE_BINARY_DIR}/bin/ui_local_resources
                     ${CMAKE_BINARY_DIR}/bin/ui_contract ${CMAKE_BINARY_DIR}/bin/ui_catalog
                     ${CMAKE_BINARY_DIR}/bin/ui ${CMAKE_BINARY_DIR}/bin/library
             TEST_LABELS "library;ui;gtk;controls;callback"

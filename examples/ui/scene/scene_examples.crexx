@@ -1,0 +1,118 @@
+/* Bounded direct consumers for the scene host seam. Graph and map policy
+ * remain in Level G features; hosts only project their views and commands. */
+options levelg
+namespace scene_examples expose make_graph_session graph_component make_map_session map_component
+import rxjson
+import ui
+import ui_contract
+import ui_scene
+
+make_graph_session: procedure = .uisession
+  arg id = .string, caps = .uicapabilities
+  session = .uisession(id, caps)
+  graphical = caps.has("form.scene") & caps.has("scene.rect") & caps.has("scene.edge")
+  rc = session.add_component("root", .graph_component(graphical))
+  rc = session.register_event("graph.move.requested")
+  rc = session.register_event("graph.add.requested")
+  rc = session.register_event("graph.select.requested")
+  rc = session.register_command(.uicommand("graph.move", "Move A", "root", "graph.move.requested", "m"))
+  rc = session.register_command(.uicommand("graph.add", "Add C", "root", "graph.add.requested", "a"))
+  rc = session.register_command(.uicommand("graph.select", "Select A", "root", "graph.select.requested", "s"))
+  rc = session.register_command(.uicommand("graph.quit", "Quit", "root", "ui.close.requested", "q"))
+  return session
+
+graph_component: class implements .uicomponent
+  _scene = .uisceneowner
+  _packet = .string
+  _graphical = .int
+  _ax = .int
+  _added = .int
+  _selected = .string
+  *: factory
+    arg graphical = .int
+    _graphical = graphical
+    _ax = 7680
+    _added = 0
+    _selected = ""
+    _scene = .uisceneowner("graph")
+    first = '{"id":"node-a","kind":"rect","x":7680,"y":7680,"w":20480,"h":15360,"label":"A"}'
+    second = '{"id":"node-b","kind":"rect","x":56320,"y":7680,"w":20480,"h":15360,"label":"B"}'
+    edge = '{"id":"edge-ab","kind":"edge","x":28160,"y":15360,"w":28160,"h":0,"label":""}'
+    unused = _scene.change("add", first)
+    unused = _scene.change("add", second)
+    unused = _scene.change("add", edge)
+    _packet = _scene.snapshot()
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    name = event.name()
+    if name = "graph.move.requested" then do
+      _ax = _ax + 2560
+      item = '{"id":"node-a","kind":"rect","x":' || _ax || ',"y":7680,"w":20480,"h":15360,"label":"A"}'
+      _packet = _scene.change("replace", item)
+    end
+    if name = "graph.add.requested" & \_added then do
+      _added = 1
+      _packet = _scene.change("add", '{"id":"node-c","kind":"rect","x":32000,"y":43520,"w":20480,"h":15360,"label":"C"}')
+    end
+    if name = "graph.select.requested" then _selected = "node-a"
+    effects = .uieffects()
+    if name = "ui.close.requested" then call effects.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))
+    return effects
+  view: method = .uiview
+    view = .uiview_impl("Scene graph fixture")
+    if _graphical then call view.add_scene("graph", _packet, "root")
+    else do
+      call view.add_label("heading", "Graph objects", "root")
+      do index = 1 to _scene.count()
+        item = _scene.item(index)
+        call view.add_label(jsonget(item, "id"), jsonget(item, "label") || " " || jsonget(item, "id"))
+      end
+    end
+    call view.add_label("model", "A x: " || _ax || " Added: " || _added)
+    call view.add_label("selection", "Selected: " || _selected)
+    call view.add_button("move", "Move A", "graph.move", "m")
+    call view.add_button("add", "Add C", "graph.add", "a", "right", "move")
+    call view.add_button("select", "Select A", "graph.select", "s", "right", "add")
+    call view.add_button("quit", "Quit", "graph.quit", "q", "right", "select")
+    return view
+  state: method = .string
+    return _ax || "/" || _added || "/" || _selected || "/" || _scene.revision()
+  scene: method = .string
+    return _scene.snapshot()
+
+make_map_session: procedure = .uisession
+  arg id = .string, caps = .uicapabilities
+  session = .uisession(id, caps)
+  rc = session.add_component("root", .map_component())
+  rc = session.register_event("map.turn.requested")
+  rc = session.register_command(.uicommand("map.turn", "End turn", "root", "map.turn.requested", "t"))
+  rc = session.register_command(.uicommand("map.quit", "Quit", "root", "ui.close.requested", "q"))
+  return session
+
+map_component: class implements .uicomponent
+  _turn = .int
+  _scene = .uisceneowner
+  *: factory
+    _turn = 1
+    _scene = .uisceneowner("map")
+    unused = _scene.change("add", '{"id":"tile-1","kind":"tile","x":0,"y":0,"w":16384,"h":16384,"label":"Plain"}')
+    unused = _scene.change("add", '{"id":"unit-1","kind":"unit","x":4096,"y":4096,"w":8192,"h":8192,"label":"Blue"}')
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    if event.name() = "map.turn.requested" then _turn = _turn + 1
+    effects = .uieffects()
+    if event.name() = "ui.close.requested" then call effects.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))
+    return effects
+  view: method = .uiview
+    view = .uiview_impl("Map fixture")
+    call view.add_label("terrain", "Plain with Blue unit", "root")
+    call view.add_label("turn", "Turn: " || _turn)
+    call view.add_button("end-turn", "End turn", "map.turn", "t")
+    call view.add_button("quit", "Quit", "map.quit", "q", "right", "end-turn")
+    return view
+  turn: method = .int
+    return _turn
+  scene: method = .string
+    return _scene.snapshot()

@@ -2,9 +2,11 @@
  * contract as the terminal hosts; native signals never call a feature directly.
  */
 options levelg
-namespace ui_gtk expose gtkdriver capabilities
+namespace ui_gtk expose gtkdriver capabilities operations
 import ui
 import ui_contract
+import ui_scene
+import rxjson
 import ui_local_resources
 import ui_gtk_native
 
@@ -17,7 +19,14 @@ capabilities: procedure = .uicapabilities
   call caps.enable("ui.dialog")
   call caps.enable("ui.widgets")
   call caps.enable("ui.collections")
+  call caps.enable("form.scene")
+  call caps.enable("scene.rect")
+  call caps.enable("scene.edge")
   return caps
+
+/** Exact drawing/control operations, copied for each owning session. */
+operations: procedure = .uioperations
+  return .uioperations("form.label form.statusbar form.line form.input form.checkbox form.progress form.button form.choice form.combo form.integer form.scene scene.rect scene.edge")
 
 /** GTK 3 host. Application policy lives exclusively in session components. */
 gtkdriver: class implements .uidriver
@@ -29,6 +38,9 @@ gtkdriver: class implements .uidriver
   _closing = .int
   _closed = .int
   _error = .string
+  _scene = .uiscenereplica
+  _operations = .uioperations
+  _scene_recovered = .int
 
   /** Construct an idle host; run owns all native resources. */
   *: factory
@@ -36,6 +48,9 @@ gtkdriver: class implements .uidriver
     _closing = 0
     _closed = 0
     _error = ""
+    _scene = .uiscenereplica()
+    _operations = operations()
+    _scene_recovered = 0
     return
 
   /** Build the initial GTK tree and enter the native event loop.
@@ -50,7 +65,23 @@ gtkdriver: class implements .uidriver
     _closing = 0
     _closed = 0
     _error = ""
+    _scene = .uiscenereplica()
+    _operations = operations()
+    _scene_recovered = 0
     view = _session.view()
+    option = .int
+    support = preflight_complete(view)
+    if \support.ok() then do
+      if report_refusal(support) >= 0 then do
+        view = _session.view()
+        support = preflight_complete(view)
+      end
+    end
+    if \support.ok() then do
+      _error = support.json()
+      call _session.close()
+      return -1
+    end
     if ui_gtk_native..create(view.title(), 520, 360) \= 1 then do
       _error = "Cannot create GTK surface"
       call _session.close()
@@ -62,6 +93,10 @@ gtkdriver: class implements .uidriver
       if kind = "label" then rc = add_label(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index))
       else if kind = "statusbar" then rc = ui_gtk_native..add_statusbar(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index))
       else if kind = "line" then rc = add_line(view.node_id(index), view.node_column(index), view.node_row(index))
+      else if kind = "scene" then do
+        rc = ui_gtk_native..add_scene(view.node_id(index), view.node_column(index), view.node_row(index))
+        if rc = 1 then rc = project_scene(view.node_id(index), view.node_value(index))
+      end
       else if kind = "input" then rc = ui_gtk_native..add_input(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index))
       else if kind = "checkbox" then rc = ui_gtk_native..add_checkbox(view.node_id(index), view.node_text(index), view.node_value(index) = "1", view.node_column(index), view.node_row(index))
       else if kind = "progress" then rc = ui_gtk_native..add_progress(view.node_id(index), view.node_value(index), view.node_column(index), view.node_row(index))
@@ -89,7 +124,7 @@ gtkdriver: class implements .uidriver
         rc = ui_gtk_native..add_combo(view.node_id(index), option_ids, option_texts, view.node_value(index), view.node_column(index), view.node_row(index))
       end
       else if kind = "integer" then rc = ui_gtk_native..add_integer(view.node_id(index), view.node_value(index), view.node_minimum(index), view.node_maximum(index), view.node_step(index), view.node_column(index), view.node_row(index))
-      if rc \= 1 then _error = "Unsupported or invalid GTK view node: " || kind
+      if rc \= 1 & _error = "" then _error = "Unsupported or invalid GTK view node: " || kind
     end
     native_rc = -1
     if _error = "" then do
@@ -114,6 +149,33 @@ gtkdriver: class implements .uidriver
   /** @return diagnostic retained after deterministic native teardown */
   error: method = .string
     return _error
+
+  preflight_complete: method = .uiresult
+    arg view = .uiview
+    result = _operations.preflight_view(view)
+    if \result.ok() then return result
+    if view.count() > 64 then return .uiresult("limit", "form", "GTK supports at most 64 controls")
+    scene_count = 0
+    do index = 1 to view.count()
+      if view.node_kind(index) = "scene" then do
+        scene_count = scene_count + 1
+        if scene_count > 1 then return .uiresult("limit", "form.scene", "GTK supports one scene per session")
+        result = _operations.preflight_scene(view.node_value(index))
+        if \result.ok() then return result
+      end
+    end
+    return .uiresult("")
+
+  /** Give the feature one owner turn to choose a supported alternative. */
+  report_refusal: method = .int
+    arg result = .uiresult
+    body = .uipayload()
+    call body.put_text("code", result.code())
+    call body.put_text("operation", result.operation())
+    call body.put_text("message", result.message())
+    rc = _session.post(.uimessage("ui.view.refused", body))
+    if rc < 0 then return -1
+    return _session.pump(1)
 
   /** Owner-turn entry, called only by the native idle mailbox.
    * @param action native fact, not application policy
@@ -238,6 +300,17 @@ gtkdriver: class implements .uidriver
   render: method = .void
     if _closing | _closed then return
     view = _session.view()
+    support = preflight_complete(view)
+    if \support.ok() then do
+      if report_refusal(support) >= 0 then do
+        view = _session.view()
+        support = preflight_complete(view)
+      end
+    end
+    if \support.ok() then do
+      _error = support.json()
+      return
+    end
     option = .int
     do index = 1 to view.count()
       kind = view.node_kind(index)
@@ -266,11 +339,65 @@ gtkdriver: class implements .uidriver
       else if kind = "integer" then do
         if ui_gtk_native..set_integer(view.node_id(index), view.node_value(index)) \= 1 then _error = "GTK integer projection failed"
       end
+      else if kind = "scene" then do
+        if project_scene(view.node_id(index), view.node_value(index)) \= 1 & _error = "" then _error = "GTK scene projection failed"
+      end
       else if kind \= "line" then do
         if set_text(view.node_id(index), view.node_text(index)) \= 1 then _error = "GTK view projection failed"
       end
     end
+    if _scene_recovered & _error = "" then do
+      _scene_recovered = 0
+      call render()
+    end
     return
+
+  /** Apply the packet to a candidate Level G replica, stage all native
+   * drawing primitives, then commit both sides together. */
+  project_scene: method = .int
+    arg id = .string, packet = .string
+    candidate = _scene
+    result = candidate.apply_for(_operations, packet)
+    if result.code() = "sync_error" & \_scene.paused() then do
+      body = .uipayload()
+      call body.put_text("epoch", _scene.epoch())
+      call body.put_integer("revision", _scene.revision())
+      call body.put_text("reason", result.code())
+      if _session.post(.uimessage("ui.scene.resync", body)) = 0 then do
+        if _session.pump(1) >= 0 then do
+          fresh = _session.view()
+          do retry_index = 1 to fresh.count()
+            if fresh.node_id(retry_index) \= id then iterate
+            packet = fresh.node_value(retry_index)
+            if jsonget(packet, "kind") = "full" then do
+              candidate = _scene
+              result = candidate.apply_for(_operations, packet)
+              if result.ok() then _scene_recovered = 1
+            end
+            leave
+          end
+        end
+      end
+    end
+    if \result.ok() then do
+      _error = result.json()
+      return 0
+    end
+    if ui_gtk_native..scene_begin(id) \= 1 then return 0
+    do item_index = 1 to candidate.count()
+      item = candidate.item(item_index)
+      rc = ui_gtk_native..scene_item(id, jsonget(item, "kind"), jsonget(item, "x") as .int, jsonget(item, "y") as .int, jsonget(item, "w") as .int, jsonget(item, "h") as .int, jsonget(item, "label"))
+      if rc \= 1 then do
+        call ui_gtk_native..scene_abort(id)
+        return 0
+      end
+    end
+    if ui_gtk_native..scene_commit(id) \= 1 then do
+      call ui_gtk_native..scene_abort(id)
+      return 0
+    end
+    _scene = candidate
+    return 1
 
 /* Implementation detail: one identity-preserving RXPA callback, not another
  * application shell. The receiver is valid only during gtkdriver.run(). */

@@ -261,6 +261,7 @@ if(BUILD_TESTING)
                         ${_host_test_image} ${_host_test_dir}/ui_driver_probe
                         ${_text_inspector_module}
                         ${CMAKE_BINARY_DIR}/bin/ui_gtk
+                        ${CMAKE_BINARY_DIR}/bin/ui_scene
                         ${CMAKE_BINARY_DIR}/bin/ui
                         ${CMAKE_BINARY_DIR}/bin/ui_local_resources
                         ${CMAKE_BINARY_DIR}/bin/ui_contract

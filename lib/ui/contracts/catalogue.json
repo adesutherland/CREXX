@@ -47,6 +47,30 @@
       "fields": {}
     },
     {
+      "name": "ui.view.refused",
+      "direction": "event",
+      "capability": "ui.lifecycle",
+      "summary": "A complete view or scene packet was refused before projection; the application may offer a supported alternative.",
+      "role": "input",
+      "fields": {
+        "code": { "type": "string", "required": true, "maxLength": 128 },
+        "operation": { "type": "string", "required": true, "maxLength": 128 },
+        "message": { "type": "string", "required": true, "maxLength": 4096 }
+      }
+    },
+    {
+      "name": "ui.scene.resync",
+      "direction": "event",
+      "capability": "ui.lifecycle",
+      "summary": "A host replica needs a full authoritative scene snapshot after a synchronization error.",
+      "role": "input",
+      "fields": {
+        "epoch": { "type": "string", "required": true, "maxLength": 64 },
+        "revision": { "type": "integer", "required": true, "minimum": 0, "maximum": 9007199254740991 },
+        "reason": { "type": "string", "required": true, "maxLength": 128 }
+      }
+    },
+    {
       "name": "ui.close.requested",
       "direction": "event",
       "capability": "ui.lifecycle",

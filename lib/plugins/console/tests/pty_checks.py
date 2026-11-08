@@ -103,7 +103,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--build", required=True, type=pathlib.Path)
     parser.add_argument("--source", required=True, type=pathlib.Path)
-    parser.add_argument("--mode", choices=["console", "app", "host-edges"], required=True)
+    parser.add_argument("--mode", choices=["console", "app", "host-edges", "scene"], required=True)
     parser.add_argument("--variant", choices=["noopt", "opt"], default="opt")
     args = parser.parse_args()
     build, source = args.build.resolve(), args.source.resolve()
@@ -144,6 +144,22 @@ def main():
         terminal = Terminal([vm, str(program)], source)
         try:
             terminal.expect(b"PASS: ANSI shared host edges")
+            terminal.finish()
+        finally:
+            terminal.close()
+    elif args.mode == "scene":
+        modules = [build / "examples/ui/scene/graph_ansi", build / "examples/ui/scene/scene_examples"]
+        modules += [binary / name for name in ("ui_ansi", "ui_dialogs", "ui_terminal_view",
+                    "ui_local_resources", "ui_scene", "ui_contract", "ui_catalog", "ui", "library")]
+        terminal = Terminal([vm] + [str(path) for path in modules], source)
+        try:
+            terminal.expect(b"Graph objects")
+            terminal.expect(b"node-a")
+            terminal.send(b"m")
+            terminal.expect(b"A x: 10240")
+            terminal.send(b"a")
+            terminal.expect(b"node-c")
+            terminal.send(b"q")
             terminal.finish()
         finally:
             terminal.close()

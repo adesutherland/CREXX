@@ -88,6 +88,7 @@ cmake-build-ui-v0-gtk/bin/rxvm \
   cmake-build-ui-v0-gtk/bin/rx_ui_gtk_native \
   cmake-build-ui-v0-gtk/examples/ui/text-inspector/text_inspector \
   cmake-build-ui-v0-gtk/bin/ui_gtk \
+  cmake-build-ui-v0-gtk/bin/ui_scene \
   cmake-build-ui-v0-gtk/bin/ui_local_resources \
   cmake-build-ui-v0-gtk/bin/ui_contract \
   cmake-build-ui-v0-gtk/bin/ui_catalog \

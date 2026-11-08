@@ -43,6 +43,8 @@ foreach(host IN LISTS hosts)
     elseif(host STREQUAL "line")
         set(driver ui_tui)
         set(host_images "${CMAKE_BINARY_DIR}/bin/ui_tui.rxbin")
+    elseif(host STREQUAL "gtk")
+        list(APPEND host_images "${CMAKE_BINARY_DIR}/bin/ui_scene.rxbin")
     endif()
     add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/Lotto-${host}.rxbin"
             COMMAND $<TARGET_FILE:rxc> --no-exe-import
@@ -78,9 +80,9 @@ if(BUILD_TESTING)
                 SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/surface/lotto_gtk_tests.crexx"
                 TARGET_GROUP example_franz_lotto_artifacts
                 IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-                DEPENDS franz_lotto_surface ui_gtk _ui_gtk_native _ui_gtk_test ${shared_images}
+                DEPENDS franz_lotto_surface ui_scene ui_gtk _ui_gtk_native _ui_gtk_test ${shared_images}
                 RUNTIME_ARGS $<TARGET_FILE:_ui_gtk_native> $<TARGET_FILE:_ui_gtk_test>
-                        ${CMAKE_BINARY_DIR}/bin/ui_gtk ${shared_images}
+                        ${CMAKE_BINARY_DIR}/bin/ui_gtk ${CMAKE_BINARY_DIR}/bin/ui_scene ${shared_images}
                         -a "${CMAKE_CURRENT_BINARY_DIR}/GTK test tips.txt"
                 TEST_LABELS "examples;ui;gtk;lotto;dialogs;effects"
                 REQUIRED_OUTPUT_REGEX "PASS: shared Lotto GTK controls, paging, validation, Save and reuse"

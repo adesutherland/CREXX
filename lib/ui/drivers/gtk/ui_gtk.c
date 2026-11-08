@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <errno.h>
+#include <stdint.h>
 
 #include "crexxpa.h"
 
@@ -24,6 +25,20 @@ typedef struct ui_gtk_option {
     ui_gtk_node *owner;
 } ui_gtk_option;
 
+typedef struct ui_gtk_scene_item {
+    char *kind;
+    char *label;
+    int64_t x, y, w, h;
+} ui_gtk_scene_item;
+
+static void ui_gtk_scene_item_free(gpointer value) {
+    ui_gtk_scene_item *item = (ui_gtk_scene_item *)value;
+    if (!item) return;
+    g_free(item->kind);
+    g_free(item->label);
+    g_free(item);
+}
+
 struct ui_gtk_node {
     char *id;
     char *action;
@@ -32,6 +47,8 @@ struct ui_gtk_node {
     ui_gtk_option *options;
     int option_count;
     gboolean owns_widget;
+    GPtrArray *scene_items;
+    GPtrArray *scene_pending;
 };
 
 typedef struct ui_gtk_loop {
@@ -104,6 +121,8 @@ static void ui_gtk_clear_nodes(void) {
             g_free(item->id);
         }
         g_free(ui_nodes[index].options);
+        if (ui_nodes[index].scene_items) g_ptr_array_unref(ui_nodes[index].scene_items);
+        if (ui_nodes[index].scene_pending) g_ptr_array_unref(ui_nodes[index].scene_pending);
         if (ui_nodes[index].owns_widget && ui_nodes[index].widget) {
             g_signal_handlers_disconnect_by_data(ui_nodes[index].widget, &ui_nodes[index]);
             g_object_unref(ui_nodes[index].widget);
@@ -116,6 +135,8 @@ static void ui_gtk_clear_nodes(void) {
         ui_nodes[index].options = NULL;
         ui_nodes[index].option_count = 0;
         ui_nodes[index].owns_widget = FALSE;
+        ui_nodes[index].scene_items = NULL;
+        ui_nodes[index].scene_pending = NULL;
     }
     ui_node_count = 0;
 }
@@ -412,6 +433,117 @@ PROCEDURE(add_line) {
     g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
     gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
     RETURNINT(1);
+    ENDPROC
+}
+
+static gboolean ui_gtk_scene_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
+    ui_gtk_node *node = (ui_gtk_node *)data;
+    guint index;
+    (void)widget;
+    cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+    cairo_paint(cr);
+    if (!node || !node->scene_items) return FALSE;
+    cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(cr, 12.0);
+    for (index = 0; index < node->scene_items->len; ++index) {
+        ui_gtk_scene_item *item = g_ptr_array_index(node->scene_items, index);
+        double x = (double)item->x / 256.0;
+        double y = (double)item->y / 256.0;
+        double w = (double)item->w / 256.0;
+        double h = (double)item->h / 256.0;
+        if (strcmp(item->kind, "edge") == 0) {
+            cairo_set_source_rgb(cr, 0.20, 0.27, 0.38);
+            cairo_set_line_width(cr, 2.0);
+            cairo_move_to(cr, x, y);
+            cairo_line_to(cr, x + w, y + h);
+            cairo_stroke(cr);
+        } else {
+            if (strcmp(item->kind, "tile") == 0) cairo_set_source_rgb(cr, 0.74, 0.85, 0.68);
+            else if (strcmp(item->kind, "unit") == 0) cairo_set_source_rgb(cr, 0.86, 0.70, 0.45);
+            else cairo_set_source_rgb(cr, 0.70, 0.81, 0.94);
+            cairo_rectangle(cr, x, y, w, h);
+            cairo_fill_preserve(cr);
+            cairo_set_source_rgb(cr, 0.18, 0.24, 0.34);
+            cairo_set_line_width(cr, 1.0);
+            cairo_stroke(cr);
+        }
+        if (item->label && *item->label) {
+            cairo_set_source_rgb(cr, 0.08, 0.10, 0.14);
+            cairo_move_to(cr, x + 4.0, y + 17.0);
+            cairo_show_text(cr, item->label);
+        }
+    }
+    return FALSE;
+}
+
+PROCEDURE(add_scene) {
+    ui_gtk_node *node;
+    const char *id = GETSTRING(ARG0);
+    int column = GETINT(ARG1);
+    int row = GETINT(ARG2);
+    if (!ui_grid || column < 0 || row < 0 || ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) RETURNINTX(0);
+    node = &ui_nodes[ui_node_count++];
+    node->id = g_strdup(id);
+    node->action = g_strdup("");
+    node->widget = gtk_drawing_area_new();
+    node->scene_items = g_ptr_array_new_with_free_func(ui_gtk_scene_item_free);
+    g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
+    gtk_widget_set_size_request(node->widget, 420, 260);
+    gtk_widget_set_hexpand(node->widget, TRUE);
+    gtk_widget_set_vexpand(node->widget, TRUE);
+    g_signal_connect(node->widget, "draw", G_CALLBACK(ui_gtk_scene_draw), node);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(scene_begin) {
+    ui_gtk_node *node = ui_gtk_find_node(GETSTRING(ARG0));
+    if (!node || !node->scene_items || node->scene_pending) RETURNINTX(0);
+    node->scene_pending = g_ptr_array_new_with_free_func(ui_gtk_scene_item_free);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(scene_item) {
+    ui_gtk_node *node = ui_gtk_find_node(GETSTRING(ARG0));
+    ui_gtk_scene_item *item;
+    const char *kind = GETSTRING(ARG1);
+    int64_t x = GETINT(ARG2), y = GETINT(ARG3), w = GETINT(ARG4), h = GETINT(ARG5);
+    const char *label = GETSTRING(ARG6);
+    const int64_t limit = INT64_C(1099511627776);
+    if (!node || !node->scene_pending || node->scene_pending->len >= 512 ||
+        x < -limit || x > limit || y < -limit || y > limit ||
+        w < 0 || w > limit || h < 0 || h > limit || strlen(label) > 4096 ||
+        (strcmp(kind, "rect") != 0 && strcmp(kind, "edge") != 0 &&
+         strcmp(kind, "tile") != 0 && strcmp(kind, "unit") != 0)) RETURNINTX(0);
+    item = g_new0(ui_gtk_scene_item, 1);
+    item->kind = g_strdup(kind);
+    item->label = g_strdup(label);
+    item->x = x; item->y = y; item->w = w; item->h = h;
+    g_ptr_array_add(node->scene_pending, item);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(scene_commit) {
+    ui_gtk_node *node = ui_gtk_find_node(GETSTRING(ARG0));
+    if (!node || !node->scene_pending) RETURNINTX(0);
+    g_ptr_array_unref(node->scene_items);
+    node->scene_items = node->scene_pending;
+    node->scene_pending = NULL;
+    g_object_set_data(G_OBJECT(node->widget), "crexx-scene-count", GINT_TO_POINTER((int)node->scene_items->len));
+    gtk_widget_queue_draw(node->widget);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(scene_abort) {
+    ui_gtk_node *node = ui_gtk_find_node(GETSTRING(ARG0));
+    if (node && node->scene_pending) {
+        g_ptr_array_unref(node->scene_pending);
+        node->scene_pending = NULL;
+    }
     ENDPROC
 }
 
@@ -828,6 +960,13 @@ LOADFUNCS
             "id=.string,text=.string,column=.int,row=.int");
     ADDPROC(add_line, "ui_gtk_native.add_line", "b", ".int",
             "id=.string,column=.int,row=.int");
+    ADDPROC(add_scene, "ui_gtk_native.add_scene", "b", ".int",
+            "id=.string,column=.int,row=.int");
+    ADDPROC(scene_begin, "ui_gtk_native.scene_begin", "b", ".int", "id=.string");
+    ADDPROC(scene_item, "ui_gtk_native.scene_item", "b", ".int",
+            "id=.string,kind=.string,x=.int,y=.int,w=.int,h=.int,label=.string");
+    ADDPROC(scene_commit, "ui_gtk_native.scene_commit", "b", ".int", "id=.string");
+    ADDPROC(scene_abort, "ui_gtk_native.scene_abort", "b", ".void", "id=.string");
     ADDPROC(add_button, "ui_gtk_native.add_button", "b", ".int",
             "id=.string,text=.string,action=.string,column=.int,row=.int");
     ADDPROC(add_input, "ui_gtk_native.add_input", "b", ".int",

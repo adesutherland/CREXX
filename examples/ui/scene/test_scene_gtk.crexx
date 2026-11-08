@@ -1,0 +1,129 @@
+options levelg
+namespace ui_scene_gtk_test
+import ui
+import ui_contract
+import ui_scene
+import ui_gtk
+import ui_gtk_test
+import scene_examples
+
+main: procedure = .int
+  preflight_driver = .gtkdriver()
+  oversized = .uiview_impl("Too many controls")
+  do index = 1 to 65
+    call oversized.add_label("label" || index, "Value")
+  end
+  if preflight_driver.preflight_complete(oversized).code() \= "limit" then return 1
+  two_scenes = .uiview_impl("Two scenes")
+  empty_packet = '{"version":1,"kind":"full","epoch":"two","revision":0,"items":[]}'
+  call two_scenes.add_scene("first", empty_packet)
+  call two_scenes.add_scene("second", empty_packet)
+  if preflight_driver.preflight_complete(two_scenes).operation() \= "form.scene" then return 1
+  steps = .string[]
+  steps[1] = "expect-scene-count|graph|3"
+  steps[2] = "expect|model|A x: 7680 Added: 0"
+  steps[3] = "click|move"
+  steps[4] = "expect|model|A x: 10240 Added: 0"
+  steps[5] = "expect-scene-count|graph|3"
+  steps[6] = "click|add"
+  steps[7] = "expect-scene-count|graph|4"
+  steps[8] = "expect|model|A x: 10240 Added: 1"
+  steps[9] = "click|quit"
+  driver = .gtkdriver()
+  rc = ui_gtk_test..start(steps)
+  if rc < 0 then return 1
+  session = make_graph_session("gtk-graph", ui_gtk..capabilities())
+  run_rc = driver.run(session)
+  test_rc = ui_gtk_test..finish()
+  if run_rc \= 0 | test_rc \= 0 then do
+    say "FAIL: GTK graph host" run_rc test_rc driver.error()
+    return 1
+  end
+
+  fallback_steps = .string[]
+  fallback_steps[1] = "expect|status|Fallback selected"
+  fallback_steps[2] = "click|quit"
+  rc = ui_gtk_test..start(fallback_steps)
+  if rc < 0 then return 1
+  session = .uisession("gtk-refusal", ui_gtk..capabilities())
+  rc = session.add_component("root", .refusal_probe())
+  rc = session.register_command(.uicommand("probe.quit", "Quit", "root", "ui.close.requested", "q"))
+  run_rc = driver.run(session)
+  test_rc = ui_gtk_test..finish()
+  if run_rc \= 0 | test_rc \= 0 then do
+    say "FAIL: GTK application-visible refusal" run_rc test_rc driver.error()
+    return 1
+  end
+
+  resync_steps = .string[]
+  resync_steps[1] = "expect-scene-count|graph|1"
+  resync_steps[2] = "click|break"
+  resync_steps[3] = "expect|status|Recovered"
+  resync_steps[4] = "expect-scene-count|graph|1"
+  resync_steps[5] = "click|quit"
+  rc = ui_gtk_test..start(resync_steps)
+  if rc < 0 then return 1
+  session = .uisession("gtk-resync", ui_gtk..capabilities())
+  rc = session.add_component("root", .resync_probe())
+  rc = session.register_event("probe.break.requested")
+  rc = session.register_command(.uicommand("probe.break", "Break", "root", "probe.break.requested", "b"))
+  rc = session.register_command(.uicommand("probe.quit", "Quit", "root", "ui.close.requested", "q"))
+  run_rc = driver.run(session)
+  test_rc = ui_gtk_test..finish()
+  if run_rc \= 0 | test_rc \= 0 then do
+    say "FAIL: GTK full resync" run_rc test_rc driver.error()
+    return 1
+  end
+  say "PASS: GTK graph scene projection"
+  return 0
+
+refusal_probe: class implements .uicomponent
+  _fallback = .int
+  *: factory
+    _fallback = 0
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    if event.name() = "ui.view.refused" then do
+      if event.body().text("operation") = "scene.tile" then _fallback = 1
+    end
+    effects = .uieffects()
+    if event.name() = "ui.close.requested" then call effects.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))
+    return effects
+  view: method = .uiview
+    view = .uiview_impl("Refusal probe")
+    if _fallback then call view.add_label("status", "Fallback selected", "root")
+    else call view.add_scene("graph", '{"version":1,"kind":"full","epoch":"refusal","revision":1,"items":[{"id":"tile","kind":"tile","x":0,"y":0,"w":256,"h":256,"label":"Tile"}]}', "root")
+    call view.add_button("quit", "Quit", "probe.quit", "q")
+    return view
+
+resync_probe: class implements .uicomponent
+  _scene = .uisceneowner
+  _packet = .string
+  _status = .string
+  *: factory
+    _scene = .uisceneowner("resync")
+    unused = _scene.change("add", '{"id":"node","kind":"rect","x":4096,"y":4096,"w":8192,"h":8192,"label":"Node"}')
+    _packet = _scene.snapshot()
+    _status = "Initial"
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    if event.name() = "probe.break.requested" then do
+      _packet = '{"version":1,"kind":"delta","epoch":"resync","base":9,"revision":10,"changes":[]}'
+      _status = "Awaiting resync"
+    end
+    if event.name() = "ui.scene.resync" then do
+      _packet = _scene.snapshot()
+      _status = "Recovered"
+    end
+    effects = .uieffects()
+    if event.name() = "ui.close.requested" then call effects.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))
+    return effects
+  view: method = .uiview
+    view = .uiview_impl("Resync probe")
+    call view.add_scene("graph", _packet, "root")
+    call view.add_label("status", _status)
+    call view.add_button("break", "Break", "probe.break", "b")
+    call view.add_button("quit", "Quit", "probe.quit", "q", "right", "break")
+    return view

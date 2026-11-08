@@ -1,0 +1,10 @@
+/* The ANSI host selects the semantic graph view from the same Level G
+ * feature used by the GTK drawing-area example. */
+options levelg
+namespace graph_ansi
+import ui_ansi
+import scene_examples
+
+session = make_graph_session("ansi-graph", ui_ansi..capabilities())
+driver = .ansidriver()
+exit driver.run(session)

@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 $prefix = (Resolve-Path -LiteralPath $CorePrefix).Path
 $binary = Join-Path $prefix 'bin'
 foreach ($name in @('crexx.exe','rxc.exe','rxas.exe','rxlink.exe','rxcpack.exe',
-        'crexx-provider-package.exe','ui_ansi.rxbin','ui_gtk.rxbin',
+        'crexx-provider-package.exe','ui_ansi.rxbin','ui_gtk.rxbin','ui_scene.rxbin',
         'providers\rxconsole.lib','providers\rx_ui_gtk_native.lib',
         'providers\rx_ui_gtk_native.native.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $binary $name))) {
@@ -27,7 +27,7 @@ try {
     foreach ($hostName in @('Console','GTK')) {
         $libraries = @('ui_ansi','ui_dialogs','ui_terminal_view')
         if ($hostName -eq 'GTK') {
-            $libraries = @('ui_gtk')
+            $libraries = @('ui_gtk','ui_scene')
         }
         $libraries += @('ui_local_resources','ui_contract','ui_catalog','ui')
         $stem = Join-Path $output "Lotto-$hostName"

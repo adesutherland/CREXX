@@ -122,6 +122,10 @@ static gboolean drive(gpointer ignored) {
     } else if (!strcmp(parts[0], "expect") && parts[1] && parts[2] && window) {
         node = find_node(window, parts[1]);
         if (node && GTK_IS_LABEL(node)) done = !strcmp(gtk_label_get_text(GTK_LABEL(node)), parts[2]);
+    } else if (!strcmp(parts[0], "expect-scene-count") && parts[1] && parts[2] && window) {
+        node = find_node(window, parts[1]);
+        if (node && GTK_IS_DRAWING_AREA(node))
+            done = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(node), "crexx-scene-count")) == (int)g_ascii_strtoll(parts[2], NULL, 10);
     } else if (!strcmp(parts[0], "cancel") && dialog) {
         gtk_dialog_response(GTK_DIALOG(dialog), GTK_RESPONSE_CANCEL); done = TRUE;
     } else if (!strcmp(parts[0], "ok") && dialog && !GTK_IS_FILE_CHOOSER(dialog)) {

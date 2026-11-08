@@ -7,6 +7,7 @@ set(CREXX_ARRAY_FORMATTING_MODULE
 add_subdirectory(functions/array-formatting)
 add_subdirectory(exits/pprint)
 add_subdirectory(ui/text-inspector)
+add_subdirectory(ui/scene)
 add_subdirectory(franz-lotto)
 add_subdirectory(fortran)
 add_subdirectory(forth)

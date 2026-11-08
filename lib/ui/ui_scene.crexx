@@ -3,7 +3,7 @@
  * this module only validates and replicates bounded presentation records.
  */
 options levelg
-namespace ui_scene expose uiresult uioperations uiscenereplica uipointer uiviewport uiworldpoint
+namespace ui_scene expose uiresult uioperations uiscenereplica uisceneowner uipointer uiviewport uiworldpoint
 import rxfnsb
 import rxjson
 import ui
@@ -334,6 +334,69 @@ uiscenereplica: class
     _resync_failures = _resync_failures + 1
     if _resync_failures >= 2 then return .uiresult("resync_exhausted", "scene", message)
     return .uiresult("sync_error", "scene", message)
+
+/** Application-facing presentation owner. The feature still owns graph/map
+ * records, rules, selection and undo; this owner makes scene revisions and
+ * shared object picking deterministic. */
+uisceneowner: class
+  _replica = .uiscenereplica
+  _error = .string
+  *: factory
+    arg epoch = .string
+    _replica = .uiscenereplica()
+    _error = ""
+    initial = '{"version":1,"kind":"full","epoch":' || jsonquote(epoch) || ',"revision":0,"items":[]}'
+    result = _replica.apply(initial)
+    if \result.ok() then _error = result.message()
+    return
+  snapshot: method = .string
+    return _replica.frame()
+  revision: method = .int
+    return _replica.revision()
+  count: method = .int
+    return _replica.count()
+  item: method = .string
+    arg index = .int
+    return _replica.item(index)
+  error: method = .string
+    return _error
+  /** Return a single bounded delta after authoritative mutation, or empty
+   * when the requested presentation change is invalid. */
+  change: method = .string
+    arg op = .string, item_or_id = .string
+    _error = ""
+    if op = "remove" then change = '{"op":"remove","id":' || jsonquote(item_or_id) || '}'
+    else if op = "add" | op = "replace" then change = '{"op":' || jsonquote(op) || ',"item":' || item_or_id || '}'
+    else do
+      _error = "unknown scene operation"
+      return ""
+    end
+    packet = '{"version":1,"kind":"delta","epoch":' || jsonquote(_replica.epoch()) || ',"base":' || _replica.revision() || ',"revision":' || (_replica.revision() + 1) || ',"changes":[' || change || ']}'
+    candidate = _replica
+    result = candidate.apply(packet)
+    if \result.ok() then do
+      _error = result.message()
+      return ""
+    end
+    _replica = candidate
+    return packet
+  /** Last drawn object wins. Rect/tile/unit hit areas are half-open in ticks;
+   * edge proximity and explicit z order are STEP05 graph refinements. */
+  pick: method = .string
+    arg point = .uiworldpoint
+    if \point.valid() then return ""
+    do index = _replica.count() to 1 by -1
+      item = _replica.item(index)
+      kind = jsonget(item, "kind")
+      if kind = "edge" then iterate
+      x = jsonget(item, "x") as .int
+      y = jsonget(item, "y") as .int
+      w = jsonget(item, "w") as .int
+      h = jsonget(item, "h") as .int
+      if point.x() >= x & point.x() < x + w & point.y() >= y & point.y() < y + h then
+        return jsonget(item, "id")
+    end
+    return ""
 
 /** Exact integer text only; prevents scientific notation/rounding at the
  * JSON-to-VM boundary and keeps every accepted wire value exact in JavaScript. */

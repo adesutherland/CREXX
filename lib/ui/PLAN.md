@@ -45,7 +45,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | --- | --- | --- | --- | --- |
 | **UIX-STEP01** Baseline | — | Trace handwritten Text Inspector through GTK/ANSI, retain the line regression, and sketch graph/map gaps with independent transition expectations. | AC01, AC04–06, AC08 | done |
 | **UIX-STEP02** Core contracts | STEP01 | Freeze direct-consumer view, scene, input and support contracts (D05–06, D08–10); preserve v0 and prove refusal, delta/resync and representative RXAS. | AC01, AC04–06, AC08 | done |
-| **UIX-STEP03** GTK/ANSI scene | STEP02; parallel with STEP04 | Build the Level G scene owner and bounded graph/map fixtures, then GTK/ANSI graph projections with keyboard, delta/resync and refusal checks. | AC04–06, AC08 | todo |
+| **UIX-STEP03** GTK/ANSI scene | STEP02; parallel with STEP04 | Build the Level G scene owner and bounded graph/map fixtures, then GTK/ANSI graph projections with keyboard, delta/resync and refusal checks. | AC04–06, AC08 | done |
 | **UIX-STEP04** Browser forms | STEP02; parallel with STEP03 | Build one browser projection and local/hosted adapters (D07); prove handwritten Text Inspector forms, owner turns, one async effect, restart and reconnect. | AC03, AC06, AC08 | todo |
 | **UIX-STEP05** Graph then map | STEP03–04 | Complete graph then map on GTK, ANSI and both browser routes; compare domain journals and scene lifecycle at each stage, measuring before acceleration. | AC04–06, AC08 | todo |
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | todo |
@@ -288,6 +288,35 @@ mapping and keyboard/cell hit areas remain host responsibilities. The shared
 ticks-per-pixel scale (1..65536), bounded origin and viewport size; out-of-view
 or out-of-world pointers are refused. The default 256 ticks per world unit is
 a representation scale, not a claim that every physical pixel has that size.
+
+#### STEP03 scene owner and host seam
+
+`uisceneowner` builds authoritative presentation revisions from application
+records and supplies shared bounded rect/tile/unit picking. Graph/map features
+retain their actual records, selection and undo/turn policy. A `scene` logical
+view node carries the full initial packet and subsequent deltas through the
+existing `node_value()` method, preserving the v0 `uiview` interface. The GTK
+driver validates packets in its Level G replica, then paints bounded primitives
+through a GTK 3 drawing area/Cairo. A feature receiving an ANSI operation
+profile builds a semantic node/edge list and stable-ID commands using existing
+controls. Both use the same feature transitions. This step proves a bounded
+graph fixture and a small map state fixture; full graph gestures/undo and map
+rendering across all hosts remain STEP05.
+
+The GTK drawing-area renderer uses full repaint after an accepted
+delta. It keeps a native copy only of approved drawing primitives, no domain
+objects or resources. Host preflight occurs before native mutation; errors
+retain the last frame and return a specific status. `ui.view.refused` gives a
+feature one owner turn to select a supported view. `ui.scene.resync` requests
+one authoritative full snapshot after a GTK revision error. Callback input
+enters the existing owner-turn mailbox. The focused tests cover drawing
+setup/cleanup, graph updates, ANSI keyboard/semantic fallback, unsupported
+operation and resync. The map fixture checks turn state and terrain/unit scene
+identity; map host projection remains STEP05.
+
+The initial GTK projection admits at most 64 controls and one scene per
+session; both limits are checked before creating the native surface. Multiple
+scene replicas and topology changes remain STEP05 host work.
 
 D04 keeps accelerators independent. Use culling and batching before considering
 WebGL2 for larger maps, Canvas layers for dense graphs, or WebGPU rendering.

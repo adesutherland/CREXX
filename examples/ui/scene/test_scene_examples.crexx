@@ -1,0 +1,102 @@
+options levelg
+namespace ui_scene_examples_test
+import rxfnsb
+import rxjson
+import ui
+import ui_contract
+import ui_scene
+import ui_terminal_view
+import scene_examples
+
+graphic_caps = .uicapabilities("")
+call graphic_caps.enable("form.scene")
+call graphic_caps.enable("scene.rect")
+call graphic_caps.enable("scene.edge")
+graphical = make_graph_session("graphical", graphic_caps)
+semantic = make_graph_session("semantic", .uicapabilities(""))
+graphic_view = graphical.view()
+semantic_view = semantic.view()
+if graphic_view.node_kind(1) \= "scene" | semantic_view.node_kind(1) \= "label" then do
+  say "FAIL: graph capability fallback"
+  exit 1
+end
+replica = .uiscenereplica()
+if \replica.apply(graphic_view.node_value(1)).ok() | replica.count() \= 3 then do
+  say "FAIL: initial graph snapshot"
+  exit 1
+end
+canvas = .uiterminal_canvas()
+call canvas.resize(80, 24)
+terminal_frame = canvas.render(semantic_view, "")
+if pos("Graph objects", terminal_frame) = 0 | pos("node-a", terminal_frame) = 0 then do
+  say "FAIL: ANSI semantic graph projection"
+  exit 1
+end
+
+if graphical.invoke("graph.move") \= 0 | semantic.invoke("graph.move") \= 0 then exit 1
+if graphical.pump(1) \= 1 | semantic.pump(1) \= 1 then exit 1
+graphic_view = graphical.view()
+semantic_view = semantic.view()
+if \replica.apply(graphic_view.node_value(1)).ok() then do
+  say "FAIL: graph move delta"
+  exit 1
+end
+if jsonget(replica.item(1), "x") \= "10240" then do
+  say "FAIL: graph move did not reach scene"
+  exit 1
+end
+graphic_model = ""
+semantic_model = ""
+i = .int
+do i = 1 to graphic_view.count()
+  if graphic_view.node_id(i) = "model" then graphic_model = graphic_view.node_text(i)
+end
+do i = 1 to semantic_view.count()
+  if semantic_view.node_id(i) = "model" then semantic_model = semantic_view.node_text(i)
+end
+if graphic_model \= "A x: 10240 Added: 0" | semantic_model \= graphic_model then do
+  say "FAIL: graph host model transitions differ"
+  exit 1
+end
+
+if graphical.invoke("graph.add") \= 0 | semantic.invoke("graph.add") \= 0 then exit 1
+if graphical.pump(1) \= 1 | semantic.pump(1) \= 1 then exit 1
+if \replica.apply(graphical.view().node_value(1)).ok() | replica.count() \= 4 then do
+  say "FAIL: graph add delta"
+  exit 1
+end
+if pos("node-c", canvas.render(semantic.view(), "")) = 0 then do
+  say "FAIL: semantic graph omitted added node"
+  exit 1
+end
+
+map = make_map_session("map", .uicapabilities(""))
+if map.invoke("map.turn") \= 0 | map.pump(1) \= 1 then exit 1
+map_view = map.view()
+if map_view.node_text(2) \= "Turn: 2" then do
+  say "FAIL: map turn transition"
+  exit 1
+end
+map_feature = .map_component()
+if jsoncount(map_feature.scene(), "items") \= 2 | jsonget(map_feature.scene(), "items.1.kind") \= "tile" | jsonget(map_feature.scene(), "items.2.kind") \= "unit" then do
+  say "FAIL: map terrain and unit scene identity"
+  exit 1
+end
+owner = .uisceneowner("pick")
+if owner.change("remove", "missing") \= "" then do
+  say "FAIL: invalid owner change was admitted"
+  exit 1
+end
+if owner.change("add", '{"id":"picked","kind":"rect","x":256,"y":256,"w":512,"h":512,"label":"Picked"}') = "" then do
+  say "FAIL: invalid change poisoned authoritative owner"
+  exit 1
+end
+if owner.pick(.uiworldpoint(300, 300, 1)) \= "picked" | owner.pick(.uiworldpoint(768, 300, 1)) \= "" then do
+  say "FAIL: half-open world hit test"
+  exit 1
+end
+call graphical.close()
+call semantic.close()
+call map.close()
+say "PASS: scene graph and map feature transitions"
+exit 0

@@ -134,6 +134,16 @@ uiview_impl: class implements .uiview
     call place_current relation, anchor
     return
 
+  /** Add a bounded scene packet as one logical control. Graph/map meaning
+   * stays in the feature; graphical hosts project it and semantic hosts may
+   * select an application-provided alternative. */
+  add_scene: method = .void
+    arg id = .string, packet = .string, relation = "below", anchor = ""
+    call add_label(id, "", relation, anchor)
+    _kinds[_count] = "scene"
+    _values[_count] = packet
+    return
+
   /** Append a single-message status bar. Drivers may use a native statusbar
    * or render the value as an ordinary status line. */
   add_statusbar: method = .void

@@ -367,9 +367,17 @@ ticks, and wire revisions stay within JavaScript's exact integer range.
 Items are presentation records with stable IDs and semantic labels; graph
 edits, map turns, terrain data and undo remain with application features.
 
-This module is a contract and replica, not a graphical host. GTK/ANSI scene
-projection and the browser adapter are separate delivery steps in
-[`PLAN.md`](PLAN.md). The focused `ui_scene_contract_noopt` test checks
+`uisceneowner` builds presentation revisions and bounded object picking from
+application-owned records. A `scene` view node carries a full packet or delta
+through the existing `node_value()` method. The GTK host validates the packet
+in Level G, stages its Cairo primitives and commits one native frame. The
+same graph feature selects a semantic node/edge list and stable commands on
+ANSI. An unsupported GTK operation is delivered to the feature as
+`ui.view.refused` before a partial frame; a revision gap produces
+`ui.scene.resync` and one authoritative full replacement. See the
+[direct scene example](../../examples/ui/scene/README.md) and
+[`PLAN.md`](PLAN.md) for the later graph/map and browser work. The focused
+`ui_scene_contract_noopt` test checks
 preflight, atomic changes, stale input, overflow and full resync. The session
 copies its broad capability set on construction; a caller cannot mutate a
 running session by changing that original builder.
