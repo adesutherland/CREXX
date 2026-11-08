@@ -196,8 +196,12 @@ policy. The existing native `llama` CPU/Metal/CUDA/Vulkan provider is not
 itself a browser WebGPU backend. Keep model preparation and inference off the
 UI owner turn, with explicit device/memory admission, cancellation, loss and
 provider fallback. A WebGPU map renderer, vector scorer and inference provider
-are separate capabilities; the [UI expansion plan](PLAN.md) records their
-decision gates. Browser-local SQLite remains conditional on a proved VFS and
+are separate optional capabilities. Canvas 2D map drawing and exact CPU
+`rxvector` scoring are the initial paths; each GPU path needs its own
+representative correctness, latency, resource and device/fallback proof. Local
+model backends are chosen during implementation; their browser-local target
+does not itself require WebGPU. The [UI expansion plan](PLAN.md) records these
+gates. Browser-local SQLite remains conditional on a proved VFS and
 export/recovery path: OPFS is origin-scoped storage subject to browser quota
 and clearing.
 

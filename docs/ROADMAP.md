@@ -983,8 +983,9 @@ prototype has been qualified by this roadmap update.
   semantic fallback or application-visible refusal for unsupported operations.
   It selects both a local Wasm Worker host and a hosted native session behind
   one browser projection. GTK 3 drawing, browser SVG graphs, Canvas 2D maps and
-  ANSI semantic views are selected initial surfaces; acceleration needs measured
-  justification. Application state stays in Level G; Peter's
+  ANSI semantic views are selected initial surfaces. GPU acceleration is an
+  independent, evidence-gated option for map rendering, vector scoring and
+  local model providers. Application state stays in Level G; Peter's
   RXPP façade follows direct core consumers. Public scene/browser and support
   contracts remain behind explicit design and January-freeze scope gates.
   RAG queries target hosted and browser-local read-only routes through one
@@ -996,9 +997,9 @@ prototype has been qualified by this roadmap update.
   browser-local providers through one application service, with native/hosted
   fallback if local generation proves infeasible within reasonable effort
   discussed during implementation. Local model engines/backends remain open.
-  Full local RAG, persistent local SQLite/vector storage and GPU map/vector
-  acceleration remain separate choices; UI effects integrate these services
-  without moving their policy into the driver.
+  Full local RAG and persistent local SQLite/vector storage remain separate
+  choices; UI effects integrate these services without moving their policy
+  into the driver.
 - First-class source provenance, shared Classic BIF behavior, and variable-pool
   integration are carried by Level C and RexxScript before becoming independent
   programmes.
