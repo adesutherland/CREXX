@@ -140,11 +140,15 @@ first prepares the RXPP macro library through
 `.rxpp` source and compiles its generated `.crexx` output into the separate
 `text_inspector_gui_macro.rxbin` target.
 
-The plan also provides an experimental `run-text-inspector-gtk-macro` target.
-It loads the generated `DEFINE-GUI` view through a separate launcher while
-delegating event updates to the existing Text Inspector component. The normal
-`run-text-inspector-gtk` target remains the reference application and is not
-replaced. After configuring the GTK tree and preparing its RXPP artifacts, run:
+The graph declares an experimental `run-text-inspector-gtk-macro` target. Its
+intended path loads the generated `DEFINE-GUI` view through a separate launcher
+while delegating event updates to the existing Text Inspector component. The
+normal `run-text-inspector-gtk` target remains the reference application. The
+graph currently refers to absent authored
+`text_inspector_gui_macro_gtk.rxpp` and
+`text_inspector_gui_macro_test.crexx` inputs, so its macro run/probe targets
+cannot be treated as runnable checkout evidence. After restoring those inputs,
+checking dependencies and qualifying the path, the intended GTK invocation is:
 
 ```powershell
 .\cmake-build-release\bin\rxbuild.exe `
@@ -163,7 +167,8 @@ generated renderer substitutes a matching value when rebuilding the view.
 This remains an experimental contract; it does not yet generate application
 update logic for every control type or derive calculated labels automatically.
 
-The focused Phase 2 regression can be run without opening a GTK window:
+The intended focused Phase 2 regression runs without opening a GTK window once
+the missing graph input and its dependencies are repaired:
 
 ```powershell
 .\\cmake-build-release\\bin\\rxbuild.exe \`
@@ -266,11 +271,13 @@ The called procedure receives `(event, delegate)`, can inspect the existing
 payload APIs, print diagnostics, and either forward the event or return its own
 effects. No `GUI-HANDLERS` block or dynamic procedure lookup is required.
 
-Work Order 7 provides the `run-text-inspector-gui-probe` graph target. It is a
-backend-neutral regression for the generated controller: it loads only the
-ordinary UI contract modules and exercises descriptors, bindings, generic
-payloads, dispatch, and handler-message generation. The existing
-`run-text-inspector-gtk-macro` target remains the GTK end-to-end path.
+Work Order 7 declares the `run-text-inspector-gui-probe` graph target. It is
+intended as a backend-neutral regression for the generated controller: it would
+load the ordinary UI contract modules and exercise descriptors, bindings,
+generic payloads, dispatch, and handler-message generation. The declared
+`run-text-inspector-gtk-macro` target is the intended GTK end-to-end path;
+both need the missing sources and focused replay before their results can be
+claimed. See the [UI expansion plan](../../../lib/ui/PLAN.md).
 
 ## QA and extension
 

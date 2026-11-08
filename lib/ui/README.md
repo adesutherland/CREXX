@@ -70,7 +70,7 @@ Level G; native providers expose lower-level mechanism, not application policy.
 | --- | --- | --- |
 | Line TUI | Owner loop; retained chooser/confirmation request; next line supplies response | Blocking line input; shortcuts/command IDs; row-oriented rendering |
 | ANSI | Timed console polling; Level G modal dialog state; resize stays live | Keyboard, text, mouse, paste where supported; bounded cell projection |
-| GTK | Native GTK loop; owned signal mailbox serviced on idle; response-driven dialogs | One GTK 3 window; fixed labels, lines, buttons, choices and integers |
+| GTK | Native GTK loop; owned signal mailbox serviced on idle; response-driven dialogs | One GTK 3 window; labels, status, lines, buttons, inputs, checkboxes, progress, choices, combos and integers |
 
 Each host starts with core capabilities and explicitly enables its implemented
 services through `capabilities()`. All three demonstrate Open, Cancel,
@@ -127,6 +127,82 @@ allocate unique session identities rather than reuse this single-run value.
 A builder can generate view/layout, command descriptors, schemas and composition.
 Handwritten feature logic stays separate and survives regeneration. It must not
 generate terminal escapes, GTK handles or browser DOM calls into a feature.
+
+## Proposed browser and 2D architecture
+
+The [UI expansion plan](PLAN.md) records options, open decisions and acceptance
+criteria. This section describes the proposed boundary; no browser driver,
+scene API or general graphics renderer is implemented in this library.
+
+```text
+Level G feature: model, update(event), view() / proposed scene()
+          | semantic commands, messages and effects
+uisession: validation, owner routing, queues, correlation and close
+          | view or scene snapshot                 ^ normalized input/outcome
+host adapter: GTK / terminal / proposed browser / proposed scene renderer
+          | native widgets, SVG/Canvas, I/O, device and event loop
+```
+
+The browser candidate keeps the cREXX VM, UI image, session and component in
+one Emscripten Worker. The Worker processes one session turn at a time and
+returns a bounded, versioned view to a thin main-thread adapter. The adapter
+uses HTML controls, SVG or Canvas and sends normalized user facts back; it owns
+DOM access, focus, browser dialogs and async Web APIs. Wasm does not directly
+access the DOM, so replacing application JavaScript with cREXX does not remove
+all JavaScript glue. Current `uidriver.run(session)` hosts own synchronous
+loops; the browser design must choose an owner-turn/step interface or a
+qualified suspend/resume mechanism. A blocking wait in the Worker would prevent
+its next input message from being handled. Browser file choice and storage
+should return opaque, scoped grants through correlated effects, following the
+same feature contract as Text Inspector. The existing single-threaded
+Emscripten profile and THE's separate browser preview are feasibility inputs,
+not a working `uidriver` for this library. A hosted native-session/browser-renderer
+path is also possible when central resources or collaboration justify its authentication and
+reconnection contract.
+
+For 2D work, add a semantic scene beside the current flat widget view only
+after defining its public contract. The candidate scene contains stable IDs,
+bounded geometry, layers and z-order, world coordinates, a viewport transform,
+style and accessible labels. Application features retain graph/map objects,
+selection, edit transactions, undo/redo and strategy rules. One reusable scene
+owner should resolve picking and scene revisions; drivers translate physical
+pointer, keyboard and touch input into its coordinate/event contract and paint
+the returned scene. A stale event must not mutate a newer scene. Existing
+`ui.pointer`, viewport and gesture names are vocabulary only; they do not yet
+establish scene hit testing or rendering behavior. The scene contract must
+select coordinate precision and define CSS/device/world conversion before
+pointer events can drive graph edits or map selection.
+
+An SVG projection is the first candidate for editable UML-like graphs because
+individual shapes can keep stable element identities and text/focus overlays.
+Canvas 2D is the first candidate for a bounded strategy map; culling and
+layering come before an accelerated renderer. WebGL2 is an option for measured
+large-map redraw pressure, while WebGPU needs a separate browser-support gate.
+HTML controls and a semantic graph/list alternative remain necessary for
+keyboard and assistive access to graphics. Text/terminal hosts may present a
+functional list or viewport rather than a pixel-equivalent drawing.
+
+Peter's `DEFINE-GUI` remains an authoring layer over these logical contracts.
+Its current generated controller and `node|value` store are experimental: a
+generated setter can change display text separately from the feature model,
+and the macro currently contains Text Inspector-specific dispatch. The next
+design must specify how dynamic labels are computed from the feature's current
+`view()` on every render, and how static routing forwards exactly one semantic
+event through the session. Generated scene declarations may describe layers,
+styles and action IDs, but cannot own a graph editor's or game's model. The
+macro must diagnose unsupported declarations instead of silently ignoring
+them. The example graph currently references two absent source files, so its
+macro run/probe targets need repair and focused replay before use as evidence.
+
+Browser API and scheduling constraints are described in the
+[WebAssembly concepts](https://developer.mozilla.org/en-US/docs/WebAssembly/Guides/Concepts)
+and [Emscripten runtime guide](https://emscripten.org/docs/porting/emscripten-runtime-environment.html).
+The rendering options use the browser's
+[SVG DOM](https://developer.mozilla.org/en-US/docs/Web/SVG/Guides/Scripting),
+[Canvas 2D](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_usage),
+[WebGL](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API) and
+[WebGPU](https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API) capabilities;
+their support and cost must be checked against the selected targets.
 
 For native packaging, GTK supplies a stable RXPA provider ID and the ordinary
 dynamic/static pair. Its V2 capability query remains conservative (zero); it

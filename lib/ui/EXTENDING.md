@@ -95,3 +95,10 @@ equivalent cREXX; the runtime contract must not depend on the builder. A web
 driver additionally needs transport authentication, bounded parsing, session
 identity/reconnection and resource authority; the generated TypeScript schema
 does not provide those services by itself.
+
+The [UI expansion plan](PLAN.md) covers the proposed in-browser Wasm host,
+interactive 2D scenes and the current `DEFINE-GUI` ownership/validation gaps.
+For a local Worker host, browser-to-Worker messages still need bounded input,
+version and stale-revision checks even without a network transport. A hosted
+browser session additionally needs the authentication and reconnection rules
+above. Scene projection must not move graph or game state into the driver.

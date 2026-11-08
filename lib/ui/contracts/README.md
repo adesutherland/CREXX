@@ -255,9 +255,10 @@ such as text, node IDs, command IDs and logical placement. It does not contain
 live GTK widgets, terminal handles or callbacks. The driver may use successive
 descriptions to update an existing display or rebuild it.
 
-The current `uiview_impl` is a flat logical grid. Its node kinds are `label`,
-`line`, `button` and `input`; the editable `input` is used by ANSI dialogs and
-is not supported by every driver. Placement uses `root` to start the layout,
+The current `uiview_impl` is a flat logical grid. Its node kinds include
+`label`, `statusbar`, `line`, `button`, `input`, `checkbox`, `progress`, `choice`,
+`combo` and `integer`; not every driver supports every kind. Placement uses
+`root` to start the layout,
 then `below` or `right` relative to an earlier node's stable ID. These resolve
 to logical rows and columns, which each driver presents in its own way.
 
@@ -620,3 +621,7 @@ asynchronous file I/O, accessibility implementation, and browser/mobile hosts
 remain subsequent work. Use the existing application and contract as a starting
 point for those extensions, with explicit view semantics, host support and
 conformance tests for each addition.
+
+The [UI expansion plan](../PLAN.md) specifies the proposed browser Wasm and 2D
+scene work, including the dynamic-view and generated-controller ownership gates.
+Its planned pointer/viewport vocabulary does not yet constitute a graphics API.
