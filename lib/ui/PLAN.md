@@ -1,8 +1,10 @@
 # UI architecture and capability expansion
 
 Status: design and implementation plan; both browser execution routes are
-selected, but no browser or 2D driver has been delivered. Browser-local RAG,
-database and GPU compute remain option gates, not selected delivery scope.
+selected, but no browser or 2D driver has been delivered. RAG query integration
+targets hosted and browser-local read-only routes, with hosted-only fallback
+conditional on implementation evidence and an agreed reasonable-effort judgment.
+Full local RAG, other application databases and GPU compute remain option gates.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not add these capabilities to an
@@ -85,7 +87,7 @@ additional line-mode coverage is selected only when a feature needs it.
 | Forms and dynamic widgets | Native controls and current session routing | Cell controls, keyboard and supported pointer input | Matching cREXX feature through both local Wasm and hosted sessions, with the same semantic HTML controls | Same command/effect/close transitions; host-specific views and failure paths. |
 | Editable graph | Native 2D projection with keyboard and pointer editing | Semantic node/edge list or bounded cell viewport; edit/connect by stable ID where usable | SVG projection with keyboard and pointer editing | Same graph model, selection and undo history; unsupported gestures refuse explicitly. |
 | Strategy map | Native 2D terrain/unit projection with pan/zoom and selection | Bounded cell viewport and unit/terrain detail/actions where usable | Canvas 2D projection with pan/zoom and selection | Same rules, turns and stale-input handling; unavailable precision or interaction is declared. |
-| Application services | Correlated native or hosted effects | Correlated native or hosted effects | Correlated effects through both browser session routes; hosted RAG first, local database/RAG/inference separate options | Same result and cancellation semantics, with provider and storage limits stated per host. |
+| Application services | Correlated native or hosted effects | Correlated native or hosted effects | Correlated effects through both browser session routes; hosted and local read-only RAG query routes targeted, with conditional hosted-only fallback | Same result and cancellation semantics, with provider and storage limits stated per host. |
 
 The approved support direction combines capability discovery with render
 preflight. A host advertises precise widget, scene, input and limit support at
@@ -127,7 +129,7 @@ main-thread projection. Local Worker messaging and hosted transport are
 adapters to that envelope; they must not create separate browser feature or
 rendering semantics. Each forms, graph and map stage qualifies both routes,
 including local Worker restart and hosted reconnect/revision behavior. This
-selection does not select browser-local RAG, database or inference deployment.
+selection of browser UI routes is independent of the separate RAG query decision.
 
 | Surface | Selected role or later gate | Upgrade condition |
 | --- | --- | --- |
@@ -180,12 +182,21 @@ the optional `llama` provider owns native CPU/Metal/CUDA/Vulkan inference. None
 of these providers is currently a browser UI driver or a proved browser
 deployment of `crexxrag`.
 
-| Candidate | Boundary and first useful proof | Main unresolved work |
-| --- | --- | --- |
-| Hosted RAG query | A proposed authenticated adapter calls the existing native `crexxrag` query path and returns bounded cited results to a browser feature through an application-owned effect. This is the smallest end-to-end RAG integration candidate. | Define the service adapter, authorization, corpus/session identity, cancellation, result size and failure contract. The present CLI/JSON/MCP adapters are not an HTTP service by themselves. |
-| Local read-only RAG | A matching Wasm Worker opens an imported, validated SQLite snapshot plus compatible immutable vector sidecars and performs lexical/vector/graph queries locally. Start with a bounded transient snapshot; persistent OPFS is a separate gate. | Cross-compile the needed Level G modules, `rxsqlite` and `rxvector`; prove bundle identity, sidecar verification, query-embedding provider, memory limits and reload, then VFS/persistence if selected. A native provider's existence is not proof of a Wasm build. |
-| Full local RAG | Browser-local ingestion, embeddings, index publication, review and maintenance. | RAG currently uses independent VM processes, WAL connections, leases and transactional publication; a one-Worker browser profile needs a separate ownership and recovery design. Defer until read-only query is proved and offline authoring is selected. |
-| Other application databases | A graph editor or map game stores its own domain model behind an application repository/effect. | Select schema, transactions, import/export and sync policy per application; do not couple those domains to RAG's SQLite schema or put SQL in the UI driver. |
+| Candidate | Boundary and first useful proof | Main unresolved work | Status |
+| --- | --- | --- | --- |
+| Hosted RAG query | An authenticated adapter calls the existing native `crexxrag` query path and returns bounded cited results to a browser feature through an application-owned effect. | Define the service adapter, authorization, corpus/session identity, cancellation, result size and failure contract. The present CLI/JSON/MCP adapters are not an HTTP service by themselves. | selected; required fallback route |
+| Local read-only RAG | A matching Wasm Worker opens an imported, validated SQLite snapshot plus compatible immutable vector sidecars and performs lexical/vector/graph queries locally. Start with a bounded transient snapshot; persistent OPFS is a separate gate. | Cross-compile the needed Level G modules, `rxsqlite` and `rxvector`; prove bundle identity, sidecar verification, query-embedding provider, memory limits and reload, then VFS/persistence if selected. A native provider's existence is not proof of a Wasm build. | selected target; conditional on implementation feasibility |
+| Full local RAG | Browser-local ingestion, embeddings, index publication, review and maintenance. | RAG currently uses independent VM processes, WAL connections, leases and transactional publication; a one-Worker browser profile needs a separate ownership and recovery design. | unselected |
+| Other application databases | A graph editor or map game stores its own domain model behind an application repository/effect. | Select schema, transactions, import/export and sync policy per application; do not couple those domains to RAG's SQLite schema or put SQL in the UI driver. | application-specific option |
+
+The two selected query routes share one application-owned `rag.query` effect and
+bounded cited-result contract, with route and evidence-snapshot identity. Local
+read-only retrieval remains in scope while its feasibility is investigated.
+If implementation experience reveals a concrete blocker, discuss the remaining
+work and reasonable effort with Adrian before using the authorized hosted-only
+fallback. Do not set an arbitrary effort limit now or silently narrow the local
+route. Browser persistence and offline query embedding are separate choices;
+a transient validated import may establish the first local read-only proof.
 
 An illustrative `rag.query` effect would carry a bounded query, corpus/version
 identity and optional retrieval mode. Its completion would carry ranked passage
@@ -232,8 +243,8 @@ unselected until a specific offline product outcome is agreed.
 
 | Decision ID | Evidence required before selection | Status |
 | --- | --- | --- |
-| **UIX-D01** | Choose hosted, local read-only or full local RAG scope using a representative cited query, data size, privacy/offline requirement and lifecycle owner. | open |
-| **UIX-D02** | For a local query option, prove matching `rxsqlite`/`rxvector` Wasm builds and sidecar identity. Before promising persistence, also prove SQLite VFS, multi-tab/storage behavior, export and recovery. | open; conditional on D01 |
+| **UIX-D01** | Approved conditional target: hosted and browser-local read-only cited query routes share one `rag.query` effect; hosted-only is authorized if the local route proves infeasible within reasonable effort. Discuss that effort when implementation experience exposes concrete work, then record the evidence before changing scope. Full local ingestion remains unselected. | direction approved; local feasibility open |
+| **UIX-D02** | Prove matching `rxsqlite`/`rxvector` Wasm builds, validated SQLite/sidecar identity and a representative cited lexical/vector/graph query. Choose query-embedding route separately. Discuss reasonable effort only after implementation reveals concrete blockers; if persistence is selected, prove SQLite VFS, multi-tab/storage behavior, export and recovery before promising it. | open; implementation feasibility gate |
 | **UIX-D03** | Choose browser embedding/generation provider and whether WebGPU is required or optional using a real small model, compatible embedding identity, device/memory inventory, CPU/hosted control and failure policy. | open |
 | **UIX-D04** | Select GPU rendering, vector search and inference independently from representative correctness and cost; do not infer one from another. | open |
 | **UIX-D05** | Approved direction: precise host support at composition plus complete-view/scene preflight, application-owned fallback and command availability, and typed correlated refusal that preserves the last valid frame with bounded retry. Specify the exact API and prove refusal leaves no partial new projection or additional feature state mutation. | direction approved; API/proof open |
@@ -256,6 +267,7 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-AC06** | Unsupported view/scene operations are declared at application composition or returned as structured refusals before partial projection, and the feature selects a fallback or a specific rejection. Scene deltas validate and commit atomically; gaps, conflicting duplicates, invalid changes and route restart trigger full resync, while stale scene input is refused and retries are bounded. Absent effect capabilities retain correlated failures. Malformed assets/messages, context loss, resize, cancellation and setup/teardown failures have explicit behavior; browser resource grants cannot be forged from display text. Run focused host and scene lifecycle/negative checks. | open |
 | **UIX-AC07** | GTK, ANSI and both browser routes have documented build cohorts, platform/browser coverage, accessibility limits, package contents and reproducible consumer routes for their selected support levels. Complete agreed integration/milestone QA separately from each development increment. | open; milestone scope unselected |
 | **UIX-AC08** | At each forms, graph and map stage, one handwritten Level G feature drives GTK, ANSI and both browser routes. Common actions have matching expected domain transitions and close policy; host-specific capability and effect outcomes are explicit. Record each host's native, semantic fallback or unsupported operations; verify supported paths and a representative application-visible refusal on each route without claiming visual equivalence. | open; parallel host gate |
+| **UIX-AC09** | A browser feature issues the same bounded `rag.query` effect through hosted and targeted local read-only executors and receives cited results with corpus/evidence identity, compatible query embedding, cancellation and stale-result handling. Compare representative lexical/vector/graph evidence with native RAG. If local feasibility is later declined under D01–02, document the concrete blocker and agreed effort judgment; hosted cited-query acceptance remains required. | open; conditional local route |
 
 ## Stable implementation steps and gates
 
@@ -268,11 +280,13 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-STEP05** | Complete the graph stage across GTK 2D, ANSI semantic/cell and browser SVG projections through both browser routes, then the map stage across GTK 2D, ANSI bounded viewport and browser Canvas 2D through both routes. At each stage compare the same domain journal, keyboard/input paths, bounded delta application, full resync and fallback/refusal behavior before moving on. Evaluate culling and measured thresholds before WebGL2; AC04–06/08. Depends on STEP03–04. | open |
 | **UIX-STEP06** | After direct consumers prove the core contract, reconcile the experimental `DEFINE-GUI` macro and its missing graph inputs. Decide its grammar/dynamic-value mapping, generate only layout, typed bindings, command/schema wiring and static routing, and run focused source-map/negative checks; AC01–02. Depends on STEP02–05; Peter may own this increment. | open; later RXPP design gate |
 | **UIX-STEP07** | Qualify selected application/host and generated-authoring combinations across GTK, ANSI and both browser routes, including fallback/refusal, failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–08. Depends on selected preceding steps. | open; milestone/scope gate |
+| **UIX-STEP08** | After the core application-service boundary exists, define one `rag.query` effect and implement the hosted adapter plus a browser-local read-only feasibility/consumer path against one validated corpus bundle. Keep RAG retrieval and evidence policy with its product owner; resolve D02 and the query-embedding choice during implementation. Qualify both routes against AC09 or record the D01 conditional hosted-only fallback after the agreed effort discussion. This application integration does not block STEP01–07. | open; separate RAG integration gate |
 
-If a browser RAG or local inference outcome is selected, add its own numbered
-delivery criteria in the owning RAG/LLM plan and reference them here. The UI
-milestone does not become an implicit database, embedding or GPU-inference
-qualification gate.
+At RAG implementation start, add retrieval/provider delivery criteria to the
+owning RAG plan and reference them from STEP08; AC09 owns only the UI effect and
+cross-route consumer boundary. If local inference is selected later, give it
+its own owning-plan criteria. The core UI milestone does not become an implicit
+database, embedding or GPU-inference qualification gate.
 
 For each development step, use the smallest changed-component build and
 behavior/contract checks, inspect representative RXAS for changed cREXX paths

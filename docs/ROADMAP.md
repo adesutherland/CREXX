@@ -987,8 +987,11 @@ prototype has been qualified by this roadmap update.
   justification. Application state stays in Level G; Peter's
   RXPP façade follows direct core consumers. Public scene/browser and support
   contracts remain behind explicit design and January-freeze scope gates.
-  Browser RAG lookup, local SQLite/vector storage and WebGPU inference are
-  separate application/provider options; UI effects may integrate them
+  RAG queries target hosted and browser-local read-only routes through one
+  application effect, with hosted-only fallback if local implementation proves
+  infeasible within an effort judgment discussed after implementation evidence.
+  Full local RAG, persistent local SQLite/vector storage and WebGPU inference
+  remain separate application/provider choices; UI effects integrate them
   without moving their policy into the driver.
 - First-class source provenance, shared Classic BIF behavior, and variable-pool
   integration are carried by Level C and RexxScript before becoming independent
