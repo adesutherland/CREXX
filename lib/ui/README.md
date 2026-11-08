@@ -200,10 +200,18 @@ drivers translate physical pointer, keyboard and touch input into logical
 viewport units and paint the returned scene. The ANSI renderer keeps its own
 cell/control hit areas and uses stable IDs for semantic graph/map actions. A
 stale event must not mutate a newer scene. Existing `ui.pointer`, viewport and
-gesture names are vocabulary only; they do not yet
-establish scene hit testing or rendering behavior. The scene contract must
+gesture names are vocabulary only; they do not yet establish scene hit testing
+or rendering behavior. The scene contract must
 select coordinate precision and define CSS/device/world conversion before
 pointer events can drive graph edits or map selection.
+
+The selected scene update direction starts with a full versioned snapshot and
+then sends bounded deltas against the last applied revision. The host
+validates and applies each delta atomically. On a revision gap, conflicting
+duplicate, invalid change or route restart, it keeps the last valid frame,
+pauses scene interaction and requests a full snapshot from the Level G owner.
+The replacement is atomic; repeated failure ends in a typed error. Message
+shapes, bounds and recovery proof remain open in the [plan](PLAN.md).
 
 The same Level G graph or map feature should drive all three delivery hosts.
 GTK and browser may offer 2D projections; ANSI can expose a labeled node/edge
