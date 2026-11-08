@@ -103,6 +103,21 @@ foreach(module IN ITEMS ui_catalog ui_contract)
     add_dependencies(${module} ${module_dependencies})
     crexx_install_bytecode(${module} "${CMAKE_BINARY_DIR}/bin/${module}.rxbin")
 endforeach()
+
+# Version 1 operation/scene contract is an additive Level G module. Existing
+# form consumers keep their v0 imports and ABI.
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/ui_scene.rxbin"
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import
+                -i "${CMAKE_BINARY_DIR}/bin" -o ui_scene
+                "${CMAKE_CURRENT_SOURCE_DIR}/ui_scene.crexx"
+        COMMAND $<TARGET_FILE:rxas> -o "${CMAKE_BINARY_DIR}/bin/ui_scene" ui_scene
+        DEPENDS rxc rxas library compiler_exit_bin ui ui_scene.crexx
+                "${CMAKE_BINARY_DIR}/bin/ui.rxbin"
+        BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ui_scene.rxas"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+add_custom_target(ui_scene ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/ui_scene.rxbin")
+crexx_install_bytecode(ui_scene "${CMAKE_BINARY_DIR}/bin/ui_scene.rxbin")
+set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS ui_scene)
 install(FILES contracts/catalogue.json contracts/README.md contracts/conformance.jsonl
         "${CREXX_UI_CONTRACT_DIR}/ui-contract.ts"
         "${CREXX_UI_CONTRACT_DIR}/ui-contract.schema.json"

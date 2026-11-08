@@ -3,6 +3,22 @@ cmake_minimum_required(VERSION 3.24)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 
 add_custom_target(ui_functional_tests ALL)
+add_custom_target(ui_scene_contract_tests)
+
+crexx_add_rexx_opt_matrix(
+        NAME ui_scene_contract RUNNER rxvm
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_ui_scene_contract.crexx
+        TARGET_GROUP ui_scene_contract_tests
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS ui ui_scene ui_contract
+        RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/ui_scene
+                ${CMAKE_BINARY_DIR}/bin/ui_contract
+                ${CMAKE_BINARY_DIR}/bin/ui_catalog
+                ${CMAKE_BINARY_DIR}/bin/ui
+                ${CMAKE_BINARY_DIR}/bin/library
+        TEST_LABELS "library;ui;scene;conformance"
+        REQUIRED_OUTPUT_REGEX "PASS: UI scene and support contract"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 
 crexx_add_rexx_opt_matrix(
         NAME ui_controls RUNNER rxvm

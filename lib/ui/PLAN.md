@@ -44,7 +44,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | Step | Depends on | Deliverable | Criteria | Status |
 | --- | --- | --- | --- | --- |
 | **UIX-STEP01** Baseline | — | Trace handwritten Text Inspector through GTK/ANSI, retain the line regression, and sketch graph/map gaps with independent transition expectations. | AC01, AC04–06, AC08 | done |
-| **UIX-STEP02** Core contracts | STEP01 | Freeze direct-consumer view, scene, input and support contracts (D05–06, D08–10); preserve v0 and prove refusal, delta/resync and representative RXAS. | AC01, AC04–06, AC08 | todo |
+| **UIX-STEP02** Core contracts | STEP01 | Freeze direct-consumer view, scene, input and support contracts (D05–06, D08–10); preserve v0 and prove refusal, delta/resync and representative RXAS. | AC01, AC04–06, AC08 | done |
 | **UIX-STEP03** GTK/ANSI scene | STEP02; parallel with STEP04 | Build the Level G scene owner and bounded graph/map fixtures, then GTK/ANSI graph projections with keyboard, delta/resync and refusal checks. | AC04–06, AC08 | todo |
 | **UIX-STEP04** Browser forms | STEP02; parallel with STEP03 | Build one browser projection and local/hosted adapters (D07); prove handwritten Text Inspector forms, owner turns, one async effect, restart and reconnect. | AC03, AC06, AC08 | todo |
 | **UIX-STEP05** Graph then map | STEP03–04 | Complete graph then map on GTK, ANSI and both browser routes; compare domain journals and scene lifecycle at each stage, measuring before acceleration. | AC04–06, AC08 | todo |
@@ -237,8 +237,8 @@ testing; application features own nodes, edges, tiles, units, selection, undo
 and game turns. Hosts convert
 physical input to declared logical viewport units and paint. ANSI owns its
 visible cell/control hit areas and addresses semantic objects by stable ID.
-World positions use bounded fixed-point integers; the public contract must
-settle tick scale, range, checked arithmetic and viewport rounding. Browser
+World positions use bounded fixed-point integers; version 1 fixes tick scale,
+range, checked arithmetic and logical-pixel mapping. Browser
 numeric transport must keep accepted values exact. Map tile IDs remain separate
 from world positions.
 
@@ -249,9 +249,45 @@ it and rejects stale scene input. On a gap, conflicting duplicate, invalid
 change or route restart, it keeps the last valid frame, pauses scene input and
 replaces the replica from a full
 authoritative snapshot. Identical duplicates may be ignored; failed bounded
-resync returns a typed error. STEP02 fixes the wire shape, limits and state
-handoff. Profile representative graph/map traffic before selecting binary
+resync returns a typed error. STEP02 fixes the wire shape and limits; STEP03–04
+adopt the host state handoff. Profile representative graph/map traffic before selecting binary
 encoding or delta coalescing.
+
+#### STEP02 direct-consumer contract (version 1)
+
+Keep `uiview`, `uicomponent`, `uidriver` and the v0 message catalogue binary and
+source compatible. Add a separate Level G `ui_scene` module. A host profile
+advertises exact operation names (`form.<kind>`, `scene.rect`, `scene.edge`,
+`scene.tile`, `scene.unit`, `input.pointer`, `input.keyboard`) and preflights the
+whole view or scene before changing its last valid frame. The result has a
+stable code, offending operation and explanatory text. A feature may select a
+semantic alternative; STEP03–04 hosts must retry preflight once and report the
+same refusal if the alternative is still unsupported. Sessions copy capabilities at
+construction, so later mutation of a caller's builder cannot change a live
+session. Host loss ends that session; application-owned saved state seeds a new
+one. Existing v0 hosts continue to use their current form path until they adopt
+the preflight helper.
+
+Scene wire version 1 is UTF-8 JSON with an epoch (session/scene identity),
+nonnegative safe-integer revision and either `full` items or a `delta` with
+`base`, `revision = base + 1` and bounded operations. Item IDs are stable and
+unique per epoch. Rect, edge, tile and unit items carry bounded integer
+`x,y,w,h` ticks and a semantic label; one world unit is 256 ticks. Accepted
+ticks are within ±2^40; widths/heights are nonnegative and may not exceed
+2^40. The initial wire profile caps items at 512 and operations at 128 per
+delta, with a 256 KiB encoded message bound. The application owns graph/map
+meaning and may choose stricter limits. The host validates all operations on a
+copy, then publishes one revision. Identical duplicate packets are ignored;
+gaps, conflicting duplicates and malformed changes retain the previous frame,
+pause scene input and request a full authoritative snapshot. A matching full
+snapshot resumes input; a second failed resync reports `resync_exhausted` to the
+application. Host logical pointer input carries epoch/revision and integer
+viewport coordinates; stale input is refused before domain update. Physical
+mapping and keyboard/cell hit areas remain host responsibilities. The shared
+`uiviewport` maps integer logical pixels to world ticks with a checked integer
+ticks-per-pixel scale (1..65536), bounded origin and viewport size; out-of-view
+or out-of-world pointers are refused. The default 256 ticks per world unit is
+a representation scale, not a claim that every physical pixel has that size.
 
 D04 keeps accelerators independent. Use culling and batching before considering
 WebGL2 for larger maps, Canvas layers for dense graphs, or WebGPU rendering.

@@ -304,6 +304,13 @@ uicapabilities: class
   /** @return advertised names */
   names: method = .string
     return _names
+  /** Snapshot a builder before it is installed in a live session. */
+  copy: method = .uicapabilities
+    result = .uicapabilities("")
+    do index = 1 to words(_names)
+      call result.enable(word(_names, index))
+    end
+    return result
 
 /** A named action shared by buttons, menus, shortcuts and future builders. */
 uicommand: class
@@ -442,7 +449,7 @@ uisession: class
     arg id = .string, capabilities = .uicapabilities, max_queue = 128, max_effects = 64
     _id = id
     _registry = .uiregistry()
-    _capabilities = capabilities
+    _capabilities = capabilities.copy()
     _limit = max_queue
     _work_limit = max_effects
     _head = 1

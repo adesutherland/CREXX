@@ -345,6 +345,35 @@ Implement imported interfaces using the signature spellings shown in their
 metadata (for example `.uisession`, `.uimessage`, `.uieffects`, `.uiview`).
 Qualified type-name canonicalisation remains a separate compiler limitation.
 
+## Additive scene and host support contract
+
+`ui_scene.crexx` adds version 1 scene replication without changing the v0
+`uiview`, `uicomponent`, message catalogue or driver interfaces. A host declares
+exact `form.<kind>` and `scene.<kind>` operations in `uioperations`, then calls
+`preflight_view()` for a complete form or `uiscenereplica.apply_for()` for a
+scene packet. A typed `uiresult` identifies an unsupported operation or an
+invalid packet. Unsupported content leaves the last valid scene frame and
+input authority intact; the application can choose a semantic fallback.
+
+One full snapshot establishes a scene epoch and revision. Atomic deltas name
+the current base and the next revision. A gap or invalid operation pauses
+scene input until a full authoritative snapshot replaces the replica. An
+identical duplicate is harmless. `uipointer` carries normalized integer
+viewport coordinates plus epoch/revision, allowing the owner to refuse stale
+input before applying domain transitions. `uiviewport` maps these logical
+pixels to world ticks with checked integer arithmetic. World coordinates are integers at
+256 ticks per world unit; item coordinates and extents are bounded to 2^40
+ticks, and wire revisions stay within JavaScript's exact integer range.
+Items are presentation records with stable IDs and semantic labels; graph
+edits, map turns, terrain data and undo remain with application features.
+
+This module is a contract and replica, not a graphical host. GTK/ANSI scene
+projection and the browser adapter are separate delivery steps in
+[`PLAN.md`](PLAN.md). The focused `ui_scene_contract_noopt` test checks
+preflight, atomic changes, stale input, overflow and full resync. The session
+copies its broad capability set on construction; a caller cannot mutate a
+running session by changing that original builder.
+
 ## Tests and next steps
 
 [Example commands](../../examples/ui/text-inspector/README.md) show how to run

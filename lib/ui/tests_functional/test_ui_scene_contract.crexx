@@ -1,0 +1,128 @@
+options levelg
+namespace ui_scene_contract_test
+import ui
+import ui_contract
+import ui_scene
+
+/* Independent expectations: one whole-form refusal, one atomic scene
+ * revision, stale-input rejection and full replacement after a sync error. */
+profile = .uioperations("form.label scene.rect")
+view = .uiview_impl("Preflight")
+call view.add_label("status", "Ready")
+call view.add_button("open", "Open", "document.open", "o")
+result = profile.preflight_view(view)
+if result.code() \= "unsupported" | result.operation() \= "form.button" then do
+  say "FAIL: whole-form unsupported operation"
+  exit 1
+end
+call profile.enable("form.button")
+if \profile.preflight_view(view).ok() then do
+  say "FAIL: supported form was refused"
+  exit 1
+end
+
+rect = '{"id":"node-a","kind":"rect","x":0,"y":0,"w":256,"h":256,"label":"A"}'
+edge = '{"id":"edge-a","kind":"edge","x":256,"y":256,"w":256,"h":0,"label":"A to B"}'
+full = '{"version":1,"kind":"full","epoch":"graph-1","revision":1,"items":[' || rect || ']}'
+if \profile.preflight_scene(full).ok() then do
+  say "FAIL: supported scene refused"
+  exit 1
+end
+replica = .uiscenereplica()
+if \replica.apply(full).ok() | replica.count() \= 1 | replica.paused() then do
+  say "FAIL: full snapshot admission"
+  exit 1
+end
+if replica.accept_input("graph-1", 0).code() \= "stale_input" then do
+  say "FAIL: stale input reached owner"
+  exit 1
+end
+pointer = .uipointer("graph-1", 1, 40, 25)
+roundtrip = .uipointer.from_json(pointer.json())
+if \roundtrip.valid() | roundtrip.x() \= 40 | roundtrip.y() \= 25 | \replica.accept_pointer(roundtrip).ok() then do
+  say "FAIL: normalized pointer round trip"
+  exit 1
+end
+if .uipointer.from_json('{"version":1,"kind":"pointer","epoch":"graph-1","revision":1,"x":1.5,"y":0}').valid() then do
+  say "FAIL: fractional pointer coordinate accepted"
+  exit 1
+end
+viewport = .uiviewport(-256, 512, 128, 100, 80)
+world = viewport.map(roundtrip)
+if \world.valid() | world.x() \= 4864 | world.y() \= 3712 then do
+  say "FAIL: exact logical-to-world transform"
+  exit 1
+end
+if viewport.map(.uipointer("graph-1", 1, 100, 0)).valid() then do
+  say "FAIL: out-of-viewport pointer accepted"
+  exit 1
+end
+edge_viewport = .uiviewport(1099511627776, 0, 65536, 2, 2)
+if edge_viewport.map(.uipointer("graph-1", 1, 1, 0)).valid() then do
+  say "FAIL: world-coordinate overflow accepted"
+  exit 1
+end
+
+delta = '{"version":1,"kind":"delta","epoch":"graph-1","base":1,"revision":2,"changes":[{"op":"add","item":' || edge || '}]}'
+if profile.preflight_scene(delta).operation() \= "scene.edge" then do
+  say "FAIL: scene operation preflight"
+  exit 1
+end
+before_unsupported = replica.frame()
+if replica.apply_for(profile, delta).code() \= "unsupported" | replica.frame() \= before_unsupported | replica.paused() then do
+  say "FAIL: unsupported scene changed last valid frame"
+  exit 1
+end
+call profile.enable("scene.edge")
+if \replica.apply_for(profile, delta).ok() | replica.count() \= 2 | replica.revision() \= 2 then do
+  say "FAIL: atomic add delta"
+  exit 1
+end
+if \replica.apply(delta).ok() | replica.count() \= 2 then do
+  say "FAIL: identical duplicate was not ignored"
+  exit 1
+end
+frame = replica.frame()
+invalid = '{"version":1,"kind":"delta","epoch":"graph-1","base":2,"revision":3,"changes":[{"op":"remove","id":"node-a"},{"op":"add","item":' || edge || '}]}'
+if replica.apply(invalid).code() \= "sync_error" | \replica.paused() then do
+  say "FAIL: invalid delta did not request resync"
+  exit 1
+end
+if replica.frame() \= frame | replica.accept_input("graph-1", 2).code() \= "stale_input" then do
+  say "FAIL: invalid delta changed frame or admitted input"
+  exit 1
+end
+if \replica.apply(full).ok() | replica.paused() | replica.count() \= 1 then do
+  say "FAIL: full resync did not restore authority"
+  exit 1
+end
+gap = '{"version":1,"kind":"delta","epoch":"graph-1","base":4,"revision":5,"changes":[]}'
+if replica.apply(gap).code() \= "sync_error" then do
+  say "FAIL: revision gap was admitted"
+  exit 1
+end
+if replica.apply(gap).code() \= "resync_exhausted" then do
+  say "FAIL: resync retry was not bounded"
+  exit 1
+end
+if \replica.apply(full).ok() | \replica.accept_input("graph-1", 1).ok() then do
+  say "FAIL: authoritative snapshot did not resume input"
+  exit 1
+end
+overflow = '{"version":1,"kind":"full","epoch":"overflow","revision":1,"items":[{"id":"bad","kind":"rect","x":1099511627777,"y":0,"w":1,"h":1,"label":"bad"}]}'
+if replica.apply(overflow).code() \= "sync_error" | replica.count() \= 1 then do
+  say "FAIL: fixed-point overflow damaged last frame"
+  exit 1
+end
+
+caps = .uicapabilities("")
+session = .uisession("capability-freeze", caps)
+call caps.enable("ui.dialog")
+if session.supports("ui.dialog") then do
+  say "FAIL: live session capability changed after composition"
+  exit 1
+end
+call session.close()
+
+say "PASS: UI scene and support contract"
+exit 0

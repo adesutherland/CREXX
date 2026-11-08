@@ -1,5 +1,10 @@
 # Understanding the cREXX UI framework and contract v0
 
+The v0 forms, message and session contract described here remains available.
+The additive version 1 scene, normalized pointer and precise host-operation
+surface is documented in [`../README.md`](../README.md#additive-scene-and-host-support-contract)
+and [`../PLAN.md`](../PLAN.md). It does not reinterpret the v0 catalogue.
+
 The cREXX UI framework lets you write an application's behaviour in Level G and
 present it through different user interfaces. You describe the information to
 show, the actions a user can take, and how those actions change application

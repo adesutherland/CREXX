@@ -1,0 +1,375 @@
+/* Version 1 scene replication and precise host-operation preflight.
+ * UI contract v0 remains unchanged. Application features own scene meaning;
+ * this module only validates and replicates bounded presentation records.
+ */
+options levelg
+namespace ui_scene expose uiresult uioperations uiscenereplica uipointer uiviewport uiworldpoint
+import rxfnsb
+import rxjson
+import ui
+
+/** A typed, application-visible admission or synchronization result. */
+uiresult: class
+  _code = .string
+  _operation = .string
+  _message = .string
+  *: factory
+    arg code = .string, operation = "", message = ""
+    _code = code
+    _operation = operation
+    _message = message
+    return
+  ok: method = .int
+    return _code = ""
+  code: method = .string
+    return _code
+  operation: method = .string
+    return _operation
+  message: method = .string
+    return _message
+  json: method = .string
+    return '{"code":' || jsonquote(_code) || ',"operation":' || jsonquote(_operation) || ',"message":' || jsonquote(_message) || '}'
+
+/** Fixed per-host operation profile; composition copies its names into a
+ * session-scoped profile before the first view is projected. */
+uioperations: class
+  _names = .string
+  *: factory
+    arg names = ""
+    _names = strip(names)
+    return
+  enable: method = .void
+    arg name = .string
+    if name \= "" & wordpos(name, _names) = 0 then _names = strip(_names || " " || name)
+    return
+  has: method = .int
+    arg name = .string
+    return wordpos(name, _names) > 0
+  names: method = .string
+    return _names
+  copy: method = .uioperations
+    return .uioperations(_names)
+
+  /** Check every node before changing the host's last valid form. */
+  preflight_view: method = .uiresult
+    arg view = .uiview
+    count = view.count()
+    if count > 512 then return .uiresult("limit", "form", "too many controls")
+    ids = .string
+    do i = 1 to count
+      id = view.node_id(i)
+      if id = "" | length(id) > 128 | words(id) \= 1 | wordpos(id, ids) > 0 then
+        return .uiresult("invalid_view", "form", "missing or duplicate control ID")
+      ids = ids || " " || id
+      operation = "form." || view.node_kind(i)
+      if \has(operation) then return .uiresult("unsupported", operation, "host cannot project this control")
+    end
+    return .uiresult("")
+
+  /** Check the complete scene packet before touching a host replica. */
+  preflight_scene: method = .uiresult
+    arg packet = .string
+    count = .int
+    i = .int
+    item = .string
+    operation = .string
+    if length(packet) > 262144 | jsonvalid(packet) \= 1 then
+      return .uiresult("invalid_scene", "scene", "malformed or oversized packet")
+    kind = jsonget(packet, "kind")
+    if kind = "full" then do
+      count = jsoncount(packet, "items")
+      if count < 0 | count > 512 then return .uiresult("limit", "scene", "invalid item count")
+      do i = 1 to count
+        item = jsonget(packet, "items." || i)
+        if item_error(item) \= "" then return .uiresult("invalid_scene", "scene", "invalid scene item")
+        operation = "scene." || jsonget(item, "kind")
+        if \has(operation) then return .uiresult("unsupported", operation, "host cannot project this scene item")
+      end
+    end
+    else if kind = "delta" then do
+      count = jsoncount(packet, "changes")
+      if count < 0 | count > 128 then return .uiresult("limit", "scene", "invalid change count")
+      do i = 1 to count
+        change = jsonget(packet, "changes." || i)
+        if jsonget(change, "op") = "remove" then iterate
+        if jsonget(change, "op") \= "add" & jsonget(change, "op") \= "replace" then
+          return .uiresult("invalid_scene", "scene", "unknown scene operation")
+        item = jsonget(change, "item")
+        if item_error(item) \= "" then return .uiresult("invalid_scene", "scene", "invalid changed item")
+        operation = "scene." || jsonget(item, "kind")
+        if \has(operation) then return .uiresult("unsupported", operation, "host cannot project this scene item")
+      end
+    end
+    else return .uiresult("invalid_scene", "scene", "unknown packet kind")
+    return .uiresult("")
+
+/** Normalized viewport input. A host converts device coordinates to integer
+ * logical pixels; the scene owner then applies its fixed-point transform.
+ * This record contains no DOM/GTK/terminal handle or domain object. */
+uipointer: class
+  _epoch = .string
+  _revision = .int
+  _x = .int
+  _y = .int
+  _valid = .int
+  *: factory
+    arg epoch = .string, revision = .int, x = .int, y = .int
+    _epoch = epoch
+    _revision = revision
+    _x = x
+    _y = y
+    _valid = length(epoch) > 0 & length(epoch) <= 64 & revision >= 0 & revision <= 9007199254740991 & x >= 0 & x <= 1000000 & y >= 0 & y <= 1000000
+    return
+  from_json: factory
+    arg wire = .string
+    _valid = 0
+    if length(wire) > 1024 | jsonvalid(wire) \= 1 then return
+    if jsonget(wire, "version") \= "1" | jsonget(wire, "kind") \= "pointer" then return
+    if jsontype(wire, "epoch") \= "string" then return
+    if \safe_integer(wire, "revision", 9007199254740991) | \safe_integer(wire, "x", 1000000) | \safe_integer(wire, "y", 1000000) then return
+    _epoch = jsonget(wire, "epoch")
+    _revision = jsonget(wire, "revision") as .int
+    _x = jsonget(wire, "x") as .int
+    _y = jsonget(wire, "y") as .int
+    _valid = length(_epoch) > 0 & length(_epoch) <= 64
+    return
+  valid: method = .int
+    return _valid
+  epoch: method = .string
+    return _epoch
+  revision: method = .int
+    return _revision
+  x: method = .int
+    return _x
+  y: method = .int
+    return _y
+  json: method = .string
+    return '{"version":1,"kind":"pointer","epoch":' || jsonquote(_epoch) || ',"revision":' || _revision || ',"x":' || _x || ',"y":' || _y || '}'
+
+/** Exact fixed-point coordinate after applying an application viewport. */
+uiworldpoint: class
+  _x = .int
+  _y = .int
+  _valid = .int
+  *: factory
+    arg x = .int, y = .int, valid = .int
+    _x = x
+    _y = y
+    _valid = valid
+    return
+  valid: method = .int
+    return _valid
+  x: method = .int
+    return _x
+  y: method = .int
+    return _y
+
+/** Shared logical-pixel to world-tick transform. A host alone converts
+ * physical device coordinates to logical pixels and owns cell hit areas. */
+uiviewport: class
+  _origin_x = .int
+  _origin_y = .int
+  _ticks_per_pixel = .int
+  _width = .int
+  _height = .int
+  _valid = .int
+  *: factory
+    arg origin_x = .int, origin_y = .int, ticks_per_pixel = .int, width = .int, height = .int
+    _origin_x = origin_x
+    _origin_y = origin_y
+    _ticks_per_pixel = ticks_per_pixel
+    _width = width
+    _height = height
+    _valid = origin_x >= -1099511627776 & origin_x <= 1099511627776 & origin_y >= -1099511627776 & origin_y <= 1099511627776 & ticks_per_pixel >= 1 & ticks_per_pixel <= 65536 & width >= 1 & width <= 1000000 & height >= 1 & height <= 1000000
+    return
+  valid: method = .int
+    return _valid
+  map: method = .uiworldpoint
+    arg pointer = .uipointer
+    if \_valid | \pointer.valid() | pointer.x() >= _width | pointer.y() >= _height then
+      return .uiworldpoint(0, 0, 0)
+    x = _origin_x + pointer.x() * _ticks_per_pixel
+    y = _origin_y + pointer.y() * _ticks_per_pixel
+    if x < -1099511627776 | x > 1099511627776 | y < -1099511627776 | y > 1099511627776 then
+      return .uiworldpoint(0, 0, 0)
+    return .uiworldpoint(x, y, 1)
+
+/** One host replica. A full snapshot establishes an epoch; later deltas are
+ * validated on a copy and committed as one revision. This class owns no app
+ * state and deliberately exposes no domain mutation operation. */
+uiscenereplica: class
+  _epoch = .string
+  _revision = .int
+  _items = .string[]
+  _last_packet = .string
+  _paused = .int
+  _resync_failures = .int
+  *: factory
+    _epoch = ""
+    _revision = 0
+    _last_packet = ""
+    _paused = 1
+    _resync_failures = 0
+    return
+
+  /** Preflight and commit as one host operation. Unsupported content leaves
+   * the last frame and input authority intact for an application fallback. */
+  apply_for: method = .uiresult
+    arg profile = .uioperations, packet = .string
+    result = profile.preflight_scene(packet)
+    if \result.ok() then return result
+    return apply(packet)
+
+  /** @return atomic acceptance, duplicate, or typed synchronization failure */
+  apply: method = .uiresult
+    arg packet = .string
+    count = .int
+    i = .int
+    item = .string
+    id = .string
+    slot = .int
+    if length(packet) > 262144 | jsonvalid(packet) \= 1 then
+      return sync_failure("malformed or oversized packet")
+    if jsonget(packet, "version") \= "1" then return sync_failure("unsupported scene version")
+    epoch = jsonget(packet, "epoch")
+    if jsontype(packet, "epoch") \= "string" | length(epoch) < 1 | length(epoch) > 64 then
+      return sync_failure("invalid epoch")
+    kind = jsonget(packet, "kind")
+    if \safe_integer(packet, "revision", 9007199254740991) then
+      return sync_failure("invalid revision")
+    revision = jsonget(packet, "revision") as .int
+    if kind = "full" then do
+      count = jsoncount(packet, "items")
+      if count < 0 | count > 512 then return sync_failure("invalid snapshot size")
+      candidate = .string[]
+      do i = 1 to count
+        item = jsonget(packet, "items." || i)
+        if item_error(item) \= "" then return sync_failure("invalid snapshot item")
+        if item_slot(candidate, jsonget(item, "id")) > 0 then
+          return sync_failure("duplicate snapshot ID")
+        candidate[i] = item
+      end
+      _items = candidate
+      _epoch = epoch
+      _revision = revision
+      _last_packet = packet
+      _paused = 0
+      _resync_failures = 0
+      return .uiresult("")
+    end
+    if kind \= "delta" | _paused | epoch \= _epoch then
+      return sync_failure("full snapshot required")
+    if \safe_integer(packet, "base", 9007199254740991) then
+      return sync_failure("invalid base revision")
+    base = jsonget(packet, "base") as .int
+    if revision = _revision & packet = _last_packet then return .uiresult("")
+    if base \= _revision | revision \= base + 1 then
+      return sync_failure("revision gap or conflicting duplicate")
+    count = jsoncount(packet, "changes")
+    if count < 0 | count > 128 then return sync_failure("invalid change count")
+    candidate = .string[]
+    do i = 1 to _items[0]
+      candidate[i] = _items[i]
+    end
+    do i = 1 to count
+      change = jsonget(packet, "changes." || i)
+      op = jsonget(change, "op")
+      if op = "remove" then do
+        id = jsonget(change, "id")
+        slot = item_slot(candidate, id)
+        if slot = 0 then return sync_failure("remove references missing ID")
+        next_items = .string[]
+        do j = 1 to candidate[0]
+          if j \= slot then next_items[next_items[0] + 1] = candidate[j]
+        end
+        candidate = next_items
+      end
+      else if op = "add" | op = "replace" then do
+        item = jsonget(change, "item")
+        if item_error(item) \= "" then return sync_failure("invalid changed item")
+        id = jsonget(item, "id")
+        slot = item_slot(candidate, id)
+        if op = "add" & slot > 0 then return sync_failure("add duplicates ID")
+        if op = "replace" & slot = 0 then return sync_failure("replace references missing ID")
+        if slot = 0 then do
+          if candidate[0] >= 512 then return sync_failure("scene item limit")
+          candidate[candidate[0] + 1] = item
+        end
+        else candidate[slot] = item
+      end
+      else return sync_failure("unknown scene operation")
+    end
+    _items = candidate
+    _revision = revision
+    _last_packet = packet
+    return .uiresult("")
+
+  /** Stale physical input is refused before it can reach application update. */
+  accept_input: method = .uiresult
+    arg epoch = .string, revision = .int
+    if _paused | epoch \= _epoch | revision \= _revision then
+      return .uiresult("stale_input", "scene.input", "full resync or current revision required")
+    return .uiresult("")
+  accept_pointer: method = .uiresult
+    arg pointer = .uipointer
+    if \pointer.valid() then return .uiresult("invalid_input", "input.pointer", "malformed normalized pointer")
+    return accept_input(pointer.epoch(), pointer.revision())
+  paused: method = .int
+    return _paused
+  revision: method = .int
+    return _revision
+  epoch: method = .string
+    return _epoch
+  count: method = .int
+    return _items[0]
+  item: method = .string
+    arg index = .int
+    if index < 1 | index > _items[0] then return ""
+    return _items[index]
+  frame: method = .string
+    return '{"version":1,"kind":"full","epoch":' || jsonquote(_epoch) || ',"revision":' || _revision || ',"items":' || jsonarray(_items) || '}'
+  sync_failure: method = .uiresult
+    arg message = .string
+    _paused = 1
+    _resync_failures = _resync_failures + 1
+    if _resync_failures >= 2 then return .uiresult("resync_exhausted", "scene", message)
+    return .uiresult("sync_error", "scene", message)
+
+/** Exact integer text only; prevents scientific notation/rounding at the
+ * JSON-to-VM boundary and keeps every accepted wire value exact in JavaScript. */
+safe_integer: procedure = .int
+  arg object = .string, path = .string, limit = .int
+  if jsontype(object, path) \= "number" then return 0
+  raw = jsonget(object, path)
+  if raw = "" | length(raw) > 16 | verify(raw, "-0123456789") \= 0 then return 0
+  if pos("-", substr(raw, 2)) > 0 then return 0
+  if raw = "-" then return 0
+  value = raw as .int
+  return value >= 0 & value <= limit
+
+item_error: procedure = .string
+  arg item = .string
+  if jsontype(item, "") \= "object" then return "item is not an object"
+  id = jsonget(item, "id")
+  kind = jsonget(item, "kind")
+  if jsontype(item, "id") \= "string" | length(id) < 1 | length(id) > 128 then return "invalid item ID"
+  if wordpos(kind, "rect edge tile unit") = 0 then return "invalid item kind"
+  if jsontype(item, "label") \= "string" | length(jsonget(item, "label")) > 4096 then return "invalid item label"
+  do coordinate = 1 to 4
+    name = word("x y w h", coordinate)
+    if jsontype(item, name) \= "number" then return "missing coordinate"
+    raw = jsonget(item, name)
+    if raw = "" | length(raw) > 14 | verify(raw, "-0123456789") \= 0 | pos("-", substr(raw, 2)) > 0 | raw = "-" then
+      return "invalid coordinate"
+    value = raw as .int
+    if value < -1099511627776 | value > 1099511627776 then return "coordinate out of range"
+    if (name = "w" | name = "h") & value < 0 then return "negative extent"
+  end
+  return ""
+
+item_slot: procedure = .int
+  arg items = .string[], id = .string
+  do index = 1 to items[0]
+    if jsonget(items[index], "id") = id then return index
+  end
+  return 0
