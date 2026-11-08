@@ -236,11 +236,15 @@ from application-owned saved state. The [plan](PLAN.md) gates the exact
 recovery API and requires equivalent domain transitions across hosts, not
 identical pixels.
 
-An SVG projection is the first candidate for editable UML-like graphs because
-individual shapes can keep stable element identities and text/focus overlays.
-Canvas 2D is the first candidate for a bounded strategy map; culling and
-layering come before an accelerated renderer. WebGL2 is an option for measured
-large-map redraw pressure, while WebGPU needs a separate browser-support gate.
+The selected native 2D projection is a GTK 3 drawing area with Cairo for both
+graph and map. The browser uses SVG with ordinary HTML controls for editable
+UML-like graphs, retaining stable element identities and text/focus overlays.
+It uses Canvas 2D for a bounded strategy map; culling and layering come before
+an accelerated renderer. ANSI supplies semantic node/edge and bounded cell-map
+views, with explicit refusal for unavailable gestures. WebGL2 remains an option
+for measured large-map redraw pressure, while WebGPU rendering and compute need
+separate gates. No general scene renderer is implemented yet.
+
 HTML controls and a semantic graph/list alternative remain necessary for
 keyboard and assistive access to graphics. Text/terminal hosts may present a
 functional list or viewport rather than a pixel-equivalent drawing.

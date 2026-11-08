@@ -982,8 +982,9 @@ prototype has been qualified by this roadmap update.
   ANSI full-screen terminal and browser projections stage by stage, with
   semantic fallback or application-visible refusal for unsupported operations.
   It selects both a local Wasm Worker host and a hosted native session behind
-  one browser projection, and compares SVG/Canvas with accelerated map
-  rendering. Application state stays in Level G; Peter's
+  one browser projection. GTK 3 drawing, browser SVG graphs, Canvas 2D maps and
+  ANSI semantic views are selected initial surfaces; acceleration needs measured
+  justification. Application state stays in Level G; Peter's
   RXPP façade follows direct core consumers. Public scene/browser and support
   contracts remain behind explicit design and January-freeze scope gates.
   Browser RAG lookup, local SQLite/vector storage and WebGPU inference are
