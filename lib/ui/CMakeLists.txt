@@ -118,6 +118,18 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/ui_scene.rxbin"
 add_custom_target(ui_scene ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/ui_scene.rxbin")
 crexx_install_bytecode(ui_scene "${CMAKE_BINARY_DIR}/bin/ui_scene.rxbin")
 set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS ui_scene)
+
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/ui_web.rxbin"
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import
+                -i "${CMAKE_BINARY_DIR}/bin" -o ui_web
+                "${CMAKE_CURRENT_SOURCE_DIR}/ui_web.crexx"
+        COMMAND $<TARGET_FILE:rxas> -o "${CMAKE_BINARY_DIR}/bin/ui_web" ui_web
+        DEPENDS rxc rxas library compiler_exit_bin ui_contract ui_scene ui_web.crexx
+        BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ui_web.rxas"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+add_custom_target(ui_web ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/ui_web.rxbin")
+crexx_install_bytecode(ui_web "${CMAKE_BINARY_DIR}/bin/ui_web.rxbin")
+set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS ui_web)
 install(FILES contracts/catalogue.json contracts/README.md contracts/conformance.jsonl
         "${CREXX_UI_CONTRACT_DIR}/ui-contract.ts"
         "${CREXX_UI_CONTRACT_DIR}/ui-contract.schema.json"

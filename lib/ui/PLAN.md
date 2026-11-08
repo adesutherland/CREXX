@@ -1,8 +1,8 @@
 # UI architecture and capability expansion
 
-Status: design and implementation plan. Line, ANSI and GTK forms exist; no
-browser or general 2D UI driver has been delivered. All acceptance criteria
-remain open. This is the authoritative UI expansion plan. The
+Status: STEP01–04 development increments done; full graph/map, RXPP authoring
+and core milestone QA remain. All initiative acceptance criteria remain open.
+This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not change that baseline.
 
@@ -46,7 +46,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP01** Baseline | — | Trace handwritten Text Inspector through GTK/ANSI, retain the line regression, and sketch graph/map gaps with independent transition expectations. | AC01, AC04–06, AC08 | done |
 | **UIX-STEP02** Core contracts | STEP01 | Freeze direct-consumer view, scene, input and support contracts (D05–06, D08–10); preserve v0 and prove refusal, delta/resync and representative RXAS. | AC01, AC04–06, AC08 | done |
 | **UIX-STEP03** GTK/ANSI scene | STEP02; parallel with STEP04 | Build the Level G scene owner and bounded graph/map fixtures, then GTK/ANSI graph projections with keyboard, delta/resync and refusal checks. | AC04–06, AC08 | done |
-| **UIX-STEP04** Browser forms | STEP02; parallel with STEP03 | Build one browser projection and local/hosted adapters (D07); prove handwritten Text Inspector forms, owner turns, one async effect, restart and reconnect. | AC03, AC06, AC08 | todo |
+| **UIX-STEP04** Browser forms | STEP02; parallel with STEP03 | Build one browser projection and local/hosted adapters (D07); prove handwritten Text Inspector forms, owner turns, one async effect, restart and reconnect. | AC03, AC06, AC08 | done |
 | **UIX-STEP05** Graph then map | STEP03–04 | Complete graph then map on GTK, ANSI and both browser routes; compare domain journals and scene lifecycle at each stage, measuring before acceleration. | AC04–06, AC08 | todo |
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | todo |
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | todo |
@@ -122,10 +122,10 @@ which route must still pass after any agreed fallback.
 
 - [`ui_contract.crexx`](ui_contract.crexx) owns session routing, bounded queues,
   capabilities, correlated effects and close lifecycle. [`ui.crexx`](ui.crexx)
-  provides a flat logical grid. Text Inspector runs on line, ANSI and GTK;
-  browser and general 2D drivers do not yet exist. The
-  [catalogue](contracts/catalogue.json) contains planned pointer, viewport and
-  web vocabulary, not implemented scene behavior.
+  provides a flat logical grid. At the STEP01 baseline, Text Inspector ran on
+  line, ANSI and GTK; browser and general 2D drivers did not yet exist. The
+  [catalogue](contracts/catalogue.json) then contained planned pointer,
+  viewport and web vocabulary without implemented scene behavior.
 - Peter's experimental [DEFINE-GUI example](../../examples/ui/text-inspector/text_inspector_gui_macro.rxpp)
   uses RXPP `DALIAS ... HANDLER`, with no
   built-in GUI parser. It generates nodes, binding metadata, a controller,
@@ -230,6 +230,25 @@ and hosted reconnect have distinct transport recovery checks. Wasm geometry or
 painting through Canvas/WebGL remains an optional optimization after the
 semantic projection works. STEP04 must select an owner-turn/step or qualified
 suspend/resume path for local `uidriver.run`.
+
+#### STEP04 browser form implementation contract
+
+Use one Level G `ui_web` process driver for both routes. Its owner loop takes
+one bounded JSON input line at a time, calls `uisession.post`, `invoke`,
+`complete` or `cancel`, pumps effects, and emits a complete version-1 view
+revision. It never reenters a suspended VM. The local Worker runs this RXBIN
+through the single-threaded cREXX Emscripten VM with Asyncify only at stdin;
+the hosted adapter runs the same RXBIN with the native VM and relays its
+standard streams. Browser code owns the DOM projection, file grant and async
+effect executor; it does not implement Text Inspector's transitions. The
+version-1 envelope carries session epoch, view revision and input base, with
+v0 `uimessage` values nested for correlated effects. A stale input receives a
+full view; duplicate effect completion is rejected by the session. A Worker
+restart creates a new session epoch from application-owned saved state. The
+hosted relay authenticates each request, retains the latest full view and
+replays or resynchronizes after reconnect. The browser form profile first
+supports Text Inspector's labels, line and buttons; other controls receive a
+typed operation refusal before projection. Scene projection follows STEP05.
 
 D08–11 define the scene boundary. A reusable Level G scene module owns world
 geometry, z-order, styles, semantic labels, viewport transforms and object hit

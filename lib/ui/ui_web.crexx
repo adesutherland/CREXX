@@ -1,0 +1,160 @@
+/* One process-style browser owner. The native hosted process and local Wasm
+ * Worker run this same Level G session loop over bounded JSON lines. */
+options levelg
+namespace ui_web expose webdriver capabilities operations
+import rxfnsb
+import rxjson
+import ui
+import ui_contract
+import ui_scene
+
+/** Browser form services; physical file grants stay in the browser executor. */
+capabilities: procedure = .uicapabilities
+  caps = .uicapabilities()
+  call caps.enable("ui.resource.choose")
+  call caps.enable("io.text.read")
+  return caps
+
+/** STEP04 form profile. Later browser scene work extends this explicitly. */
+operations: procedure = .uioperations
+  return .uioperations("form.label form.line form.button")
+
+webdriver: class implements .uidriver
+  _session = .uisession
+  _operations = .uioperations
+  _revision = .int
+  _running = .int
+  _error = .string
+  _outgoing = .string[]
+
+  *: factory
+    _operations = operations()
+    _revision = 0
+    _running = 0
+    _error = ""
+    call arraydrop _outgoing
+    return
+
+  /** Each line is one owner turn; the VM suspends only in stdin read. */
+  run: method = .int
+    arg session = .uisession
+    _session = session
+    _operations = operations()
+    _revision = 0
+    _running = 1
+    _error = ""
+    call arraydrop _outgoing
+    if _session.post(.uimessage("ui.ready", .uipayload())) < 0 then _error = "cannot admit ui.ready"
+    if _error = "" then call service()
+    if _error = "" then call emit_view()
+    if _error = "" then call emit_effects()
+    do while _running & _error = ""
+      wire = linein("")
+      if wire = "" then do
+        _error = "browser input ended before close"
+        leave
+      end
+      if length(wire) > 262144 | jsonvalid(wire) \= 1 then do
+        call emit_refusal("invalid_input", "browser", "malformed or oversized input")
+        iterate
+      end
+      if jsonget(wire, "version") \= "1" | jsonget(wire, "session") \= _session.id() then do
+        call emit_refusal("invalid_input", "browser", "session or version mismatch")
+        iterate
+      end
+      if jsontype(wire, "base") \= "number" | jsonget(wire, "base") \= (_revision as .string) then do
+        call emit_view()
+        iterate
+      end
+      kind = jsonget(wire, "type")
+      rc = -1
+      if kind = "command" then rc = _session.invoke(jsonget(wire, "command"))
+      else if kind = "complete" then do
+        message = .uimessage.from_json(jsonget(wire, "message"))
+        if message.wire_error() = "" then rc = _session.complete(message)
+      end
+      else if kind = "cancel" then rc = _session.cancel(jsonget(wire, "request_id"))
+      else if kind = "close" then rc = _session.post(.uimessage("ui.close.requested", .uipayload()))
+      if rc < 0 then do
+        call emit_refusal("invalid_input", kind, "input or completion rejected")
+        iterate
+      end
+      call service()
+      if _error = "" & _running then do
+        call emit_view()
+        call emit_effects()
+      end
+    end
+    if _error \= "" then call emit_refusal("host_error", "browser", _error)
+    call _session.close()
+    if _error \= "" then return -1
+    return 0
+
+  error: method = .string
+    return _error
+
+  service: method = .void
+    do budget = 1 to 64
+      if _session.pump() < 0 then do
+        _error = _session.fault()
+        return
+      end
+      if _session.pending() = 0 then return
+      effect = _session.take_effect()
+      if effect.name() = "ui.close" then do
+        if _session.complete(.uimessage("ui.closed", .uipayload(), effect.target(), "event", effect.request_id(), _session.id())) < 0 then
+          _error = "close completion rejected"
+        else do
+          if _session.pump() < 0 then _error = _session.fault()
+          say '{"version":1,"type":"closed","session":' || jsonquote(_session.id()) || ',"revision":' || _revision || '}'
+          _running = 0
+        end
+        return
+      end
+      _outgoing[_outgoing[0] + 1] = effect.json()
+    end
+    _error = "browser owner budget exhausted"
+    return
+
+  emit_effects: method = .void
+    do index = 1 to _outgoing[0]
+      say '{"version":1,"type":"effect","session":' || jsonquote(_session.id()) || ',"revision":' || _revision || ',"message":' || _outgoing[index] || '}'
+    end
+    call arraydrop _outgoing
+    return
+
+  emit_view: method = .void
+    view = _session.view()
+    support = _operations.preflight_view(view)
+    if \support.ok() then do
+      body = .uipayload()
+      call body.put_text("code", support.code())
+      call body.put_text("operation", support.operation())
+      call body.put_text("message", support.message())
+      if _session.post(.uimessage("ui.view.refused", body)) >= 0 & _session.pump(1) >= 0 then do
+        view = _session.view()
+        support = _operations.preflight_view(view)
+      end
+    end
+    if \support.ok() then do
+      call emit_refusal(support.code(), support.operation(), support.message())
+      return
+    end
+    if view.count() > 64 then do
+      call emit_refusal("limit", "form", "browser supports at most 64 controls")
+      return
+    end
+    nodes = "["
+    do index = 1 to view.count()
+      if index > 1 then nodes = nodes || ","
+      nodes = nodes || '{"kind":' || jsonquote(view.node_kind(index)) || ',"id":' || jsonquote(view.node_id(index)) || ',"text":' || jsonquote(view.node_text(index)) || ',"action":' || jsonquote(view.node_action(index)) || ',"row":' || view.node_row(index) || ',"column":' || view.node_column(index) || '}'
+    end
+    nodes = nodes || "]"
+    _revision = _revision + 1
+    say '{"version":1,"type":"view","session":' || jsonquote(_session.id()) || ',"revision":' || _revision || ',"view":{"title":' || jsonquote(view.title()) || ',"nodes":' || nodes || '}}'
+    return
+
+  emit_refusal: method = .void
+    arg code = .string, operation = .string, message = .string
+    say '{"version":1,"type":"refusal","session":' || jsonquote(_session.id()) || ',"revision":' || _revision || ',"result":{"code":' || jsonquote(code) || ',"operation":' || jsonquote(operation) || ',"message":' || jsonquote(message) || '}}'
+    return

@@ -1,4 +1,4 @@
-# Text Inspector: one feature, three hosts
+# Text Inspector: one feature, desktop, terminal and browser hosts
 
 Text Inspector is a **Level G** worked example. It counts physical text records,
 whitespace-delimited words and Unicode scalar values excluding line terminators.
@@ -33,6 +33,11 @@ macro. The three launcher files differ only in driver namespace/class.
 RXPP emits one source per invocation and retains source maps to the authored
 `.rxpp`. Stable view IDs and `root`/`below`/`right` layout are the builder
 seam; this is not yet a rich or responsive widget system.
+
+The browser uses a direct handwritten launcher with the same session factory.
+It runs unchanged in a local cREXX Wasm Worker or a hosted native process. Its
+form profile has no confirm dialog, so Clear follows the feature's existing
+capability fallback. See the [browser route guide](../../../web/ui/README.md).
 
 ## Build and run
 

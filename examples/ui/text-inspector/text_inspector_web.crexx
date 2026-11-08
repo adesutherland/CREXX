@@ -1,0 +1,12 @@
+/* Both browser routes enter the existing handwritten Text Inspector feature. */
+options levelg
+namespace text_inspector_web
+import ui_web
+import text_inspector
+
+main: procedure = .int
+  arg arguments = .string[]
+  if arguments[0] < 1 then return 2
+  session = make_text_inspector_session(arguments[1], ui_web..capabilities())
+  driver = .webdriver()
+  return driver.run(session)

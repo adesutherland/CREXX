@@ -376,11 +376,23 @@ ANSI. An unsupported GTK operation is delivered to the feature as
 `ui.view.refused` before a partial frame; a revision gap produces
 `ui.scene.resync` and one authoritative full replacement. See the
 [direct scene example](../../examples/ui/scene/README.md) and
-[`PLAN.md`](PLAN.md) for the later graph/map and browser work. The focused
+[`PLAN.md`](PLAN.md) for the later graph/map work. The focused
 `ui_scene_contract_noopt` test checks
 preflight, atomic changes, stale input, overflow and full resync. The session
 copies its broad capability set on construction; a caller cannot mutate a
 running session by changing that original builder.
+
+## Browser form route
+
+`ui_web.crexx` is a process-style Level G owner loop shared by a local Wasm
+Worker and an authenticated native hosted relay. Both use the same handwritten
+Text Inspector feature and version-1 view/input/effect frames. The browser
+projects labels, lines and buttons and completes asynchronous file effects;
+the cREXX session validates commands, correlation, cancellation and stale
+input. A local Worker restart creates a new session epoch, while the hosted
+route reconnects to a full view of its existing session. See the
+[browser build and checks](../../web/ui/README.md). Scene projection and
+general form controls remain later steps.
 
 ## Tests and next steps
 
@@ -402,5 +414,4 @@ progress, subscriptions, cancellation, stale results and bounded admission.
 Use `qa-comprehensive` for prepared broad correctness QA. This slice makes no
 sanitizer or cross-platform release claim; sanitizer testing remains the agreed
 later tracer gate. Rich widgets, dynamic GTK topology, general Unicode cell
-width, asynchronous file I/O, accessibility and browser/mobile implementations
-remain subsequent work.
+width, asynchronous native file I/O and accessibility remain subsequent work.
