@@ -8,7 +8,8 @@ Small-LLM answer generation likewise targets browser-local and native/hosted
 providers behind one application service, with a conditional native/hosted-only
 fallback after an effort discussion informed by implementation. Full local RAG,
 other application databases and each GPU acceleration workload remain separate
-option gates.
+option gates. A persistent browser cache for the read-only RAG bundle is a
+second-stage conditional target after transient import works.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not add these capabilities to an
@@ -189,7 +190,7 @@ deployment of `crexxrag`.
 | Candidate | Boundary and first useful proof | Main unresolved work | Status |
 | --- | --- | --- | --- |
 | Hosted RAG query | An authenticated adapter calls the existing native `crexxrag` query path and returns bounded cited results to a browser feature through an application-owned effect. | Define the service adapter, authorization, corpus/session identity, cancellation, result size and failure contract. The present CLI/JSON/MCP adapters are not an HTTP service by themselves. | selected; required fallback route |
-| Local read-only RAG | A matching Wasm Worker opens an imported, validated SQLite snapshot plus compatible immutable vector sidecars and performs lexical/vector/graph queries locally. Start with a bounded transient snapshot; persistent OPFS is a separate gate. | Cross-compile the needed Level G modules, `rxsqlite` and `rxvector`; prove bundle identity, sidecar verification, query-embedding provider, memory limits and reload, then VFS/persistence if selected. A native provider's existence is not proof of a Wasm build. | selected target; conditional on implementation feasibility |
+| Local read-only RAG | A matching Wasm Worker opens an imported, validated SQLite snapshot plus compatible immutable vector sidecars and performs lexical/vector/graph queries locally. Prove a bounded transient import first, then target a validated OPFS snapshot cache as a separate stage. | Cross-compile the needed Level G modules, `rxsqlite` and `rxvector`; prove bundle identity, sidecar verification, query-embedding provider, memory limits and reload, then qualify the selected persistence stage. A native provider's existence is not proof of a Wasm build. | selected query target; staged cache target conditional on feasibility |
 | Full local RAG | Browser-local ingestion, embeddings, index publication, review and maintenance. | RAG currently uses independent VM processes, WAL connections, leases and transactional publication; a one-Worker browser profile needs a separate ownership and recovery design. | unselected |
 | Other application databases | A graph editor or map game stores its own domain model behind an application repository/effect. | Select schema, transactions, import/export and sync policy per application; do not couple those domains to RAG's SQLite schema or put SQL in the UI driver. | application-specific option |
 
@@ -199,8 +200,9 @@ read-only retrieval remains in scope while its feasibility is investigated.
 If implementation experience reveals a concrete blocker, discuss the remaining
 work and reasonable effort with Adrian before using the authorized hosted-only
 fallback. Do not set an arbitrary effort limit now or silently narrow the local
-route. Browser persistence is a separate choice; a transient validated import
-may establish the first local read-only proof. Both a compatible browser-local
+route. The first local read-only proof uses a transient validated import.
+Persistent OPFS caching follows as a separate conditional stage under D13; it
+does not gate that first query proof. Both a compatible browser-local
 query embedding model and a hosted query embedding provider are targeted behind
 the same request/result contract. The local model's CPU/Wasm or WebGPU backend
 remains to be selected and proved. If the local embedding route encounters a
@@ -251,14 +253,15 @@ compatibility with the current RAG embedding corpus.
 SQLite's browser OPFS VFS is a feasibility input, not proof that the bundled
 `rxsqlite` provider can persist unchanged in the current Emscripten profile.
 Browser storage is origin-scoped and subject to quota, eviction and user data
-clearing, so any local authoritative library needs explicit export/backup and
-recovery behavior. These choices are outside the UI contract and remain
-unselected until a specific offline product outcome is agreed.
+clearing. The selected read-only cache must preserve bundle validation and
+provide export/re-import recovery; it is not a browser-local ingestion or
+authoritative publication store. Full local RAG storage remains unselected
+until a specific offline product outcome is agreed.
 
 | Decision ID | Evidence required before selection | Status |
 | --- | --- | --- |
 | **UIX-D01** | Approved conditional target: hosted and browser-local read-only cited query routes share one `rag.query` effect; hosted-only is authorized if the local route proves infeasible within reasonable effort. Discuss that effort when implementation experience exposes concrete work, then record the evidence before changing scope. Full local ingestion remains unselected. | direction approved; local feasibility open |
-| **UIX-D02** | Prove matching `rxsqlite`/`rxvector` Wasm builds, validated SQLite/sidecar identity and a representative cited lexical/vector/graph query using the D03 embedding contract. Discuss reasonable effort only after implementation reveals concrete blockers; if persistence is selected, prove SQLite VFS, multi-tab/storage behavior, export and recovery before promising it. | open; implementation feasibility gate |
+| **UIX-D02** | Prove matching `rxsqlite`/`rxvector` Wasm builds, validated SQLite/sidecar identity and a representative cited lexical/vector/graph query using the D03 embedding contract. Discuss reasonable effort only after implementation reveals concrete blockers. The selected D13 persistence stage has its own VFS, multi-tab/storage, export and recovery proof. | open; implementation feasibility gate |
 | **UIX-D03** | Approved conditional target: a compatible browser-local query embedding model and a hosted embedding provider share one query-embedding request/result contract. If local model support proves infeasible within reasonable effort discussed after concrete implementation experience, use hosted embedding only and record the evidence. Select and prove the local CPU/Wasm or WebGPU backend separately; no answer-generation route is selected by this decision. | direction approved; local backend/proof open |
 | **UIX-D04** | Approved: assess acceleration independently for map rendering, vector scoring, query embedding and small-LLM generation. Begin with Canvas 2D for bounded maps and exact CPU `rxvector` scoring; select each local model backend during implementation. Add a GPU path only after representative correctness, latency and resource evidence against agreed targets, then qualify its device support, failure and fallback without making other workloads depend on it. A browser-local model target does not itself require WebGPU. | direction approved; per-workload evidence gates open |
 | **UIX-D05** | Approved direction: precise host support at composition plus complete-view/scene preflight, application-owned fallback and command availability, and typed correlated refusal that preserves the last valid frame with bounded retry. Specify the exact API and prove refusal leaves no partial new projection or additional feature state mutation. | direction approved; API/proof open |
@@ -269,6 +272,7 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-D10** | Approved: use bounded fixed-point integer world coordinates shared by GTK and both browser routes; keep map tile identities separate and convert to pixels for painting. Define ticks per world unit, exact wire range, viewport rounding, checked arithmetic and terminal mapping; prove identical picking and explicit overflow rejection before freezing the API. | direction approved; scale/API proof open |
 | **UIX-D11** | Approved: GTK 3 drawing area/Cairo for graph and map, browser SVG/HTML for editable graph and Canvas 2D for bounded map through both browser routes, and ANSI semantic/cell alternatives. Add culling/batching first; select accelerated rendering only after representative scene size, interaction latency and memory evidence against agreed targets. GPU compute is a separate decision. | direction approved; host/proof open |
 | **UIX-D12** | Approved conditional target: browser-local and native/hosted small-LLM answer generation share one application-service request/result contract. If local generation proves infeasible within reasonable effort, discuss the concrete implementation evidence and effort then use native/hosted generation only. Select the local engine/backend and define model identity, evidence/citation, privacy, device and failure policy during implementation; D03 query embeddings and D04 GPU workloads remain separate decisions. | direction approved; local provider/proof open |
+| **UIX-D13** | Approved staged persistence target for browser-local read-only RAG: first prove bounded transient import of a validated SQLite/vector bundle, then add an OPFS snapshot cache with bundle identity, export/re-import recovery and multi-tab behavior. If persistent caching proves infeasible within reasonable effort, discuss concrete implementation evidence and effort before retaining transient import as the local route. This does not select browser-local ingestion or make persistence a prerequisite for the first query proof. | direction approved; cache VFS/proof open |
 
 ## Acceptance criteria
 
@@ -285,6 +289,7 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-AC09** | A browser feature issues the same bounded `rag.query` effect through hosted and targeted local read-only executors and receives cited results with corpus/evidence identity, compatible query embedding, cancellation and stale-result handling. Compare representative lexical/vector/graph evidence with native RAG. If local feasibility is later declined under D01–02, document the concrete blocker and agreed effort judgment; hosted cited-query acceptance remains required. | open; conditional local route |
 | **UIX-AC10** | The same query-embedding request/result contract supports hosted and targeted browser-local compatible models. For a representative corpus profile, verify model/input identity, dimensions, vector compatibility, cancellation, provider failure and privacy route; compare resulting cited retrieval to the native control. If local model support is later declined under D03, record the blocker and agreed effort judgment; hosted embedding remains required. | open; conditional local embedding route |
 | **UIX-AC11** | The same application-service generation request/result contract supports native/hosted and targeted browser-local small-LLM providers, independently of query embedding and UI rendering. Verify bounded input/output or streaming, model identity, privacy route, cancellation, stale completion, provider/device failure and application-owned result policy. For cited RAG answers, preserve the owning RAG evidence and citation validation. If local generation is later declined under D12, record the concrete blocker and agreed effort judgment; native/hosted generation remains required. | open; conditional local generation route |
+| **UIX-AC12** | After a validated transient bundle supports local read-only cited queries, the targeted OPFS cache reloads that same corpus/evidence version across browser restarts without weakening SQLite/sidecar validation. Verify quota or eviction failure, clearing/re-import, export, multi-tab access/locking and bounded cleanup. If persistence is later declined under D13, record the concrete blocker and agreed effort judgment; the transient local query route remains the fallback. | open; conditional persistent cache |
 
 ## Stable implementation steps and gates
 
@@ -299,14 +304,18 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-STEP07** | Qualify selected application/host and generated-authoring combinations across GTK, ANSI and both browser routes, including fallback/refusal, failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–08. Depends on selected preceding steps. | open; milestone/scope gate |
 | **UIX-STEP08** | After the core application-service boundary exists, define one `rag.query` effect and implement the hosted adapter plus a browser-local read-only feasibility/consumer path against one validated corpus bundle. Keep RAG retrieval and evidence policy with its product owner; resolve D02 and the D03 local embedding backend during implementation. Use exact CPU `rxvector` scoring as the baseline and apply D04 separately before any GPU scorer. Qualify query and embedding routes against AC09–10 or record the D01/D03 conditional hosted-only fallbacks after their agreed effort discussions. This application integration does not block STEP01–07. | open; separate RAG integration gate |
 | **UIX-STEP09** | After the core application-service boundary exists, define the D12 generation request/result contract and implement native/hosted and browser-local small-LLM consumer paths. Keep answer/evidence policy with its application or RAG owner; choose and prove the local engine/backend during implementation under D04 without requiring a GPU path. Qualify both routes against AC11 or record the conditional native/hosted-only fallback after discussing concrete local effort. This application integration does not block STEP01–07 and need not wait for full local RAG. | open; separate generation integration gate |
+| **UIX-STEP10** | After STEP08 proves a transient validated local corpus, implement the D13 OPFS cache through a qualified SQLite VFS and bundle-sidecar storage boundary. Prove versioned reload, export/re-import recovery, quota/eviction, multi-tab locking and cleanup against AC12; if the cache is infeasible within reasonable effort, discuss concrete evidence and retain transient import. This storage stage does not block STEP01–09 or the initial local query proof. | open; separate persistence gate |
 
 At RAG implementation start, add retrieval/provider delivery criteria to the
 owning RAG plan and reference them from STEP08; AC09–10 own only the UI effect,
 embedding-provider and cross-route consumer boundaries. At generation
 implementation start, place provider and answer-policy criteria with the owning
 application or RAG plan and reference them from STEP09; AC11 owns the shared
-service and cross-route consumer boundary. The core UI milestone does not
-become an implicit database, embedding or generation qualification gate.
+service and cross-route consumer boundary. At persistence implementation start,
+place cache/VFS, export and recovery criteria with the owning RAG plan and
+reference them from STEP10; AC12 owns the browser consumer boundary. The core
+UI milestone does not become an implicit database, embedding, generation or
+persistence qualification gate.
 
 For each development step, use the smallest changed-component build and
 behavior/contract checks, inspect representative RXAS for changed cREXX paths

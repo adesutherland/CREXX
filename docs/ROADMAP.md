@@ -991,13 +991,17 @@ prototype has been qualified by this roadmap update.
   RAG queries target hosted and browser-local read-only routes through one
   application effect, with hosted-only fallback if local implementation proves
   infeasible within an effort judgment discussed after implementation evidence.
+  The local route first proves transient validated corpus import, then targets
+  an OPFS snapshot cache with export/re-import recovery and multi-tab behavior;
+  transient import remains the local fallback if persistence proves infeasible
+  within effort discussed after concrete implementation evidence.
   Query embeddings likewise target both hosted and compatible browser-local
   providers, with the same conditional hosted-only fallback and later effort
   discussion. Small-LLM answer generation targets both native/hosted and
   browser-local providers through one application service, with native/hosted
   fallback if local generation proves infeasible within reasonable effort
   discussed during implementation. Local model engines/backends remain open.
-  Full local RAG and persistent local SQLite/vector storage remain separate
+  Full local RAG ingestion and authoritative browser storage remain separate
   choices; UI effects integrate these services without moving their policy
   into the driver.
 - First-class source provenance, shared Classic BIF behavior, and variable-pool

@@ -177,12 +177,13 @@ adapter and a browser-local read-only Wasm route using a validated SQLite and
 vector-sidecar bundle. The local route requires `rxsqlite`, `rxvector` and a
 compatible query embedding route. Both hosted and browser-local compatible
 query embedding providers are targeted behind one contract; the local CPU/Wasm
-or WebGPU backend remains unproved. Transient import can be proved before
-persistent browser storage. If local embedding or retrieval proves infeasible
-within reasonable effort, discuss the concrete work then use the authorized
-hosted embedding or hosted query fallback respectively. A full local RAG port
-would also have to replace its current process/WAL worker and recovery
-arrangements. Editable graph and map applications may need databases
+or WebGPU backend remains unproved. Prove a transient validated bundle import
+first, then target an OPFS cache with export/re-import recovery and multi-tab
+behavior as a separate conditional stage. If local embedding or retrieval
+proves infeasible within reasonable effort, discuss the concrete work then use
+the authorized hosted embedding or hosted query fallback respectively. A full
+local RAG port would also have to replace its current process/WAL worker and
+recovery arrangements. Editable graph and map applications may need databases
 too, but each keeps its own schema and transaction owner behind effects.
 
 Small-LLM answer generation targets both native/hosted and browser-local
@@ -201,9 +202,8 @@ are separate optional capabilities. Canvas 2D map drawing and exact CPU
 representative correctness, latency, resource and device/fallback proof. Local
 model backends are chosen during implementation; their browser-local target
 does not itself require WebGPU. The [UI expansion plan](PLAN.md) records these
-gates. Browser-local SQLite remains conditional on a proved VFS and
-export/recovery path: OPFS is origin-scoped storage subject to browser quota
-and clearing.
+gates. The read-only OPFS cache needs a proved SQLite VFS and bundle-validation
+path: OPFS is origin-scoped storage subject to browser quota and clearing.
 
 For 2D work, add a semantic scene beside the current flat widget view only
 after defining its public contract. The candidate scene contains stable IDs,
