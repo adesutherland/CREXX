@@ -13,11 +13,18 @@ capabilities: procedure = .uicapabilities
   caps = .uicapabilities()
   call caps.enable("ui.resource.choose")
   call caps.enable("io.text.read")
+  call caps.enable("form.scene")
+  call caps.enable("scene.rect")
+  call caps.enable("scene.edge")
+  call caps.enable("scene.tile")
+  call caps.enable("scene.unit")
+  call caps.enable("ui.pointer")
+  call caps.enable("ui.keyboard")
   return caps
 
-/** STEP04 form profile. Later browser scene work extends this explicitly. */
+/** Bounded browser form and scene operation profile. */
 operations: procedure = .uioperations
-  return .uioperations("form.label form.line form.button")
+  return .uioperations("form.label form.line form.button form.scene scene.rect scene.edge scene.tile scene.unit input.pointer input.keyboard")
 
 webdriver: class implements .uidriver
   _session = .uisession
@@ -26,6 +33,8 @@ webdriver: class implements .uidriver
   _running = .int
   _error = .string
   _outgoing = .string[]
+  _scene = .uiscenereplica
+  _scene_node_id = .string
 
   *: factory
     _operations = operations()
@@ -33,17 +42,22 @@ webdriver: class implements .uidriver
     _running = 0
     _error = ""
     call arraydrop _outgoing
+    _scene = .uiscenereplica()
+    _scene_node_id = ""
     return
 
   /** Each line is one owner turn; the VM suspends only in stdin read. */
   run: method = .int
     arg session = .uisession
+    body = .uipayload
     _session = session
     _operations = operations()
     _revision = 0
     _running = 1
     _error = ""
     call arraydrop _outgoing
+    _scene = .uiscenereplica()
+    _scene_node_id = ""
     if _session.post(.uimessage("ui.ready", .uipayload())) < 0 then _error = "cannot admit ui.ready"
     if _error = "" then call service()
     if _error = "" then call emit_view()
@@ -74,6 +88,29 @@ webdriver: class implements .uidriver
         if message.wire_error() = "" then rc = _session.complete(message)
       end
       else if kind = "cancel" then rc = _session.cancel(jsonget(wire, "request_id"))
+      else if kind = "pointer" then do
+        pointer = .uipointer.from_json(jsonget(wire, "pointer"))
+        if jsonget(wire, "node") = _scene_node_id & _scene_node_id \= "" & _scene.accept_pointer(pointer).ok() & wordpos(jsonget(wire, "phase"), "press release move") > 0 then do
+          body = .uipayload()
+          call body.put_text("node", _scene_node_id)
+          call body.put_text("epoch", pointer.epoch())
+          call body.put_integer("revision", pointer.revision())
+          call body.put_integer("x", pointer.x())
+          call body.put_integer("y", pointer.y())
+          call body.put_text("phase", jsonget(wire, "phase"))
+          rc = _session.post(.uimessage("ui.scene.pointer", body))
+        end
+      end
+      else if kind = "key" then do
+        if jsonget(wire, "node") = _scene_node_id & _scene_node_id \= "" & jsonget(wire, "epoch") = _scene.epoch() & jsonget(wire, "revision") = (_scene.revision() as .string) then do
+          body = .uipayload()
+          call body.put_text("node", _scene_node_id)
+          call body.put_text("epoch", _scene.epoch())
+          call body.put_integer("revision", _scene.revision())
+          call body.put_text("key", jsonget(wire, "key"))
+          rc = _session.post(.uimessage("ui.scene.key", body))
+        end
+      end
       else if kind = "close" then rc = _session.post(.uimessage("ui.close.requested", .uipayload()))
       if rc < 0 then do
         call emit_refusal("invalid_input", kind, "input or completion rejected")
@@ -124,6 +161,8 @@ webdriver: class implements .uidriver
     return
 
   emit_view: method = .void
+    body = .uipayload
+    index = .int
     view = _session.view()
     support = _operations.preflight_view(view)
     if \support.ok() then do
@@ -144,10 +183,46 @@ webdriver: class implements .uidriver
       call emit_refusal("limit", "form", "browser supports at most 64 controls")
       return
     end
+    scene_count = 0
+    do index = 1 to view.count()
+      if view.node_kind(index) \= "scene" then iterate
+      scene_count = scene_count + 1
+      if scene_count > 1 then do
+        call emit_refusal("limit", "form.scene", "browser supports one scene per session")
+        return
+      end
+      packet = view.node_value(index)
+      candidate = _scene
+      support = candidate.apply_for(_operations, packet)
+      if support.code() = "sync_error" then do
+        body = .uipayload()
+        call body.put_text("epoch", _scene.epoch())
+        call body.put_integer("revision", _scene.revision())
+        call body.put_text("reason", support.code())
+        if _session.post(.uimessage("ui.scene.resync", body)) >= 0 & _session.pump(1) >= 0 then do
+          view = _session.view()
+          packet = view.node_value(index)
+          if jsonget(packet, "kind") = "full" then do
+            candidate = _scene
+            support = candidate.apply_for(_operations, packet)
+          end
+        end
+      end
+      if \support.ok() then do
+        call emit_refusal(support.code(), support.operation(), support.message())
+        return
+      end
+      _scene = candidate
+      _scene_node_id = view.node_id(index)
+    end
+    if scene_count = 0 then _scene_node_id = ""
     nodes = "["
     do index = 1 to view.count()
       if index > 1 then nodes = nodes || ","
-      nodes = nodes || '{"kind":' || jsonquote(view.node_kind(index)) || ',"id":' || jsonquote(view.node_id(index)) || ',"text":' || jsonquote(view.node_text(index)) || ',"action":' || jsonquote(view.node_action(index)) || ',"row":' || view.node_row(index) || ',"column":' || view.node_column(index) || '}'
+      nodes = nodes || '{"kind":' || jsonquote(view.node_kind(index)) || ',"id":' || jsonquote(view.node_id(index)) || ',"text":' || jsonquote(view.node_text(index)) || ',"action":' || jsonquote(view.node_action(index)) || ',"row":' || view.node_row(index) || ',"column":' || view.node_column(index)
+      if view.node_kind(index) = "scene" then
+        nodes = nodes || ',"scenePacket":' || jsonquote(view.node_value(index)) || ',"sceneFull":' || jsonquote(_scene.frame())
+      nodes = nodes || '}'
     end
     nodes = nodes || "]"
     _revision = _revision + 1

@@ -1,0 +1,63 @@
+options levelg
+namespace scene_editors_gtk_test
+import ui_contract
+import ui_gtk
+import ui_gtk_test
+import scene_editors
+
+main: procedure = .int
+  driver = .gtkdriver()
+  steps = .string[]
+  steps[1] = "expect-scene-count|graph|3"
+  steps[2] = "click|create"
+  steps[3] = "expect-scene-count|graph|4"
+  steps[4] = "click|connect"
+  steps[5] = "expect-scene-count|graph|5"
+  steps[6] = "scene-press|graph|40,40"
+  steps[7] = "expect|state|A: 7680 C: 1 Edge AC: 1 Selected: node-a"
+  steps[8] = "scene-key|graph|Right"
+  steps[9] = "expect|state|A: 10240 C: 1 Edge AC: 1 Selected: node-a"
+  steps[10] = "click|zoom"
+  steps[11] = "expect|viewport|Pan: 0 Scale: 128"
+  steps[12] = "click|pan"
+  steps[13] = "expect|viewport|Pan: 2560 Scale: 128"
+  steps[14] = "click|delete"
+  steps[15] = "expect-scene-count|graph|3"
+  steps[16] = "click|undo"
+  steps[17] = "expect-scene-count|graph|5"
+  steps[18] = "click|redo"
+  steps[19] = "expect-scene-count|graph|3"
+  steps[20] = "click|quit"
+  if ui_gtk_test..start(steps) < 0 then return 1
+  session = make_graph_editor_session("gtk-graph-editor", ui_gtk..capabilities())
+  run_rc = driver.run(session)
+  test_rc = ui_gtk_test..finish()
+  if run_rc \= 0 | test_rc \= 0 then do
+    say "FAIL: GTK graph editor" run_rc test_rc driver.error()
+    return 1
+  end
+
+  steps = .string[]
+  call arraydrop steps
+  steps[1] = "expect-scene-count|map|17"
+  steps[2] = "click|turn"
+  steps[3] = "expect|state|Turn: 2 Unit x: 20480 Selected: "
+  steps[4] = "click|zoom"
+  steps[5] = "expect|viewport|Pan: 0 Scale: 128"
+  steps[6] = "click|pan"
+  steps[7] = "expect|viewport|Pan: 4096 Scale: 128"
+  steps[8] = "scene-press|map|140,50"
+  steps[9] = "expect|state|Turn: 2 Unit x: 20480 Selected: unit-blue"
+  steps[10] = "scene-key|map|Right"
+  steps[11] = "expect|state|Turn: 3 Unit x: 36864 Selected: unit-blue"
+  steps[12] = "click|quit"
+  if ui_gtk_test..start(steps) < 0 then return 1
+  session = make_map_editor_session("gtk-map-editor", ui_gtk..capabilities())
+  run_rc = driver.run(session)
+  test_rc = ui_gtk_test..finish()
+  if run_rc \= 0 | test_rc \= 0 then do
+    say "FAIL: GTK map editor" run_rc test_rc driver.error()
+    return 1
+  end
+  say "PASS: GTK graph and map editor routes"
+  return 0

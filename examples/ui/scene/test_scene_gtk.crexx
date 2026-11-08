@@ -85,7 +85,7 @@ refusal_probe: class implements .uicomponent
   update: method = .uieffects
     arg event = .uimessage
     if event.name() = "ui.view.refused" then do
-      if event.body().text("operation") = "scene.tile" then _fallback = 1
+      if event.body().text("operation") = "form.scene" then _fallback = 1
     end
     effects = .uieffects()
     if event.name() = "ui.close.requested" then call effects.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))
@@ -93,7 +93,10 @@ refusal_probe: class implements .uicomponent
   view: method = .uiview
     view = .uiview_impl("Refusal probe")
     if _fallback then call view.add_label("status", "Fallback selected", "root")
-    else call view.add_scene("graph", '{"version":1,"kind":"full","epoch":"refusal","revision":1,"items":[{"id":"tile","kind":"tile","x":0,"y":0,"w":256,"h":256,"label":"Tile"}]}', "root")
+    else do
+      call view.add_scene("graph", '{"version":1,"kind":"full","epoch":"refusal","revision":1,"items":[]}', "root")
+      call view.add_scene("map", '{"version":1,"kind":"full","epoch":"refusal","revision":1,"items":[]}')
+    end
     call view.add_button("quit", "Quit", "probe.quit", "q")
     return view
 

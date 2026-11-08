@@ -3,6 +3,7 @@
  * timeout bounds missing state; progress depends on observed widgets, not sleeps.
  */
 #include <gtk/gtk.h>
+#include <stdio.h>
 #include <string.h>
 #include "crexxpa.h"
 
@@ -79,6 +80,34 @@ static gboolean drive(gpointer ignored) {
     if (!strcmp(parts[0], "click") && parts[1] && window && !dialog) {
         node = find_node(window, parts[1]);
         if (node && GTK_IS_BUTTON(node)) { gtk_button_clicked(GTK_BUTTON(node)); done = TRUE; }
+    } else if (!strcmp(parts[0], "scene-press") && parts[1] && parts[2] && window && !dialog) {
+        node = find_node(window, parts[1]);
+        if (node && GTK_IS_DRAWING_AREA(node)) {
+            int x, y;
+            if (sscanf(parts[2], "%d,%d", &x, &y) == 2) {
+                gboolean handled = FALSE;
+                GdkEvent *event = gdk_event_new(GDK_BUTTON_PRESS);
+                event->button.x = (double)x;
+                event->button.y = (double)y;
+                event->button.button = 1;
+                g_signal_emit_by_name(node, "button-press-event", event, &handled);
+                gdk_event_free(event);
+                done = handled;
+            }
+        }
+    } else if (!strcmp(parts[0], "scene-key") && parts[1] && parts[2] && window && !dialog) {
+        node = find_node(window, parts[1]);
+        if (node && GTK_IS_DRAWING_AREA(node)) {
+            guint key = gdk_keyval_from_name(parts[2]);
+            if (key) {
+                gboolean handled = FALSE;
+                GdkEvent *event = gdk_event_new(GDK_KEY_PRESS);
+                event->key.keyval = key;
+                g_signal_emit_by_name(node, "key-press-event", event, &handled);
+                gdk_event_free(event);
+                done = handled;
+            }
+        }
     } else if (!strcmp(parts[0], "choice") && parts[1] && parts[2] && window && !dialog) {
         node = find_item(window, parts[1], parts[2]);
         if (node && GTK_IS_RADIO_BUTTON(node)) {
@@ -182,6 +211,8 @@ PROCEDURE(finish) {
     commit_source = 0;
     /* The final close may end GTK before the timer observes the next tick. */
     if (cursor == step_count) result = 0;
+    if (result != 0 && cursor < step_count)
+        g_printerr("GTK scenario stopped at step %d: %s\n", cursor, steps[cursor]);
     g_strfreev(steps); steps = NULL;
     RETURNINT(result);
     ENDPROC

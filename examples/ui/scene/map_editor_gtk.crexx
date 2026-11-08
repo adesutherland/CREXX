@@ -1,0 +1,7 @@
+options levelg
+namespace map_editor_gtk
+import ui_gtk
+import scene_editors
+session = make_map_editor_session("gtk-map-editor", ui_gtk..capabilities())
+driver = .gtkdriver()
+exit driver.run(session)

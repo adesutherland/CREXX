@@ -22,11 +22,15 @@ capabilities: procedure = .uicapabilities
   call caps.enable("form.scene")
   call caps.enable("scene.rect")
   call caps.enable("scene.edge")
+  call caps.enable("scene.tile")
+  call caps.enable("scene.unit")
+  call caps.enable("ui.pointer")
+  call caps.enable("ui.keyboard")
   return caps
 
 /** Exact drawing/control operations, copied for each owning session. */
 operations: procedure = .uioperations
-  return .uioperations("form.label form.statusbar form.line form.input form.checkbox form.progress form.button form.choice form.combo form.integer form.scene scene.rect scene.edge")
+  return .uioperations("form.label form.statusbar form.line form.input form.checkbox form.progress form.button form.choice form.combo form.integer form.scene scene.rect scene.edge scene.tile scene.unit input.pointer input.keyboard")
 
 /** GTK 3 host. Application policy lives exclusively in session components. */
 gtkdriver: class implements .uidriver
@@ -41,6 +45,7 @@ gtkdriver: class implements .uidriver
   _scene = .uiscenereplica
   _operations = .uioperations
   _scene_recovered = .int
+  _scene_node_id = .string
 
   /** Construct an idle host; run owns all native resources. */
   *: factory
@@ -51,6 +56,7 @@ gtkdriver: class implements .uidriver
     _scene = .uiscenereplica()
     _operations = operations()
     _scene_recovered = 0
+    _scene_node_id = ""
     return
 
   /** Build the initial GTK tree and enter the native event loop.
@@ -68,6 +74,7 @@ gtkdriver: class implements .uidriver
     _scene = .uiscenereplica()
     _operations = operations()
     _scene_recovered = 0
+    _scene_node_id = ""
     view = _session.view()
     option = .int
     support = preflight_complete(view)
@@ -185,6 +192,7 @@ gtkdriver: class implements .uidriver
   on_native_event: method = .int
     arg action = .string, payload = .string
     rc = 0
+    body = .uipayload
     if action = "ready" then rc = _session.post(.uimessage("ui.ready", .uipayload()))
     else if action = "command" & \_modal & \_closing then do
       /* Disabled/unregistered commands are rejected without killing the host. */
@@ -193,6 +201,31 @@ gtkdriver: class implements .uidriver
     end
     else if (action = "selection.changed" | action = "checked.changed" | action = "value.changed" | action = "value.committed") & \_modal & \_closing then
       rc = _session.post(.uimessage("widget." || action, .uipayload(payload)))
+    else if action = "scene.pointer" & \_modal & \_closing then do
+      if jsonget(payload, "node") = _scene_node_id then do
+        pointer = .uipointer(_scene.epoch(), _scene.revision(), jsonget(payload, "x") as .int, jsonget(payload, "y") as .int)
+        if _scene.accept_pointer(pointer).ok() then do
+          body = .uipayload()
+          call body.put_text("node", _scene_node_id)
+          call body.put_text("epoch", _scene.epoch())
+          call body.put_integer("revision", _scene.revision())
+          call body.put_integer("x", pointer.x())
+          call body.put_integer("y", pointer.y())
+          call body.put_text("phase", "press")
+          rc = _session.post(.uimessage("ui.scene.pointer", body))
+        end
+      end
+    end
+    else if action = "scene.key" & \_modal & \_closing then do
+      if jsonget(payload, "node") = _scene_node_id & _scene.accept_input(_scene.epoch(), _scene.revision()).ok() then do
+        body = .uipayload()
+        call body.put_text("node", _scene_node_id)
+        call body.put_text("epoch", _scene.epoch())
+        call body.put_integer("revision", _scene.revision())
+        call body.put_text("key", jsonget(payload, "key"))
+        rc = _session.post(.uimessage("ui.scene.key", body))
+      end
+    end
     else if action = "close.requested" & \_closing then rc = _session.post(.uimessage("ui.close.requested", .uipayload()))
     else if action = "dialog.accepted" | action = "dialog.cancelled" then do
       if _modal then do
@@ -384,6 +417,11 @@ gtkdriver: class implements .uidriver
       return 0
     end
     if ui_gtk_native..scene_begin(id) \= 1 then return 0
+    viewport = candidate.viewport()
+    if ui_gtk_native..scene_viewport(id, jsonget(viewport, "origin_x") as .int, jsonget(viewport, "origin_y") as .int, jsonget(viewport, "ticks_per_pixel") as .int, jsonget(viewport, "width") as .int, jsonget(viewport, "height") as .int) \= 1 then do
+      call ui_gtk_native..scene_abort(id)
+      return 0
+    end
     do item_index = 1 to candidate.count()
       item = candidate.item(item_index)
       rc = ui_gtk_native..scene_item(id, jsonget(item, "kind"), jsonget(item, "x") as .int, jsonget(item, "y") as .int, jsonget(item, "w") as .int, jsonget(item, "h") as .int, jsonget(item, "label"))
@@ -397,6 +435,7 @@ gtkdriver: class implements .uidriver
       return 0
     end
     _scene = candidate
+    _scene_node_id = id
     return 1
 
 /* Implementation detail: one identity-preserving RXPA callback, not another

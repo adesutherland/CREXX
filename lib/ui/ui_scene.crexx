@@ -75,6 +75,8 @@ uioperations: class
     operation = .string
     if length(packet) > 262144 | jsonvalid(packet) \= 1 then
       return .uiresult("invalid_scene", "scene", "malformed or oversized packet")
+    if jsonget(packet, "viewport") \= "" & viewport_error(jsonget(packet, "viewport")) \= "" then
+      return .uiresult("invalid_scene", "scene.viewport", "invalid viewport")
     kind = jsonget(packet, "kind")
     if kind = "full" then do
       count = jsoncount(packet, "items")
@@ -202,12 +204,14 @@ uiscenereplica: class
   _revision = .int
   _items = .string[]
   _last_packet = .string
+  _viewport = .string
   _paused = .int
   _resync_failures = .int
   *: factory
     _epoch = ""
     _revision = 0
     _last_packet = ""
+    _viewport = '{"origin_x":0,"origin_y":0,"ticks_per_pixel":256,"width":420,"height":260}'
     _paused = 1
     _resync_failures = 0
     return
@@ -234,6 +238,9 @@ uiscenereplica: class
     epoch = jsonget(packet, "epoch")
     if jsontype(packet, "epoch") \= "string" | length(epoch) < 1 | length(epoch) > 64 then
       return sync_failure("invalid epoch")
+    new_viewport = jsonget(packet, "viewport")
+    if new_viewport \= "" & viewport_error(new_viewport) \= "" then
+      return sync_failure("invalid viewport")
     kind = jsonget(packet, "kind")
     if \safe_integer(packet, "revision", 9007199254740991) then
       return sync_failure("invalid revision")
@@ -253,6 +260,8 @@ uiscenereplica: class
       _epoch = epoch
       _revision = revision
       _last_packet = packet
+      _viewport = '{"origin_x":0,"origin_y":0,"ticks_per_pixel":256,"width":420,"height":260}'
+      if new_viewport \= "" then _viewport = new_viewport
       _paused = 0
       _resync_failures = 0
       return .uiresult("")
@@ -302,6 +311,7 @@ uiscenereplica: class
     _items = candidate
     _revision = revision
     _last_packet = packet
+    if new_viewport \= "" then _viewport = new_viewport
     return .uiresult("")
 
   /** Stale physical input is refused before it can reach application update. */
@@ -320,6 +330,8 @@ uiscenereplica: class
     return _revision
   epoch: method = .string
     return _epoch
+  viewport: method = .string
+    return _viewport
   count: method = .int
     return _items[0]
   item: method = .string
@@ -327,7 +339,11 @@ uiscenereplica: class
     if index < 1 | index > _items[0] then return ""
     return _items[index]
   frame: method = .string
-    return '{"version":1,"kind":"full","epoch":' || jsonquote(_epoch) || ',"revision":' || _revision || ',"items":' || jsonarray(_items) || '}'
+    return '{"version":1,"kind":"full","epoch":' || jsonquote(_epoch) || ',"revision":' || _revision || ',"viewport":' || _viewport || ',"items":' || jsonarray(_items) || '}'
+  copy: method = .uiscenereplica
+    clone = .uiscenereplica()
+    unused = clone.apply(frame())
+    return clone
   sync_failure: method = .uiresult
     arg message = .string
     _paused = 1
@@ -372,7 +388,7 @@ uisceneowner: class
       return ""
     end
     packet = '{"version":1,"kind":"delta","epoch":' || jsonquote(_replica.epoch()) || ',"base":' || _replica.revision() || ',"revision":' || (_replica.revision() + 1) || ',"changes":[' || change || ']}'
-    candidate = _replica
+    candidate = _replica.copy()
     result = candidate.apply(packet)
     if \result.ok() then do
       _error = result.message()
@@ -380,8 +396,86 @@ uisceneowner: class
     end
     _replica = candidate
     return packet
+  /** Replace the presentation list with one atomic bounded delta. */
+  set_items: method = .string
+    arg items = .string[]
+    i = .int
+    j = .int
+    old = .string
+    _error = ""
+    if items[0] > 512 then do
+      _error = "scene item limit"
+      return ""
+    end
+    do i = 1 to items[0]
+      if item_error(items[i]) \= "" then do
+        _error = "invalid scene item"
+        return ""
+      end
+      do j = 1 to i - 1
+        if jsonget(items[i], "id") = jsonget(items[j], "id") then do
+          _error = "duplicate scene ID"
+          return ""
+        end
+      end
+    end
+    changes = .string[]
+    do i = 1 to _replica.count()
+      old = _replica.item(i)
+      found = 0
+      do j = 1 to items[0]
+        if jsonget(items[j], "id") = jsonget(old, "id") then found = 1
+      end
+      if \found then changes[changes[0] + 1] = '{"op":"remove","id":' || jsonquote(jsonget(old, "id")) || '}'
+    end
+    do i = 1 to items[0]
+      old = ""
+      do j = 1 to _replica.count()
+        candidate_item = _replica.item(j)
+        if jsonget(candidate_item, "id") = jsonget(items[i], "id") then old = candidate_item
+      end
+      if old = "" then changes[changes[0] + 1] = '{"op":"add","item":' || items[i] || '}'
+      else if old \= items[i] then changes[changes[0] + 1] = '{"op":"replace","item":' || items[i] || '}'
+    end
+    if changes[0] = 0 then return _replica.frame()
+    if changes[0] > 128 then do
+      _error = "scene delta operation limit"
+      return ""
+    end
+    packet = '{"version":1,"kind":"delta","epoch":' || jsonquote(_replica.epoch()) || ',"base":' || _replica.revision() || ',"revision":' || (_replica.revision() + 1) || ',"changes":' || jsonarray(changes) || '}'
+    candidate = _replica.copy()
+    result = candidate.apply(packet)
+    if \result.ok() then do
+      _error = result.message()
+      return ""
+    end
+    _replica = candidate
+    return packet
+  accept_pointer: method = .uiresult
+    arg pointer = .uipointer
+    return _replica.accept_pointer(pointer)
+  /** A viewport-only delta changes presentation, not application records. */
+  set_viewport: method = .string
+    arg origin_x = .int, origin_y = .int, ticks_per_pixel = .int, width = .int, height = .int
+    _error = ""
+    viewport = '{"origin_x":' || origin_x || ',"origin_y":' || origin_y || ',"ticks_per_pixel":' || ticks_per_pixel || ',"width":' || width || ',"height":' || height || '}'
+    if viewport_error(viewport) \= "" then do
+      _error = "invalid viewport"
+      return ""
+    end
+    packet = '{"version":1,"kind":"delta","epoch":' || jsonquote(_replica.epoch()) || ',"base":' || _replica.revision() || ',"revision":' || (_replica.revision() + 1) || ',"changes":[],"viewport":' || viewport || '}'
+    candidate = _replica.copy()
+    result = candidate.apply(packet)
+    if \result.ok() then do
+      _error = result.message()
+      return ""
+    end
+    _replica = candidate
+    return packet
+  viewport: method = .string
+    return _replica.viewport()
   /** Last drawn object wins. Rect/tile/unit hit areas are half-open in ticks;
-   * edge proximity and explicit z order are STEP05 graph refinements. */
+   * edge proximity and explicit z order are outside this bounded profile. */
   pick: method = .string
     arg point = .uiworldpoint
     if \point.valid() then return ""
@@ -409,6 +503,22 @@ safe_integer: procedure = .int
   if raw = "-" then return 0
   value = raw as .int
   return value >= 0 & value <= limit
+
+signed_integer: procedure = .int
+  arg object = .string, path = .string, limit = .int
+  if jsontype(object, path) \= "number" then return 0
+  raw = jsonget(object, path)
+  if raw = "" | raw = "-" | length(raw) > 14 | verify(raw, "-0123456789") \= 0 | pos("-", substr(raw, 2)) > 0 then return 0
+  value = raw as .int
+  return value >= -limit & value <= limit
+
+viewport_error: procedure = .string
+  arg viewport = .string
+  if jsontype(viewport, "") \= "object" then return "viewport is not an object"
+  if \signed_integer(viewport, "origin_x", 1099511627776) | \signed_integer(viewport, "origin_y", 1099511627776) then return "invalid origin"
+  if \safe_integer(viewport, "ticks_per_pixel", 65536) | \safe_integer(viewport, "width", 1000000) | \safe_integer(viewport, "height", 1000000) then return "invalid scale or size"
+  if (jsonget(viewport, "ticks_per_pixel") as .int) < 1 | (jsonget(viewport, "width") as .int) < 1 | (jsonget(viewport, "height") as .int) < 1 then return "zero scale or size"
+  return ""
 
 item_error: procedure = .string
   arg item = .string

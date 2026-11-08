@@ -71,6 +71,34 @@
       }
     },
     {
+      "name": "ui.scene.pointer",
+      "direction": "event",
+      "capability": "ui.pointer",
+      "summary": "A graphical host admitted a current scene pointer in logical pixels.",
+      "role": "input",
+      "fields": {
+        "node": { "type": "string", "required": true, "maxLength": 128 },
+        "epoch": { "type": "string", "required": true, "maxLength": 64 },
+        "revision": { "type": "integer", "required": true, "minimum": 0, "maximum": 9007199254740991 },
+        "x": { "type": "integer", "required": true, "minimum": 0, "maximum": 1000000 },
+        "y": { "type": "integer", "required": true, "minimum": 0, "maximum": 1000000 },
+        "phase": { "type": "string", "required": true, "enum": ["press", "release", "move"] }
+      }
+    },
+    {
+      "name": "ui.scene.key",
+      "direction": "event",
+      "capability": "ui.keyboard",
+      "summary": "A key pressed on a current scene.",
+      "role": "input",
+      "fields": {
+        "node": { "type": "string", "required": true, "maxLength": 128 },
+        "epoch": { "type": "string", "required": true, "maxLength": 64 },
+        "revision": { "type": "integer", "required": true, "minimum": 0, "maximum": 9007199254740991 },
+        "key": { "type": "string", "required": true, "maxLength": 128 }
+      }
+    },
+    {
       "name": "ui.close.requested",
       "direction": "event",
       "capability": "ui.lifecycle",

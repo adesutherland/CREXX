@@ -1,0 +1,74 @@
+options levelg
+namespace scene_editors_test
+import rxfnsb
+import rxjson
+import ui
+import ui_contract
+import scene_editors
+
+i = .int
+action = .string
+event = .uimessage
+unused = .uieffects
+graph = .graph_editor(1)
+semantic = .graph_editor(0)
+if jsoncount(graph.scene(), "items") \= 3 | semantic.view().node_kind(1) = "scene" then do
+  say "FAIL: graph initial projection/fallback"
+  exit 1
+end
+do i = 1 to 10
+  action = word("create move connect select zoom pan delete undo redo undo", i)
+  event = .uimessage("graph." || action || ".requested", .uipayload())
+  unused = graph.update(event)
+  unused = semantic.update(event)
+  if graph.model() \= semantic.model() | graph.journal() \= semantic.journal() then do
+    say "FAIL: graph host-independent model" action
+    exit 1
+  end
+end
+if jsoncount(graph.scene(), "items") \= 5 | jsonget(graph.scene(), "viewport.ticks_per_pixel") \= "128" | jsonget(graph.scene(), "viewport.origin_x") \= "2560" then do
+  say "FAIL: graph undo/viewport/edge"
+  exit 1
+end
+body = .uipayload()
+call body.put_text("node", "graph")
+call body.put_text("epoch", "graph-editor")
+call body.put_integer("revision", jsonget(graph.scene(), "revision") as .int)
+call body.put_integer("x", 65)
+call body.put_integer("y", 65)
+call body.put_text("phase", "press")
+unused = graph.update(.uimessage("ui.scene.pointer", body))
+if jsonget(graph.model(), "selected") \= "node-a" then do
+  say "FAIL: graph world-space picking"
+  exit 1
+end
+old_model = graph.model()
+call body.put_integer("revision", 0)
+unused = graph.update(.uimessage("ui.scene.pointer", body))
+if graph.model() \= old_model then do
+  say "FAIL: stale graph pointer changed model"
+  exit 1
+end
+
+map = .map_editor(1)
+map_semantic = .map_editor(0)
+if jsoncount(map.scene(), "items") \= 17 | map_semantic.view().node_kind(1) = "scene" then do
+  say "FAIL: map projection/cell fallback"
+  exit 1
+end
+do i = 1 to 4
+  action = word("turn zoom pan select", i)
+  event = .uimessage("map." || action || ".requested", .uipayload())
+  unused = map.update(event)
+  unused = map_semantic.update(event)
+  if map.state() \= map_semantic.state() | map.journal() \= map_semantic.journal() then do
+    say "FAIL: map host-independent turn" action
+    exit 1
+  end
+end
+if map.state() \= "2/20480/4096/128/unit-blue" | jsonget(map.scene(), "viewport.origin_x") \= "4096" then do
+  say "FAIL: map turn/viewport"
+  exit 1
+end
+say "PASS: graph and map editor transitions"
+exit 0

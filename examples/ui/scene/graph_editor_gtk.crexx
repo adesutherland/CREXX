@@ -1,0 +1,7 @@
+options levelg
+namespace graph_editor_gtk
+import ui_gtk
+import scene_editors
+session = make_graph_editor_session("gtk-graph-editor", ui_gtk..capabilities())
+driver = .gtkdriver()
+exit driver.run(session)

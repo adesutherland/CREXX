@@ -1,7 +1,8 @@
 /* Local route: the same RXBIN owner process runs inside a dedicated Worker. */
 export class LocalRoute {
-  constructor(workerUrl = new URL('./local-worker.mjs', import.meta.url)) {
+  constructor(workerUrl = new URL('./local-worker.mjs', import.meta.url), app = 'text') {
     this.workerUrl = workerUrl;
+    this.app = app;
     this.worker = null;
   }
   async start(onFrame) {
@@ -27,7 +28,7 @@ export class LocalRoute {
         else reject(new Error(event.message));
         this.stop();
       };
-      this.worker.postMessage({type: 'start', session});
+      this.worker.postMessage({type: 'start', session, app: this.app});
     });
   }
   async send(input) {

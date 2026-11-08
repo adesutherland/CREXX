@@ -103,7 +103,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--build", required=True, type=pathlib.Path)
     parser.add_argument("--source", required=True, type=pathlib.Path)
-    parser.add_argument("--mode", choices=["console", "app", "host-edges", "scene"], required=True)
+    parser.add_argument("--mode", choices=["console", "app", "host-edges", "scene", "scene-editors"], required=True)
     parser.add_argument("--variant", choices=["noopt", "opt"], default="opt")
     args = parser.parse_args()
     build, source = args.build.resolve(), args.source.resolve()
@@ -163,6 +163,36 @@ def main():
             terminal.finish()
         finally:
             terminal.close()
+    elif args.mode == "scene-editors":
+        shared = [binary / name for name in ("ui_ansi", "ui_dialogs", "ui_terminal_view",
+                  "ui_local_resources", "ui_scene", "ui_contract", "ui_catalog", "ui", "library")]
+        for app in ("graph", "map"):
+            launcher = build / f"examples/ui/scene/{app}_editor_ansi"
+            feature = build / "examples/ui/scene/scene_editors"
+            terminal = Terminal([vm] + [str(path) for path in [launcher, feature] + shared], source)
+            try:
+                if app == "graph":
+                    terminal.expect(b"Graph objects")
+                    terminal.expect(b"node-a")
+                    terminal.send(b"c")
+                    terminal.expect(b"C: 1")
+                    terminal.send(b"m")
+                    terminal.expect(b"A: 10240")
+                    terminal.send(b"u")
+                    terminal.expect(b"A: 7680")
+                else:
+                    terminal.expect(b"Map cell viewport 4x4")
+                    terminal.expect(b"B..F")
+                    terminal.send(b"t")
+                    terminal.expect(b"Turn: 2 Unit x: 20480")
+                    terminal.send(b"z")
+                    terminal.expect(b"Scale: 128")
+                    terminal.send(b"p")
+                    terminal.expect(b"Pan: 4096")
+                terminal.send(b"q")
+                terminal.finish()
+            finally:
+                terminal.close()
     else:
         modules = [build / "examples/ui/text-inspector/text_inspector_ansi",
                    build / "examples/ui/text-inspector/text_inspector"]

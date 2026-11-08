@@ -13,15 +13,17 @@ const wasm = resolve(process.argv[3]);
 const output = resolve(process.argv[4]);
 const source = fileURLToPath(new URL('.', import.meta.url));
 const names = ['library', 'ui', 'ui_catalog', 'ui_contract', 'ui_scene', 'ui_web',
-  'text_inspector', 'text_inspector_web'];
+  'text_inspector', 'text_inspector_web', 'scene_editors', 'graph_web', 'map_web'];
 const assets = [];
 for (const name of names) assets.push({source: name.startsWith('text_') ?
   join(native, 'examples/ui/text-inspector', `${name}.rxbin`) :
+  ['scene_editors', 'graph_web', 'map_web'].includes(name) ?
+  join(native, 'examples/ui/scene', `${name}.rxbin`) :
   join(native, 'bin', `${name}.rxbin`), target: `modules/${name}.rxbin`});
 for (const name of ['crexx_ui_vm.mjs', 'crexx_ui_vm.wasm'])
   assets.push({source: join(wasm, name), target: `vm/${name}`});
 for (const name of ['index.html', 'main.mjs', 'projection.mjs', 'local.mjs',
-  'local-worker.mjs', 'hosted.mjs', 'hosted-server.mjs'])
+  'local-worker.mjs', 'hosted.mjs', 'hosted-server.mjs', 'scene.mjs'])
   assets.push({source: join(source, name), target: name});
 const manifest = {contract: 1, assets: {}};
 for (const asset of assets) {

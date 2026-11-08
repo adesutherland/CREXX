@@ -1,24 +1,29 @@
-# Direct scene consumers
+# Graph and map UI consumers
 
-`scene_examples.crexx` contains two small Level G features. The graph feature
-owns node positions and selection and builds scene revisions through
-`uisceneowner`. When a host advertises `form.scene`, `scene.rect` and
-`scene.edge`, its view has a scene node. Otherwise it builds a labeled
-node/edge list and the same stable commands. The map fixture owns its turn and
-terrain/unit identity; full map interaction and graphical maps are STEP05.
+scene_editors.crexx contains two independent handwritten Level G features.
+The graph owns its nodes, edges, selection and undo history. The map owns its
+terrain, unit, turn and selection state. Both publish scene revisions through
+uisceneowner, accept normalized pointer and keyboard events, and choose a
+semantic fallback when a host has no scene operations. The shared UI has no
+graph or game rules.
 
-The GTK driver renders accepted scene items through a drawing area and Cairo.
-The ANSI launcher uses the same graph session factory, selecting the semantic
-view from ANSI's operation profile. Use these focused checks after building
-`example_ui_scene_tests` and `example_ui_scene_ansi`:
+| Route | Graph | Map |
+| --- | --- | --- |
+| GTK | Cairo drawing area with commands, pointer and keyboard | Cairo terrain and unit scene with turn and viewport controls |
+| ANSI | Labeled node/edge list and commands | Four by four cell viewport, detail and commands |
+| Browser local Wasm | SVG scene and HTML commands | Canvas 2D and HTML commands |
+| Browser hosted native | The same SVG projection | The same Canvas projection |
 
-```sh
-ctest --test-dir cmake-build-ui -R '^ui_scene_(examples_noopt|gtk_noopt|ansi_pty)$' --output-on-failure
-```
+The direct transition test compares graph and map models across graphical and
+semantic feature instances. GTK tests inject native drawing-area signals;
+ANSI tests use a real foreground PTY. The browser check exercises both routes
+in Chrome. Build the native artifacts and run the focused checks with:
 
-The GTK test exercises actual native setup, three driver lifetimes, accepted
-deltas, one application-visible unsupported-operation fallback, full resync
-after a gap, and teardown. The ANSI PTY test exercises keyboard commands,
-semantic labels and terminal restoration. Browser projections, graph gesture
-editing/undo and map rendering are subsequent steps in
-[`lib/ui/PLAN.md`](../../../lib/ui/PLAN.md).
+~~~sh
+cmake --build cmake-build-ui --target example_ui_scene_tests example_ui_scene_editor_artifacts --parallel 6
+ctest --test-dir cmake-build-ui -R '^ui_scene_(editors|editors_gtk|editors_ansi_pty)' --output-on-failure
+~~~
+
+The earlier scene_examples.crexx fixture remains a small contract example,
+including a GTK application-visible refusal and full resync probe. See the
+[UI plan](../../../lib/ui/PLAN.md) for acceptance criteria and later gates.

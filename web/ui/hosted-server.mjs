@@ -11,10 +11,15 @@ const token = process.env.CREXX_UI_TOKEN;
 if (!token || token.length < 16) throw new Error('Set CREXX_UI_TOKEN (at least 16 characters)');
 const build = resolve(process.env.CREXX_UI_BUILD ?? 'cmake-build-ui');
 const vm = join(build, 'bin/rxvm');
-const modules = ['text_inspector_web', 'text_inspector', 'ui_web', 'ui_scene',
-  'ui_contract', 'ui_catalog', 'ui', 'library'];
-const images = modules.map(name => name.startsWith('text_') ?
-  join(build, 'examples/ui/text-inspector', `${name}.rxbin`) : join(build, 'bin', `${name}.rxbin`));
+const common = ['ui_web', 'ui_scene', 'ui_contract', 'ui_catalog', 'ui', 'library'];
+const applications = {
+  text: ['text_inspector_web', 'text_inspector'],
+  graph: ['graph_web', 'scene_editors'],
+  map: ['map_web', 'scene_editors'],
+};
+const image = name => join(build, name.startsWith('text_') ?
+  'examples/ui/text-inspector' : ['graph_web', 'map_web', 'scene_editors'].includes(name) ?
+  'examples/ui/scene' : 'bin', `${name}.rxbin`);
 const sessions = new Map();
 const site = resolve(fileURLToPath(new URL('.', import.meta.url)));
 
@@ -37,10 +42,12 @@ async function body(request) {
   }
   return JSON.parse(text);
 }
-function createSession() {
+function createSession(app) {
+  if (!Object.hasOwn(applications, app)) throw new Error('Unknown UI application');
   if (sessions.size >= 16) throw new Error('Hosted UI session limit reached');
   const id = `hosted-${randomUUID()}`;
-  const process = spawn(vm, [...images, '-a', id], {stdio: ['pipe', 'pipe', 'pipe']});
+  const process = spawn(vm, [...applications[app], ...common].map(image).concat('-a', id),
+    {stdio: ['pipe', 'pipe', 'pipe']});
   const session = {id, process, frames: [], sequence: 0, latest: null, ended: false};
   sessions.set(id, session);
   const decoder = new StringDecoder('utf8');
@@ -93,8 +100,8 @@ const server = createServer(async (request, response) => {
     }
     if (!authorized(request)) return reply(response, 401, {error: 'Unauthorized'});
     if (url.pathname === '/api/sessions' && request.method === 'POST') {
-      await body(request);
-      return reply(response, 201, {session: createSession().id});
+      const selection = await body(request);
+      return reply(response, 201, {session: createSession(selection.app ?? 'text').id});
     }
     const match = /^\/api\/sessions\/([a-z0-9-]+)(\/input)?$/.exec(url.pathname);
     const session = match && sessions.get(match[1]);

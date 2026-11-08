@@ -1,6 +1,10 @@
 /* Asyncify suspends the VM only while its single owner reads stdin. */
-const names = ['library', 'ui', 'ui_catalog', 'ui_contract', 'ui_scene', 'ui_web',
-  'text_inspector', 'text_inspector_web'];
+const common = ['library', 'ui', 'ui_catalog', 'ui_contract', 'ui_scene', 'ui_web'];
+const applications = {
+  text: ['text_inspector', 'text_inspector_web'],
+  graph: ['scene_editors', 'graph_web'],
+  map: ['scene_editors', 'map_web'],
+};
 let vm, started = false, done = false;
 const queue = [];
 let wake;
@@ -57,7 +61,8 @@ self.onmessage = async ({data}) => {
       push(encoder.encode(JSON.stringify(data.input) + '\n'));
       return;
     }
-    if (data?.type !== 'start' || started || typeof data.session !== 'string')
+    if (data?.type !== 'start' || started || typeof data.session !== 'string' ||
+        !Object.hasOwn(applications, data.app))
       throw new Error('Invalid UI Worker start');
     started = true;
     const {default: createVM} = await import('./vm/crexx_ui_vm.mjs');
@@ -65,7 +70,7 @@ self.onmessage = async ({data}) => {
       locateFile: name => new URL(`./vm/${name}`, import.meta.url).href,
       uiRead: read, uiWrite: write});
     check(vm._ui_vm_create());
-    for (const name of names) {
+    for (const name of [...common, ...applications[data.app]]) {
       const response = await fetch(new URL(`./modules/${name}.rxbin`, import.meta.url));
       if (!response.ok) throw new Error(`Missing RXBIN: ${name}`);
       const bytes = new Uint8Array(await response.arrayBuffer());

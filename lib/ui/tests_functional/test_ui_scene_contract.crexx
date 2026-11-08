@@ -109,6 +109,32 @@ if \replica.apply(full).ok() | \replica.accept_input("graph-1", 1).ok() then do
   say "FAIL: authoritative snapshot did not resume input"
   exit 1
 end
+owner = .uisceneowner("viewport-test")
+before_owner = owner.snapshot()
+if owner.change("add", '{"id":"bad","kind":"rect","x":0,"y":0,"w":-1,"h":1,"label":"bad"}') \= "" | owner.snapshot() \= before_owner then do
+  say "FAIL: invalid owner edit changed authoritative frame"
+  exit 1
+end
+viewport_delta = owner.set_viewport(-256, 512, 128, 100, 80)
+if viewport_delta = "" | owner.revision() \= 1 | \profile.preflight_scene(viewport_delta).ok() then do
+  say "FAIL: viewport-only delta"
+  exit 1
+end
+viewport_replica = .uiscenereplica()
+if \viewport_replica.apply(owner.snapshot()).ok() | viewport_replica.viewport() \= owner.viewport() then do
+  say "FAIL: full viewport resync"
+  exit 1
+end
+if \owner.accept_pointer(.uipointer("viewport-test", owner.revision(), 1, 1)).ok() then do
+  say "FAIL: owner pointer admission"
+  exit 1
+end
+before_viewport = viewport_replica.frame()
+bad_viewport = '{"version":1,"kind":"delta","epoch":"viewport-test","base":1,"revision":2,"changes":[],"viewport":{"origin_x":0,"origin_y":0,"ticks_per_pixel":0,"width":100,"height":80}}'
+if viewport_replica.apply(bad_viewport).code() \= "sync_error" | viewport_replica.frame() \= before_viewport then do
+  say "FAIL: invalid viewport damaged last frame"
+  exit 1
+end
 overflow = '{"version":1,"kind":"full","epoch":"overflow","revision":1,"items":[{"id":"bad","kind":"rect","x":1099511627777,"y":0,"w":1,"h":1,"label":"bad"}]}'
 if replica.apply(overflow).code() \= "sync_error" | replica.count() \= 1 then do
   say "FAIL: fixed-point overflow damaged last frame"

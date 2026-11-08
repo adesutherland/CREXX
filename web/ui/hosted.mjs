@@ -1,8 +1,9 @@
 /* Authenticated hosted relay. Reconnect fetches a full authoritative view. */
 export class HostedRoute {
-  constructor(token, base = '') {
+  constructor(token, base = '', app = 'text') {
     this.token = token;
     this.base = base;
+    this.app = app;
     this.cursor = 0;
     this.session = '';
     this.stopped = false;
@@ -17,7 +18,7 @@ export class HostedRoute {
   }
   async start(onFrame) {
     this.onFrame = onFrame;
-    const created = await this.request('/api/sessions', {method: 'POST', body: '{}'});
+    const created = await this.request('/api/sessions', {method: 'POST', body: JSON.stringify({app: this.app})});
     this.session = created.session;
     this.cursor = 0;
     this.stopped = false;

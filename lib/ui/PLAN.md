@@ -1,7 +1,7 @@
 # UI architecture and capability expansion
 
-Status: STEP01–04 development increments done; full graph/map, RXPP authoring
-and core milestone QA remain. All initiative acceptance criteria remain open.
+Status: STEP01–05 development increments done; RXPP authoring and core
+milestone QA remain. All initiative acceptance criteria remain open.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not change that baseline.
@@ -47,7 +47,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP02** Core contracts | STEP01 | Freeze direct-consumer view, scene, input and support contracts (D05–06, D08–10); preserve v0 and prove refusal, delta/resync and representative RXAS. | AC01, AC04–06, AC08 | done |
 | **UIX-STEP03** GTK/ANSI scene | STEP02; parallel with STEP04 | Build the Level G scene owner and bounded graph/map fixtures, then GTK/ANSI graph projections with keyboard, delta/resync and refusal checks. | AC04–06, AC08 | done |
 | **UIX-STEP04** Browser forms | STEP02; parallel with STEP03 | Build one browser projection and local/hosted adapters (D07); prove handwritten Text Inspector forms, owner turns, one async effect, restart and reconnect. | AC03, AC06, AC08 | done |
-| **UIX-STEP05** Graph then map | STEP03–04 | Complete graph then map on GTK, ANSI and both browser routes; compare domain journals and scene lifecycle at each stage, measuring before acceleration. | AC04–06, AC08 | todo |
+| **UIX-STEP05** Graph then map | STEP03–04 | Complete graph then map on GTK, ANSI and both browser routes; compare domain journals and scene lifecycle at each stage, measuring before acceleration. | AC04–06, AC08 | done |
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | todo |
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | todo |
 | **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Add `rag.query`, the hosted adapter and local transient read-only proof; compare cited evidence and compatible embeddings under D01–03. | AC09–10 | todo |
@@ -333,9 +333,36 @@ setup/cleanup, graph updates, ANSI keyboard/semantic fallback, unsupported
 operation and resync. The map fixture checks turn state and terrain/unit scene
 identity; map host projection remains STEP05.
 
-The initial GTK projection admits at most 64 controls and one scene per
-session; both limits are checked before creating the native surface. Multiple
-scene replicas and topology changes remain STEP05 host work.
+The GTK and browser projections admit at most 64 controls and one scene per
+session. Multiple concurrent scene replicas and dynamic topology remain
+outside the current bounded profile.
+
+#### STEP05 graph/map implementation contract
+
+Extend scene wire version 1 additively with an optional checked viewport
+(`origin_x`, `origin_y`, `ticks_per_pixel`, `width`, `height`); absent viewport
+means the original fixed 256 ticks per logical pixel. A viewport-only delta
+still advances one revision. Each graphical host paints world ticks through
+that same transform and maps pointer coordinates back through `uiviewport`;
+the application feature then uses `uisceneowner.pick()` and owns selection.
+The host sends scene epoch/revision with pointer input and refuses stale input
+before calling the feature. Browser view frames carry both the accepted delta
+and a full authoritative scene snapshot so hosted reconnect and Worker restart
+do not depend on retained transport history. The browser graph uses SVG and
+the map uses Canvas 2D; GTK uses its existing Cairo drawing area. ANSI uses
+semantic commands and a bounded labeled cell viewport. Graph and map domain
+journals are compared across host routes, with focused redraw/size observations
+before any acceleration decision. Shared scene code has no graph schema,
+terrain rules or game turn policy.
+
+The handwritten graph and map examples use one feature per application across
+GTK, ANSI and both browser routes. Graph commands create, move, connect,
+delete, select and undo/redo; map commands advance turns, pan, zoom and select.
+GTK and browser map drawing clip and cull against the declared viewport. ANSI
+uses a semantic graph list and a four by four map cell viewport. Focused
+browser first-update observations on these bounded fixtures were reported in
+conversation; they are not production performance verdicts. No accelerated
+renderer is selected. Pointer picking covers rectangular objects, not edges.
 
 D04 keeps accelerators independent. Use culling and batching before considering
 WebGL2 for larger maps, Canvas layers for dense graphs, or WebGPU rendering.

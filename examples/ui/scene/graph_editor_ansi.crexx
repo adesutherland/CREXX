@@ -1,0 +1,7 @@
+options levelg
+namespace graph_editor_ansi
+import ui_ansi
+import scene_editors
+session = make_graph_editor_session("ansi-graph-editor", ui_ansi..capabilities())
+driver = .ansidriver()
+exit driver.run(session)

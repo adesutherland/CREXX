@@ -30,6 +30,10 @@ typedef struct ui_gtk_scene_item {
     char *label;
     int64_t x, y, w, h;
 } ui_gtk_scene_item;
+typedef struct ui_gtk_viewport {
+    int64_t origin_x, origin_y, ticks_per_pixel;
+    int width, height;
+} ui_gtk_viewport;
 
 static void ui_gtk_scene_item_free(gpointer value) {
     ui_gtk_scene_item *item = (ui_gtk_scene_item *)value;
@@ -49,6 +53,8 @@ struct ui_gtk_node {
     gboolean owns_widget;
     GPtrArray *scene_items;
     GPtrArray *scene_pending;
+    ui_gtk_viewport viewport;
+    ui_gtk_viewport pending_viewport;
 };
 
 typedef struct ui_gtk_loop {
@@ -210,6 +216,40 @@ static void ui_gtk_quote(GString *output, const char *text) {
         } else g_string_append_c(output, (char)*cursor);
     }
     g_string_append_c(output, '"');
+}
+
+static gboolean ui_gtk_scene_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
+    ui_gtk_node *node = (ui_gtk_node *)data;
+    GString *payload;
+    (void)widget;
+    if (ui_rendering || !node || event->type != GDK_BUTTON_PRESS ||
+        event->x < 0 || event->y < 0 ||
+        event->x >= node->viewport.width || event->y >= node->viewport.height)
+        return FALSE;
+    gtk_widget_grab_focus(node->widget);
+    payload = g_string_new("{\"node\":");
+    ui_gtk_quote(payload, node->id);
+    g_string_append_printf(payload, ",\"x\":%d,\"y\":%d}",
+                           (int)event->x, (int)event->y);
+    ui_gtk_enqueue("scene.pointer", payload->str);
+    g_string_free(payload, TRUE);
+    return TRUE;
+}
+
+static gboolean ui_gtk_scene_key(GtkWidget *widget, GdkEventKey *event, gpointer data) {
+    ui_gtk_node *node = (ui_gtk_node *)data;
+    const char *key = gdk_keyval_name(event->keyval);
+    GString *payload;
+    (void)widget;
+    if (ui_rendering || !node || event->type != GDK_KEY_PRESS || !key) return FALSE;
+    payload = g_string_new("{\"node\":");
+    ui_gtk_quote(payload, node->id);
+    g_string_append(payload, ",\"key\":");
+    ui_gtk_quote(payload, key);
+    g_string_append_c(payload, '}');
+    ui_gtk_enqueue("scene.key", payload->str);
+    g_string_free(payload, TRUE);
+    return TRUE;
 }
 
 static void ui_gtk_choice_changed(GtkToggleButton *button, gpointer data) {
@@ -443,14 +483,19 @@ static gboolean ui_gtk_scene_draw(GtkWidget *widget, cairo_t *cr, gpointer data)
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     cairo_paint(cr);
     if (!node || !node->scene_items) return FALSE;
+    cairo_rectangle(cr, 0.0, 0.0, (double)node->viewport.width, (double)node->viewport.height);
+    cairo_clip(cr);
     cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(cr, 12.0);
     for (index = 0; index < node->scene_items->len; ++index) {
         ui_gtk_scene_item *item = g_ptr_array_index(node->scene_items, index);
-        double x = (double)item->x / 256.0;
-        double y = (double)item->y / 256.0;
-        double w = (double)item->w / 256.0;
-        double h = (double)item->h / 256.0;
+        double scale = (double)node->viewport.ticks_per_pixel;
+        double x = ((double)item->x - (double)node->viewport.origin_x) / scale;
+        double y = ((double)item->y - (double)node->viewport.origin_y) / scale;
+        double w = (double)item->w / scale;
+        double h = (double)item->h / scale;
+        if (x + w < 0.0 || y + h < 0.0 || x > node->viewport.width || y > node->viewport.height)
+            continue;
         if (strcmp(item->kind, "edge") == 0) {
             cairo_set_source_rgb(cr, 0.20, 0.27, 0.38);
             cairo_set_line_width(cr, 2.0);
@@ -487,11 +532,16 @@ PROCEDURE(add_scene) {
     node->action = g_strdup("");
     node->widget = gtk_drawing_area_new();
     node->scene_items = g_ptr_array_new_with_free_func(ui_gtk_scene_item_free);
+    node->viewport = (ui_gtk_viewport){0, 0, 256, 420, 260};
     g_object_set_data(G_OBJECT(node->widget), "crexx-node-id", node->id);
     gtk_widget_set_size_request(node->widget, 420, 260);
+    gtk_widget_set_can_focus(node->widget, TRUE);
     gtk_widget_set_hexpand(node->widget, TRUE);
     gtk_widget_set_vexpand(node->widget, TRUE);
     g_signal_connect(node->widget, "draw", G_CALLBACK(ui_gtk_scene_draw), node);
+    gtk_widget_add_events(node->widget, GDK_BUTTON_PRESS_MASK);
+    g_signal_connect(node->widget, "button-press-event", G_CALLBACK(ui_gtk_scene_press), node);
+    g_signal_connect(node->widget, "key-press-event", G_CALLBACK(ui_gtk_scene_key), node);
     gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
     RETURNINT(1);
     ENDPROC
@@ -501,6 +551,21 @@ PROCEDURE(scene_begin) {
     ui_gtk_node *node = ui_gtk_find_node(GETSTRING(ARG0));
     if (!node || !node->scene_items || node->scene_pending) RETURNINTX(0);
     node->scene_pending = g_ptr_array_new_with_free_func(ui_gtk_scene_item_free);
+    node->pending_viewport = node->viewport;
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(scene_viewport) {
+    ui_gtk_node *node = ui_gtk_find_node(GETSTRING(ARG0));
+    const int64_t limit = INT64_C(1099511627776);
+    int64_t x = GETINT(ARG1), y = GETINT(ARG2), scale = GETINT(ARG3);
+    int64_t width = GETINT(ARG4), height = GETINT(ARG5);
+    if (!node || !node->scene_pending || x < -limit || x > limit ||
+        y < -limit || y > limit || scale < 1 || scale > 65536 ||
+        width < 1 || width > 1000000 || height < 1 || height > 1000000)
+        RETURNINTX(0);
+    node->pending_viewport = (ui_gtk_viewport){x, y, scale, (int)width, (int)height};
     RETURNINT(1);
     ENDPROC
 }
@@ -532,6 +597,7 @@ PROCEDURE(scene_commit) {
     g_ptr_array_unref(node->scene_items);
     node->scene_items = node->scene_pending;
     node->scene_pending = NULL;
+    node->viewport = node->pending_viewport;
     g_object_set_data(G_OBJECT(node->widget), "crexx-scene-count", GINT_TO_POINTER((int)node->scene_items->len));
     gtk_widget_queue_draw(node->widget);
     RETURNINT(1);
@@ -963,6 +1029,8 @@ LOADFUNCS
     ADDPROC(add_scene, "ui_gtk_native.add_scene", "b", ".int",
             "id=.string,column=.int,row=.int");
     ADDPROC(scene_begin, "ui_gtk_native.scene_begin", "b", ".int", "id=.string");
+    ADDPROC(scene_viewport, "ui_gtk_native.scene_viewport", "b", ".int",
+            "id=.string,origin_x=.int,origin_y=.int,ticks_per_pixel=.int,width=.int,height=.int");
     ADDPROC(scene_item, "ui_gtk_native.scene_item", "b", ".int",
             "id=.string,kind=.string,x=.int,y=.int,w=.int,h=.int,label=.string");
     ADDPROC(scene_commit, "ui_gtk_native.scene_commit", "b", ".int", "id=.string");

@@ -1,4 +1,5 @@
 /* One browser projection for local and hosted cREXX sessions. */
+import {SceneReplica, renderScene} from './scene.mjs';
 export class BrowserUI {
   constructor(root, route, {executeEffect} = {}) {
     this.root = root;
@@ -9,6 +10,7 @@ export class BrowserUI {
     this.seenEffects = new Set();
     this.files = new Map();
     this.closed = false;
+    this.scene = new SceneReplica();
   }
 
   async start() {
@@ -28,12 +30,13 @@ export class BrowserUI {
       this.revision = 0;
       this.seenEffects.clear();
       this.files.clear();
+      this.scene = new SceneReplica();
     }
     this.session = frame.session;
     if (frame.type === 'view') {
       if (frame.revision < this.revision) return;
-      this.revision = frame.revision;
       this.project(frame.view);
+      this.revision = frame.revision;
     } else if (frame.type === 'effect') {
       const message = frame.message;
       if (!message || message.version !== 0 || message.direction !== 'effect' ||
@@ -57,6 +60,17 @@ export class BrowserUI {
     if (!view || typeof view.title !== 'string' || !Array.isArray(view.nodes) || view.nodes.length > 64)
       throw new Error('Invalid UI view');
     const ids = new Set();
+    let scenes = 0;
+    for (const node of view.nodes) {
+      if (!node || typeof node.id !== 'string' || !node.id || ids.has(node.id) ||
+          !Number.isInteger(node.row) || !Number.isInteger(node.column) ||
+          node.row < 0 || node.column < 0 ||
+          !['scene', 'button', 'line', 'label'].includes(node.kind))
+        throw new Error('Invalid UI node');
+      ids.add(node.id);
+      if (node.kind === 'scene' && ++scenes > 1) throw new Error('Too many scenes');
+    }
+    const candidateScene = this.scene.copy();
     const fragment = document.createDocumentFragment();
     const heading = document.createElement('h1');
     heading.textContent = view.title;
@@ -64,12 +78,11 @@ export class BrowserUI {
     const grid = document.createElement('div');
     grid.className = 'ui-grid';
     for (const node of view.nodes) {
-      if (!node || typeof node.id !== 'string' || ids.has(node.id) ||
-          !Number.isInteger(node.row) || !Number.isInteger(node.column) ||
-          node.row < 0 || node.column < 0) throw new Error('Invalid UI node');
-      ids.add(node.id);
       let element;
-      if (node.kind === 'button') {
+      if (node.kind === 'scene') {
+        candidateScene.apply(node.scenePacket, node.sceneFull);
+        element = renderScene(node, candidateScene, input => void this.send(input.type, input));
+      } else if (node.kind === 'button') {
         element = document.createElement('button');
         element.type = 'button';
         element.addEventListener('click', () => void this.send('command', {command: node.action}));
@@ -77,13 +90,14 @@ export class BrowserUI {
       else if (node.kind === 'label') element = document.createElement('div');
       else throw new Error(`Unsupported browser control: ${node.kind}`);
       element.dataset.nodeId = node.id;
-      element.textContent = node.kind === 'line' ? '' : String(node.text ?? '');
+      if (node.kind !== 'scene') element.textContent = node.kind === 'line' ? '' : String(node.text ?? '');
       element.style.gridRowStart = String(node.row + 1);
       element.style.gridColumnStart = String(node.column + 1);
       grid.append(element);
     }
     fragment.append(grid);
     this.root.replaceChildren(fragment);
+    this.scene = candidateScene;
   }
 
   async complete(request, name, payload) {
