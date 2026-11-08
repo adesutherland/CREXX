@@ -99,11 +99,14 @@ not move application state or fallback policy into the driver. Specify the
 exact manifest, refusal API, retry count and state/close behavior at the public
 contract gate; current render errors do not yet supply this behavior.
 
-Capabilities are stable during a v0 session. The extended contract must decide
-whether support can change during a live session and how device/context loss
-reaches the application. Until that decision is implemented, a v0 host uses its
-existing failure or restart path and must not silently change its advertised
-support.
+Capabilities remain fixed for the life of a session in the first extension.
+A host may recover a lost device or switch renderers internally only while it
+still provides the advertised semantic operations. Otherwise it reports a
+typed host-loss failure and ends that session; a new session is composed from
+application-owned saved model state. Define the exact failure, in-flight work,
+state snapshot and restart protocol before claiming automatic recovery. The
+catalogue's `ui.capabilities.changed` remains future vocabulary, not a live
+v0 or first-extension promise.
 Terminal fallbacks need meaningful keyboard commands and readable labels, not
 a promise that freehand dragging or dense graphical maps work in cells. For
 operations with no useful fallback, the application disables or rejects the
@@ -207,7 +210,8 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-D03** | Choose browser embedding/generation provider and whether WebGPU is required or optional using a real small model, compatible embedding identity, device/memory inventory, CPU/hosted control and failure policy. | open |
 | **UIX-D04** | Select GPU rendering, vector search and inference independently from representative correctness and cost; do not infer one from another. | open |
 | **UIX-D05** | Approved direction: precise host support at composition plus complete-view/scene preflight, application-owned fallback and command availability, and typed correlated refusal that preserves the last valid frame with bounded retry. Specify the exact API and prove refusal leaves no partial new projection or additional feature state mutation. | direction approved; API/proof open |
-| **UIX-D06** | Choose capability lifetime and host-loss behavior: whether support changes inside a live session, how device/context loss is reported, and how application state survives restoration or restart. | open; public core contract gate |
+| **UIX-D06** | Approved direction: support is fixed for a session. Hosts may recover internally while preserving advertised semantics; otherwise report typed host loss and recompose a new session from application-owned saved model state. Specify failure, in-flight work, snapshot and restart APIs and prove state continuity before promising automatic recovery. | direction approved; API/proof open |
+| **UIX-D07** | Select the first browser UI execution route: local cREXX Wasm Worker, hosted native session, or parallel implementation. Prove matching runtime packaging and owner-turn behavior for local execution, or authentication/reconnect/revision ownership for hosted execution. | open; browser host gate |
 
 ## Acceptance criteria
 
@@ -227,9 +231,9 @@ unselected until a specific offline product outcome is agreed.
 | ID | Work, dependency and criteria served | Status |
 | --- | --- | --- |
 | **UIX-STEP01** | Trace the direct Text Inspector feature through session, view, commands and effect outcomes on GTK and ANSI, retaining the line TUI regression. Use handwritten graph/map sketches to identify missing dynamic layout, scene, input and fallback contracts; AC01/04–06/08. | open |
-| **UIX-STEP02** | Agree the core view, scene, normalized input and per-operation support/refusal contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Apply D05, decide D06, preserve v0 consumers and test a rejected whole snapshot and alternative view; AC01/04–06/08. | open; public core contract gate |
+| **UIX-STEP02** | Agree the core view, scene, normalized input and per-operation support/refusal contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Apply D05–06, preserve v0 consumers and test a rejected whole snapshot and alternative view; AC01/04–06/08. | open; public core contract gate |
 | **UIX-STEP03** | Implement the shared scene owner and bounded graph/map model-first fixtures. Build the initial GTK 2D and ANSI semantic graph projections against the same feature, including keyboard paths and explicit refusals; AC04/06/08. Keep editing, undo and game rules in the feature. Depends on STEP02; may proceed alongside STEP04. | open |
-| **UIX-STEP04** | Select local Wasm or hosted browser session and its packaging, runtime cohort, owner-turn API and bounded bridge or transport protocol. For local Wasm, choose a matching UI VM image and owner-turn/step or qualified suspend/resume route for `uidriver.run`; for hosted use, define authentication and reconnect/revision ownership. Implement a handwritten Text Inspector browser consumer with the same forms-stage transitions and focused lifecycle/async/refusal tests; AC03/06/08. Keep a separate asynchronous application-service route for later RAG/database/inference effects. Depends on STEP02; may proceed alongside STEP03. | open; browser host/API gate |
+| **UIX-STEP04** | Decide D07 and select browser packaging, runtime cohort, owner-turn API and bounded bridge or transport protocol. For local Wasm, choose a matching UI VM image and owner-turn/step or qualified suspend/resume route for `uidriver.run`; for hosted use, define authentication and reconnect/revision ownership. Implement a handwritten Text Inspector browser consumer with the same forms-stage transitions and focused lifecycle/async/refusal tests; AC03/06/08. Keep a separate asynchronous application-service route for later RAG/database/inference effects. Depends on STEP02; may proceed alongside STEP03. | open; browser host/API gate |
 | **UIX-STEP05** | Complete the graph stage across GTK 2D, ANSI semantic/cell and browser SVG projections, then the map stage across GTK 2D, ANSI bounded viewport and browser Canvas 2D. At each stage compare the same domain journal, keyboard/input paths and fallback/refusal behavior before moving on. Evaluate culling and measured thresholds before WebGL2; AC04–06/08. Depends on STEP03–04. | open |
 | **UIX-STEP06** | After direct consumers prove the core contract, reconcile the experimental `DEFINE-GUI` macro and its missing graph inputs. Decide its grammar/dynamic-value mapping, generate only layout, typed bindings, command/schema wiring and static routing, and run focused source-map/negative checks; AC01–02. Depends on STEP02–05; Peter may own this increment. | open; later RXPP design gate |
 | **UIX-STEP07** | Qualify selected application/host and generated-authoring combinations across GTK, ANSI and browser, including fallback/refusal, failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–08. Depends on selected preceding steps. | open; milestone/scope gate |

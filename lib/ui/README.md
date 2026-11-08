@@ -210,9 +210,12 @@ to the application as a typed refusal, leaving the last valid frame intact.
 The user then receives a specific reason or a usable fallback. Current v0
 effect capability failures already reach the feature, but an unsupported view
 node currently fails the host render path; application-visible view refusal
-remains design work. The [plan](PLAN.md)
-gates this contract and requires equivalent domain transitions across hosts,
-not identical pixels.
+remains design work. The first extension also keeps capabilities fixed during
+each session. A host can recover internally while preserving its advertised
+operations; otherwise it reports host loss and a new session must be composed
+from application-owned saved state. The [plan](PLAN.md) gates the exact
+recovery API and requires equivalent domain transitions across hosts, not
+identical pixels.
 
 An SVG projection is the first candidate for editable UML-like graphs because
 individual shapes can keep stable element identities and text/focus overlays.
