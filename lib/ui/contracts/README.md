@@ -15,11 +15,13 @@ state. A **driver** connects those descriptions to a particular interface, such
 as a terminal or a GTK window.
 
 The working example is Text Inspector: the same feature opens a text file,
-counts its contents and displays the results through three drivers—line-oriented
-terminal, ANSI full-screen terminal and GTK. This is an experimental framework
-with a small reference implementation. Browser and mobile requirements inform
-the design, but those drivers do not exist yet. The current views support a
-small set of controls; the framework is not yet a complete widget toolkit.
+counts its contents and displays the results through the line-oriented
+terminal, ANSI full-screen terminal and GTK v0 drivers. The additive browser
+host runs that feature through local WebAssembly and hosted native routes; see
+the [browser guide](../../../web/ui/README.md) for its current support profile.
+This is an experimental framework with a small reference implementation. The
+current views support a small set of controls; the framework is not yet a
+complete widget toolkit.
 
 The **contract** is the agreement that lets application code and drivers work
 together. It defines the messages they exchange, who handles each message, how
