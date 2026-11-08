@@ -147,9 +147,12 @@ host adapter: GTK / ANSI terminal / proposed browser / proposed scene renderer
           + application effects -> RAG / database / inference executors
 ```
 
-The browser candidate keeps the cREXX VM, UI image, session and component in
-one Emscripten Worker. The Worker processes one session turn at a time and
-returns a bounded, versioned view to a thin main-thread adapter. The adapter
+The browser track implements two routes in parallel: a local Emscripten Worker
+and a hosted native cREXX session. Both run the same feature and use one
+versioned view/input/effect envelope and one main-thread projection. The local
+Worker owns its cREXX VM, UI image, session and component; the hosted route
+owns its session on the server behind an authenticated transport. Both process
+one session turn at a time and return bounded views to the adapter. The adapter
 uses HTML controls, SVG or Canvas and sends normalized user facts back; it owns
 DOM access, focus, browser dialogs and async Web APIs. Wasm does not directly
 access the DOM, so replacing application JavaScript with cREXX does not remove
@@ -160,9 +163,9 @@ its next input message from being handled. Browser file choice and storage
 should return opaque, scoped grants through correlated effects, following the
 same feature contract as Text Inspector. The existing single-threaded
 Emscripten profile and THE's separate browser preview are feasibility inputs,
-not a working `uidriver` for this library. A hosted native-session/browser-renderer
-path is also possible when central resources or collaboration justify its authentication and
-reconnection contract.
+not a working `uidriver` for this library. The hosted route separately needs
+authentication, authorization, reconnect and revision ownership. Both routes
+must pass the forms, graph and map stages through the shared browser projection.
 
 The browser host also needs a route for application services. cREXX-RAG is a
 useful stress case: its SQLite library owns corpus, graph and embedding truth,

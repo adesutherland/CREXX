@@ -981,8 +981,9 @@ prototype has been qualified by this roadmap update.
   baseline. The [UI expansion plan](../lib/ui/PLAN.md) develops GTK desktop,
   ANSI full-screen terminal and browser projections stage by stage, with
   semantic fallback or application-visible refusal for unsupported operations.
-  It compares a local Wasm Worker host with a hosted session, and SVG/Canvas
-  with accelerated map rendering. Application state stays in Level G; Peter's
+  It selects both a local Wasm Worker host and a hosted native session behind
+  one browser projection, and compares SVG/Canvas with accelerated map
+  rendering. Application state stays in Level G; Peter's
   RXPP façade follows direct core consumers. Public scene/browser and support
   contracts remain behind explicit design and January-freeze scope gates.
   Browser RAG lookup, local SQLite/vector storage and WebGPU inference are

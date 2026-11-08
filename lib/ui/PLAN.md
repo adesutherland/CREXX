@@ -1,8 +1,9 @@
 # UI architecture and capability expansion
 
-Status: design and implementation plan; no browser or 2D driver has been
-selected or delivered. Browser-local RAG, database and GPU compute are option
-gates, not selected delivery scope. This is the authoritative UI expansion plan. The
+Status: design and implementation plan; both browser execution routes are
+selected, but no browser or 2D driver has been delivered. Browser-local RAG,
+database and GPU compute remain option gates, not selected delivery scope.
+This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not add these capabilities to an
 unapproved Release 1 baseline.
@@ -16,9 +17,9 @@ Let the same application present forms and interactive 2D scenes where supported
 and choose semantic alternatives or refuse unavailable operations elsewhere.
 An RXPP declaration may shorten view, layout, and command wiring, but generated
 code must use the ordinary UI contract and leave application behavior with its
-feature owner. A browser version should execute that owner in a matching cREXX
-WebAssembly runtime where
-feasible. Browser API access still needs a small host bridge.
+feature owner. The browser track runs the same feature in both a matching cREXX
+WebAssembly Worker and a hosted native session, using one browser view/input
+contract. Browser API access still needs a small host bridge.
 
 The intended examples are an editable UML-like graph and a pan/zoom strategy
 map with selectable units and terrain. They are acceptance workloads, not a
@@ -81,10 +82,10 @@ additional line-mode coverage is selected only when a feature needs it.
 
 | Stage | GTK desktop | ANSI full-screen terminal | Browser | Shared check |
 | --- | --- | --- | --- | --- |
-| Forms and dynamic widgets | Native controls and current session routing | Cell controls, keyboard and supported pointer input | Matching cREXX feature through a selected local Wasm or hosted session, with semantic HTML controls | Same command/effect/close transitions; host-specific views and failure paths. |
+| Forms and dynamic widgets | Native controls and current session routing | Cell controls, keyboard and supported pointer input | Matching cREXX feature through both local Wasm and hosted sessions, with the same semantic HTML controls | Same command/effect/close transitions; host-specific views and failure paths. |
 | Editable graph | Native 2D projection with keyboard and pointer editing | Semantic node/edge list or bounded cell viewport; edit/connect by stable ID where usable | SVG projection with keyboard and pointer editing | Same graph model, selection and undo history; unsupported gestures refuse explicitly. |
 | Strategy map | Native 2D terrain/unit projection with pan/zoom and selection | Bounded cell viewport and unit/terrain detail/actions where usable | Canvas 2D projection with pan/zoom and selection | Same rules, turns and stale-input handling; unavailable precision or interaction is declared. |
-| Application services | Correlated native or hosted effects | Correlated native or hosted effects | Correlated effects through the selected browser session; hosted RAG first, local database/RAG/inference separate options | Same result and cancellation semantics, with provider and storage limits stated per host. |
+| Application services | Correlated native or hosted effects | Correlated native or hosted effects | Correlated effects through both browser session routes; hosted RAG first, local database/RAG/inference separate options | Same result and cancellation semantics, with provider and storage limits stated per host. |
 
 The approved support direction combines capability discovery with render
 preflight. A host advertises precise widget, scene, input and limit support at
@@ -117,9 +118,16 @@ refusal path against the same domain transition journal on every host.
 
 | Choice | Shape | Benefit | Cost or limit | Decision |
 | --- | --- | --- | --- | --- |
-| Local browser Wasm | One Worker owns cREXX VM, session and feature; a small main-thread browser adapter projects semantic views and returns normalized input. | Application behavior stays in cREXX; local use need not run a server session. | Wasm cannot directly use DOM; JS/TS glue, async effects, asset packaging and Worker lifecycle remain. | First browser proof candidate; select after a matching UI image and callback/lifetime spike. |
-| Hosted browser | Native cREXX session on a server; browser renders versioned views over an authenticated transport. | Server resources, collaboration and larger workloads are easier to own centrally. | Authentication, authorization, reconnect/revision rules and latency are part of the product. | Later or application-specific path, sharing the same logical view and events. |
+| Local browser Wasm | One Worker owns cREXX VM, session and feature; a small main-thread browser adapter projects semantic views and returns normalized input. | Application behavior stays in cREXX; local use need not run a server session. | Wasm cannot directly use DOM; JS/TS glue, async effects, asset packaging and Worker lifecycle remain. | Selected as one of two initial browser routes; matching UI image and owner-turn proof required. |
+| Hosted browser | Native cREXX session on a server; the same browser adapter renders versioned views over an authenticated transport. | Server resources, collaboration and larger workloads are easier to own centrally. | Authentication, authorization, reconnect/revision rules and latency are part of the product. | Selected as the second initial browser route; shared protocol and hosted lifecycle proof required. |
 | Wasm graphics renderer | Wasm computes layout/geometry and possibly draws through Canvas/WebGL bindings. | Keeps expensive scene calculations in cREXX/native code. | DOM controls, accessibility, input and browser APIs still need host glue. | Optional optimization after the semantic browser driver works. |
+
+The two browser routes share one versioned view/input/effect envelope and one
+main-thread projection. Local Worker messaging and hosted transport are
+adapters to that envelope; they must not create separate browser feature or
+rendering semantics. Each forms, graph and map stage qualifies both routes,
+including local Worker restart and hosted reconnect/revision behavior. This
+selection does not select browser-local RAG, database or inference deployment.
 
 | Surface | Initial fit | Upgrade condition |
 | --- | --- | --- |
@@ -211,7 +219,8 @@ unselected until a specific offline product outcome is agreed.
 | **UIX-D04** | Select GPU rendering, vector search and inference independently from representative correctness and cost; do not infer one from another. | open |
 | **UIX-D05** | Approved direction: precise host support at composition plus complete-view/scene preflight, application-owned fallback and command availability, and typed correlated refusal that preserves the last valid frame with bounded retry. Specify the exact API and prove refusal leaves no partial new projection or additional feature state mutation. | direction approved; API/proof open |
 | **UIX-D06** | Approved direction: support is fixed for a session. Hosts may recover internally while preserving advertised semantics; otherwise report typed host loss and recompose a new session from application-owned saved model state. Specify failure, in-flight work, snapshot and restart APIs and prove state continuity before promising automatic recovery. | direction approved; API/proof open |
-| **UIX-D07** | Select the first browser UI execution route: local cREXX Wasm Worker, hosted native session, or parallel implementation. Prove matching runtime packaging and owner-turn behavior for local execution, or authentication/reconnect/revision ownership for hosted execution. | open; browser host gate |
+| **UIX-D07** | Approved: implement local cREXX Wasm Worker and hosted native browser sessions in parallel, sharing one browser projection and versioned view/input/effect envelope. Prove matching runtime packaging and owner-turn behavior locally, plus authentication, reconnect and revision ownership for hosted execution. | direction approved; both route proofs open |
+| **UIX-D08** | Choose the shared scene geometry and hit-testing owner: Level G scene module, one lower-level reusable module, or host-specific implementations. Preserve one coordinate/identity contract across GTK, ANSI and both browser routes. | open; scene contract gate |
 
 ## Acceptance criteria
 
@@ -219,24 +228,24 @@ unselected until a specific offline product outcome is agreed.
 | --- | --- | --- |
 | **UIX-AC01** | A handwritten Level G feature/session handles equivalent commands, events, effects, dynamic values and close outcomes on two existing hosts, with one authoritative model. Compare independent expected transition journals and views. | open |
 | **UIX-AC02** | Once the core contracts are stable, RXPP generates declarations that reproduce the direct consumer's current dynamic values and routing without a second authoritative model. It rejects malformed/unknown controls, duplicate IDs, inconsistent command definitions and invalid event/binding references with source locations; multiple controls may share one command. Generated code has no named Text Inspector special cases. Inspect representative cREXX/RXAS and run positive/negative and regeneration checks. | open; later authoring increment |
-| **UIX-AC03** | A browser host runs a matching cREXX feature/session in the selected local Wasm Worker or hosted native route. It serializes owner turns, projects current controls, returns normalized input and correlated async outcomes, and closes or fails without leaked authority. Check browser interaction, one bounded synthetic application-service result, cancellation, stale/duplicate messages and Worker restart or hosted reconnect as applicable; no DB/model handle enters a view. | open; target and packaging choice unselected |
+| **UIX-AC03** | Both a matching local Wasm Worker and hosted native session run the same cREXX feature behind one browser projection and versioned view/input/effect envelope. Each serializes owner turns, projects current controls, returns normalized input and correlated async outcomes, and closes or fails without leaked authority. Check both routes against the same browser interactions and one bounded synthetic application-service result; check cancellation and stale/duplicate messages, Worker restart, and hosted authentication/reconnect/revision handling. No DB/model handle enters a view. | open; route implementation and packaging unproved |
 | **UIX-AC04** | A versioned 2D scene contract edits a representative graph: create/move/connect/delete, zoom/pan, selection, keyboard operation and undo/redo. GTK and browser project the 2D scene; ANSI offers a tested semantic node/edge alternative or refuses a specific unavailable operation. Compare shared model state and check chosen coordinate precision, stable picking under resize/scale and keyboard access. | open; scene API decision required |
 | **UIX-AC05** | A representative strategy map renders terrain and units, supports pan/zoom, selection and turn actions, and keeps rules/state in the feature. GTK and browser provide 2D projections; ANSI supplies a bounded cell viewport and detail/actions where usable, with explicit refusal for unavailable interactions. Compare shared turn/state results; check bounded tiles, clipping/culling, pointer coordinate conversion and stale input on graphical hosts. Measure before selecting an accelerated renderer. | open |
 | **UIX-AC06** | Unsupported view/scene operations are declared at application composition or returned as structured refusals before partial projection, and the feature selects a fallback or a specific rejection. Absent effect capabilities retain correlated failures. Malformed assets/messages, context loss, resize, cancellation and setup/teardown failures have explicit behavior; browser resource grants cannot be forged from display text. Run focused host and scene lifecycle/negative checks. | open |
-| **UIX-AC07** | GTK, ANSI and browser tracks have documented build cohorts, platform/browser coverage, accessibility limits, package contents and reproducible consumer routes for their selected support levels. Complete agreed integration/milestone QA separately from each development increment. | open; milestone scope unselected |
-| **UIX-AC08** | At each forms, graph and map stage, one handwritten Level G feature drives GTK, ANSI and browser. Common actions have matching expected domain transitions and close policy; host-specific capability and effect outcomes are explicit. Record each host's native, semantic fallback or unsupported operations; verify supported paths and one application-visible refusal per stage without claiming visual equivalence. | open; parallel host gate |
+| **UIX-AC07** | GTK, ANSI and both browser routes have documented build cohorts, platform/browser coverage, accessibility limits, package contents and reproducible consumer routes for their selected support levels. Complete agreed integration/milestone QA separately from each development increment. | open; milestone scope unselected |
+| **UIX-AC08** | At each forms, graph and map stage, one handwritten Level G feature drives GTK, ANSI and both browser routes. Common actions have matching expected domain transitions and close policy; host-specific capability and effect outcomes are explicit. Record each host's native, semantic fallback or unsupported operations; verify supported paths and a representative application-visible refusal on each route without claiming visual equivalence. | open; parallel host gate |
 
 ## Stable implementation steps and gates
 
 | ID | Work, dependency and criteria served | Status |
 | --- | --- | --- |
 | **UIX-STEP01** | Trace the direct Text Inspector feature through session, view, commands and effect outcomes on GTK and ANSI, retaining the line TUI regression. Use handwritten graph/map sketches to identify missing dynamic layout, scene, input and fallback contracts; AC01/04–06/08. | open |
-| **UIX-STEP02** | Agree the core view, scene, normalized input and per-operation support/refusal contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Apply D05–06, preserve v0 consumers and test a rejected whole snapshot and alternative view; AC01/04–06/08. | open; public core contract gate |
+| **UIX-STEP02** | Agree the core view, scene, normalized input and per-operation support/refusal contracts using handwritten consumers: dynamic values, IDs, geometry, transforms, hit testing, accessibility, coordinate precision and capacity. Apply D05–06, decide D08, preserve v0 consumers and test a rejected whole snapshot and alternative view; AC01/04–06/08. | open; public core contract gate |
 | **UIX-STEP03** | Implement the shared scene owner and bounded graph/map model-first fixtures. Build the initial GTK 2D and ANSI semantic graph projections against the same feature, including keyboard paths and explicit refusals; AC04/06/08. Keep editing, undo and game rules in the feature. Depends on STEP02; may proceed alongside STEP04. | open |
-| **UIX-STEP04** | Decide D07 and select browser packaging, runtime cohort, owner-turn API and bounded bridge or transport protocol. For local Wasm, choose a matching UI VM image and owner-turn/step or qualified suspend/resume route for `uidriver.run`; for hosted use, define authentication and reconnect/revision ownership. Implement a handwritten Text Inspector browser consumer with the same forms-stage transitions and focused lifecycle/async/refusal tests; AC03/06/08. Keep a separate asynchronous application-service route for later RAG/database/inference effects. Depends on STEP02; may proceed alongside STEP03. | open; browser host/API gate |
-| **UIX-STEP05** | Complete the graph stage across GTK 2D, ANSI semantic/cell and browser SVG projections, then the map stage across GTK 2D, ANSI bounded viewport and browser Canvas 2D. At each stage compare the same domain journal, keyboard/input paths and fallback/refusal behavior before moving on. Evaluate culling and measured thresholds before WebGL2; AC04–06/08. Depends on STEP03–04. | open |
+| **UIX-STEP04** | Apply D07: build one browser projection and versioned envelope with local Worker and hosted transport adapters. Select matching runtime packaging and an owner-turn/step or qualified suspend/resume route for local `uidriver.run`; define hosted authentication and reconnect/revision ownership. Implement the handwritten Text Inspector feature through both browser routes with the same forms-stage transitions and focused lifecycle/async/refusal tests; AC03/06/08. Keep a separate asynchronous application-service route for later RAG/database/inference effects. Depends on STEP02; may proceed alongside STEP03. | open; two browser host/API gates |
+| **UIX-STEP05** | Complete the graph stage across GTK 2D, ANSI semantic/cell and browser SVG projections through both browser routes, then the map stage across GTK 2D, ANSI bounded viewport and browser Canvas 2D through both routes. At each stage compare the same domain journal, keyboard/input paths and fallback/refusal behavior before moving on. Evaluate culling and measured thresholds before WebGL2; AC04–06/08. Depends on STEP03–04. | open |
 | **UIX-STEP06** | After direct consumers prove the core contract, reconcile the experimental `DEFINE-GUI` macro and its missing graph inputs. Decide its grammar/dynamic-value mapping, generate only layout, typed bindings, command/schema wiring and static routing, and run focused source-map/negative checks; AC01–02. Depends on STEP02–05; Peter may own this increment. | open; later RXPP design gate |
-| **UIX-STEP07** | Qualify selected application/host and generated-authoring combinations across GTK, ANSI and browser, including fallback/refusal, failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–08. Depends on selected preceding steps. | open; milestone/scope gate |
+| **UIX-STEP07** | Qualify selected application/host and generated-authoring combinations across GTK, ANSI and both browser routes, including fallback/refusal, failure paths, package closure and supported browsers/platforms at an agreed milestone. Reconcile Release 1 selection and January freeze separately; AC01–08. Depends on selected preceding steps. | open; milestone/scope gate |
 
 If a browser RAG or local inference outcome is selected, add its own numbered
 delivery criteria in the owning RAG/LLM plan and reference them here. The UI
