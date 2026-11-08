@@ -1,0 +1,30 @@
+options levelg
+namespace text_inspector_gui_macro_gtk_test
+import ui_gtk
+import ui_gtk_test
+import TextInspector
+
+arg test_args = .string[]
+if test_args[0] < 1 then exit 1
+steps = .string[]
+steps[1] = "expect|status|Status: Ready"
+steps[2] = "click|open_again"
+steps[3] = "file|" || test_args[1]
+steps[4] = "expect|status|Status: Count complete"
+steps[5] = "expect|words|Words: 5"
+steps[6] = "click|clear"
+steps[7] = "cancel"
+steps[8] = "expect|status|Status: Clear cancelled"
+steps[9] = "close"
+
+session = make_text_inspector_gui_session("gtk-gui-macro", ui_gtk..capabilities())
+driver = .gtkdriver()
+if ui_gtk_test..start(steps) < 0 then exit 1
+run_rc = driver.run(session)
+test_rc = ui_gtk_test..finish()
+if run_rc \= 0 | test_rc \= 0 then do
+  say "FAIL: generated GTK GUI facade" run_rc test_rc driver.error()
+  exit 1
+end
+say "PASS: generated GTK GUI facade"
+exit 0

@@ -1,0 +1,4 @@
+/* Generated GUI facade with the existing ANSI driver. */
+options levelg
+##LOADMACRO ui
+##UI_LAUNCHER "ui_ansi","ansidriver","TextInspector","make_text_inspector_gui_session"

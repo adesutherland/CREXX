@@ -145,6 +145,7 @@ RXC-LC-IMPLICIT_ADDRESS = Impliciete ADDRESS-opdracht; zet de opdrachttekst tuss
 RXPP_ALREADY_SOURCE_MAPPED = Invoer bevat al options srcmap: {file}.
 RXPP_ALREADY_SOURCE_MAPPED_HINT = Voer rxc uit op de gegenereerde source-map-uitvoer; voer rxpp niet twee keer uit.
 RXPP_ASSERT_FAILED = RXPP-assertie mislukt: {condition}: {message}
+RXPP_HANDLER_VALIDATION = Ongeldige declaratie in scriptblok op {file}:{line}: {message}
 RXPP_INFO = {message}
 RXPP_WARNING = {message}
 RXPP_ERROR = {message}

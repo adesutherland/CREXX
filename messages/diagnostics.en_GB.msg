@@ -145,6 +145,7 @@ RXC-LC-IMPLICIT_ADDRESS = Implicit ADDRESS command; quote command text or use AD
 RXPP_ALREADY_SOURCE_MAPPED = Input already contains options srcmap: {file}.
 RXPP_ALREADY_SOURCE_MAPPED_HINT = Run rxc on generated source-map output; do not run rxpp twice.
 RXPP_ASSERT_FAILED = RXPP assertion failed: {condition}: {message}
+RXPP_HANDLER_VALIDATION = Invalid scripted block declaration at {file}:{line}: {message}
 RXPP_INFO = {message}
 RXPP_WARNING = {message}
 RXPP_ERROR = {message}

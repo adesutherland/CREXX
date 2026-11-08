@@ -1,180 +1,36 @@
-/*
- * Rich DEFINE-GUI example using the currently implemented features.
- *
- * The example demonstrates:
- *
- *   - labels and layout rows;
- *   - editable text controls;
- *   - bindings;
- *   - change and commit events;
- *   - generated control setters;
- *   - button actions;
- *   - activation callbacks;
- *   - a status bar.
- *
- * The application handlers remain ordinary cREXX procedures.
- */
+/* DEFINE-GUI describes layout and commands over the existing feature view.
+ * The generated wrapper has no application state or callback policy. */
 options levelg
-
-##cflags ndef nset niflink n1buf 2buf 3buf 4buf
-##cflags nvars nmaclist includes nosrcmap nmaclog format
+namespace TextInspector expose controller_component make_controller render control_metadata event_metadata register_gui make_text_inspector_gui_session
+import text_inspector
 
 ##loadmacro ui
 ##DALIAS DEFINE-GUI HANDLER UI_GUI
 
-import text_inspector
-
 DEFINE-GUI TextInspector
-
-  MENU file "File"
-    ITEM open_menu "Open..." ACTION document.open
-    ITEM clear_menu "Clear" ACTION document.clear
-    SEPARATOR
-    ITEM quit_menu "Quit" ACTION document.quit
-  END MENU
-
-  /*
-   * Header and current file.
-   */
-  LABEL heading "cREXX Text Inspector"
-  LABEL path    "File: (none)"
-
-
-  /*
-   * Summary information.
-   */
+  LABEL path
+  LINE summary-divider
   ROW
-    LABEL lines      "Lines: 0"
-    LABEL words      "Words: 0"
-    LABEL characters "Characters: 0"
+    LABEL lines
+    LABEL words
+    LABEL characters
   END ROW
-
-
-  /*
-   * Main text input.
-   *
-   * The content is reported whenever the control changes.
-   */
-  TEXT content "Text contents"
-  BIND content document.text
-  ON CHANGE content CALL document.text
-
-
-  /*
-   * Search and filter input.
-   *
-   * The filter is processed only when the user commits it.
-   */
+  LABEL status
   ROW
-    TEXT filter "Filter text"
-    BIND filter document.filter
-    ON COMMIT filter CALL document.filter
-
-    TEXT search "Search text"
-    BIND search document.search
-    ON COMMIT search CALL document.search
+    BUTTON open ACTION document.open EVENT document.open.requested SHORTCUT o
+    BUTTON open_again ACTION document.open EVENT document.open.requested SHORTCUT o
+    BUTTON clear ACTION document.clear EVENT document.clear.requested SHORTCUT c
+    BUTTON quit ACTION document.quit EVENT ui.close.requested SHORTCUT q
   END ROW
-
-
-  /*
-   * Application actions.
-   */
-  ROW
-    BUTTON open    "Open..."  ACTION document.open
-    BUTTON clear   "Clear"    ACTION document.clear
-    BUTTON refresh "Refresh"  ACTION document.refresh
-    BUTTON quit    "Quit"     ACTION document.quit
-  END ROW
-
-
-  /*
-   * The status bar is initially static. Its value can be changed
-   * by the application handlers through generated setters.
-   */
-  STATUSBAR status "Status: Ready"
-
-
-  /*
-   * Button activation remains independent of the native driver.
-   */
-  ON ACTIVATE open    CALL document.open
-  ON ACTIVATE clear   CALL document.clear
-  ON ACTIVATE refresh CALL document.refresh
-  ON ACTIVATE quit    CALL document.quit
-
+  BIND path path
+  BIND status status
+  BIND open_again open
 END DEFINE-GUI
 
-##UI_GUI_HOST text_inspector_gui_macro,text_inspector,text_inspector_component,TextInspector,make_text_inspector_session
+##UI_GUI_HOST TextInspector,make_text_inspector_gui_session,make_gui_delegate
 ##EMIT gui_host_component
 ##EMIT gui_host_session
-/* Generated host is part of this source. */
 
-
-/*
- * Flat application handlers.
- *
- * The generated controller invokes these procedures. The application
- * does not call the generated TextInspector module directly.
- */
-
-
-application_open: procedure = .uieffects
-  arg event = .uimessage, delegate = .controller_component
-  call delegate.set_status("Choose a text file")
-  return delegate.update(event)
-
-application_file_selected: procedure = .uieffects
-  arg event = .uimessage, delegate = .controller_component
-
-  resource = event.body().resource("resource")
-  filename = resource.display_name()
-say 111 filename
-  call delegate.set_path(filename)
-  call delegate.set_status("Opening " || filename)
-
-  return delegate.update(event)
-
-application_text: procedure = .uieffects
-  arg event = .uimessage, delegate = .controller_component
-
-  value = event.body().text("value")
-  call delegate.set_status("Text changed")
-  return delegate.update(event)
-
-
-application_filter: procedure = .uieffects
-  arg event = .uimessage, delegate = .controller_component
-
-  value = event.body().text("value")
-
-  call delegate.set_status("Filtering: " || value)
-  return delegate.update(event)
-
-
-application_search: procedure = .uieffects
-  arg event = .uimessage, delegate = .controller_component
-
-  value = event.body().text("value")
-
-  call delegate.set_status("Searching for: " || value)
-  return delegate.update(event)
-
-
-application_clear: procedure = .uieffects
-  arg event = .uimessage, delegate = .controller_component
-
-  call delegate.set_status("Clearing results")
-  return delegate.update(event)
-
-
-application_refresh: procedure = .uieffects
-  arg event = .uimessage, delegate = .controller_component
-
-  call delegate.set_status("Refreshing view")
-  return delegate.update(event)
-
-
-application_quit: procedure = .uieffects
-  arg event = .uimessage, delegate = .controller_component
-
-  return delegate.update(event)
+make_gui_delegate: procedure = .uicomponent
+  arg caps = .uicapabilities
+  return .text_inspector_component(caps.has("ui.dialog"))

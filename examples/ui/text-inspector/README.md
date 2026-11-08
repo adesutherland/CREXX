@@ -123,167 +123,45 @@ plugin.
 
 ### Scripted GUI handler
 
-`text_inspector_gui_macro.rxpp` demonstrates the generic scripted-handler form:
+[The generated source](text_inspector_gui_macro.rxpp) declares a bounded layout
+over the existing Text Inspector feature:
 
 ```rexx
 ##DALIAS DEFINE-GUI HANDLER UI_GUI
 DEFINE-GUI TextInspector
-  LABEL path "File: (none)"
+  LABEL path
+  ROW
+    BUTTON open ACTION document.open EVENT document.open.requested SHORTCUT o
+    BUTTON open_again ACTION document.open EVENT document.open.requested SHORTCUT o
+  END ROW
+  BIND open_again open
 END DEFINE-GUI
 ```
 
-`HANDLER UI_GUI` registers `DEFINE-GUI` as one alias and dispatches the
-completed block to the separately loaded `UI_GUI` scripted macro. The
-preprocessor does not contain GUI-specific tag logic; other DSLs can register
-their own handler macro in the same way. The handler currently emits the
-`TextInspector..render(view, bindings)` and
-`TextInspector..register(session)` facade procedures; widget interpretation is
-owned by the UI layer and remains an experimental extension point.
+The application supplies `make_gui_delegate(caps)`, which returns its ordinary
+`.uicomponent`. The generated controller forwards each event once and builds
+its view from the delegate's current view. There is no separate value store or
+Text Inspector callback in the macro. Two buttons may share one registered
+command. The current grammar accepts ROW, LABEL, LINE, STATUSBAR, TEXT,
+CHECKBOX, PROGRESS, BUTTON, SCENE, BIND and bounded ON declarations. Unknown
+controls, malformed declarations, duplicate IDs, conflicting commands and
+invalid references stop RXPP with the authored file and line. An ISPF form
+dialect can generate these declarations as an application adapter.
 
-The `.rxpp` source is also part of `text_inspector_gtk.graph.build`. CMake
-first prepares the RXPP macro library through
-`example_text_inspector_artifacts`; the graph builder then preprocesses the
-`.rxpp` source and compiles its generated `.crexx` output into the separate
-`text_inspector_gui_macro.rxbin` target.
+CMake builds the generated module and GTK/ANSI launchers:
 
-The graph declares an experimental `run-text-inspector-gtk-macro` target. Its
-intended path loads the generated `DEFINE-GUI` view through a separate launcher
-while delegating event updates to the existing Text Inspector component. The
-normal `run-text-inspector-gtk` target remains the reference application. The
-graph currently refers to absent authored
-`text_inspector_gui_macro_gtk.rxpp` and
-`text_inspector_gui_macro_test.crexx` inputs, so its macro run/probe targets
-cannot be treated as runnable checkout evidence. After restoring those inputs,
-checking dependencies and qualifying the path, the intended GTK invocation is:
-
-```powershell
-.\cmake-build-release\bin\rxbuild.exe `
-  examples\ui\text-inspector\text_inspector_gtk.graph.build `
-  run-text-inspector-gtk-macro --verbose
+```sh
+cmake --build cmake-build-ui --target text_inspector_gui_macro_tests \
+  text_inspector_gui_macro_gtk_artifact text_inspector_gui_macro_ansi_artifact
+ctest --test-dir cmake-build-ui -R '^text_inspector_gui_macro_' --output-on-failure
 ```
 
-This Phase 1 target demonstrates generated layout and generic command routing;
-Phase 2 additionally applies \`widget.value.changed\` payloads to generated
-bindings. The payload contract is the existing \`uimessage.body()\` API:
-\`body.text("node")\` identifies the control and \`body.text("value")\` carries
-the new text. No backend-specific event or payload API was added.
-
-The binding records use the experimental internal form \`node|value\`. The
-generated renderer substitutes a matching value when rebuilding the view.
-This remains an experimental contract; it does not yet generate application
-update logic for every control type or derive calculated labels automatically.
-
-The intended focused Phase 2 regression runs without opening a GTK window once
-the missing graph input and its dependencies are repaired:
-
-```powershell
-.\\cmake-build-release\\bin\\rxbuild.exe \`
-  examples\\ui\\text-inspector\\text_inspector_gtk.graph.build \`
-  run-text-inspector-gtk-macro-test \`
-  --verbose
-```
-
-It checks initial binding rendering, `widget.value.changed` replacement,
-metadata generation, and preservation across unrelated events.
-
-Phase 3 adds experimental generic event declarations:
-
-```text
-ON ACTIVATE control
-ON CHECKED control
-ON SELECTION control
-```
-
-The generated namespace exposes `event_node`, `event_value`,
-`event_checked`, and `event_selection`. These read the existing
-`uimessage` payload fields; they do not add driver-specific callbacks or
-change the UI contract.
-
-Phase 4 adds `event_interested(event)`. It matches a generic `widget.*`
-event against the control ID and event declaration from the RXPP block. The
-helper is an application-side filter; it does not register or suppress the
-reserved `widget.*` catalogue events. `session.register_event()` remains for
-application-owned events such as `document.open.requested`.
-
-Phase 5 accepts callback labels on event declarations:
-
-```text
-ON COMMIT filter CALL document.filter
-ON ACTIVATE refresh CALL document.refresh
-```
-
-The generated `event_callback(event)` returns the declared symbolic label for
-a matching event, or an empty string. The application remains responsible for
-dispatching that label to an ordinary cREXX procedure; the RXPP layer does not
-perform dynamic procedure calls.
-
-The generated namespace also exposes `make_controller(delegate)`. It returns
-an ordinary `.uicomponent` that owns the generated view and binding store while
-forwarding application events and effects to the supplied delegate. The
-generated `binding_read(bindings, id)` and `binding_write(bindings, id, value)`
-helpers provide the experimental `node|value` store operations used by the
-controller. They do not synchronize an application model or add a new UI
-contract. The sample host is now emitted into the same precompiled
-`text_inspector_gui_macro.crexx` output through named RXPP sections. The GTK
-launcher uses its generated `make_text_inspector_session()` entry point; the
-former separate `text_inspector_gui_macro_app.crexx` adapter is no longer part
-of the graph build.
-
-The generated `control_metadata()` table describes each control as the
-experimental record `id|kind|label|binding|action|events`. The final field
-contains the declared generic event policies separated by semicolons. This is
-controller metadata, not a public serialization format.
-
-Work Order 3 adds the first generated-controller metadata and binding-store
-surface. The controller is deliberately returned through the existing
-backend-neutral `.uicomponent` interface, so applications continue to use the
-normal `view()` and `update()` methods. The descriptor table and binding
-helpers are experimental implementation aids and do not invoke callback labels
-through dynamic procedure lookup.
-
-Work Order 4 adds the generated flat dispatch table. `dispatch_metadata()`
-returns experimental records in the form `node|event|handler`, combining
-button `ACTION` declarations with `ON ... CALL` declarations. The generated
-`dispatch_event(event)` performs the corresponding lookup, and
-`event_callback(event)` delegates to it. It returns the symbolic handler name;
-the application still decides how to invoke that ordinary cREXX procedure.
-No backend-specific event registration or dynamic procedure execution is
-introduced.
-
-Work Order 5 connects the generated controller to the existing generic event
-path. Its `update(event)` method consumes the current `uimessage` payload
-through the existing `body().text(...)` accessors, updates the generated
-binding store for `widget.value.changed`, and forwards the original event to
-the delegate. The driver remains responsible for producing generic events;
-GTK and TUI drivers require no changes for this generated-controller feature.
-
-Work Order 6 adds generated ordinary cREXX handler plumbing. The flat
-`handler_message(event)` procedure converts a matched callback such as
-`document.refresh` into the existing application event
-`document.refresh.requested`, preserving the current node/value payload when
-present. `dispatch_handler(delegate, event)` sends that message to the
-delegate, while unmatched generic events are forwarded unchanged. This is a
-static generated mapping; it does not perform dynamic procedure lookup.
-
-The generated host uses direct static calls. For each callback label, it has an
-explicit branch such as:
-
-```rexx
-if callback = "document.filter" then
-  return TextInspector..application_filter(callback_event, _delegate)
-```
-
-The called procedure receives `(event, delegate)`, can inspect the existing
-payload APIs, print diagnostics, and either forward the event or return its own
-effects. No `GUI-HANDLERS` block or dynamic procedure lookup is required.
-
-Work Order 7 declares the `run-text-inspector-gui-probe` graph target. It is
-intended as a backend-neutral regression for the generated controller: it would
-load the ordinary UI contract modules and exercise descriptors, bindings,
-generic payloads, dispatch, and handler-message generation. The declared
-`run-text-inspector-gtk-macro` target is the intended GTK end-to-end path;
-both need the missing sources and focused replay before their results can be
-claimed. See the [UI expansion plan](../../../lib/ui/PLAN.md).
+The generated-controller test checks current values and one command route.
+The GTK callback test and ANSI real-PTY test use the same generated session.
+`CheckGuiMacro.cmake` checks invalid declarations, authored locations and
+stable regeneration. The [graph recipe](text_inspector_gtk.graph.build) also
+contains authored GUI launcher and probe inputs; its Windows build/run route
+needs its own platform qualification.
 
 ## QA and extension
 

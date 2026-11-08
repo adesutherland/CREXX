@@ -162,12 +162,13 @@ edge selection, layering and accessible graph navigation remain future work.
 No GPU accelerator has been selected. RAG query, compatible embedding,
 generation and application packages are separate later plan steps.
 
-Peter's RXPP DEFINE-GUI is an authoring façade over these contracts. Its
-generated view and command wiring must take dynamic values from the current
-feature model and route each command through the session once. STEP06 owns
-that reconciliation; a generated controller cannot become a second
-application state owner. ISPF-style panels can use the general form
-infrastructure through an application adapter.
+Peter's RXPP DEFINE-GUI is a bounded authoring façade over these contracts.
+Its generated view takes current values from an application-owned component;
+the wrapper forwards each event once and registers shared commands once.
+Invalid declarations report authored source locations. The
+[Text Inspector sample](../../examples/ui/text-inspector/README.md) exercises
+the generated wrapper through GTK and ANSI. ISPF-style panels can use the
+general form infrastructure through an application adapter.
 
 ## GTK callback lifetime
 

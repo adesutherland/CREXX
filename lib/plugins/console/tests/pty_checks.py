@@ -103,7 +103,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--build", required=True, type=pathlib.Path)
     parser.add_argument("--source", required=True, type=pathlib.Path)
-    parser.add_argument("--mode", choices=["console", "app", "host-edges", "scene", "scene-editors"], required=True)
+    parser.add_argument("--mode", choices=["console", "app", "app-gui", "host-edges", "scene", "scene-editors"], required=True)
     parser.add_argument("--variant", choices=["noopt", "opt"], default="opt")
     args = parser.parse_args()
     build, source = args.build.resolve(), args.source.resolve()
@@ -194,8 +194,13 @@ def main():
             finally:
                 terminal.close()
     else:
-        modules = [build / "examples/ui/text-inspector/text_inspector_ansi",
-                   build / "examples/ui/text-inspector/text_inspector"]
+        if args.mode == "app-gui":
+            modules = [build / "examples/ui/text-inspector/text_inspector_gui_macro_ansi",
+                       build / "examples/ui/text-inspector/text_inspector_gui_macro",
+                       build / "examples/ui/text-inspector/text_inspector"]
+        else:
+            modules = [build / "examples/ui/text-inspector/text_inspector_ansi",
+                       build / "examples/ui/text-inspector/text_inspector"]
         modules += [binary / name for name in ("ui_ansi", "ui_dialogs", "ui_terminal_view",
                     "ui_local_resources", "ui_contract", "ui_catalog", "ui", "library")]
         terminal = Terminal([vm] + [str(path) for path in modules], source)

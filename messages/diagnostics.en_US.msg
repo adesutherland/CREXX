@@ -2,6 +2,7 @@
 # This file contains spelling overrides. Missing entries fall back to en_GB.
 
 RXPP_ASSERT_FAILED = RXPP assertion failed: {condition}: {message}
+RXPP_HANDLER_VALIDATION = Invalid scripted block declaration at {file}:{line}: {message}
 RXPP_INFO = {message}
 RXPP_WARNING = {message}
 RXPP_ERROR = {message}

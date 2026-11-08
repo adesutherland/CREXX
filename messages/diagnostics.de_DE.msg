@@ -145,6 +145,7 @@ RXC-LC-IMPLICIT_ADDRESS = Impliziter ADDRESS-Befehl; setzen Sie den Befehlstext 
 RXPP_ALREADY_SOURCE_MAPPED = Eingabe enthält bereits options srcmap: {file}.
 RXPP_ALREADY_SOURCE_MAPPED_HINT = Führen Sie rxc mit der generierten Source-Map-Ausgabe aus; rxpp nicht zweimal ausführen.
 RXPP_ASSERT_FAILED = RXPP-Assertion fehlgeschlagen: {condition}: {message}
+RXPP_HANDLER_VALIDATION = Ungültige Deklaration im Skriptblock bei {file}:{line}: {message}
 RXPP_INFO = {message}
 RXPP_WARNING = {message}
 RXPP_ERROR = {message}

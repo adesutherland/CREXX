@@ -80,6 +80,58 @@ add_custom_command(
 add_custom_target(text_inspector_module_artifact
         DEPENDS "${_text_inspector_module}")
 
+# DEFINE-GUI is an authoring facade over the same handwritten feature.
+set(_text_inspector_gui_generated
+        "${_text_inspector_generated_root}/text_inspector_gui_macro.crexx")
+set(_text_inspector_gui_module
+        "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_gui_macro.rxbin")
+add_custom_command(OUTPUT "${_text_inspector_gui_generated}"
+        COMMAND $<TARGET_FILE:rxpp> rxprecomp
+                -I "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_gui_macro.rxpp"
+                -o "${_text_inspector_gui_generated}"
+                -m "${CMAKE_BINARY_DIR}/bin/maclib.rexx"
+        DEPENDS rxpp rxpp_support_files ui_rxpp_macros
+                "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_gui_macro.rxpp"
+                "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui/ui_gui.rxpm"
+                "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui/ui_gui_host.rxpm"
+        VERBATIM)
+add_custom_command(OUTPUT "${_text_inspector_gui_module}"
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import
+                -i "${CMAKE_CURRENT_BINARY_DIR}" -i "${CMAKE_BINARY_DIR}/bin"
+                -o text_inspector_gui_macro "${_text_inspector_gui_generated}"
+        COMMAND $<TARGET_FILE:rxas> -o text_inspector_gui_macro text_inspector_gui_macro
+        DEPENDS rxc rxas compiler_exit_bin text_inspector_module_artifact
+                "${_text_inspector_gui_generated}" ui ui_contract
+        BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_gui_macro.rxas"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+add_custom_target(text_inspector_gui_macro_artifact DEPENDS "${_text_inspector_gui_module}")
+
+foreach(_gui_host IN ITEMS ansi gtk)
+    if(_gui_host STREQUAL "gtk" AND NOT ENABLE_GTK)
+        continue()
+    endif()
+    set(_gui_launcher_source "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_gui_macro_${_gui_host}.rxpp")
+    set(_gui_launcher_generated "${_text_inspector_generated_root}/text_inspector_gui_macro_${_gui_host}.crexx")
+    set(_gui_launcher_image "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_gui_macro_${_gui_host}.rxbin")
+    add_custom_command(OUTPUT "${_gui_launcher_generated}"
+            COMMAND $<TARGET_FILE:rxpp> rxprecomp -I "${_gui_launcher_source}"
+                    -o "${_gui_launcher_generated}" -m "${CMAKE_BINARY_DIR}/bin/maclib.rexx"
+            DEPENDS rxpp rxpp_support_files ui_rxpp_macros "${_gui_launcher_source}"
+            VERBATIM)
+    add_custom_command(OUTPUT "${_gui_launcher_image}"
+            COMMAND $<TARGET_FILE:rxc> --no-exe-import
+                    -i "${CMAKE_CURRENT_BINARY_DIR}" -i "${CMAKE_BINARY_DIR}/bin"
+                    -o "text_inspector_gui_macro_${_gui_host}" "${_gui_launcher_generated}"
+            COMMAND $<TARGET_FILE:rxas> -o "text_inspector_gui_macro_${_gui_host}"
+                    "text_inspector_gui_macro_${_gui_host}"
+            DEPENDS rxc rxas compiler_exit_bin text_inspector_gui_macro_artifact
+                    "${_gui_launcher_generated}" ui_${_gui_host}
+            BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_gui_macro_${_gui_host}.rxas"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+    add_custom_target(text_inspector_gui_macro_${_gui_host}_artifact
+            DEPENDS "${_gui_launcher_image}")
+endforeach()
+
 add_custom_command(
         OUTPUT "${_text_inspector_tui}"
         COMMAND $<TARGET_FILE:rxc> --no-exe-import
@@ -110,6 +162,66 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_web.rxbin"
 add_custom_target(text_inspector_web_artifact
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_web.rxbin")
 if(BUILD_TESTING)
+    add_custom_target(text_inspector_gui_macro_tests)
+    add_test(NAME text_inspector_gui_macro_validation
+            COMMAND ${CMAKE_COMMAND}
+                    -DRXPP=$<TARGET_FILE:rxpp>
+                    -DMACLIB=${CMAKE_BINARY_DIR}/bin/maclib.rexx
+                    -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_gui_macro.rxpp
+                    -DSCRATCH=${CMAKE_CURRENT_BINARY_DIR}/gui-macro-validation
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/CheckGuiMacro.cmake)
+    set_tests_properties(text_inspector_gui_macro_validation PROPERTIES
+            LABELS "examples;ui;rxpp;source-map;contract"
+            TIMEOUT 60 CREXX_PREP_TARGETS "rxpp;ui_rxpp_macros")
+    if(UNIX)
+        find_package(Python3 COMPONENTS Interpreter REQUIRED)
+        add_test(NAME text_inspector_gui_macro_ansi_pty
+                COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/lib/plugins/console/tests/pty_checks.py
+                        --build ${CMAKE_BINARY_DIR} --source ${CMAKE_SOURCE_DIR} --mode app-gui)
+        set_tests_properties(text_inspector_gui_macro_ansi_pty PROPERTIES TIMEOUT 90
+                LABELS "examples;ui;rxpp;console;pty"
+                CREXX_PREP_TARGETS "text_inspector_gui_macro_ansi_artifact;rxvm")
+    endif()
+    if(ENABLE_GTK)
+        crexx_add_rexx_opt_matrix(
+                NAME text_inspector_gui_macro_gtk RUNNER rxvm
+                SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_text_inspector_gui_macro_gtk.crexx
+                TARGET_GROUP text_inspector_gui_macro_tests
+                IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+                DEPENDS ui ui_gtk _ui_gtk_native _ui_gtk_test
+                        text_inspector_gui_macro_artifact text_inspector_module_artifact
+                RUNTIME_ARGS
+                        ${CMAKE_BINARY_DIR}/bin/rx_ui_gtk_native
+                        $<TARGET_FILE:_ui_gtk_test>
+                        ${_text_inspector_gui_module} ${_text_inspector_module}
+                        ${CMAKE_BINARY_DIR}/bin/ui_gtk
+                        ${CMAKE_BINARY_DIR}/bin/ui_scene
+                        ${CMAKE_BINARY_DIR}/bin/ui
+                        ${CMAKE_BINARY_DIR}/bin/ui_local_resources
+                        ${CMAKE_BINARY_DIR}/bin/ui_contract
+                        ${CMAKE_BINARY_DIR}/bin/ui_catalog
+                        ${CMAKE_BINARY_DIR}/bin/library
+                        -a ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/sample.txt
+                TEST_LABELS "examples;ui;gtk;rxpp;callback"
+                REQUIRED_OUTPUT_REGEX "PASS: generated GTK GUI facade"
+                FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+        set_tests_properties(text_inspector_gui_macro_gtk_noopt text_inspector_gui_macro_gtk_opt
+                PROPERTIES TIMEOUT 60 RESOURCE_LOCK crexx_gtk_surface)
+    endif()
+    crexx_add_rexx_opt_matrix(
+            NAME text_inspector_gui_macro RUNNER rxvm
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_text_inspector_gui_macro.crexx
+            TARGET_GROUP text_inspector_gui_macro_tests
+            IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+            DEPENDS text_inspector_gui_macro_artifact text_inspector_module_artifact
+            RUNTIME_ARGS ${_text_inspector_gui_module} ${_text_inspector_module}
+                    ${CMAKE_BINARY_DIR}/bin/ui_contract
+                    ${CMAKE_BINARY_DIR}/bin/ui_catalog
+                    ${CMAKE_BINARY_DIR}/bin/ui
+                    ${CMAKE_BINARY_DIR}/bin/library
+            TEST_LABELS "examples;ui;rxpp;source-map"
+            REQUIRED_OUTPUT_REGEX "PASS: DEFINE-GUI current values and single session route"
+            FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     find_program(CREXX_UI_NODE_EXECUTABLE NAMES node)
     if(CREXX_UI_NODE_EXECUTABLE)
         add_test(NAME text_inspector_web_protocol
@@ -304,16 +416,21 @@ install(FILES
         "${_text_inspector_tui}"
         "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_ansi.rxbin"
         "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_web.rxbin"
+        "${_text_inspector_gui_module}"
+        "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_gui_macro_ansi.rxbin"
         DESTINATION examples/ui/text-inspector)
 if(ENABLE_GTK)
     install(FILES "${_text_inspector_gtk}"
+            "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_gui_macro_gtk.rxbin"
             DESTINATION examples/ui/text-inspector)
 endif()
 
 crexx_finalize_directory_qa_tiers()
 
 set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
-    text_inspector_module_artifact text_inspector_tui_artifact text_inspector_ansi_artifact text_inspector_web_artifact)
+    text_inspector_module_artifact text_inspector_tui_artifact text_inspector_ansi_artifact text_inspector_web_artifact
+    text_inspector_gui_macro_artifact text_inspector_gui_macro_ansi_artifact)
 if(ENABLE_GTK)
-    set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS example_text_inspector_gtk)
+    set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
+            example_text_inspector_gtk text_inspector_gui_macro_gtk_artifact)
 endif()

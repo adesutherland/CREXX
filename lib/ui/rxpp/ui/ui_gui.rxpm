@@ -4,434 +4,350 @@
   if phase \= 'BLOCK' then return
 
   control_count = 0
+  command_count = 0
   binding_count = 0
+  event_count = 0
   row_mode = 0
   previous_id = ''
   row_first_id = ''
+  ids = ''
+  allowed_name = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-'
+  in_comment = 0
   do i = 1 to handler_lines.0
     line = strip(changestr('__RXPP_QUOTE__', handler_lines.i, '"'))
-    if line = '' then iterate
-    op = upper(word(line, 1))
-    if op = 'DEFINE-GUI' then iterate
-    if op = 'END' then do
-      if upper(word(line, 2)) = 'ROW' then do
-        row_mode = 0
-        row_first_id = ''
-      end
+    if left(line, 2) = '/*' then in_comment = 1
+    if in_comment then do
+      if pos('*/', line) > 0 then in_comment = 0
       iterate
     end
+    if line = '' then iterate
+    if left(line, 2) = '--' then iterate
+    op = upper(word(line, 1))
     if op = 'ROW' then do
+      bad = 0
+      if words(line) \= 1 then bad = 1
+      if row_mode = 1 then bad = 1
+      if bad = 1 then do
+        handler_error = 'malformed or nested ROW'
+        handler_error_line = i
+        return
+      end
       row_mode = 1
       row_first_id = ''
       iterate
     end
-    if op = 'BIND' then do
-      bind_id = word(line, 2)
-      bind_target = word(line, 3)
-      if bind_id \= '' then do
-        if bind_target \= '' then do
-          binding_count = binding_count + 1
-          binding_id.binding_count = bind_id
-          binding_value.binding_count = bind_target
-          binding_callback.binding_count = ''
-        end
+    if op = 'END' then do
+      bad = 0
+      if upper(word(line, 2)) \= 'ROW' then bad = 1
+      if words(line) \= 2 then bad = 1
+      if row_mode = 0 then bad = 1
+      if bad = 1 then do
+        handler_error = 'unmatched END ROW'
+        handler_error_line = i
+        return
       end
+      row_mode = 0
+      row_first_id = ''
+      iterate
+    end
+    if op = 'BIND' then do
+      if words(line) \= 3 then do
+        handler_error = 'BIND requires a control ID and source node ID'
+        handler_error_line = i
+        return
+      end
+      binding_count = binding_count + 1
+      binding_id.binding_count = word(line, 2)
+      binding_source.binding_count = word(line, 3)
+      bad = 0
+      if verify(binding_id.binding_count, allowed_name) > 0 then bad = 1
+      if verify(binding_source.binding_count, allowed_name) > 0 then bad = 1
+      if bad = 1 then do
+        handler_error = 'BIND contains an invalid identifier'
+        handler_error_line = i
+        return
+      end
+      binding_line.binding_count = i
       iterate
     end
     if op = 'ON' then do
-      event_kind = upper(word(line, 2))
-      if event_kind = 'CHANGE' then do
-        change_id = word(line, 3)
-        if change_id \= '' then do
-          binding_count = binding_count + 1
-          binding_id.binding_count = change_id
-          binding_value.binding_count = 'widget.value.changed'
-          binding_callback.binding_count = ''
-          if upper(word(line, 4)) = 'CALL' then binding_callback.binding_count = word(line, 5)
-        end
-        iterate
+      bad = 0
+      if words(line) \= 4 then bad = 1
+      if upper(word(line, 4)) \= 'FORWARD' then bad = 1
+      if bad = 1 then do
+        handler_error = 'ON requires event kind, control ID and FORWARD'
+        handler_error_line = i
+        return
       end
-      if event_kind = 'ACTIVATE' then do
-        change_id = word(line, 3)
-        if change_id \= '' then do
-          binding_count = binding_count + 1
-          binding_id.binding_count = change_id
-          binding_value.binding_count = 'widget.activated'
-          binding_callback.binding_count = ''
-          if upper(word(line, 4)) = 'CALL' then binding_callback.binding_count = word(line, 5)
-        end
-        iterate
+      event_count = event_count + 1
+      event_kind.event_count = upper(word(line, 2))
+      event_id.event_count = word(line, 3)
+      if verify(event_id.event_count, allowed_name) > 0 then do
+        handler_error = 'ON contains an invalid control ID'
+        handler_error_line = i
+        return
       end
-      if event_kind = 'COMMIT' then do
-        change_id = word(line, 3)
-        if change_id \= '' then do
-          binding_count = binding_count + 1
-          binding_id.binding_count = change_id
-          binding_value.binding_count = 'widget.value.committed'
-          binding_callback.binding_count = ''
-          if upper(word(line, 4)) = 'CALL' then binding_callback.binding_count = word(line, 5)
-        end
-        iterate
-      end
-      if event_kind = 'CHECKED' then do
-        change_id = word(line, 3)
-        if change_id \= '' then do
-          binding_count = binding_count + 1
-          binding_id.binding_count = change_id
-          binding_value.binding_count = 'widget.checked.changed'
-          binding_callback.binding_count = ''
-          if upper(word(line, 4)) = 'CALL' then binding_callback.binding_count = word(line, 5)
-        end
-        iterate
-      end
-      if event_kind = 'SELECTION' then do
-        change_id = word(line, 3)
-        if change_id \= '' then do
-          binding_count = binding_count + 1
-          binding_id.binding_count = change_id
-          binding_value.binding_count = 'widget.selection.changed'
-          binding_callback.binding_count = ''
-          if upper(word(line, 4)) = 'CALL' then binding_callback.binding_count = word(line, 5)
-        end
-        iterate
-      end
+      event_line.event_count = i
+      iterate
     end
-    supported = 0
-    if op = 'LABEL' then supported = 1
-    if op = 'STATUSBAR' then supported = 1
-    if op = 'CHECKBOX' then supported = 1
-    if op = 'PROGRESS' then supported = 1
-    if op = 'TEXT' then supported = 1
-    if op = 'BUTTON' then supported = 1
-    if supported = 0 then iterate
+    kind = ''
+    if op = 'LABEL' then kind = 'label'
+    if op = 'LINE' then kind = 'line'
+    if op = 'STATUSBAR' then kind = 'statusbar'
+    if op = 'TEXT' then kind = 'input'
+    if op = 'CHECKBOX' then kind = 'checkbox'
+    if op = 'PROGRESS' then kind = 'progress'
+    if op = 'BUTTON' then kind = 'button'
+    if op = 'SCENE' then kind = 'scene'
+    if kind = '' then do
+      handler_error = 'unsupported DEFINE-GUI declaration ' || op
+      handler_error_line = i
+      return
+    end
     control_id = word(line, 2)
-    if control_id = '' then iterate
-    control_count = control_count + 1
-    control_kind.control_count = lower(op)
-    if op = 'TEXT' then control_kind.control_count = 'input'
-    control_id_value.control_count = control_id
-    control_text.control_count = subword(line, 3)
-    control_action.control_count = 'none'
-    if op = 'BUTTON' then do
-      control_text.control_count = word(line, 3)
-      if upper(word(line, 4)) = 'ACTION' then control_action.control_count = word(line, 5)
+    bad = 0
+    if control_id = '' then bad = 1
+    if wordpos(control_id, ids) > 0 then bad = 1
+    if verify(control_id, allowed_name) > 0 then bad = 1
+    if bad = 1 then do
+      handler_error = 'missing, duplicate or invalid control ID ' || control_id
+      handler_error_line = i
+      return
     end
+    if op = 'BUTTON' then do
+      bad = 0
+      if words(line) \= 8 then bad = 1
+      if upper(word(line, 3)) \= 'ACTION' then bad = 1
+      if upper(word(line, 5)) \= 'EVENT' then bad = 1
+      if upper(word(line, 7)) \= 'SHORTCUT' then bad = 1
+      if bad = 1 then do
+        handler_error = 'BUTTON requires ACTION, EVENT and SHORTCUT'
+        handler_error_line = i
+        return
+      end
+      action = word(line, 4)
+      event = word(line, 6)
+      shortcut = word(line, 8)
+      bad = 0
+      if action = '' then bad = 1
+      if event = '' then bad = 1
+      if shortcut = '' then bad = 1
+      if verify(action, allowed_name) > 0 then bad = 1
+      if verify(event, allowed_name) > 0 then bad = 1
+      if verify(shortcut, allowed_name) > 0 then bad = 1
+      if bad = 1 then do
+        handler_error = 'empty BUTTON command definition'
+        handler_error_line = i
+        return
+      end
+      found_command = 0
+      do j = 1 to command_count
+        if command_action.j = action then do
+          found_command = 1
+          bad = 0
+          if command_event.j \= event then bad = 1
+          if command_shortcut.j \= shortcut then bad = 1
+          if bad = 1 then do
+            handler_error = 'conflicting command definition ' || action
+            handler_error_line = i
+            return
+          end
+        end
+      end
+      if found_command = 0 then do
+        command_count = command_count + 1
+        command_action.command_count = action
+        command_event.command_count = event
+        command_shortcut.command_count = shortcut
+      end
+    end
+    if op \= 'BUTTON' then do
+      if words(line) \= 2 then do
+        handler_error = op || ' requires exactly one control ID'
+        handler_error_line = i
+        return
+      end
+      action = 'none'
+      event = ''
+      shortcut = 'none'
+    end
+    control_count = control_count + 1
+    control_kind.control_count = kind
+    control_id_value.control_count = control_id
+    control_source.control_count = control_id
+    control_action.control_count = action
+    control_event.control_count = event
+    control_shortcut.control_count = shortcut
     control_relation.control_count = 'below'
     control_anchor.control_count = previous_id
     if previous_id = '' then control_relation.control_count = 'root'
     if row_mode = 1 then do
-      if row_first_id \= '' then control_relation.control_count = 'right'
       if row_first_id = '' then row_first_id = control_id
+      else control_relation.control_count = 'right'
     end
     previous_id = control_id
+    ids = ids || ' ' || control_id
+  end
+  if row_mode = 1 then do
+    handler_error = 'ROW is missing END ROW'
+    handler_error_line = handler_lines.0
+    return
+  end
+  if control_count = 0 then do
+    handler_error = 'DEFINE-GUI has no controls'
+    handler_error_line = 1
+    return
+  end
+  do i = 1 to binding_count
+    bad = 0
+    if wordpos(binding_id.i, ids) = 0 then bad = 1
+    if wordpos(binding_source.i, ids) = 0 then bad = 1
+    if bad = 1 then do
+      handler_error = 'BIND references an unknown control or source node'
+      handler_error_line = binding_line.i
+      return
+    end
+    do j = 1 to i - 1
+      if binding_id.i = binding_id.j then do
+        handler_error = 'duplicate BIND for ' || binding_id.i
+        handler_error_line = binding_line.i
+        return
+      end
+    end
+    do j = 1 to control_count
+      if control_id_value.j = binding_id.i then control_source.j = binding_source.i
+    end
+  end
+  do i = 1 to event_count
+    if wordpos(event_id.i, ids) = 0 then do
+      handler_error = 'ON references an unknown control'
+      handler_error_line = event_line.i
+      return
+    end
+    if wordpos(event_kind.i, 'POINTER KEY CHANGE COMMIT CHECKED SELECTION') = 0 then do
+      handler_error = 'unknown ON event kind ' || event_kind.i
+      handler_error_line = event_line.i
+      return
+    end
+    do j = 1 to control_count
+      if control_id_value.j = event_id.i then do
+        kind = control_kind.j
+        bad = 0
+        if event_kind.i = 'POINTER' then do
+          if kind \= 'scene' then bad = 1
+        end
+        if event_kind.i = 'KEY' then do
+          if kind \= 'scene' then bad = 1
+        end
+        if bad = 1 then do
+          handler_error = 'scene input ON requires a SCENE control'
+          handler_error_line = event_line.i
+          return
+        end
+        bad = 0
+        if event_kind.i = 'CHANGE' then do
+          if kind \= 'input' then bad = 1
+        end
+        if event_kind.i = 'COMMIT' then do
+          if kind \= 'input' then bad = 1
+        end
+        if bad = 1 then do
+          handler_error = 'text input ON requires a TEXT control'
+          handler_error_line = event_line.i
+          return
+        end
+        if event_kind.i = 'CHECKED' then do
+          if kind \= 'checkbox' then do
+            handler_error = 'CHECKED requires a CHECKBOX control'
+            handler_error_line = event_line.i
+            return
+          end
+        end
+        if event_kind.i = 'SELECTION' then do
+          handler_error = 'SELECTION is unsupported by this bounded grammar'
+          handler_error_line = event_line.i
+          return
+        end
+      end
+    end
   end
 
-  .gen namespace &namespace expose render control_metadata binding_metadata binding_read binding_write update_bindings event_node event_value event_checked event_selection event_interested event_callback dispatch_metadata dispatch_event handler_message dispatch_handler dispatch_application application_open application_file_selected application_text application_filter application_search application_clear application_refresh application_quit register_gui make_controller controller_component make_text_inspector_session
   .gen import ui
   .gen import ui_contract
-  .gen render: procedure = .void
-  .gen   arg view = .uiview_impl, supplied_bindings = .string[]
+  .gen source_node: procedure = .int
+  .gen   arg source = .uiview, wanted = .string
+  .gen   do index = 1 to source.count()
+  .gen     if source.node_id(index) = wanted then return index
+  .gen   end
+  .gen   return 0
+  .gen render: procedure = .uiview
+  .gen   arg source = .uiview
+  .gen   view = .ui..uiview_impl(source.title())
   do i = 1 to control_count
-    kind = control_kind.i
     control_id = control_id_value.i
-    display = control_text.i
-    action = control_action.i
+    source_id = control_source.i
+    kind = control_kind.i
     relation = control_relation.i
     anchor = control_anchor.i
-    spec = kind || '|' || control_id || '|' || action || '|none|' || relation || '|' || anchor
-    generated = 'display = ' || display
+    action = control_action.i
+    shortcut = control_shortcut.i
+    generated = '  index = source_node(source, "' || source_id || '")'
     .gen &generated
-    generated = 'bound = binding_value(supplied_bindings, "' || control_id || '")'
-    .gen &generated
-    generated = 'if bound \= "" then display = bound'
-    .gen &generated
-    generated = 'call view.add_spec("' || spec || '", display)'
+    .gen   if index < 1 then return source
+    generated = '  call view.add_label("' || control_id || '", source.node_text(index), "' || relation || '", "' || anchor || '")'
+    if kind = 'scene' then generated = '  call view.add_scene("' || control_id || '", source.node_value(index), "' || relation || '", "' || anchor || '")'
+    if kind = 'input' then generated = '  call view.add_input("' || control_id || '", source.node_value(index), "' || relation || '", "' || anchor || '")'
+    if kind = 'checkbox' then generated = '  call view.add_checkbox("' || control_id || '", source.node_text(index), source.node_value(index), "' || relation || '", "' || anchor || '")'
+    if kind = 'progress' then generated = '  call view.add_progress("' || control_id || '", source.node_value(index), "' || relation || '", "' || anchor || '")'
+    if kind = 'button' then generated = '  call view.add_button("' || control_id || '", source.node_text(index), "' || action || '", "' || shortcut || '", "' || relation || '", "' || anchor || '")'
+    if kind = 'line' then generated = '  call view.add_line("' || control_id || '", "' || relation || '", "' || anchor || '")'
+    if kind = 'statusbar' then generated = '  call view.add_statusbar("' || control_id || '", source.node_text(index), "' || relation || '", "' || anchor || '")'
     .gen &generated
   end
-  .gen   return
+  .gen   return view
   .gen controller_component: class implements .uicomponent
   .gen   _delegate = .uicomponent
-  .gen   _bindings = .string[]
   .gen   *: factory
   .gen     arg delegate = .uicomponent
   .gen     _delegate = delegate
   .gen     return
   .gen   update: method = .uieffects
   .gen     arg event = .uimessage
-  .gen     _bindings = update_bindings(event, _bindings)
-  .gen     return dispatch_handler(_delegate, event)
+  .gen     return _delegate.update(event)
   .gen   view: method = .uiview
-  .gen     view = .ui..uiview_impl("&namespace GUI")
-  .gen     call render(view, _bindings)
-  .gen     return view
-  .gen   binding: method = .string
-  .gen     arg id = .string
-  .gen     return binding_read(_bindings, id)
-  .gen   bindings: method = .string[]
-  .gen     return _bindings
-  .gen   set_binding: method = .void
-  .gen     arg id = .string, value = .string
-  .gen     _bindings = binding_write(_bindings, id, value)
-  .gen     return
-  do i = 1 to control_count
-    control_id = control_id_value.i
-    if control_id \= 'binding' then do
-      generated = '  set_' || control_id || ': method = .void'
-      .gen &generated
-      generated = '    arg value = .string'
-      .gen &generated
-      generated = '    _bindings = binding_write(_bindings, "' || control_id || '", value)'
-      .gen &generated
-      generated = '    return'
-      .gen &generated
-    end
-  end
+  .gen     return render(_delegate.view())
   .gen make_controller: procedure = .uicomponent
   .gen   arg delegate = .uicomponent
   .gen   return .controller_component(delegate)
   .gen control_metadata: procedure = .string[]
   .gen   result = .string[]
   do i = 1 to control_count
-    control_binding = ''
-    control_events = ''
-    do j = 1 to binding_count
-      if binding_id.j = control_id_value.i then do
-        if left(binding_value.j, 7) = 'widget.' then do
-          if control_events = '' then control_events = binding_value.j
-          else control_events = control_events || ';' || binding_value.j
-        end
-        else control_binding = binding_value.j
-      end
-    end
-    control_label = unquote(control_text.i)
-    metadata = control_id_value.i || '|' || control_kind.i || '|' || control_label || '|' || control_binding || '|' || control_action.i || '|' || control_events
+    metadata = control_id_value.i || '|' || control_kind.i || '|' || control_source.i || '|' || control_action.i || '|' || control_event.i
     .gen   result[&i] = "&metadata"
   end
   .gen   return result
-  .gen binding_value: procedure = .string
-  .gen   arg supplied_bindings = .string[], wanted = .string
-  .gen   do i = 1 to supplied_bindings[0]
-  .gen     separator = pos("|", supplied_bindings[i])
-  .gen     if separator > 0 then do
-  .gen       if left(supplied_bindings[i], separator - 1) = wanted then return substr(supplied_bindings[i], separator + 1)
-  .gen     end
-  .gen   end
-  .gen   return ""
-  .gen update_bindings: procedure = .string[]
-  .gen   arg event = .uimessage, supplied_bindings = .string[]
+  .gen event_metadata: procedure = .string[]
   .gen   result = .string[]
-  .gen   do i = 1 to supplied_bindings[0]
-  .gen     result[i] = supplied_bindings[i]
-  .gen   end
-  .gen   node = event.body().text("node")
-  .gen   value = event.body().text("value")
-  .gen   if event.name() = "widget.value.changed" then do
-  do i = 1 to binding_count
-    if binding_value.i = 'widget.value.changed' then iterate
-    if binding_value.i = 'widget.value.committed' then iterate
-    generated = '    if node = "' || binding_id.i || '" then do'
-    .gen &generated
-    generated = '      updated = 0'
-    .gen &generated
-    generated = '      do j = 1 to result[0]'
-    .gen &generated
-    generated = '        separator = pos("|", result[j])'
-    .gen &generated
-    generated = '        if separator > 0 then if left(result[j], separator - 1) = node then do'
-    .gen &generated
-    generated = '          result[j] = node || "|" || value'
-    .gen &generated
-    generated = '          updated = 1'
-    .gen &generated
-    generated = '          leave'
-    .gen &generated
-    generated = '        end'
-    .gen &generated
-    generated = '      end'
-    .gen &generated
-    generated = '      if \updated then result[result[0] + 1] = node || "|" || value'
-    .gen &generated
-    generated = '    end'
-    .gen &generated
-  end
-  .gen   end
-  .gen   if event.name() = "widget.value.committed" then do
-  do i = 1 to binding_count
-    if binding_value.i = 'widget.value.changed' then iterate
-    if binding_value.i = 'widget.value.committed' then iterate
-    generated = '    if node = "' || binding_id.i || '" then do'
-    .gen &generated
-    generated = '      updated = 0'
-    .gen &generated
-    generated = '      do j = 1 to result[0]'
-    .gen &generated
-    generated = '        separator = pos("|", result[j])'
-    .gen &generated
-    generated = '        if separator > 0 then if left(result[j], separator - 1) = node then do'
-    .gen &generated
-    generated = '          result[j] = node || "|" || value'
-    .gen &generated
-    generated = '          updated = 1'
-    .gen &generated
-    generated = '          leave'
-    .gen &generated
-    generated = '        end'
-    .gen &generated
-    generated = '      end'
-    .gen &generated
-    generated = '      if \updated then result[result[0] + 1] = node || "|" || value'
-    .gen &generated
-    generated = '    end'
-    .gen &generated
-  end
-  .gen   end
-  .gen   return result
-  .gen binding_read: procedure = .string
-  .gen   arg supplied_bindings = .string[], wanted = .string
-  .gen   return binding_value(supplied_bindings, wanted)
-  .gen binding_write: procedure = .string[]
-  .gen   arg supplied_bindings = .string[], wanted = .string, value = .string
-  .gen   result = .string[]
-  .gen   do i = 1 to supplied_bindings[0]
-  .gen     result[i] = supplied_bindings[i]
-  .gen   end
-  .gen   updated = 0
-  .gen   do i = 1 to result[0]
-  .gen     separator = pos("|", result[i])
-  .gen     if separator > 0 then do
-  .gen       if left(result[i], separator - 1) = wanted then do
-  .gen         result[i] = wanted || "|" || value
-  .gen         updated = 1
-  .gen         leave
-  .gen       end
-  .gen     end
-  .gen   end
-  .gen   if \updated then result[result[0] + 1] = wanted || "|" || value
-  .gen   return result
-  .gen event_node: procedure = .string
-  .gen   arg event = .uimessage
-  .gen   return event.body().text("node")
-  .gen event_value: procedure = .string
-  .gen   arg event = .uimessage
-  .gen   return event.body().text("value")
-  .gen event_checked: procedure = .int
-  .gen   arg event = .uimessage
-  .gen   return event.body().flag("checked")
-  .gen event_selection: procedure = .string[]
-  .gen   arg event = .uimessage
-  .gen   return event.body().texts("items")
-  .gen event_interested: procedure = .int
-  .gen   arg event = .uimessage
-  .gen   metadata = binding_metadata()
-  .gen   node = event.body().text("node")
-  .gen   name = event.name()
-  .gen   do i = 1 to metadata[0]
-  .gen     separator = pos("|", metadata[i])
-  .gen     if separator > 0 then do
-  .gen       if left(metadata[i], separator - 1) = node then if substr(metadata[i], separator + 1) = name then return 1
-  .gen     end
-  .gen   end
-  .gen   return 0
-  .gen event_callback: procedure = .string
-  .gen   arg event = .uimessage
-  .gen   return dispatch_event(event)
-  .gen dispatch_metadata: procedure = .string[]
-  .gen   result = .string[]
-  dispatch_count = 0
-  do i = 1 to binding_count
-    if left(binding_value.i, 7) = 'widget.' then do
-      dispatch = binding_callback.i
-      if dispatch = '' then do
-        do j = 1 to control_count
-          if control_id_value.j = binding_id.i then if control_action.j \= 'none' then dispatch = control_action.j
-        end
-      end
-      if dispatch \= '' then do
-        dispatch_count = dispatch_count + 1
-        metadata = binding_id.i || '|' || binding_value.i || '|' || dispatch
-        .gen   result[&dispatch_count] = "&metadata"
-      end
-    end
-  end
-  .gen   return result
-  .gen dispatch_event: procedure = .string
-  .gen   arg event = .uimessage
-  .gen   node = event.body().text("node")
-  .gen   name = event.name()
-  .gen   metadata = dispatch_metadata()
-  .gen   do i = 1 to metadata[0]
-  .gen     first = pos("|", metadata[i])
-  .gen     if first > 0 then do
-  .gen       second = pos("|", metadata[i], first + 1)
-  .gen       if second > first then do
-  .gen         if left(metadata[i], first - 1) = node then if substr(metadata[i], first + 1, second - first - 1) = name then return substr(metadata[i], second + 1)
-  .gen       end
-  .gen     end
-  .gen   end
-  .gen   return ""
-  .gen handler_message: procedure = .uimessage
-  .gen   arg event = .uimessage
-  .gen   callback = dispatch_event(event)
-  .gen   if callback = "" then return event
-  .gen   payload = .uipayload()
-  .gen   node = event_node(event)
-  .gen   value = event_value(event)
-  .gen   if node \= "" then call payload.put_text("node", node)
-  .gen   if value \= "" then call payload.put_text("value", value)
-  .gen   return .uimessage(callback || ".requested", payload, event.target(), "event")
-  .gen dispatch_handler: procedure = .uieffects
-  .gen   arg delegate = .uicomponent, event = .uimessage
-  .gen   return delegate.update(handler_message(event))
-  .gen dispatch_application: procedure = .uieffects
-  .gen   arg delegate = .controller_component, event = .uimessage
-  .gen   callback = event_callback(event)
-  .gen   callback_event = handler_message(event)
-  do i = 1 to binding_count
-    dispatch = binding_callback.i
-    if dispatch = '' then do
-      do j = 1 to control_count
-        if control_id_value.j = binding_id.i then if control_action.j \= 'none' then dispatch = control_action.j
-      end
-    end
-    if dispatch \= '' then do
-      callback_words = changestr('.', dispatch, ' ')
-      handler = 'application_' || lower(word(callback_words, words(callback_words)))
-      generated = '  if callback = "' || dispatch || '" then return ' || handler || '(callback_event, delegate)'
-      .gen &generated
-    end
-  end
-  do i = 1 to control_count
-    if control_action.i = 'document.open' then do
-      .gen   if event.name() = "ui.resource.selected" then return application_file_selected(event, delegate)
-    end
-  end
-  .gen   return delegate.update(event)
-  .gen binding_metadata: procedure = .string[]
-  .gen   result = .string[]
-  do i = 1 to binding_count
-    metadata = binding_id.i || '|' || binding_value.i
+  do i = 1 to event_count
+    metadata = event_id.i || '|' || event_kind.i
     .gen   result[&i] = "&metadata"
   end
   .gen   return result
   .gen register_gui: procedure = .int
   .gen   arg session = .uisession
   .gen   rc = 0
-  do i = 1 to control_count
-    action = control_action.i
-    if action = 'none' then iterate
-    event_name = action || '.requested'
-    if action = 'document.quit' then event_name = 'ui.close.requested'
-    label = unquote(control_text.i)
-    if action <> 'document.quit' then do
-      generated = '  rc = session.register_event("' || event_name || '")'
+  do i = 1 to command_count
+    action = command_action.i
+    event = command_event.i
+    shortcut = command_shortcut.i
+    if left(event, 3) \= 'ui.' then do
+      generated = '  rc = session.register_event("' || event || '")'
       .gen &generated
-      generated = '  if rc < 0 then do; say "UI GUI register_event failed: ' || event_name || ' rc=" || rc; return rc; end'
-      .gen &generated
+      .gen   if rc < 0 then return rc
     end
-    generated = '  rc = session.register_command(.uicommand("' || action || '", "' || label || '", "root", "' || event_name || '", ""))'
+    generated = '  rc = session.register_command(.uicommand("' || action || '", "' || action || '", "root", "' || event || '", "' || shortcut || '"))'
     .gen &generated
-    generated = '  if rc < 0 then do; say "UI GUI register_command failed: ' || action || ' rc=" || rc; return rc; end'
-    .gen &generated
+    .gen   if rc < 0 then return rc
   end
   .gen   return rc
 ##MEND

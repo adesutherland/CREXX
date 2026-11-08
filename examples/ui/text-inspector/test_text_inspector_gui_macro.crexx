@@ -1,0 +1,58 @@
+options levelg
+namespace text_inspector_gui_macro_test
+import ui
+import ui_contract
+import text_inspector
+import TextInspector
+
+delegate = .text_inspector_component(0)
+controller = .TextInspector..controller_component(delegate)
+records = .string[]
+records[1] = "alpha beta"
+records[2] = "café gamma delta"
+body = .uipayload()
+call body.put_resource("resource", .uiresource("fixture-1", "session", "fixture.txt"))
+call body.put_texts("records", records)
+event = .uimessage("io.text.read.completed", body)
+effects = controller.update(event)
+unused = delegate.update(event)
+source = delegate.view()
+generated = controller.view()
+if effects.count() \= 0 | generated.count() \= 10 then do
+  say "FAIL: generated controller count or extra effect"
+  exit 1
+end
+do index = 1 to 6
+  if generated.node_text(index) \= source.node_text(index) then do
+    say "FAIL: generated dynamic value" index generated.node_text(index) source.node_text(index)
+    exit 1
+  end
+end
+if generated.node_text(7) \= source.node_text(7) | generated.node_text(8) \= source.node_text(7) then do
+  say "FAIL: shared command display binding"
+  exit 1
+end
+event = .uimessage("document.open.requested", .uipayload())
+effects = controller.update(event)
+unused = delegate.update(event)
+if effects.count() \= 1 | effects.item(1).name() \= "ui.resource.choose" | controller.view().node_text(6) \= "Status: Choose a text file" then do
+  say "FAIL: generated controller did not forward once or update current status"
+  exit 1
+end
+
+caps = .uicapabilities()
+call caps.enable("ui.resource.choose")
+session = make_text_inspector_gui_session("gui-macro", caps)
+if session.invoke("document.open") \= 0 | session.pump() < 0 then do
+  say "FAIL: generated command registration"
+  exit 1
+end
+effect = session.take_effect()
+second = session.take_effect()
+if effect.name() \= "ui.resource.choose" | second.name() \= "" then do
+  say "FAIL: shared command caused duplicate route" effect.name() second.name() session.fault()
+  exit 1
+end
+call session.close()
+say "PASS: DEFINE-GUI current values and single session route"
+exit 0

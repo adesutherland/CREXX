@@ -1,0 +1,4 @@
+/* Generated GUI facade with the existing GTK driver. */
+options levelg
+##LOADMACRO ui
+##UI_LAUNCHER "ui_gtk","gtkdriver","TextInspector","make_text_inspector_gui_session"

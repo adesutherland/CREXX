@@ -141,7 +141,7 @@ An alias can instead dispatch the completed block to a scripted macro:
 ```rexx
 ##DALIAS DEFINE-GUI HANDLER UI_GUI
 DEFINE-GUI TextInspector
-  LABEL path "File: (none)"
+  LABEL path
 END DEFINE-GUI
 ```
 
@@ -149,6 +149,14 @@ END DEFINE-GUI
 namespace and collected block; the preprocessor remains unaware of the
 embedded language's tags. Handler declarations currently require exactly one
 alias.
+
+The handler may set `handler_error` to a nonempty diagnostic and
+`handler_error_line` to a one-based row of its collected block. RXPP then
+reports `RXPP_HANDLER_VALIDATION` with the original source file and line and
+stops preprocessing with status 8. This is a generic scripted-handler
+diagnostic channel; the UI macro owns its grammar and validation. The
+`handler_origin_file` and `handler_origin_line` arrays expose the matching
+per-row origins to handlers that need them.
 
 ## Build metadata directives
 

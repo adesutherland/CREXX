@@ -1,7 +1,8 @@
 # UI architecture and capability expansion
 
-Status: STEP01–05 development increments done; RXPP authoring and core
-milestone QA remain. All initiative acceptance criteria remain open.
+Status: STEP01–06 development increments done; core milestone QA remains.
+Initiative acceptance criteria remain open until STEP07 verifies the selected
+core scope.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not change that baseline.
@@ -48,7 +49,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP03** GTK/ANSI scene | STEP02; parallel with STEP04 | Build the Level G scene owner and bounded graph/map fixtures, then GTK/ANSI graph projections with keyboard, delta/resync and refusal checks. | AC04–06, AC08 | done |
 | **UIX-STEP04** Browser forms | STEP02; parallel with STEP03 | Build one browser projection and local/hosted adapters (D07); prove handwritten Text Inspector forms, owner turns, one async effect, restart and reconnect. | AC03, AC06, AC08 | done |
 | **UIX-STEP05** Graph then map | STEP03–04 | Complete graph then map on GTK, ANSI and both browser routes; compare domain journals and scene lifecycle at each stage, measuring before acceleration. | AC04–06, AC08 | done |
-| **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | todo |
+| **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | done |
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | todo |
 | **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Add `rag.query`, the hosted adapter and local transient read-only proof; compare cited evidence and compatible embeddings under D01–03. | AC09–10 | todo |
 | **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
@@ -126,20 +127,13 @@ which route must still pass after any agreed fallback.
   line, ANSI and GTK; browser and general 2D drivers did not yet exist. The
   [catalogue](contracts/catalogue.json) then contained planned pointer,
   viewport and web vocabulary without implemented scene behavior.
-- Peter's experimental [DEFINE-GUI example](../../examples/ui/text-inspector/text_inspector_gui_macro.rxpp)
-  uses RXPP `DALIAS ... HANDLER`, with no
-  built-in GUI parser. It generates nodes, binding metadata, a controller,
-  command registration and static callback dispatch. Its `node|value` display
-  binding store can diverge from the feature's next `view()`. It also has Text
-  Inspector callback and `ui.resource.selected` special cases and silently
-  skips authored `MENU`/`ITEM` declarations. `ON` parsing and render support
-  are not a validated grammar.
-  The example graph refers to absent
-  `text_inspector_gui_macro_test.crexx` and
-  `text_inspector_gui_macro_gtk.rxpp` inputs. Repair that graph and validate
-  source locations during STEP06. `rxBuild` describes its macro graph; CMake
-  still prepares native GTK prerequisites. Keep the experimental macro
-  available while handwritten core consumers are developed.
+- RXPP `DALIAS ... HANDLER` dispatches [DEFINE-GUI](../../examples/ui/text-inspector/text_inspector_gui_macro.rxpp)
+  without a built-in GUI parser. The bounded STEP06 macro generates layout
+  and command wiring around an application-owned component; its controller
+  has no value store or Text Inspector callback. Invalid declarations report
+  authored locations through the generic RXPP handler diagnostic channel.
+  CMake builds GTK/ANSI generated launchers, while `rxBuild` retains the
+  independently runnable graph recipe after its missing inputs were restored.
 - CREXX's single-threaded Emscripten profile and THE's separate browser
   preview establish useful Worker/runtime precedent. THE owns its editor UI;
   neither it nor the current cREXX profile supplies this library's browser
@@ -369,6 +363,22 @@ WebGL2 for larger maps, Canvas layers for dense graphs, or WebGPU rendering.
 Measure representative redraw, interaction and memory on each selected host;
 GPU compute for vectors or local models has its own gate and needs
 representative corpus/model sizes.
+
+#### STEP06 RXPP authoring contract
+
+DEFINE-GUI compiles a bounded layout and command declaration into a wrapper
+around an application-owned component. The generated wrapper forwards each
+event exactly once and projects current values from the component's view by
+stable ID; it has no independent value store or application callback. Explicit
+BUTTON ACTION/EVENT declarations generate one registration per command ID,
+even when several controls reference it. BIND and ON declarations validate
+references and event/control compatibility. Unknown tags, duplicate IDs,
+malformed rows and conflicting command definitions fail preprocessing with
+the authored declaration location. RXPP's scripted-handler diagnostics may
+carry a block-relative row to report that location; the generic preprocessor
+does not parse GUI tags. Source maps remain enabled through the generated
+component and compiler output. The ISPF-style form dialect remains an
+application adapter, not part of this authoring grammar.
 
 ### Application services, RAG and compute
 
