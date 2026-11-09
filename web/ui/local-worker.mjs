@@ -4,6 +4,7 @@ const applications = {
   text: ['text_inspector', 'text_inspector_web'],
   graph: ['scene_editors', 'graph_web'],
   map: ['scene_editors', 'map_web'],
+  process: ['process_designer', 'process_web'],
   probe: ['web_service_probe'],
 };
 let vm, started = false, done = false;

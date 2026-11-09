@@ -11,7 +11,7 @@ const required = ['index.html', 'main.mjs', 'projection.mjs', 'scene.mjs',
   'vm/crexx_ui_vm.mjs', 'vm/crexx_ui_vm.wasm',
   ...['library', 'ui', 'ui_catalog', 'ui_contract', 'ui_scene', 'ui_web',
     'text_inspector', 'text_inspector_web', 'web_service_probe',
-    'scene_editors', 'graph_web', 'map_web'].map(name => `modules/${name}.rxbin`)];
+    'scene_editors', 'graph_web', 'map_web', 'process_designer', 'process_web'].map(name => `modules/${name}.rxbin`)];
 assert.deepEqual(Object.keys(manifest.assets).sort(), required.sort());
 for (const [name, expected] of Object.entries(manifest.assets)) {
   const bytes = await readFile(join(root, name));

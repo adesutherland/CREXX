@@ -209,22 +209,22 @@ ansidriver: class implements .uidriver
         call cycle_choice(focused_index, direction)
         return
       end
-      if \_modal & control_kind = "integer" then do
+      if \_modal & (control_kind = "integer" | control_kind = "input") then do
         if text = "Enter" then do
-          call begin_integer(focused_index)
-          call integer_value(focused_index, _editing_text, "widget.value.committed")
+          call begin_edit(focused_index)
+          call publish_value(focused_index, _editing_text, "widget.value.committed")
           _replace_edit = 1
           return
         end
         if text = "Backspace" | text = "Delete" then do
-          call begin_integer(focused_index)
+          call begin_edit(focused_index)
           if text = "Delete" then _editing_text = ""
           else _editing_text = left(_editing_text, max(0, length(_editing_text) - 1))
           _replace_edit = 0
-          call integer_value(focused_index, _editing_text, "widget.value.changed")
+          call publish_value(focused_index, _editing_text, "widget.value.changed")
           return
         end
-        if text = "Up" | text = "Down" then do
+        if control_kind = "integer" & (text = "Up" | text = "Down") then do
           direction = 1
           if text = "Down" then direction = -1
           call increment_integer(focused_index, direction)
@@ -253,14 +253,16 @@ ansidriver: class implements .uidriver
       name = "ui.input.key"
     end
     if kind = 2 | kind = 3 then do
-      if \_modal & control_kind = "integer" then do
-        call begin_integer(focused_index)
+      if \_modal & (control_kind = "integer" | control_kind = "input") then do
+        call begin_edit(focused_index)
         candidate = text
         if \_replace_edit then candidate = _editing_text || text
-        if length(candidate) <= 4096 then do
+        limit = 4096
+        if control_kind = "input" then limit = 1024
+        if length(candidate) <= limit then do
           _editing_text = candidate
           _replace_edit = 0
-          call integer_value(focused_index, candidate, "widget.value.changed")
+          call publish_value(focused_index, candidate, "widget.value.changed")
         end
         return
       end
@@ -336,8 +338,8 @@ ansidriver: class implements .uidriver
       do i = 1 to view.count()
         if view.node_id(i) = node then do
           if view.node_kind(i) = "choice" then call cycle_choice(i, 1)
-          else if view.node_kind(i) = "integer" then do
-            call begin_integer(i)
+          else if view.node_kind(i) = "integer" | view.node_kind(i) = "input" then do
+            call begin_edit(i)
           end
           else do
             rc = _session.invoke(view.node_action(i))
@@ -391,7 +393,7 @@ ansidriver: class implements .uidriver
     call choose_item(index, view.node_option_id(index, selected))
     return
 
-  begin_integer: method = .void
+  begin_edit: method = .void
     arg index = .int
     view = _session.view()
     if _editing_node \= view.node_id(index) then do
@@ -401,7 +403,7 @@ ansidriver: class implements .uidriver
     end
     return
 
-  integer_value: method = .void
+  publish_value: method = .void
     arg index = .int, value = .string, event = .string
     view = _session.view()
     body = .uipayload()
@@ -427,7 +429,7 @@ ansidriver: class implements .uidriver
     _editing_node = view.node_id(index)
     _editing_text = value as .string
     _replace_edit = 1
-    call integer_value(index, _editing_text, "widget.value.changed")
+    call publish_value(index, _editing_text, "widget.value.changed")
     return
 
   dialog_cancel: method = .void

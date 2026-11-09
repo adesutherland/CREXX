@@ -1,0 +1,122 @@
+options levelg
+namespace process_designer_test
+import rxfnsb
+import rxjson
+import ui
+import ui_contract
+import process_designer
+
+stage = .int
+name = .string
+body = .uipayload
+event = .uimessage
+unused = .uieffects
+graph = .process_feature(1)
+semantic = .process_feature(0)
+if jsoncount(graph.scene(), "items") \= 5 | graph.view().node_kind(1) \= "scene" | semantic.view().node_kind(1) = "scene" then do
+  say "FAIL: initial process and semantic fallback"
+  exit 1
+end
+if jsonget(graph.state(), "count") \= "3" | jsonget(graph.state(), "selected") \= "step-1" | jsonget(graph.state(), "name2") \= "Review" then do
+  say "FAIL: initial process records"
+  exit 1
+end
+
+do stage = 1 to 9
+  body = .uipayload()
+  if stage = 1 then name = "process.pick.two.requested"
+  else if stage = 2 | stage = 3 then do
+    name = "widget.value.changed"
+    if stage = 3 then name = "widget.value.committed"
+    call body.put_text("node", "step.name")
+    call body.put_text("value", "Check case")
+  end
+  else if stage = 4 then name = "process.add.requested"
+  else if stage = 5 then do
+    name = "widget.value.committed"
+    call body.put_text("node", "step.owner")
+    call body.put_text("value", "Analyst")
+  end
+  else if stage = 6 then name = "process.earlier.requested"
+  else if stage = 7 then name = "process.undo.requested"
+  else if stage = 8 then name = "process.redo.requested"
+  else name = "process.remove.requested"
+  event = .uimessage(name, body)
+  unused = graph.update(event)
+  unused = semantic.update(event)
+  if graph.state() \= semantic.state() then do
+    say "FAIL: graphical and semantic process transitions" stage
+    exit 1
+  end
+end
+if jsonget(graph.state(), "count") \= "3" | jsonget(graph.state(), "selected") \= "step-2" | jsonget(graph.state(), "name2") \= "Check case" then do
+  say "FAIL: edit, add, reorder, redo and remove outcome" graph.state()
+  exit 1
+end
+if jsoncount(graph.scene(), "items") \= 5 then do
+  say "FAIL: linked scene after remove"
+  exit 1
+end
+
+before = graph.state()
+body = .uipayload()
+call body.put_text("node", "step.notes")
+call body.put_text("value", copies("x", 121))
+unused = graph.update(.uimessage("widget.value.committed", body))
+if graph.state() \= before then do
+  say "FAIL: oversized edit changed process"
+  exit 1
+end
+body = .uipayload()
+call body.put_text("node", "step.owner")
+call body.put_text("value", "bad" || '0A'x || "line")
+unused = graph.update(.uimessage("widget.value.committed", body))
+body = .uipayload()
+call body.put_text("node", "step.unknown")
+call body.put_text("value", "invalid control")
+unused = graph.update(.uimessage("widget.value.committed", body))
+if graph.state() \= before then do
+  say "FAIL: malformed edit changed process"
+  exit 1
+end
+body = .uipayload()
+call body.put_text("node", "process")
+call body.put_text("epoch", "process-designer")
+call body.put_integer("revision", 0)
+call body.put_integer("x", 40)
+call body.put_integer("y", 60)
+call body.put_text("phase", "press")
+unused = graph.update(.uimessage("ui.scene.pointer", body))
+if graph.state() \= before then do
+  say "FAIL: stale pointer changed process"
+  exit 1
+end
+unused = graph.update(.uimessage("process.undo.requested", .uipayload()))
+if jsonget(graph.state(), "count") \= "4" | jsonget(graph.state(), "selected") \= "step-4" | jsonget(graph.state(), "owner2") \= "Analyst" then do
+  say "FAIL: undo did not restore step and form" graph.state()
+  exit 1
+end
+unused = graph.update(.uimessage("ui.scene.resync", .uipayload()))
+if jsonget(graph.scene(), "kind") \= "full" | jsoncount(graph.scene(), "items") \= 7 then do
+  say "FAIL: full scene resync"
+  exit 1
+end
+edit = .process_feature(1)
+unused = edit.update(.uimessage("process.pick.two.requested", .uipayload()))
+body = .uipayload()
+call body.put_text("node", "step.name")
+call body.put_text("value", "Check case")
+unused = edit.update(.uimessage("widget.value.changed", body))
+unused = edit.update(.uimessage("widget.value.committed", body))
+unused = edit.update(.uimessage("process.undo.requested", .uipayload()))
+if jsonget(edit.state(), "name2") \= "Review" then do
+  say "FAIL: edit undo did not restore form and graph"
+  exit 1
+end
+unused = edit.update(.uimessage("process.redo.requested", .uipayload()))
+if jsonget(edit.state(), "name2") \= "Check case" then do
+  say "FAIL: edit redo did not restore form and graph"
+  exit 1
+end
+say "PASS: process designer transitions"
+exit 0

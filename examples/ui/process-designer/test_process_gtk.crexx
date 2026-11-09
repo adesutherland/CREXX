@@ -1,0 +1,37 @@
+options levelg
+namespace process_gtk_test
+import ui_contract
+import ui_gtk
+import ui_gtk_test
+import process_designer
+
+main: procedure = .int
+  steps = .string[]
+  steps[1] = "expect-scene-count|process|5"
+  steps[2] = "expect-value|step.name|Request"
+  steps[3] = "scene-press|process|140,60"
+  steps[4] = "expect|selected|Step 2 of 3 (step-2)"
+  steps[5] = "value|step.name|Check request"
+  steps[6] = "enter|step.name"
+  steps[7] = "expect-value|step.name|Check request"
+  steps[8] = "click|add"
+  steps[9] = "expect-scene-count|process|7"
+  steps[10] = "expect-value|step.name|New step"
+  steps[11] = "click|earlier"
+  steps[12] = "expect|selected|Step 2 of 4 (step-4)"
+  steps[13] = "click|undo"
+  steps[14] = "expect|selected|Step 3 of 4 (step-4)"
+  steps[15] = "click|remove"
+  steps[16] = "expect-scene-count|process|5"
+  steps[17] = "click|quit"
+  if ui_gtk_test..start(steps) < 0 then return 1
+  driver = .gtkdriver()
+  session = make_process_session("gtk-process-test", ui_gtk..capabilities())
+  run_rc = driver.run(session)
+  test_rc = ui_gtk_test..finish()
+  if run_rc \= 0 | test_rc \= 0 then do
+    say "FAIL: GTK process designer" run_rc test_rc driver.error()
+    return 1
+  end
+  say "PASS: GTK process graph and form"
+  return 0

@@ -16,11 +16,13 @@ const applications = {
   text: ['text_inspector_web', 'text_inspector'],
   graph: ['graph_web', 'scene_editors'],
   map: ['map_web', 'scene_editors'],
+  process: ['process_web', 'process_designer'],
   probe: ['web_service_probe'],
 };
 const image = name => join(build, name.startsWith('text_') || name === 'web_service_probe' ?
   'examples/ui/text-inspector' : ['graph_web', 'map_web', 'scene_editors'].includes(name) ?
-  'examples/ui/scene' : 'bin', `${name}.rxbin`);
+  'examples/ui/scene' : ['process_web', 'process_designer'].includes(name) ?
+  'examples/ui/process-designer' : 'bin', `${name}.rxbin`);
 const sessions = new Map();
 const site = resolve(fileURLToPath(new URL('.', import.meta.url)));
 

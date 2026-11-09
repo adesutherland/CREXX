@@ -1,0 +1,7 @@
+options levelg
+namespace process_ansi
+import ui_ansi
+import process_designer
+session = make_process_session("ansi-process-designer", ui_ansi..capabilities())
+driver = .ansidriver()
+exit driver.run(session)

@@ -1,7 +1,8 @@
 # UI architecture and capability expansion
 
-Status: STEP01–07 done for the selected macOS ARM64 development profile;
-AC01–08 verified in that profile. AC09–15 and public delivery gates remain open.
+Status: STEP01–07 and STEP07A done for the selected macOS ARM64 development
+profile; AC01–08 and AC16 verified in that profile. AC09–15 and public delivery
+gates remain open.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not change that baseline.
@@ -23,6 +24,10 @@ compatibility host. Preserve UI contract v0 and the three existing reference
 hosts while extending them.
 
 The graph and map are representative consumers, not platform data models.
+The process-designer showcase adds a small independent application: a bounded
+linear process graph with one editable form for the selected step. It uses the
+same UI session and host routes, with in-memory state only; workflow execution,
+branching, storage and package distribution remain separate decisions.
 Versioned application packages support separately developed applications;
 their initial deployment uses trusted packages. Peter's RXPP `DEFINE-GUI`
 façade follows stable handwritten consumers and generates wiring, leaving
@@ -50,6 +55,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP05** Graph then map | STEP03–04 | Complete graph then map on GTK, ANSI and both browser routes; compare domain journals and scene lifecycle at each stage, measuring before acceleration. | AC04–06, AC08 | done |
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | done |
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | done |
+| **UIX-STEP07A** Process-designer showcase | STEP07; independent of service steps | Add a bounded Level G linear-process example with per-selected-step editing; complete the browser/ANSI text-input host seams, then prove one application model across GTK, ANSI and both browser routes. | AC16 | done |
 | **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Add `rag.query`, the hosted adapter and local transient read-only proof; compare cited evidence and compatible embeddings under D01–03. | AC09–10 | todo |
 | **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
 | **UIX-STEP10** RAG cache | STEP08 transient local query proof | Prove D13 OPFS cache identity, reload, export/re-import, quota/eviction, multi-tab and cleanup, or record the conditional transient fallback. | AC12 | todo |
@@ -87,6 +93,7 @@ sanitizer and delivery QA belong to named milestones under repository policy.
 | **UIX-AC13** | After the read-only query and persistence stages yield implementation evidence, an owning RAG assessment maps source ingestion, provider/model identity, worker/lease behavior, review, transactional SQLite and `.rxvec` publication, multi-tab ownership and crash recovery to a browser profile. Identify the smallest representative proof and remaining risks, then record a separate implementation decision with scope and effort; native/hosted ingestion remains available throughout. | open; later feasibility decision gate |
 | **UIX-AC14** | Two independently structured Level G example applications register distinct namespaced repository/service effects and compatible payload schemas through composition without editing the UI core or global catalogue. Each receives correlated success, cancellation, failure and unsupported-capability outcomes; stale/conflicting domain writes remain application-owned. Use graph save/load and map turn persistence as different verification operations, preserving their respective model/undo or rule state without prescribing product storage policies; hosts do not inspect domain records. | open; multi-application extension gate |
 | **UIX-AC15** | Two independently authored example applications produce versioned package declarations and selected native/browser artifacts without UI-core source edits. For each selected host route, verify entry composition, UI contract compatibility, dependencies/assets, required operation preflight and application-owned optional fallback; reject an incompatible package or missing required asset/capability before starting its session. Document package contents and route-specific build/install steps. Runtime hot loading is not required. | open; independent application packaging gate |
+| **UIX-AC16** | A separately authored Level G process designer shows a bounded linear graph and an editable Name, Owner and Notes form for the selected step. Add/remove/reorder/select steps, keep edges and form values synchronized, and support undo/redo with one authoritative in-memory model. GTK and both browser routes project the graph; ANSI provides a usable semantic list. The same form edits work on all four routes, with malformed, stale or oversized edits refused without corrupting state. Compare independent transition expectations, inspect representative RXAS and run focused real-host interaction and close checks. | verified in selected macOS ARM64 profile |
 
 ### Decisions and open gates
 
@@ -362,6 +369,18 @@ uses a semantic graph list and a four by four map cell viewport. Focused
 browser first-update observations on these bounded fixtures were reported in
 conversation; they are not production performance verdicts. No accelerated
 renderer is selected. Pointer picking covers rectangular objects, not edges.
+
+STEP07A's handwritten `process_feature` owns stable step IDs, Name/Owner/Notes,
+selection, linear edge order and bounded undo/redo. It projects at most four
+steps through the existing scene owner; ANSI substitutes numbered step buttons
+and the same editable form. GTK uses its existing native inputs. The browser
+projects single-line text inputs and sends a committed value with the
+originating view revision; `ui_web` admits only a current input control and a
+bounded string before posting the standard value event. ANSI publishes changed
+values while typing and commits on Enter. The feature rejects unknown fields,
+line breaks and field-specific length overflows. Notes is single-line in this
+showcase. The [example guide](../../examples/ui/process-designer/README.md)
+owns the runnable routes; the UI core has no process schema.
 
 D04 keeps accelerators independent. Use culling and batching before considering
 WebGL2 for larger maps, Canvas layers for dense graphs, or WebGPU rendering.

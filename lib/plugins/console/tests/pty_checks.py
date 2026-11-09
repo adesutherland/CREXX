@@ -103,7 +103,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--build", required=True, type=pathlib.Path)
     parser.add_argument("--source", required=True, type=pathlib.Path)
-    parser.add_argument("--mode", choices=["console", "app", "app-gui", "host-edges", "scene", "scene-editors"], required=True)
+    parser.add_argument("--mode", choices=["console", "app", "app-gui", "host-edges", "scene", "scene-editors", "process-designer"], required=True)
     parser.add_argument("--variant", choices=["noopt", "opt"], default="opt")
     args = parser.parse_args()
     build, source = args.build.resolve(), args.source.resolve()
@@ -159,6 +159,25 @@ def main():
             terminal.expect(b"A x: 10240")
             terminal.send(b"a")
             terminal.expect(b"node-c")
+            terminal.send(b"q")
+            terminal.finish()
+        finally:
+            terminal.close()
+    elif args.mode == "process-designer":
+        modules = [build / "examples/ui/process-designer/process_ansi",
+                   build / "examples/ui/process-designer/process_designer"]
+        modules += [binary / name for name in ("ui_ansi", "ui_dialogs", "ui_terminal_view",
+                    "ui_local_resources", "ui_scene", "ui_contract", "ui_catalog", "ui", "library")]
+        terminal = Terminal([vm] + [str(path) for path in modules], source)
+        try:
+            terminal.expect(b"Process steps (select 1-4)")
+            terminal.send(b"2")
+            terminal.expect(b"Step 2 of 3 (step-2)")
+            terminal.send(b"\t\t\t\t")
+            terminal.send(b"Verified")
+            terminal.expect(b"> Verified")
+            terminal.send(b"\r")
+            terminal.send(b"\t\t\t")
             terminal.send(b"q")
             terminal.finish()
         finally:

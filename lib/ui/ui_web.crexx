@@ -24,7 +24,7 @@ capabilities: procedure = .uicapabilities
 
 /** Bounded browser form and scene operation profile. */
 operations: procedure = .uioperations
-  return .uioperations("form.label form.line form.button form.scene scene.rect scene.edge scene.tile scene.unit input.pointer input.keyboard")
+  return .uioperations("form.label form.line form.input form.button form.scene scene.rect scene.edge scene.tile scene.unit input.pointer input.keyboard")
 
 webdriver: class implements .uidriver
   _session = .uisession
@@ -83,6 +83,22 @@ webdriver: class implements .uidriver
       kind = jsonget(wire, "type")
       rc = -1
       if kind = "command" then rc = _session.invoke(jsonget(wire, "command"))
+      else if kind = "value" then do
+        node = jsonget(wire, "node")
+        value = jsonget(wire, "value")
+        current = _session.view()
+        if jsontype(wire, "node") = "string" & jsontype(wire, "value") = "string" & length(value) <= 1024 then do
+          do index = 1 to current.count()
+            if current.node_id(index) = node & current.node_kind(index) = "input" then do
+              body = .uipayload()
+              call body.put_text("node", node)
+              call body.put_text("value", value)
+              rc = _session.post(.uimessage("widget.value.committed", body))
+              leave
+            end
+          end
+        end
+      end
       else if kind = "complete" then do
         message = .uimessage.from_json(jsonget(wire, "message"))
         if message.wire_error() = "" then rc = _session.complete(message)
@@ -220,6 +236,7 @@ webdriver: class implements .uidriver
     do index = 1 to view.count()
       if index > 1 then nodes = nodes || ","
       nodes = nodes || '{"kind":' || jsonquote(view.node_kind(index)) || ',"id":' || jsonquote(view.node_id(index)) || ',"text":' || jsonquote(view.node_text(index)) || ',"action":' || jsonquote(view.node_action(index)) || ',"row":' || view.node_row(index) || ',"column":' || view.node_column(index)
+      if view.node_kind(index) = "input" then nodes = nodes || ',"value":' || jsonquote(view.node_value(index))
       if view.node_kind(index) = "scene" then
         nodes = nodes || ',"scenePacket":' || jsonquote(view.node_value(index)) || ',"sceneFull":' || jsonquote(_scene.frame())
       nodes = nodes || '}'

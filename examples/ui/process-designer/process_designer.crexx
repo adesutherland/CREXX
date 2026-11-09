@@ -1,0 +1,349 @@
+/* A small application-owned linear process, projected by the common UI hosts. */
+options levelg
+namespace process_designer expose make_process_session process_feature
+import rxfnsb
+import rxjson
+import ui
+import ui_contract
+import ui_scene
+
+process_items: procedure = .string[]
+  arg count = .int, ids = .string[], names = .string[], selected = .string
+  result = .string[]
+  index = .int
+  x = .int
+  do index = 1 to count
+    x = 5120 + (index - 1) * 25600
+    label = names[index]
+    if label = "" then label = "(unnamed)"
+    if length(label) > 16 then label = left(label, 16)
+    if ids[index] = selected then label = label || " *"
+    result[result[0] + 1] = '{"id":' || jsonquote(ids[index]) || ',"kind":"rect","x":' || x || ',"y":7680,"w":20480,"h":15360,"label":' || jsonquote(label) || '}'
+  end
+  do index = 1 to count - 1
+    x = 5120 + (index - 1) * 25600 + 20480
+    result[result[0] + 1] = '{"id":"link-' || ids[index] || '-' || ids[index + 1] || '","kind":"edge","x":' || x || ',"y":15360,"w":5120,"h":0,"label":""}'
+  end
+  return result
+
+make_process_session: procedure = .uisession
+  arg id = .string, caps = .uicapabilities
+  session = .uisession(id, caps)
+  i = .int
+  event = .string
+  graphical = caps.has("form.scene") & caps.has("scene.rect") & caps.has("scene.edge")
+  rc = session.add_component("root", .process_feature(graphical))
+  do i = 1 to 7
+    action = word("add remove earlier later undo redo quit", i)
+    event = "process." || action || ".requested"
+    if action = "quit" then event = "ui.close.requested"
+    else rc = session.register_event(event)
+    rc = session.register_command(.uicommand("process." || action, action, "root", event, ""))
+  end
+  do i = 1 to 4
+    slot_name = word("one two three four", i)
+    event = "process.pick." || slot_name || ".requested"
+    rc = session.register_event(event)
+    rc = session.register_command(.uicommand("process.pick." || slot_name, "Step " || i, "root", event, ""))
+  end
+  return session
+
+process_feature: class implements .uicomponent
+  _graphical = .int
+  _scene = .uisceneowner
+  _packet = .string
+  _count = .int
+  _next = .int
+  _ids = .string[]
+  _names = .string[]
+  _owners = .string[]
+  _notes = .string[]
+  _selected = .string
+  _undo = .string[]
+  _redo = .string[]
+  _edit_before = .string
+  _edit_node = .string
+  _edit_selected = .string
+  _notice = .string
+
+  *: factory
+    arg graphical = .int
+    _graphical = graphical
+    _scene = .uisceneowner("process-designer")
+    _count = 3
+    _next = 4
+    _ids[1] = "step-1"
+    _ids[2] = "step-2"
+    _ids[3] = "step-3"
+    _names[1] = "Request"
+    _names[2] = "Review"
+    _names[3] = "Approve"
+    _owners[1] = "Operations"
+    _owners[2] = "Manager"
+    _owners[3] = "Director"
+    _notes[1] = "Record the request"
+    _notes[2] = "Check the details"
+    _notes[3] = "Make the decision"
+    _selected = _ids[1]
+    call arraydrop _undo
+    call arraydrop _redo
+    _edit_before = ""
+    _edit_node = ""
+    _edit_selected = ""
+    _notice = "Select a step to edit its details."
+    unused = _scene.set_items(process_items(_count, _ids, _names, _selected))
+    _packet = _scene.snapshot()
+    return
+
+  selected_index: method = .int
+    do index = 1 to _count
+      if _ids[index] = _selected then return index
+    end
+    return 0
+
+  /** Stable IDs survive reordering; only this feature owns the process data. */
+  state: method = .string
+    result = '{"count":' || _count || ',"next":' || _next || ',"selected":' || jsonquote(_selected)
+    do index = 1 to _count
+      key = index as .string
+      result = result || ',"id' || key || '":' || jsonquote(_ids[index])
+      result = result || ',"name' || key || '":' || jsonquote(_names[index])
+      result = result || ',"owner' || key || '":' || jsonquote(_owners[index])
+      result = result || ',"note' || key || '":' || jsonquote(_notes[index])
+    end
+    return result || '}'
+
+  restore: method = .void
+    arg saved = .string
+    _count = jsonget(saved, "count") as .int
+    _next = jsonget(saved, "next") as .int
+    _selected = jsonget(saved, "selected")
+    call arraydrop _ids
+    call arraydrop _names
+    call arraydrop _owners
+    call arraydrop _notes
+    do index = 1 to _count
+      key = index as .string
+      _ids[index] = jsonget(saved, "id" || key)
+      _names[index] = jsonget(saved, "name" || key)
+      _owners[index] = jsonget(saved, "owner" || key)
+      _notes[index] = jsonget(saved, "note" || key)
+    end
+    return
+
+  items: method = .string[]
+    return process_items(_count, _ids, _names, _selected)
+
+  reconcile: method = .void
+    _packet = _scene.set_items(items())
+    if _packet = "" then _packet = _scene.snapshot()
+    return
+
+  remember: method = .void
+    arg before = .string
+    if before = state() then return
+    _undo[_undo[0] + 1] = before
+    if _undo[0] > 32 then call arraydelete _undo, 1, 1
+    call arraydrop _redo
+    return
+
+  finish_edit: method = .void
+    if _edit_before \= "" then call remember(_edit_before)
+    _edit_before = ""
+    _edit_node = ""
+    _edit_selected = ""
+    return
+
+  edit_field: method = .void
+    arg node = .string, value = .string, committed = .int
+    index = selected_index()
+    if index < 1 then return
+    limit = 40
+    if node = "step.notes" then limit = 120
+    else if node \= "step.name" & node \= "step.owner" then return
+    if length(value) > limit | pos('0A'x, value) > 0 | pos('0D'x, value) > 0 then do
+      _notice = "Field exceeds its limit or contains a line break."
+      if committed then call finish_edit()
+      return
+    end
+    if _edit_before \= "" & (node \= _edit_node | _selected \= _edit_selected) then call finish_edit()
+    if _edit_before = "" then do
+      _edit_before = state()
+      _edit_node = node
+      _edit_selected = _selected
+    end
+    if node = "step.name" then _names[index] = value
+    else if node = "step.owner" then _owners[index] = value
+    else _notes[index] = value
+    _notice = "Step details updated."
+    call reconcile()
+    if committed then call finish_edit()
+    return
+
+  select_step: method = .void
+    arg index = .int
+    if index < 1 | index > _count then return
+    call finish_edit()
+    if _selected = _ids[index] then return
+    _selected = _ids[index]
+    _notice = "Editing step " || index || "."
+    call reconcile()
+    return
+
+  act: method = .void
+    arg action = .string
+    slot = .int
+    call finish_edit()
+    before = state()
+    index = selected_index()
+    if action = "undo" then do
+      if _undo[0] < 1 then return
+      _redo[_redo[0] + 1] = before
+      call restore(arraypop(_undo))
+    end
+    else if action = "redo" then do
+      if _redo[0] < 1 then return
+      _undo[_undo[0] + 1] = before
+      call restore(arraypop(_redo))
+    end
+    else if action = "add" then do
+      if _count >= 4 then do
+        _notice = "This example supports four steps."
+        return
+      end
+      do slot = _count to index + 1 by -1
+        _ids[slot + 1] = _ids[slot]
+        _names[slot + 1] = _names[slot]
+        _owners[slot + 1] = _owners[slot]
+        _notes[slot + 1] = _notes[slot]
+      end
+      _count = _count + 1
+      _ids[index + 1] = "step-" || _next
+      _names[index + 1] = "New step"
+      _owners[index + 1] = ""
+      _notes[index + 1] = ""
+      _selected = _ids[index + 1]
+      _next = _next + 1
+    end
+    else if action = "remove" then do
+      if _count <= 1 then do
+        _notice = "A process needs at least one step."
+        return
+      end
+      do slot = index to _count - 1
+        _ids[slot] = _ids[slot + 1]
+        _names[slot] = _names[slot + 1]
+        _owners[slot] = _owners[slot + 1]
+        _notes[slot] = _notes[slot + 1]
+      end
+      _count = _count - 1
+      _selected = _ids[min(index, _count)]
+    end
+    else if action = "earlier" | action = "later" then do
+      other = index - 1
+      if action = "later" then other = index + 1
+      if other < 1 | other > _count then return
+      temp = _ids[index]
+      _ids[index] = _ids[other]
+      _ids[other] = temp
+      temp = _names[index]
+      _names[index] = _names[other]
+      _names[other] = temp
+      temp = _owners[index]
+      _owners[index] = _owners[other]
+      _owners[other] = temp
+      temp = _notes[index]
+      _notes[index] = _notes[other]
+      _notes[other] = temp
+    end
+    else return
+    if action \= "undo" & action \= "redo" then call remember(before)
+    _notice = "Process updated."
+    call reconcile()
+    return
+
+  select_pointer: method = .void
+    arg body = .uipayload
+    if body.text("phase") \= "press" then return
+    pointer = .uipointer(body.text("epoch"), body.integer("revision"), body.integer("x"), body.integer("y"))
+    admission = _scene.accept_pointer(pointer)
+    if \admission.ok() then return
+    viewport = .uiviewport(0, 0, 256, 420, 260)
+    point = viewport.map(pointer)
+    if \point.valid() then return
+    picked = _scene.pick(point)
+    do index = 1 to _count
+      if picked = _ids[index] then call select_step(index)
+    end
+    return
+
+  update: method = .uieffects
+    arg event = .uimessage
+    index = .int
+    name = event.name()
+    if name = "widget.value.changed" | name = "widget.value.committed" then
+      call edit_field(event.body().text("node"), event.body().text("value"), name = "widget.value.committed")
+    else if left(name, 13) = "process.pick." then do
+      do index = 1 to 4
+        if name = "process.pick." || word("one two three four", index) || ".requested" then call select_step(index)
+      end
+    end
+    else do index = 1 to 6
+      action = word("add remove earlier later undo redo", index)
+      if name = "process." || action || ".requested" then call act(action)
+    end
+    if name = "ui.scene.pointer" then call select_pointer(event.body())
+    if name = "ui.scene.key" then do
+      key = event.body().text("key")
+      if key = "ArrowRight" then call select_step(min(_count, selected_index() + 1))
+      else if key = "ArrowLeft" then call select_step(max(1, selected_index() - 1))
+      else if key = "Delete" then call act("remove")
+      else if key = "a" then call act("add")
+      else if key = "u" then call act("undo")
+      else if key = "r" then call act("redo")
+    end
+    if name = "ui.scene.resync" then _packet = _scene.snapshot()
+    effects = .uieffects()
+    if name = "ui.close.requested" then do
+      call finish_edit()
+      call effects.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))
+    end
+    return effects
+
+  view: method = .uiview
+    result = .uiview_impl("Process designer")
+    index = selected_index()
+    if _graphical then call result.add_scene("process", _packet, "root")
+    else do
+      call result.add_label("steps", "Process steps (select 1-4)")
+      do slot = 1 to 4
+        caption = slot || ": (empty)"
+        if slot <= _count then caption = slot || ": " || left(_names[slot], 10)
+        relation = "right"
+        anchor = "slot" || (slot - 1)
+        if slot = 1 then do
+          relation = "below"
+          anchor = "steps"
+        end
+        call result.add_button("slot" || slot, caption, "process.pick." || word("one two three four", slot), slot as .string, relation, anchor)
+      end
+    end
+    call result.add_label("selected", "Step " || index || " of " || _count || " (" || _ids[index] || ")")
+    call result.add_label("name-label", "Name")
+    call result.add_input("step.name", _names[index], "right", "name-label")
+    call result.add_label("owner-label", "Owner", "below", "name-label")
+    call result.add_input("step.owner", _owners[index], "right", "owner-label")
+    call result.add_label("notes-label", "Notes", "below", "owner-label")
+    call result.add_input("step.notes", _notes[index], "right", "notes-label")
+    call result.add_label("notice", _notice, "below", "notes-label")
+    call result.add_button("add", "Add after", "process.add", "a", "below", "notice")
+    call result.add_button("remove", "Remove", "process.remove", "d", "right", "add")
+    call result.add_button("earlier", "Earlier", "process.earlier", "", "right", "remove")
+    call result.add_button("later", "Later", "process.later", "", "below", "add")
+    call result.add_button("undo", "Undo", "process.undo", "u", "right", "later")
+    call result.add_button("redo", "Redo", "process.redo", "r", "right", "undo")
+    call result.add_button("quit", "Quit", "process.quit", "q", "below", "later")
+    return result
+
+  scene: method = .string
+    return _scene.snapshot()

@@ -35,7 +35,7 @@ export class BrowserUI {
     this.session = frame.session;
     if (frame.type === 'view') {
       if (frame.revision < this.revision) return;
-      this.project(frame.view);
+      this.project(frame.view, frame.revision);
       this.revision = frame.revision;
     } else if (frame.type === 'effect') {
       const message = frame.message;
@@ -57,7 +57,7 @@ export class BrowserUI {
     } else throw new Error('Unknown UI frame');
   }
 
-  project(view) {
+  project(view, revision = this.revision) {
     if (!view || typeof view.title !== 'string' || !Array.isArray(view.nodes) || view.nodes.length > 64)
       throw new Error('Invalid UI view');
     const ids = new Set();
@@ -66,7 +66,8 @@ export class BrowserUI {
       if (!node || typeof node.id !== 'string' || !node.id || ids.has(node.id) ||
           !Number.isInteger(node.row) || !Number.isInteger(node.column) ||
           node.row < 0 || node.column < 0 ||
-          !['scene', 'button', 'line', 'label'].includes(node.kind))
+          !['scene', 'button', 'line', 'label', 'input'].includes(node.kind) ||
+          (node.kind === 'input' && (typeof node.value !== 'string' || node.value.length > 1024)))
         throw new Error('Invalid UI node');
       ids.add(node.id);
       if (node.kind === 'scene' && ++scenes > 1) throw new Error('Too many scenes');
@@ -87,11 +88,20 @@ export class BrowserUI {
         element = document.createElement('button');
         element.type = 'button';
         element.addEventListener('click', () => void this.send('command', {command: node.action}));
+      } else if (node.kind === 'input') {
+        element = document.createElement('input');
+        element.type = 'text';
+        element.value = node.value;
+        element.maxLength = 1024;
+        element.setAttribute('aria-label', node.id);
+        element.addEventListener('change', () => void this.send('value',
+          {base: revision, node: node.id, value: element.value}));
       } else if (node.kind === 'line') element = document.createElement('hr');
       else if (node.kind === 'label') element = document.createElement('div');
       else throw new Error(`Unsupported browser control: ${node.kind}`);
       element.dataset.nodeId = node.id;
-      if (node.kind !== 'scene') element.textContent = node.kind === 'line' ? '' : String(node.text ?? '');
+      if (node.kind !== 'scene' && node.kind !== 'input')
+        element.textContent = node.kind === 'line' ? '' : String(node.text ?? '');
       element.style.gridRowStart = String(node.row + 1);
       element.style.gridColumnStart = String(node.column + 1);
       grid.append(element);

@@ -5,7 +5,7 @@ import {HostedRoute} from './hosted.mjs';
 const root = document.getElementById('app');
 const hosted = new URL(location.href).searchParams.get('hosted') === '1';
 const app = new URL(location.href).searchParams.get('app') ?? 'text';
-if (!['text', 'graph', 'map'].includes(app)) throw new Error('Unknown UI application');
+if (!['text', 'graph', 'map', 'process'].includes(app)) throw new Error('Unknown UI application');
 const token = hosted ? prompt('Hosted UI access token') : null;
 const route = hosted ? new HostedRoute(token, '', app) : new LocalRoute(undefined, app);
 const ui = new BrowserUI(root, route);

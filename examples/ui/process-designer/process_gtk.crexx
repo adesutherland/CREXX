@@ -1,0 +1,7 @@
+options levelg
+namespace process_gtk
+import ui_gtk
+import process_designer
+session = make_process_session("gtk-process-designer", ui_gtk..capabilities())
+driver = .gtkdriver()
+exit driver.run(session)

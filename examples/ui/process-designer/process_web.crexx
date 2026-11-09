@@ -1,0 +1,9 @@
+options levelg
+namespace process_web
+import ui_web
+import process_designer
+main: procedure = .int
+  arg arguments = .string[]
+  if arguments[0] < 1 then return 2
+  driver = .webdriver()
+  return driver.run(make_process_session(arguments[1], ui_web..capabilities()))

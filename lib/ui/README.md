@@ -234,10 +234,12 @@ running session by changing that original builder.
 
 ## Browser routes
 
-The shared Level G browser owner runs Text Inspector, the graph and the map.
+The shared Level G browser owner runs Text Inspector, the graph, the map and
+the [process designer](../../examples/ui/process-designer/README.md).
 A Wasm Worker and a hosted native process use the same version-1 view/input
-envelope and browser projection. The browser projects HTML controls, SVG
-graphs and Canvas 2D maps, handles physical input and completes file effects.
+envelope and browser projection. The browser projects labels, buttons and
+single-line text inputs alongside SVG graphs and Canvas 2D maps, handles
+physical input and completes file effects.
 Scene frames include the current delta and full authoritative snapshot for
 reconnect and full resync. See the [browser build and checks](../../web/ui/README.md).
 
