@@ -14,7 +14,7 @@ const manifest = JSON.parse(await readFile(join(site, 'manifest.json'), 'utf8'))
 const publicAssets = new Set(Object.keys(manifest.assets ?? {})
   .filter(path => !path.startsWith('services/')));
 publicAssets.add('manifest.json');
-const contentTypes = {'.html': 'text/html', '.mjs': 'text/javascript',
+const contentTypes = {'.html': 'text/html', '.mjs': 'text/javascript', '.css': 'text/css',
   '.json': 'application/json', '.wasm': 'application/wasm',
   '.rxbin': 'application/octet-stream'};
 let inFlight = 0;

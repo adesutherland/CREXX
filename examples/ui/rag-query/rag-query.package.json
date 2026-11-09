@@ -2,6 +2,7 @@
   "format": 1,
   "id": "rag_demo",
   "contract": 1,
+  "browserStyle": {"path": "rag-query.css", "target": "styles/rag-query.css"},
   "modules": [
     {"name": "rag_query_app", "path": "examples/ui/rag-query/rag_query_app.rxbin"}
   ],

@@ -42,6 +42,8 @@ for (const filename of process.argv.slice(5)) {
   if (Object.hasOwn(packages, pkg.id)) throw new Error(`Duplicate UI package: ${pkg.id}`);
   for (const route of Object.keys(pkg.routes ?? {})) preflightPackage(pkg, route);
   packages[pkg.id] = pkg;
+  if (pkg.browserStyle)
+    addAsset(join(dirname(declaration), pkg.browserStyle.path), pkg.browserStyle.target);
   for (const record of pkg.modules) {
     const target = `modules/${record.name}.rxbin`;
     addAsset(join(native, record.path), target);

@@ -48,6 +48,8 @@ for (const pkg of [graph, map]) {
 }
 const localRag = preflightPackage(rag, 'local');
 const hostedRag = preflightPackage(rag, 'hosted');
+assert.ok(siteAssets(localRag).includes('styles/rag-query.css'));
+assert.ok(siteAssets(hostedRag).includes('styles/rag-query.css'));
 assert.equal(hostedRag.selected.service.capability, 'rag.query');
 assert.equal(localRag.selected.service, undefined);
 assert.equal(localRag.selected.executor.capability, 'rag.query');
@@ -55,6 +57,9 @@ assert.equal(localRag.selected.executor.requiresStorage, false);
 const badService = structuredClone(rag);
 badService.routes.hosted.service.target = '../rag-query.mjs';
 assert.throws(() => preflightPackage(badService, 'hosted'), /Invalid hosted UI service/);
+const badStyle = structuredClone(rag);
+badStyle.browserStyle.target = '../rag-query.css';
+assert.throws(() => preflightPackage(badStyle, 'local'), /Invalid UI browser style/);
 const ragAssets = Object.fromEntries(siteAssets(hostedRag).map(path => [path, 'hash']));
 await preflightBrowserPackage({packages: {rag_demo: rag}, assets: ragAssets},
   'rag_demo', 'hosted', async () => ({ok: true}));
@@ -97,5 +102,6 @@ try {
   assert.ok(manifest.packages.rag_demo);
   assert.ok(manifest.assets['services/rag-query.mjs']);
   assert.ok(manifest.assets['apps/rag-query-http.mjs']);
+  assert.ok(manifest.assets['styles/rag-query.css']);
 } finally { await rm(scratch, {recursive: true, force: true}); }
 console.log('PASS: independent UI packages and preflight refusals');

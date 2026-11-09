@@ -150,14 +150,14 @@ async function createSession(app) {
   return session;
 }
 
-const contentTypes = {'.html': 'text/html', '.mjs': 'text/javascript', '.json': 'application/json',
+const contentTypes = {'.html': 'text/html', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.wasm': 'application/wasm', '.rxbin': 'application/octet-stream'};
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
     if (!url.pathname.startsWith('/api/')) {
       const path = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
-      if (!/^(index\.html|manifest\.json|[a-z-]+\.mjs|apps\/[a-z][a-z0-9_-]*\.mjs|vm\/crexx_ui_vm\.(mjs|wasm)|modules\/[a-z][a-z0-9_]*\.rxbin)$/.test(path))
+      if (!/^(index\.html|manifest\.json|[a-z-]+\.mjs|apps\/[a-z][a-z0-9_-]*\.mjs|styles\/[a-z][a-z0-9_-]*\.css|vm\/crexx_ui_vm\.(mjs|wasm)|modules\/[a-z][a-z0-9_]*\.rxbin)$/.test(path))
         return reply(response, 404, {error: 'Not found'});
       const bytes = await readFile(join(site, path));
       const ext = path.slice(path.lastIndexOf('.'));

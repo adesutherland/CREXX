@@ -18,6 +18,17 @@ try {
   if (!packaged && !['text', 'graph', 'map', 'process'].includes(app))
     throw new Error('Unknown UI application');
   const checked = packaged ? await preflightBrowserPackage(manifest, app, hosted ? 'hosted' : 'local') : null;
+  if (checked?.pkg.browserStyle) {
+    const style = document.createElement('link');
+    style.rel = 'stylesheet';
+    style.href = new URL(`./${checked.pkg.browserStyle.target}`, import.meta.url).href;
+    const loaded = new Promise((resolve, reject) => {
+      style.onload = resolve;
+      style.onerror = () => reject(new Error('Application stylesheet failed to load'));
+    });
+    document.head.append(style);
+    await loaded;
+  }
   const token = hosted ? prompt('Hosted UI access token') : null;
   const route = hosted ? new HostedRoute(token, '', app) : new LocalRoute(undefined, app);
   let ui;

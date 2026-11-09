@@ -1,0 +1,26 @@
+/* Presentation for the independently packaged cited-query application. */
+#app .ui-grid {
+  grid-template-columns: minmax(10rem, 12rem) minmax(0, 1fr);
+  align-items: start;
+}
+
+#app .ui-grid > :is([data-node-id="intro"], [data-node-id="status"],
+  [data-node-id="identity"], [data-node-id="excerpt"],
+  [data-node-id="citation"]) {
+  grid-column: 1 / -1 !important;
+  overflow-wrap: anywhere;
+}
+
+#app .ui-grid > [data-node-id="excerpt"] {
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+#app .ui-grid > [data-node-id="citation"] {
+  font-size: .875rem;
+}
+
+@media (max-width: 600px) {
+  #app .ui-grid { grid-template-columns: minmax(0, 1fr); }
+  #app .ui-grid > * { grid-column: 1 !important; grid-row: auto !important; }
+}

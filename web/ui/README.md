@@ -81,8 +81,17 @@ The browser default question demonstrates a source lookup, not answer quality
 or clinical use. Use the [cREXX-RAG tutorial](https://github.com/adesutherland/crexx-rag/blob/main/docs/tutorial/README.md)
 for a synthetic corpus. An internal deployment needs its usual authenticated
 reverse proxy and TLS; this loopback process is only a development proof.
-Browser-local SQLite/vector retrieval, compatible query embeddings and wider
-retrieval comparisons remain STEP08 work.
+A user of an internal deployment needs only a browser. The question input,
+Search button, cited excerpt and library/generation text are ordinary HTML
+controls and text, so an agent with browser control can use the same page.
+This does not automatically grant Codex, Claude or Gemini browser access: each
+agent host must have its own browser tool and permission to reach the URL.
+For direct machine access, cREXX-RAG already has a read-only MCP/CLI query
+surface; a cREXX HTTP reader binding under the same application service
+contract is the next STEP08 server increment. The current Node adapter is a
+loopback proof. Browser-local SQLite/vector lookup has been proved separately
+in one browser profile, but its packaged executor, compatible embeddings and
+wider retrieval comparisons remain STEP08 work.
 
 ## Application packages
 
@@ -92,7 +101,9 @@ routes. Every route declares
 required operations/capabilities and optional operations. Browser routes also
 declare their application executor, which supplies its optional repository
 capability. Executor paths resolve beside their declaration; RXBIN paths
-resolve under the named build or install root. Preflight rejects an incompatible contract, missing required
+resolve under the named build or install root. A package may include one
+validated browser stylesheet for presentation without adding application node
+rules to the shared projection. Preflight rejects an incompatible contract, missing required
 operation/capability or missing RXBIN/executor asset before session creation.
 Optional scene rendering falls back to semantic ANSI controls; the absent
 native repository returns a correlated application-visible refusal. The site

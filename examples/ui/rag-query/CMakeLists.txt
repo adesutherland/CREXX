@@ -32,7 +32,7 @@ add_dependencies(example_ui_rag_query_browser rag_query_web_local_artifact
 install(FILES "${_rag_query_app}"
         "${CMAKE_CURRENT_BINARY_DIR}/rag_query_web_local.rxbin"
         "${CMAKE_CURRENT_BINARY_DIR}/rag_query_web_hosted.rxbin"
-        rag-query.package.json hosted_service.mjs query-http.mjs query-api-server.mjs
+        rag-query.package.json rag-query.css hosted_service.mjs query-http.mjs query-api-server.mjs
         DESTINATION examples/ui/rag-query)
 set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
         example_ui_rag_query_browser)

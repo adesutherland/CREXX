@@ -51,6 +51,10 @@ export function preflightPackage(pkg, route, operations = HOST_OPERATIONS[route]
       !Array.isArray(selected.requiredCapabilities))
     throw new Error(`Missing or invalid ${route} route`);
   if (!Array.isArray(operations)) throw new Error(`Unknown UI route: ${route}`);
+  if (pkg.browserStyle && (!safePath(pkg.browserStyle.path) ||
+      !pkg.browserStyle.path.endsWith('.css') ||
+      !/^styles\/[a-z][a-z0-9_-]*\.css$/.test(pkg.browserStyle.target ?? '')))
+    throw new Error('Invalid UI browser style declaration');
   for (const operation of selected.requiredOperations) {
     if (typeof operation !== 'string' || !operations.includes(operation))
       throw new Error(`Missing required UI operation: ${operation}`);
@@ -92,6 +96,8 @@ export function siteAssets(preflight) {
     ...preflight.modules.map(record => `modules/${record.name}.rxbin`)];
   if (preflight.route === 'local')
     assets.push('vm/crexx_ui_vm.mjs', 'vm/crexx_ui_vm.wasm');
+  if (preflight.pkg.browserStyle && ['local', 'hosted'].includes(preflight.route))
+    assets.push(preflight.pkg.browserStyle.target);
   if (preflight.selected.executor) assets.push(preflight.selected.executor.target);
   if (preflight.selected.service) assets.push(preflight.selected.service.target);
   return assets;

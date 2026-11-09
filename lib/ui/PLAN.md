@@ -56,7 +56,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | done |
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | done |
 | **UIX-STEP07A** Process-designer showcase | STEP07; independent of service steps | Add a bounded Level G linear-process example with per-selected-step editing; complete the browser/ANSI text-input host seams, then prove one application model across GTK, ANSI and both browser routes. | AC16 | done |
-| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Add `rag.query`, the hosted adapter and local transient read-only proof; compare cited evidence and compatible embeddings under D01–03. | AC09–10 | in progress |
+| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Bind one typed `rag.query` service operation to a cREXX HTTP reader first and the browser-local executor separately (D17); provide a browser-only cited-query client, then compare evidence and compatible embeddings under D01–03. | AC09–10 | in progress |
 | **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
 | **UIX-STEP10** RAG cache | STEP08 transient local query proof | Prove D13 OPFS cache identity, reload, export/re-import, quota/eviction, multi-tab and cleanup, or record the conditional transient fallback. | AC12 | todo |
 | **UIX-STEP11** Local-write assessment | STEP08 and STEP10 evidence | Assess D14 browser corpus writes with the RAG owner and make a separate implementation decision from concrete evidence. | AC13 | todo |
@@ -87,7 +87,7 @@ sanitizer and delivery QA belong to named milestones under repository policy.
 | **UIX-AC06** | Unsupported view/scene operations are declared at application composition or returned as structured refusals before partial projection, and the feature selects a fallback or a specific rejection. Scene deltas validate and commit atomically; gaps, conflicting duplicates, invalid changes and route restart trigger full resync, while stale scene input is refused and retries are bounded. Absent effect capabilities retain correlated failures. Malformed assets/messages, context loss, resize, cancellation and setup/teardown failures have explicit behavior; browser resource grants cannot be forged from display text. Run focused host and scene lifecycle/negative checks. | verified in selected macOS ARM64 profile |
 | **UIX-AC07** | GTK, ANSI and both browser routes have documented build cohorts, platform/browser coverage, accessibility limits, package contents and reproducible consumer routes for their selected support levels. Complete agreed integration/milestone QA separately from each development increment. | verified in selected macOS ARM64 profile |
 | **UIX-AC08** | At each forms, graph and map stage, one handwritten Level G feature drives GTK, ANSI and both browser routes. Common actions have matching expected domain transitions and close policy; host-specific capability and effect outcomes are explicit. Record each host's native, semantic fallback or unsupported operations; verify supported paths and a representative application-visible refusal on each route without claiming visual equivalence. | verified in selected macOS ARM64 profile |
-| **UIX-AC09** | A browser feature issues the same bounded `rag.query` effect through hosted and targeted local read-only executors and receives cited results with corpus/evidence identity, compatible query embedding, cancellation and stale-result handling. Compare representative lexical/vector/graph evidence with native RAG. If local feasibility is later declined under D01–02, document the concrete blocker and agreed effort judgment; hosted cited-query acceptance remains required. | open; conditional local route |
+| **UIX-AC09** | A person with only a browser can enter a question and read bounded, accessible cited evidence and corpus/snapshot identity; an agent with browser control can use the same page. The feature issues the same bounded `rag.query` effect through hosted and targeted local read-only executors with compatible query embedding, cancellation and stale-result handling. Compare representative lexical/vector/graph evidence with native RAG. If local feasibility is later declined under D01–02, document the concrete blocker and agreed effort judgment; hosted cited-query acceptance remains required. | open; conditional local route |
 | **UIX-AC10** | The same query-embedding request/result contract supports hosted and targeted browser-local compatible models. For a representative corpus profile, verify model/input identity, dimensions, vector compatibility, cancellation, provider failure and privacy route; compare resulting cited retrieval to the native control. If local model support is later declined under D03, record the blocker and agreed effort judgment; hosted embedding remains required. | open; conditional local embedding route |
 | **UIX-AC11** | The same application-service generation request/result contract supports native/hosted and targeted browser-local small-LLM providers, independently of query embedding and UI rendering. Verify bounded input/output or streaming, model identity, privacy route, cancellation, stale completion, provider/device failure and application-owned result policy. For cited RAG answers, preserve the owning RAG evidence and citation validation. If local generation is later declined under D12, record the concrete blocker and agreed effort judgment; native/hosted generation remains required. | open; conditional local generation route |
 | **UIX-AC12** | After a validated transient bundle supports local read-only cited queries, the targeted OPFS cache reloads that same corpus/evidence version across browser restarts without weakening SQLite/sidecar validation. Verify quota or eviction failure, clearing/re-import, export, multi-tab access/locking and bounded cleanup. If persistence is later declined under D13, record the concrete blocker and agreed effort judgment; the transient local query route remains the fallback. | open; conditional persistent cache |
@@ -123,6 +123,7 @@ which route must still pass after any agreed fallback.
 | **UIX-D14** | Native/hosted RAG keeps corpus writes; assess browser-local writes after read-only and storage evidence. | Separate product need, scope, ownership and implementation decision. |
 | **UIX-D15** | Registered effects form the extension point for independently authored applications; teams own repositories and policies without a shared graph/map/RAG schema. | Namespacing, schema compatibility/versioning and independent-consumer proof. |
 | **UIX-D16** | Versioned application packages declare entry, UI contract, required/optional capabilities, dependencies and assets. Native/browser assembly may differ; initial packages are deployer-approved and trusted. | Manifest/package preflight and install proof; runtime hot loading and untrusted-package isolation remain outside this UI delivery. |
+| **UIX-D17** | One versioned application service operation has typed request/result/failure semantics. HTTP is its first remote binding; a later distributed channel provider may be another binding under the same contract. UI calls complete through effects, without blocking the owner turn. | Implement the cREXX HTTP reader binding, preserve local and hosted correlation/cancellation, and assess a channel transport only after an actual multi-service need. |
 
 ## Architecture details
 
@@ -477,9 +478,37 @@ query-embedding compatibility, memory limits and reload. Exact CPU `rxvector`
 result ordering is its scoring baseline. Lexical retrieval may be offered
 separately if a compatible embedding provider is unavailable.
 
+D17 makes the service operation the stable cREXX boundary, with HTTP and a
+possible later distributed channel as transport bindings. The UI feature emits
+`rag.query` and receives a terminal effect; it never waits synchronously for a
+remote function inside `update()`. The initial server binding maps a bounded
+HTTP request to an ordinary Level G RAG query service call. RAG owns the query
+rule, read-only store access and evidence validation; the HTTP adapter owns
+framing, admission and transport status. A local browser UI can bind through
+same-origin `fetch` to the hosted service or through Worker messages to local
+execution; a hosted UI session may dispatch the same operation on its server.
+JavaScript handles browser APIs only. Authentication and TLS can be supplied
+by ordinary reverse-proxy infrastructure; the present loopback server is a
+development proof, not a production service. A future distributed channel
+must retain explicit remote uncertainty and cancellation semantics rather than
+presenting network work as an OS thread or process.
+
+The first shared service should have a deliberately read-only RAG entry or
+package, using the existing query service and a fixed allowlist of query and
+citation operations. It must open the corpus read-only, refuse schema migration
+and writes, omit ingestion credentials and provider calls for lexical
+`query.inspect`, and return bounded cited evidence. This is a proposed RAG-owned
+delivery decision, not a fork of the retrieval algorithm. RAG's owning plan
+must define its packaging and exact read-only negative checks before product
+implementation. A browser user needs no local installation; the service host
+holds the corpus and model. Browser-local snapshot use remains a separate
+optional route under D01–03 and D13.
+
 The first STEP08 consumer is `examples/ui/rag-query`. Its Level G application
 owns `rag.query` and displays a bounded cited passage with library/generation
-identity. The hosted route declares an application service for read-only
+identity. Its browser package may include presentation-only CSS for long cited
+text; package preflight must validate that asset without teaching the shared
+projection RAG-specific node IDs. The hosted route declares an application service for read-only
 lexical `query.inspect` on a configured library. Its current browser-local UI
 shell uses an application executor that calls a stateless, same-origin HTTP
 query API; that query still runs on the server. The UI delta/resync protocol
