@@ -477,6 +477,23 @@ query-embedding compatibility, memory limits and reload. Exact CPU `rxvector`
 result ordering is its scoring baseline. Lexical retrieval may be offered
 separately if a compatible embedding provider is unavailable.
 
+The first STEP08 increment may use an explicitly selected synthetic library
+and RAG's read-only lexical `query.inspect` command as a bounded hosted service
+control. It must preserve the returned citation and library/generation identity,
+make no provider call or corpus write, and keep the query executor outside the
+UI owner loop. A browser-local capability refusal during this increment is not
+acceptance of D01–03; the matching local Wasm query and embedding proofs remain
+open. A Public Purpose Lab corpus is a later demonstrator only under its own
+recorded data and hosting authority.
+
+The first hosted lexical consumer is `examples/ui/rag-query`: its package
+declares a server-only service module, the generic hosted relay executes the
+correlated effect, and the Level G application displays the cited passage.
+It uses an explicitly configured RAG library and no provider credentials.
+The local route currently gives an application-visible capability refusal.
+STEP08 still requires the local read-only/vector comparison and wider hosted
+retrieval modes; STEP09 owns the embedding-model proof.
+
 D13 adds an OPFS read-only cache only after transient import works. SQLite's
 [browser VFS guidance](https://www.sqlite.org/wasm/doc/trunk/persistence.md)
 is a feasibility input, not proof for this `rxsqlite` build. Browser storage is

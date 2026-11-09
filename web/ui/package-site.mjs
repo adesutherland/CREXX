@@ -53,6 +53,8 @@ for (const filename of process.argv.slice(5)) {
     addAsset(join(native, selected.entry.path), target);
     if (selected.executor)
       addAsset(join(dirname(declaration), selected.executor.path), selected.executor.target);
+    if (selected.service)
+      addAsset(join(dirname(declaration), selected.service.path), selected.service.target);
   }
 }
 const manifest = {contract: 1, packages, assets: {}};

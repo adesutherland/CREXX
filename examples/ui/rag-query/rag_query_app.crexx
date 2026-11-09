@@ -1,0 +1,99 @@
+/* Read-only cited-query consumer. Retrieval and corpus policy stay in RAG. */
+options levelg
+namespace rag_query_app expose make_rag_query_session rag_query_component
+import rxfnsb
+import ui
+import ui_contract
+
+make_rag_query_session: procedure = .uisession
+  arg id = .string, caps = .uicapabilities
+  session = .uisession(id, caps)
+  rc = session.add_component("root", .rag_query_component())
+  rc = session.register_event("rag.search.requested")
+  rc = session.register_event("rag.query.completed", '{"library_id":{"type":"string","required":true,"maxLength":128},"generation":{"type":"integer","required":true,"minimum":0},"citation":{"type":"string","required":true,"maxLength":512},"excerpt":{"type":"string","required":true,"maxLength":2048}}', "completion")
+  rc = session.register_effect("rag.query", "rag.query", '{"corpus":{"type":"string","required":true,"maxLength":64},"question":{"type":"string","required":true,"maxLength":256},"mode":{"type":"string","required":true,"enum":["lexical"]}}', "rag.query.completed")
+  rc = session.register_command(.uicommand("rag.search", "Search", "root", "rag.search.requested", ""))
+  rc = session.register_command(.uicommand("rag.quit", "Quit", "root", "ui.close.requested", ""))
+  return session
+
+rag_query_component: class implements .uicomponent
+  _question = .string
+  _status = .string
+  _library = .string
+  _generation = .int
+  _citation = .string
+  _excerpt = .string
+  _pending = .int
+
+  *: factory
+    _question = "What does BillingService depend on?"
+    _status = "Ready: read-only lexical evidence"
+    _library = ""
+    _generation = 0
+    _citation = ""
+    _excerpt = ""
+    _pending = 0
+    return
+
+  update: method = .uieffects
+    arg event = .uimessage
+    effects = .uieffects()
+    name = event.name()
+    if name = "widget.value.committed" then do
+      if event.body().text("node") = "question" then do
+        candidate = strip(event.body().text("value"))
+        if candidate = "" | length(candidate) > 256 | pos('0A'x, candidate) > 0 | pos('0D'x, candidate) > 0 then
+          _status = "Enter a question of 1 to 256 characters."
+        else do
+          _question = candidate
+          _status = "Ready: read-only lexical evidence"
+        end
+      end
+    end
+    else if name = "rag.search.requested" then do
+      if _pending then _status = "Wait for the current query."
+      else do
+        body = .uipayload()
+        call body.put_text("corpus", "tutorial")
+        call body.put_text("question", _question)
+        call body.put_text("mode", "lexical")
+        call effects.add(.uimessage("rag.query", body, event.target(), "effect"))
+        _pending = 1
+        _status = "Searching cited evidence"
+        _citation = ""
+        _excerpt = ""
+      end
+    end
+    else if name = "rag.query.completed" then do
+      _pending = 0
+      _library = event.body().text("library_id")
+      _generation = event.body().integer("generation")
+      _citation = event.body().text("citation")
+      _excerpt = event.body().text("excerpt")
+      if _citation = "" then _status = "No cited passage found"
+      else _status = "Cited passage found"
+    end
+    else if name = "ui.effect.failed" then do
+      _pending = 0
+      _status = "Query failed: " || event.body().text("code")
+    end
+    else if name = "ui.effect.cancelled" then do
+      _pending = 0
+      _status = "Query cancelled"
+    end
+    if name = "ui.close.requested" then
+      call effects.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))
+    return effects
+
+  view: method = .uiview
+    result = .uiview_impl("Cited RAG query")
+    call result.add_label("intro", "Synthetic tutorial corpus; no model or provider call", "root")
+    call result.add_label("question-label", "Question")
+    call result.add_input("question", _question, "right", "question-label")
+    call result.add_button("search", "Search", "rag.search", "", "below", "question-label")
+    call result.add_label("status", _status, "below", "search")
+    call result.add_label("identity", "Library: " || _library || " Generation: " || _generation)
+    call result.add_label("excerpt", _excerpt)
+    call result.add_label("citation", _citation)
+    call result.add_button("quit", "Quit", "rag.quit", "")
+    return result

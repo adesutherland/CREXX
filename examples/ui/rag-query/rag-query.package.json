@@ -1,0 +1,27 @@
+{
+  "format": 1,
+  "id": "rag_demo",
+  "contract": 1,
+  "modules": [
+    {"name": "rag_query_app", "path": "examples/ui/rag-query/rag_query_app.rxbin"}
+  ],
+  "routes": {
+    "local": {
+      "entry": {"name": "rag_query_web_local", "path": "examples/ui/rag-query/rag_query_web_local.rxbin"},
+      "requiredOperations": ["form.label", "form.input", "form.button"],
+      "requiredCapabilities": [],
+      "optionalOperations": []
+    },
+    "hosted": {
+      "entry": {"name": "rag_query_web_hosted", "path": "examples/ui/rag-query/rag_query_web_hosted.rxbin"},
+      "requiredOperations": ["form.label", "form.input", "form.button"],
+      "requiredCapabilities": ["rag.query"],
+      "optionalOperations": [],
+      "service": {
+        "path": "hosted_service.mjs",
+        "target": "services/rag-query.mjs",
+        "capability": "rag.query"
+      }
+    }
+  }
+}

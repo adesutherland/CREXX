@@ -70,8 +70,14 @@ export function preflightPackage(pkg, route, operations = HOST_OPERATIONS[route]
     throw new Error('Invalid UI executor declaration');
   if (selected.executor && !['local', 'hosted'].includes(route))
     throw new Error(`Unsupported executor on ${route} route`);
+  if (selected.service && (route !== 'hosted' || !safePath(selected.service.path) ||
+      !selected.service.path.endsWith('.mjs') ||
+      !/^services\/[a-z][a-z0-9_-]*\.mjs$/.test(selected.service.target ?? '') ||
+      !/^[a-z][a-z0-9_.]*$/.test(selected.service.capability ?? '')))
+    throw new Error('Invalid hosted UI service declaration');
   const capabilities = [...HOST_CAPABILITIES[route],
-    ...(selected.executor ? [selected.executor.capability] : [])];
+    ...(selected.executor ? [selected.executor.capability] : []),
+    ...(selected.service ? [selected.service.capability] : [])];
   for (const capability of selected.requiredCapabilities) {
     if (typeof capability !== 'string' || !capabilities.includes(capability))
       throw new Error(`Missing required UI capability: ${capability}`);
@@ -85,6 +91,7 @@ export function siteAssets(preflight) {
   if (preflight.route === 'local')
     assets.push('vm/crexx_ui_vm.mjs', 'vm/crexx_ui_vm.wasm');
   if (preflight.selected.executor) assets.push(preflight.selected.executor.target);
+  if (preflight.selected.service) assets.push(preflight.selected.service.target);
   return assets;
 }
 
@@ -93,6 +100,7 @@ export async function preflightBrowserPackage(manifest, id, route, fetchAsset = 
   const checked = preflightPackage(pkg, route);
   for (const path of siteAssets(checked)) {
     if (!manifest.assets?.[path]) throw new Error(`Missing required UI asset: ${path}`);
+    if (path.startsWith('services/')) continue;
     const response = await fetchAsset(new URL(path, import.meta.url), {method: 'HEAD'});
     if (!response.ok) throw new Error(`Missing required UI asset: ${path}`);
   }

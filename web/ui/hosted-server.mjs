@@ -4,7 +4,7 @@ import {spawn} from 'node:child_process';
 import {randomUUID, timingSafeEqual} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import {StringDecoder} from 'node:string_decoder';
 import {CORE_MODULES, preflightPackage, siteAssets} from './package-registry.mjs';
 
@@ -27,6 +27,23 @@ const image = name => join(build, name.startsWith('text_') || name === 'web_serv
 const sessions = new Map();
 const site = resolve(fileURLToPath(new URL('.', import.meta.url)));
 const siteManifest = JSON.parse(await readFile(join(site, 'manifest.json'), 'utf8'));
+
+function stopServices(session) {
+  for (const controller of session.services.values()) controller.abort();
+  session.services.clear();
+}
+
+function completeService(session, request, outcome) {
+  if (session.ended || !sessions.has(session.id) || !session.latest) return;
+  if (!outcome || typeof outcome.name !== 'string' || !outcome.payload ||
+      typeof outcome.payload !== 'object')
+    throw new Error('Invalid hosted application service outcome');
+  const message = {version: 0, direction: 'event', name: outcome.name,
+    target: request.target, payload: outcome.payload, request_id: request.request_id,
+    session_id: session.id, sequence: 0};
+  session.process.stdin.write(JSON.stringify({version: 1, type: 'complete',
+    session: session.id, base: session.latest.revision, message}) + '\n');
+}
 
 function authorized(request) {
   const header = request.headers.authorization ?? '';
@@ -52,6 +69,7 @@ async function createSession(app) {
   if (!pkg && !Object.hasOwn(applications, app)) throw new Error('Unknown UI application');
   if (sessions.size >= 16) throw new Error('Hosted UI session limit reached');
   let images;
+  let service = null;
   if (pkg) {
     const checked = preflightPackage(pkg, 'hosted');
     for (const path of siteAssets(checked)) {
@@ -64,11 +82,16 @@ async function createSession(app) {
     for (const path of images) {
       if (!(await readFile(path)).length) throw new Error(`Missing required UI asset: ${path}`);
     }
+    if (checked.selected.service) {
+      service = await import(pathToFileURL(join(site, checked.selected.service.target)).href);
+      if (typeof service.supports !== 'function' || typeof service.run !== 'function')
+        throw new Error('Hosted application service must export supports and run');
+    }
   } else images = [...applications[app], ...common].map(image);
   const id = `hosted-${randomUUID()}`;
   const process = spawn(vm, images.concat('-a', id),
     {stdio: ['pipe', 'pipe', 'pipe']});
-  const session = {id, process, frames: [], sequence: 0, latest: null,
+  const session = {id, process, frames: [], sequence: 0, latest: null, services: new Map(),
     ended: false, lastTouched: Date.now()};
   sessions.set(id, session);
   const decoder = new StringDecoder('utf8');
@@ -84,6 +107,27 @@ async function createSession(app) {
         const frame = JSON.parse(line);
         if (frame.session !== id || frame.version !== 1) throw new Error('Invalid host frame');
         if (frame.type === 'view') session.latest = frame;
+        if (frame.type === 'effect' && service?.supports(frame.message)) {
+          const request = frame.message;
+          if (request?.session_id !== id || typeof request?.request_id !== 'string' ||
+              session.services.has(request.request_id) || !session.latest)
+            throw new Error('Invalid hosted service request');
+          const controller = new AbortController();
+          session.services.set(request.request_id, controller);
+          void Promise.resolve().then(() => service.run(request, {signal: controller.signal}))
+            .then(outcome => {
+              if (!controller.signal.aborted) completeService(session, request, outcome);
+            })
+            .catch(() => {
+              if (!controller.signal.aborted) completeService(session, request, {
+                name: 'ui.effect.failed', payload: {
+                  code: 'service_failed', message: 'Application service failed',
+                },
+              });
+            })
+            .finally(() => session.services.delete(request.request_id));
+          continue;
+        }
         session.frames.push({sequence: ++session.sequence, frame});
         if (session.frames.length > 256) session.frames.shift();
       } catch { process.kill(); }
@@ -93,6 +137,7 @@ async function createSession(app) {
   process.on('error', error => { session.diagnostic = String(error); session.ended = true; });
   process.on('close', (code, signal) => {
     session.ended = true;
+    stopServices(session);
     if (session.frames.at(-1)?.frame.type !== 'closed') {
       const frame = {version: 1, type: 'refusal', session: id,
         revision: session.latest?.revision ?? 0,
@@ -129,6 +174,7 @@ const server = createServer(async (request, response) => {
     if (!session) return reply(response, 404, {error: 'Unknown session'});
     if (request.method === 'DELETE' && !match[2]) {
       sessions.delete(session.id);
+      stopServices(session);
       if (!session.ended) session.process.kill();
       return reply(response, 200, {closed: true});
     }
@@ -148,6 +194,9 @@ const server = createServer(async (request, response) => {
       if (input.version !== 1 || input.session !== session.id ||
           !Number.isSafeInteger(input.base) || input.base < 0)
         return reply(response, 400, {error: 'Invalid input'});
+      if (input.type === 'cancel' && input.base === session.latest?.revision &&
+          typeof input.request_id === 'string')
+        session.services.get(input.request_id)?.abort();
       session.process.stdin.write(JSON.stringify(input) + '\n');
       return reply(response, 202, {accepted: true});
     }
@@ -160,11 +209,15 @@ setInterval(() => {
   for (const session of sessions.values()) {
     if (session.ended || now - session.lastTouched <= 30000) continue;
     sessions.delete(session.id);
+    stopServices(session);
     session.process.kill();
   }
 }, 5000).unref();
 function shutdown() {
-  for (const session of sessions.values()) session.process.kill();
+  for (const session of sessions.values()) {
+    stopServices(session);
+    session.process.kill();
+  }
   server.close();
 }
 process.on('SIGINT', shutdown);

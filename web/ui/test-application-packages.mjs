@@ -8,6 +8,7 @@ import {preflightPackage, preflightBrowserPackage, siteAssets} from './package-r
 
 const graph = JSON.parse(await readFile(new URL('../../examples/ui/app-effects/graph.package.json', import.meta.url)));
 const map = JSON.parse(await readFile(new URL('../../examples/ui/app-effects/map.package.json', import.meta.url)));
+const rag = JSON.parse(await readFile(new URL('../../examples/ui/rag-query/rag-query.package.json', import.meta.url)));
 for (const pkg of [graph, map]) {
   for (const route of ['gtk', 'ansi', 'local', 'hosted']) {
     const checked = preflightPackage(pkg, route);
@@ -45,6 +46,19 @@ for (const pkg of [graph, map]) {
     assets: hostedAssets}, pkg.id, 'hosted', async () => ({ok: true})),
   /Missing required UI asset/);
 }
+const localRag = preflightPackage(rag, 'local');
+const hostedRag = preflightPackage(rag, 'hosted');
+assert.equal(hostedRag.selected.service.capability, 'rag.query');
+assert.equal(localRag.selected.service, undefined);
+const badService = structuredClone(rag);
+badService.routes.hosted.service.target = '../rag-query.mjs';
+assert.throws(() => preflightPackage(badService, 'hosted'), /Invalid hosted UI service/);
+const ragAssets = Object.fromEntries(siteAssets(hostedRag).map(path => [path, 'hash']));
+await preflightBrowserPackage({packages: {rag_demo: rag}, assets: ragAssets},
+  'rag_demo', 'hosted', async () => ({ok: true}));
+delete ragAssets[hostedRag.selected.service.target];
+await assert.rejects(preflightBrowserPackage({packages: {rag_demo: rag}, assets: ragAssets},
+  'rag_demo', 'hosted', async () => ({ok: true})), /Missing required UI asset/);
 const scratch = await mkdtemp(join(tmpdir(), 'crexx-ui-package-test-'));
 try {
   for (const pkg of [graph, map]) {
@@ -71,10 +85,14 @@ try {
     [fileURLToPath(new URL('./package-site.mjs', import.meta.url)),
       resolve(process.argv[2] ?? 'cmake-build-ui'),
       resolve(process.argv[3] ?? 'cmake-build-ui-wasm'), bundle,
-      join(external, 'graph.package.json')], {encoding: 'utf8'});
+      join(external, 'graph.package.json'),
+      fileURLToPath(new URL('../../examples/ui/rag-query/rag-query.package.json', import.meta.url))],
+    {encoding: 'utf8'});
   assert.equal(packed.status, 0, packed.stderr);
   const manifest = JSON.parse(await readFile(join(bundle, 'manifest.json'), 'utf8'));
   assert.ok(manifest.packages.graph_app);
   assert.ok(manifest.assets['apps/graph-repository.mjs']);
+  assert.ok(manifest.packages.rag_demo);
+  assert.ok(manifest.assets['services/rag-query.mjs']);
 } finally { await rm(scratch, {recursive: true, force: true}); }
 console.log('PASS: independent UI packages and preflight refusals');

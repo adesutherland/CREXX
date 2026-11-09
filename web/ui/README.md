@@ -1,7 +1,7 @@
 # Browser UI routes
 
 One Level G ui_web.crexx owner loop runs Text Inspector, the editable graph,
-Tile Map Demo, the process designer or a separately packaged graph/map
+Tile Map Demo, the process designer or a separately packaged graph/map/RAG
 application. The local route runs its RXBIN in a
 single-threaded Wasm Worker. The hosted route runs the same RXBIN in a native
 VM behind a loopback authenticated relay. Both use projection.mjs: HTML form
@@ -12,13 +12,14 @@ carries its delta and a full authoritative snapshot for reconnect and resync.
 ## Build and serve
 
 ~~~sh
-cmake --build cmake-build-ui --target rxvm ui_web text_inspector_web_artifact web_service_probe_artifact example_ui_scene_editor_artifacts example_ui_process_artifacts example_ui_application_packages --parallel 6
+cmake --build cmake-build-ui --target rxvm ui_web text_inspector_web_artifact web_service_probe_artifact example_ui_scene_editor_artifacts example_ui_process_artifacts example_ui_application_packages example_ui_rag_query_browser --parallel 6
 source /path/to/emsdk/emsdk_env.sh
 emcmake cmake -S ports/ui-web-wasm -B cmake-build-ui-wasm -G Ninja \
   -DCMAKE_BUILD_TYPE=MinSizeRel -DCREXX_GENERATED_DIR="$PWD/cmake-build-ui/generated"
 cmake --build cmake-build-ui-wasm --target crexx_ui_vm --parallel 6
 node web/ui/package-site.mjs cmake-build-ui cmake-build-ui-wasm cmake-build-ui-web-site \
-  examples/ui/app-effects/graph.package.json examples/ui/app-effects/map.package.json
+  examples/ui/app-effects/graph.package.json examples/ui/app-effects/map.package.json \
+  examples/ui/rag-query/rag-query.package.json
 CREXX_UI_TOKEN=your-private-token-at-least-16-characters \
   CREXX_UI_BUILD="$PWD/cmake-build-ui" \
   node cmake-build-ui-web-site/hosted-server.mjs
@@ -38,14 +39,40 @@ records. Their browser executors use origin-scoped `localStorage` as an example
 repository. GTK and ANSI expose the same editing actions and report the optional
 repository capability as unavailable. A browser with blocked origin storage
 reports the same application-visible failure and retains the editing controls.
-The models and schemas remain in the
-application modules; the shared browser projection passes effect envelopes.
+The models and schemas remain in the application modules; the browser routes
+deliver effects to the declared executor or hosted service.
+
+The `?app=rag_demo&hosted=1` route is a first STEP08 read-only lexical
+consumer. Its package declares a server-only `rag.query` service; the generic
+relay handles correlation and cancellation while the application service runs
+`crexxrag query inspect` with explicit read access. Configure a pre-ingested
+synthetic RAG tutorial library before starting the relay:
+
+~~~sh
+CREXX_UI_RAG_CORPUS=tutorial \
+CREXX_UI_RAG_BINARY=/absolute/path/to/crexxrag \
+CREXX_UI_RAG_LIBRARY=/absolute/path/to/tutorial/library \
+CREXX_UI_RAG_CONFIG=/absolute/path/to/tutorial/crexxrag.conf \
+CREXX_UI_TOKEN=your-private-token-at-least-16-characters \
+CREXX_UI_BUILD="$PWD/cmake-build-ui" \
+  node cmake-build-ui-web-site/hosted-server.mjs
+~~~
+
+The adapter returns one bounded cited excerpt with library and generation
+identity; it runs without provider credentials and rejects a provider call or
+query-gap write. Use the [cREXX-RAG tutorial](https://github.com/adesutherland/crexx-rag/blob/main/docs/tutorial/README.md)
+as a source of synthetic text and config, then initialize and ingest in that
+project's supported workflow. The local `?app=rag_demo` route currently reports
+`unsupported_capability` when Search is pressed. Local Wasm SQLite/vector
+retrieval, query embeddings and non-lexical comparison remain STEP08–09 work.
+The Public Purpose Lab reference corpus is not a hosted demo fixture under its
+current local research authority.
 
 ## Application packages
 
-Each trusted version-1 declaration in `examples/ui/app-effects/*.package.json`
-names an application ID, UI contract version, dependency RXBINs and a route
-entry for GTK, ANSI, local Wasm and hosted native browser. Every route declares
+Each trusted version-1 declaration in `examples/ui/*/*.package.json`
+names an application ID, UI contract version, dependency RXBINs and its supported
+routes. Every route declares
 required operations/capabilities and optional operations. Browser routes also
 declare their application executor, which supplies its optional repository
 capability. Executor paths resolve beside their declaration; RXBIN paths
@@ -54,10 +81,14 @@ operation/capability or missing RXBIN/executor asset before session creation.
 Optional scene rendering falls back to semantic ANSI controls; the absent
 native repository returns a correlated application-visible refusal. The site
 manifest lists each declaration and hashes its selected browser assets.
-Application-specific module names come from the declarations; the host code
-contains no graph/map repository schemas or storage rules.
+Hosted packages can declare a server-only application service module; its
+source is packaged but cannot be fetched over the browser HTTP route. The relay
+loads it after package preflight. Application-specific module names come from
+the declarations; the host code contains no graph/map/RAG domain schemas or
+storage rules.
 
-The build command above creates all six route entry RXBINs. Check or run a
+The build command above creates the six graph/map route entry RXBINs and two
+RAG browser entries. Check or run a
 native package from the build tree with:
 
 ~~~sh
@@ -122,6 +153,8 @@ CREXX_PLAYWRIGHT=/path/to/playwright/index.mjs \
 node web/ui/test-hosted.mjs
 node web/ui/test-package.mjs cmake-build-ui-web-site
 node web/ui/test-application-packages.mjs
+node examples/ui/rag-query/test-rag-query.mjs cmake-build-ui
+node examples/ui/rag-query/test-hosted-service.mjs
 node examples/ui/app-effects/test-repositories.mjs
 python3 lib/plugins/console/tests/pty_checks.py --build cmake-build-ui --source . --mode application-packages
 CREXX_PLAYWRIGHT=/path/to/playwright/index.mjs \
