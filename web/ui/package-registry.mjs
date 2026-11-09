@@ -66,7 +66,9 @@ export function preflightPackage(pkg, route, operations = HOST_OPERATIONS[route]
       !selected.executor.path.endsWith('.mjs') ||
       !/^apps\/[a-z][a-z0-9_-]*\.mjs$/.test(selected.executor.target ?? '') ||
       !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(selected.executor.export ?? '') ||
-      !/^[a-z][a-z0-9_.]*$/.test(selected.executor.capability ?? '')))
+      !/^[a-z][a-z0-9_.]*$/.test(selected.executor.capability ?? '') ||
+      (selected.executor.requiresStorage !== undefined &&
+        typeof selected.executor.requiresStorage !== 'boolean')))
     throw new Error('Invalid UI executor declaration');
   if (selected.executor && !['local', 'hosted'].includes(route))
     throw new Error(`Unsupported executor on ${route} route`);

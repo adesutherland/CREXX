@@ -32,7 +32,7 @@ add_dependencies(example_ui_rag_query_browser rag_query_web_local_artifact
 install(FILES "${_rag_query_app}"
         "${CMAKE_CURRENT_BINARY_DIR}/rag_query_web_local.rxbin"
         "${CMAKE_CURRENT_BINARY_DIR}/rag_query_web_hosted.rxbin"
-        rag-query.package.json hosted_service.mjs
+        rag-query.package.json hosted_service.mjs query-http.mjs query-api-server.mjs
         DESTINATION examples/ui/rag-query)
 set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
         example_ui_rag_query_browser)
@@ -50,6 +50,11 @@ if(BUILD_TESTING)
                 COMMAND "${CREXX_UI_NODE_EXECUTABLE}"
                         "${CMAKE_CURRENT_SOURCE_DIR}/test-hosted-service.mjs")
         set_tests_properties(ui_rag_query_hosted_service PROPERTIES TIMEOUT 30
+                LABELS "examples;ui;browser;rag;service")
+        add_test(NAME ui_rag_query_http_executor
+                COMMAND "${CREXX_UI_NODE_EXECUTABLE}"
+                        "${CMAKE_CURRENT_SOURCE_DIR}/test-query-http.mjs")
+        set_tests_properties(ui_rag_query_http_executor PROPERTIES TIMEOUT 30
                 LABELS "examples;ui;browser;rag;service")
     endif()
 endif()

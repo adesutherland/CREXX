@@ -9,8 +9,15 @@
     "local": {
       "entry": {"name": "rag_query_web_local", "path": "examples/ui/rag-query/rag_query_web_local.rxbin"},
       "requiredOperations": ["form.label", "form.input", "form.button"],
-      "requiredCapabilities": [],
-      "optionalOperations": []
+      "requiredCapabilities": ["rag.query"],
+      "optionalOperations": [],
+      "executor": {
+        "path": "query-http.mjs",
+        "target": "apps/rag-query-http.mjs",
+        "export": "ragQueryHttp",
+        "capability": "rag.query",
+        "requiresStorage": false
+      }
     },
     "hosted": {
       "entry": {"name": "rag_query_web_hosted", "path": "examples/ui/rag-query/rag_query_web_hosted.rxbin"},

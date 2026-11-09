@@ -50,6 +50,8 @@ const localRag = preflightPackage(rag, 'local');
 const hostedRag = preflightPackage(rag, 'hosted');
 assert.equal(hostedRag.selected.service.capability, 'rag.query');
 assert.equal(localRag.selected.service, undefined);
+assert.equal(localRag.selected.executor.capability, 'rag.query');
+assert.equal(localRag.selected.executor.requiresStorage, false);
 const badService = structuredClone(rag);
 badService.routes.hosted.service.target = '../rag-query.mjs';
 assert.throws(() => preflightPackage(badService, 'hosted'), /Invalid hosted UI service/);
@@ -94,5 +96,6 @@ try {
   assert.ok(manifest.assets['apps/graph-repository.mjs']);
   assert.ok(manifest.packages.rag_demo);
   assert.ok(manifest.assets['services/rag-query.mjs']);
+  assert.ok(manifest.assets['apps/rag-query-http.mjs']);
 } finally { await rm(scratch, {recursive: true, force: true}); }
 console.log('PASS: independent UI packages and preflight refusals');

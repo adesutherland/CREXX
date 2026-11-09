@@ -1,4 +1,4 @@
-/* Focused owner-loop proof for the application effect and capability refusal. */
+/* Focused owner-loop proof for local and hosted RAG effects and lifecycle. */
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {join, resolve} from 'node:path';
@@ -48,7 +48,18 @@ async function route(kind) {
       send('command', view.revision, {command: 'rag.search'});
       view = await next();
       assert.equal(view.type, 'view');
-      assert.equal(label(view, 'status'), 'Query failed: unsupported_capability');
+      const effect = (await next()).message;
+      assert.equal(effect.name, 'rag.query');
+      assert.equal(effect.payload.corpus, 'heart-failure');
+      assert.equal(effect.payload.mode, 'lexical');
+      assert.match(effect.payload.question, /before speaking to a healthcare professional/);
+      send('complete', view.revision, {message: completion(effect, 'rag.query.completed', {
+        library_id: 'library-test', generation: 2308,
+        citation: 'crexx-rag:library-test:source', excerpt: 'Cited source text',
+      })});
+      view = await next();
+      assert.equal(label(view, 'status'), 'Cited passage found');
+      assert.match(label(view, 'identity'), /Generation: 2308/);
     } else {
       send('value', view.revision, {node: 'question', value: '   '});
       view = await next();
@@ -97,4 +108,4 @@ async function route(kind) {
 
 await route('hosted');
 await route('local');
-console.log('PASS: RAG query effect, citation, cancellation, failure and local refusal');
+console.log('PASS: local and hosted RAG query effects, citation, cancellation and failure');

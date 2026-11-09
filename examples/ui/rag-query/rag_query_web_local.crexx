@@ -5,5 +5,7 @@ import rag_query_app
 main: procedure = .int
   arg arguments = .string[]
   if arguments[0] < 1 then return 2
+  caps = ui_web..capabilities()
+  call caps.enable("rag.query")
   driver = .webdriver()
-  return driver.run(make_rag_query_session(arguments[1], ui_web..capabilities()))
+  return driver.run(make_rag_query_session(arguments[1], caps, "heart-failure", "Should I stop taking medicine before speaking to a healthcare professional?"))

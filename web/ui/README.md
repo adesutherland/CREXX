@@ -42,9 +42,9 @@ reports the same application-visible failure and retains the editing controls.
 The models and schemas remain in the application modules; the browser routes
 deliver effects to the declared executor or hosted service.
 
-The `?app=rag_demo&hosted=1` route is a first STEP08 read-only lexical
-consumer. Its package declares a server-only `rag.query` service; the generic
-relay handles correlation and cancellation while the application service runs
+The `?app=rag_demo&hosted=1` route is a STEP08 read-only lexical consumer.
+Its package declares a server-only `rag.query` service; the generic relay
+handles correlation and cancellation while the application service runs
 `crexxrag query inspect` with explicit read access. Configure a pre-ingested
 synthetic RAG tutorial library before starting the relay:
 
@@ -58,15 +58,31 @@ CREXX_UI_BUILD="$PWD/cmake-build-ui" \
   node cmake-build-ui-web-site/hosted-server.mjs
 ~~~
 
-The adapter returns one bounded cited excerpt with library and generation
-identity; it runs without provider credentials and rejects a provider call or
-query-gap write. Use the [cREXX-RAG tutorial](https://github.com/adesutherland/crexx-rag/blob/main/docs/tutorial/README.md)
-as a source of synthetic text and config, then initialize and ingest in that
-project's supported workflow. The local `?app=rag_demo` route currently reports
-`unsupported_capability` when Search is pressed. Local Wasm SQLite/vector
-retrieval, query embeddings and non-lexical comparison remain STEP08–09 work.
-The Public Purpose Lab reference corpus is not a hosted demo fixture under its
-current local research authority.
+The `?app=rag_demo` local Wasm route uses an application-owned HTTP executor.
+It calls the same read-only adapter through a stateless, same-origin query API;
+no browser database access or query logic is in the shared UI host. For the
+approved internal heart-failure demonstrator, serve the packaged site and API
+together on loopback:
+
+~~~sh
+CREXX_UI_PORT=8788 \
+CREXX_UI_RAG_CORPUS=heart-failure \
+CREXX_UI_RAG_BINARY=/absolute/path/to/crexxrag \
+CREXX_UI_RAG_LIBRARY=/absolute/path/to/heart-failure/library \
+CREXX_UI_RAG_CONFIG=/absolute/path/to/heart-failure/crexxrag.conf \
+  node examples/ui/rag-query/query-api-server.mjs cmake-build-ui-web-site
+~~~
+
+Open `http://127.0.0.1:8788/?app=rag_demo`. The adapter returns one bounded
+cited excerpt with library and generation identity; it runs without provider
+credentials and rejects a provider call or query-gap write. The API refuses
+foreign origins and does not serve the corpus or server-side service module.
+The browser default question demonstrates a source lookup, not answer quality
+or clinical use. Use the [cREXX-RAG tutorial](https://github.com/adesutherland/crexx-rag/blob/main/docs/tutorial/README.md)
+for a synthetic corpus. An internal deployment needs its usual authenticated
+reverse proxy and TLS; this loopback process is only a development proof.
+Browser-local SQLite/vector retrieval, compatible query embeddings and wider
+retrieval comparisons remain STEP08 work.
 
 ## Application packages
 
@@ -155,6 +171,7 @@ node web/ui/test-package.mjs cmake-build-ui-web-site
 node web/ui/test-application-packages.mjs
 node examples/ui/rag-query/test-rag-query.mjs cmake-build-ui
 node examples/ui/rag-query/test-hosted-service.mjs
+node examples/ui/rag-query/test-query-http.mjs
 node examples/ui/app-effects/test-repositories.mjs
 python3 lib/plugins/console/tests/pty_checks.py --build cmake-build-ui --source . --mode application-packages
 CREXX_PLAYWRIGHT=/path/to/playwright/index.mjs \

@@ -27,7 +27,7 @@ try {
     let storage;
     try { storage = localStorage; storage.getItem('crexx.ui.storage.probe'); }
     catch { storage = null; }
-    const handler = storage ? module[executor.export](storage) :
+    const handler = (executor.requiresStorage === false || storage) ? module[executor.export](storage) :
       async (request, complete) => complete(request, 'ui.effect.failed',
         {code: 'unsupported_capability', message: executor.capability});
     ui = new BrowserUI(root, route, {executeEffect: async request => {

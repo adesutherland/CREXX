@@ -477,22 +477,20 @@ query-embedding compatibility, memory limits and reload. Exact CPU `rxvector`
 result ordering is its scoring baseline. Lexical retrieval may be offered
 separately if a compatible embedding provider is unavailable.
 
-The first STEP08 increment may use an explicitly selected synthetic library
-and RAG's read-only lexical `query.inspect` command as a bounded hosted service
-control. It must preserve the returned citation and library/generation identity,
-make no provider call or corpus write, and keep the query executor outside the
-UI owner loop. A browser-local capability refusal during this increment is not
-acceptance of D01–03; the matching local Wasm query and embedding proofs remain
-open. A Public Purpose Lab corpus is a later demonstrator only under its own
-recorded data and hosting authority.
-
-The first hosted lexical consumer is `examples/ui/rag-query`: its package
-declares a server-only service module, the generic hosted relay executes the
-correlated effect, and the Level G application displays the cited passage.
-It uses an explicitly configured RAG library and no provider credentials.
-The local route currently gives an application-visible capability refusal.
-STEP08 still requires the local read-only/vector comparison and wider hosted
-retrieval modes; STEP09 owns the embedding-model proof.
+The first STEP08 consumer is `examples/ui/rag-query`. Its Level G application
+owns `rag.query` and displays a bounded cited passage with library/generation
+identity. The hosted route declares an application service for read-only
+lexical `query.inspect` on a configured library. The local Wasm route declares
+an application executor that calls a stateless, same-origin HTTP query API;
+the UI delta/resync protocol remains inside the browser. The service makes no
+provider call or corpus write. Adrian approved internal-only service use of
+the active Public Purpose Lab heart-failure library on 9 November 2026. The
+loopback proof uses a fixed question and compares the cited result with native
+read-only `query.inspect`; it does not publish or distribute corpus files.
+Top-one lexical evidence is a lookup demonstration, not answer relevance or
+clinical qualification. STEP08 still requires representative local
+SQLite/vector and hosted retrieval comparisons under D01–03; AC09–10 and the
+compatible embedding proof remain open.
 
 D13 adds an OPFS read-only cache only after transient import works. SQLite's
 [browser VFS guidance](https://www.sqlite.org/wasm/doc/trunk/persistence.md)
