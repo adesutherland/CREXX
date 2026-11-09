@@ -492,6 +492,16 @@ clinical qualification. STEP08 still requires representative local
 SQLite/vector and hosted retrieval comparisons under D01–03; AC09–10 and the
 compatible embedding proof remain open.
 
+For the targeted browser-local route, the existing `rxsqlite` and `rxvector`
+sources compile and link into the single-thread Wasm VM; focused Level G probes
+can open a read-only MEMFS SQLite file and decode an RXVIDX/1 index. This does
+not yet run RAG's query owner or import the reference library in a browser.
+The active heart-failure sidecar is `ivf-flat-v1` JSON, not a bare RXVIDX/1
+file, and its library includes substantial operational history. The next D02
+proof must validate the RAG-owned sidecar/membership contract and compare a
+bounded serving snapshot or measured full-library import with native retrieval
+before selecting a browser storage route.
+
 D13 adds an OPFS read-only cache only after transient import works. SQLite's
 [browser VFS guidance](https://www.sqlite.org/wasm/doc/trunk/persistence.md)
 is a feasibility input, not proof for this `rxsqlite` build. Browser storage is
