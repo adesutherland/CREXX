@@ -369,23 +369,38 @@ map_editor: class implements .uicomponent
     arg view = .uiview_impl
     if _graphical then call view.add_scene("map", _packet, "root")
     else do
-      call view.add_label("heading", "Map cell viewport 4x4", "root")
+      border = "+--+--+--+--+"
+      unit_column = (_unit_x - 4096) <idiv> 16384
+      call view.add_label("heading", "Map cell viewport 4x4: B blue, ^^ forest, __ plain", "root")
+      call view.add_label("border-top", border)
       do row = 0 to 3
-        text = ""
+        units = "|"
+        terrain = "|"
         do column = 0 to 3
-          cell = "."
-          if row = 0 & column = (_unit_x - 4096) % 16384 then cell = "B"
-          else if (row + column) % 3 = 0 then cell = "F"
-          text = text || cell
+          unit = "  "
+          if row = 0 & column = unit_column then unit = "B "
+          ground = "__"
+          if (row + column) % 3 = 0 then ground = "^^"
+          units = units || unit || "|"
+          terrain = terrain || ground || "|"
         end
-        call view.add_label("row-" || row, text)
+        call view.add_label("row-" || row || "-unit", units)
+        call view.add_label("row-" || row || "-terrain", terrain)
+        call view.add_label("border-" || row, border)
       end
     end
     call view.add_label("state", "Turn: " || _turn || " Unit x: " || _unit_x || " Selected: " || _selected)
     call view.add_label("viewport", "Pan: " || _origin || " Scale: " || _scale)
-    do i = 1 to 5
+    if _graphical then do i = 1 to 5
       action = word("turn pan zoom select quit", i)
       call view.add_button(action, action, "map." || action, substr(action, 1, 1))
+    end
+    else do
+      call view.add_button("turn", "turn", "map.turn", "t")
+      call view.add_button("pan", "pan", "map.pan", "p", "right", "turn")
+      call view.add_button("zoom", "zoom", "map.zoom", "z", "below", "turn")
+      call view.add_button("select", "select", "map.select", "s", "right", "zoom")
+      call view.add_button("quit", "quit", "map.quit", "q", "below", "zoom")
     end
     return
   journal: method = .string

@@ -203,6 +203,15 @@ routes at each selected stage. Their presentation may differ:
 | Editable graph | Drawing area/Cairo with keyboard and pointer editing. | Node/edge list or bounded cell viewport with stable-ID actions. | SVG plus HTML text/focus controls. |
 | Strategy map | Drawing area/Cairo terrain and units. | Bounded cell viewport, detail and turn actions. | Canvas 2D terrain/units with pan, zoom and selection. |
 
+The selected ANSI map projection uses two text lines per logical map row:
+two printable columns per cell for units above terrain, with ASCII table
+borders between cells and rows. `B` marks the blue unit; `^^` marks forest and
+`__` plain terrain. Paired ANSI action rows leave room for the application's
+repository status and restore control on the selected 80x24 terminal. The
+application retains the same map rules and scene state. Unicode
+box-drawing glyphs need a separate terminal-width capability: the current
+conservative renderer replaces code points outside its single-cell set.
+
 STEP07's selected development profile is macOS ARM64, GTK 3.24, ANSI
 `xterm-256color`, and Chrome 156 for both browser routes. Its native install
 contains the UI modules, GTK provider and form/graph/map example images; the

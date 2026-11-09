@@ -222,8 +222,11 @@ def main():
                     terminal.expect(b"A: 7680")
                 else:
                     terminal.expect(b"Map cell viewport 4x4")
-                    terminal.expect(b"B..F")
+                    terminal.expect(b"+--+--+--+--+")
+                    terminal.expect(b"|B |  |  |  |")
+                    terminal.expect(b"|^^|__|__|^^|")
                     terminal.send(b"t")
+                    terminal.expect(b"|  |B |  |  |")
                     terminal.expect(b"Turn: 2 Unit x: 20480")
                     terminal.send(b"z")
                     terminal.expect(b"Scale: 128")

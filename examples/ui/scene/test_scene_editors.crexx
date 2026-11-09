@@ -56,6 +56,15 @@ if jsoncount(map.scene(), "items") \= 17 | map_semantic.view().node_kind(1) = "s
   say "FAIL: map projection/cell fallback"
   exit 1
 end
+map_view = map_semantic.view()
+if map_view.count() \= 21 | map_view.node_text(2) \= "+--+--+--+--+" | map_view.node_text(3) \= "|B |  |  |  |" | map_view.node_text(4) \= "|^^|__|__|^^|" then do
+  say "FAIL: layered ANSI map terrain and unit rows"
+  exit 1
+end
+if map_view.node_row(17) \= map_view.node_row(18) | map_view.node_row(19) \= map_view.node_row(20) | map_view.node_row(21) \= map_view.node_row(19) + 1 then do
+  say "FAIL: ANSI map actions do not leave room for application status"
+  exit 1
+end
 do i = 1 to 4
   action = word("turn zoom pan select", i)
   event = .uimessage("map." || action || ".requested", .uipayload())
@@ -68,6 +77,10 @@ do i = 1 to 4
 end
 if map.state() \= "2/20480/4096/128/unit-blue" | jsonget(map.scene(), "viewport.origin_x") \= "4096" then do
   say "FAIL: map turn/viewport"
+  exit 1
+end
+if map_semantic.view().node_text(3) \= "|  |B |  |  |" then do
+  say "FAIL: ANSI unit row did not follow turn"
   exit 1
 end
 say "PASS: graph and map editor transitions"
