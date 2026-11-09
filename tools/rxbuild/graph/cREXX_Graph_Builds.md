@@ -103,6 +103,12 @@ The current graph reader and runner support the essential dependency-based build
 - unknown-rule and unknown-target diagnostics;
 - unknown logical-dependency diagnostics;
 - dependency-cycle detection;
+- recursive include-cycle detection;
+- graph composition through `INCLUDE_GRAPH`;
+- local variable and logical-name scopes for included graphs;
+- source-aware resolved graph inspection through `--dump-graph`;
+- validation-only traversal through `--dry-run`;
+- duplicate physical and logical dependency diagnostics before execution;
 - variable and default-target validation;
 - typed actions for the existing cREXX toolchain.
 
@@ -110,6 +116,7 @@ The supported actions are currently:
 
 ```text
 COMPILE PROGRAM
+COMPILE RXPP
 COMPILE GRAMMAR
 COMPILE READER
 COMPILE APPLICATION
@@ -137,7 +144,8 @@ This refers to a file or physical output path.
 DEPENDS_ON_BUILD = grammar
 ```
 
-This refers to a `BUILD_NAME` declared elsewhere in the same graph.
+This refers to a `BUILD_NAME` declared in the current graph or in one of its
+included graphs.
 
 Both forms may occur in one build declaration. This is useful when a target depends on both a generated build target and an external file:
 
@@ -188,10 +196,9 @@ The current implementation does not yet support all features found in Ninja. In 
 - parallel graph execution;
 - resource pools and job limits;
 - command-line change tracking;
-- a persistent build log;
-- graph import or composition;
+- a persistent build log file;
 - clean and clean-dead operations;
-- dependency graph visualisation;
+- graphical dependency visualisation beyond the textual resolved graph dump;
 - arbitrary compiler dependency selection.
 
 These omissions are intentional. They do not prevent the current implementation from demonstrating the main dependency-graph model.
@@ -204,12 +211,10 @@ Not all of them are equally important.
 
 The most useful future additions would probably be:
 
-1. graph imports, so that separate build descriptions can be combined;
-2. multiple outputs, for actions producing several artefacts;
-3. a dry-run mode;
-4. a simple dependency-graph inspection command;
-5. clean and rebuild operations;
-6. generic command templates, if users need custom actions.
+1. multiple outputs, for actions producing several artefacts;
+2. clean and rebuild operations;
+3. graphical dependency visualisation;
+4. generic command templates, if users need custom actions.
 
 ### Features that can wait
 
@@ -217,24 +222,32 @@ Parallel execution, pools, compiler dependency files and persistent command logs
 
 The graph should first be correct and reliable when executed sequentially. Parallel execution can be added later using the same dependency graph.
 
-## Possible graph composition
+## Graph composition
 
-If separate graph files later need to cooperate, an explicit import mechanism would be a natural extension:
+Separate graph files can cooperate through `INCLUDE_GRAPH`. The include path is
+resolved relative to the containing graph and nested includes are supported:
 
 ```text
-IMPORT "grammar.graph.build" AS grammar;
+INCLUDE_GRAPH "grammar.graph.build"
 
-BUILD reader
+BUILD "${BUILD_DIR}/reader.rxbin"
   BUILD_NAME = reader
   RULE = compile_reader
   INPUT = "examples/php/php_reader.crexx"
-  DEPENDS_ON_BUILD = grammar:phpgrammar
+  DEPENDS_ON_BUILD = grammar
 END BUILD;
 ```
 
-The imported graph would contribute its own targets, while the namespace prefix would prevent name collisions.
+Included graphs contribute their rules and targets to the merged graph. Their
+variables and logical names remain local to the graph that defines them.
+Unqualified logical references resolve locally first, then globally only when
+the name is unique; ambiguous names are rejected. Physical output paths remain
+global and must not collide. Include cycles and duplicate loads are detected.
+Only the root graph supplies the effective `DEFAULT` or `DEFAULT_BUILD`.
 
-This would combine several graph descriptions into one dependency graph. It would not automatically coordinate several independent `rxbuild` processes running at the same time; that would require additional locking and process-coordination rules.
+Composition combines graph descriptions into one dependency graph. It does
+not coordinate independent `rxbuild` processes running at the same time; that
+would require separate locking and process-coordination rules.
 
 ## Current conclusion
 

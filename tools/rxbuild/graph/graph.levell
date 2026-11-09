@@ -14,6 +14,7 @@ dependsword: token
 dependsbuildword: token
 buildnameword: token
 defaultbuildword: token
+includeword: token
 workdirword: token
 argumentword: token
 runtimeargumentword: token
@@ -40,7 +41,7 @@ scan: lexer input utf8bytes
 
 parse: parser semantics contextfree input tokens start program
   program: rule = statement*
-  statement: rule = assignment.statement | rule.statement | build.statement | default.statement | default.build.statement
+  statement: rule = assignment.statement | rule.statement | build.statement | default.statement | default.build.statement | include.statement
   assignment.statement: rule = identifier equals string terminator
   rule.statement: rule = ruleword identifier rule.attributes endword ruleword terminator
   rule.attributes: rule = rule.attribute*
@@ -61,6 +62,7 @@ parse: parser semantics contextfree input tokens start program
   stdin.attribute: rule = stdinword equals string
   default.statement: rule = defaultword string terminator
   default.build.statement: rule = defaultbuildword equals identifier terminator
+  include.statement: rule = includeword string terminator | includeword string
 
 classify: tokenstage start 1
   word.rule:
@@ -93,6 +95,9 @@ classify: tokenstage start 1
   word.default.build:
     transform stage classify state 1
       take identifier text "DEFAULT_BUILD" emit defaultbuildword next 1
+  word.include:
+    transform stage classify state 1
+      take identifier text "INCLUDE_GRAPH" emit includeword next 1
   word.workdir:
     transform stage classify state 1
       take identifier text "WORK_DIR" emit workdirword next 1

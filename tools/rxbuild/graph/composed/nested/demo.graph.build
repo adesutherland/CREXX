@@ -1,0 +1,15 @@
+/* Nested graph.  Its variables and default are local to this graph. */
+BUILD_DIR = ".crexx-build/graph-composed-nested";
+SOURCE = "tools/rxbuild/build_demo.crexx";
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+
+BUILD "${BUILD_DIR}/nested.rxbin"
+  BUILD_NAME = nested_program
+  RULE = compile_program
+  INPUT = "${SOURCE}"
+END BUILD;
+
+DEFAULT_BUILD = nested_program;

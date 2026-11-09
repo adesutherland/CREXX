@@ -126,6 +126,67 @@ DEFAULT_BUILD = final_program;
         rc, output = run(exe, root, logical, "prepare")
         require(rc == 0 and "up to date" in output, "logical target selection failed", output)
 
+        include_dir = test_root / "nested"
+        include_dir.mkdir()
+        included = include_dir / "included.graph.build"
+        included_output = output_dir + "/included"
+        write_plan(
+            included,
+            f'''BUILD_DIR = "{included_output}";
+SOURCE = "{source}";
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "${{BUILD_DIR}}/child.rxbin"
+  BUILD_NAME = child
+  RULE = compile_program
+  INPUT = "${{SOURCE}}"
+END BUILD;
+DEFAULT_BUILD = child;
+''',
+        )
+        composed = test_root / "composed.graph.build"
+        write_plan(
+            composed,
+            f'''INCLUDE_GRAPH "nested/included.graph.build"
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/parent.rxbin"
+  BUILD_NAME = parent
+  RULE = compile_program
+  INPUT = "{source}"
+  DEPENDS_ON_BUILD = child
+END BUILD;
+DEFAULT_BUILD = parent;
+''',
+        )
+        rc, output = run(exe, root, composed)
+        require(rc == 0 and output.count("built") == 2, "composed graph build failed", output)
+        rc, output = run(exe, root, composed, "child")
+        require(rc == 0 and "up to date" in output, "included logical target selection failed", output)
+        rc, output = run(exe, root, composed, "--dump-graph")
+        require(
+            rc == 0
+            and "RXBUILD GRAPH BEGIN" in output
+            and "source_graph=" in output
+            and "name=child" in output
+            and "name=parent" in output
+            and "depends_build=child -> output=" in output
+            and "RXBUILD GRAPH END" in output
+            and "RXBUILD: built" not in output
+            and "RXBUILD: ran" not in output,
+            "resolved graph dump was incomplete or executed an action",
+            output,
+        )
+
+        include_cycle_a = test_root / "include-cycle-a.graph.build"
+        include_cycle_b = test_root / "include-cycle-b.graph.build"
+        write_plan(include_cycle_a, 'INCLUDE_GRAPH "include-cycle-b.graph.build"\n')
+        write_plan(include_cycle_b, 'INCLUDE_GRAPH "include-cycle-a.graph.build"\n')
+        rc, output = run(exe, root, include_cycle_a)
+        require(rc != 0 and "graph include cycle detected" in output, "include cycle was not diagnosed", output)
+
         unknown_build_name = test_root / "unknown-build-name.graph.build"
         write_plan(
             unknown_build_name,
@@ -217,6 +278,71 @@ DEFAULT "{output_dir}/a.rxbin";
         rc, output = run(exe, root, cycle)
         require(rc != 0 and "dependency cycle" in output, "dependency cycle was not diagnosed", output)
 
+        recursive_logical = test_root / "recursive-logical.graph.build"
+        write_plan(
+            recursive_logical,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/logical-a.rxbin"
+  BUILD_NAME = logical_a
+  RULE = compile_program
+  INPUT = "{source}"
+  DEPENDS_ON_BUILD = logical_b
+END BUILD;
+BUILD "{output_dir}/logical-b.rxbin"
+  BUILD_NAME = logical_b
+  RULE = compile_program
+  INPUT = "{source}"
+  DEPENDS_ON_BUILD = logical_a
+END BUILD;
+DEFAULT_BUILD = logical_a;
+''',
+        )
+        rc, output = run(exe, root, recursive_logical)
+        require(rc != 0 and "dependency cycle" in output, "recursive logical dependency was not diagnosed", output)
+
+        duplicate_physical = test_root / "duplicate-physical.graph.build"
+        write_plan(
+            duplicate_physical,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/duplicate-physical.rxbin"
+  RULE = compile_program
+  INPUT = "{source}"
+  DEPENDS_ON = "{source}"
+  DEPENDS_ON = "{source}"
+END BUILD;
+DEFAULT "{output_dir}/duplicate-physical.rxbin";
+''',
+        )
+        rc, output = run(exe, root, duplicate_physical)
+        require(rc != 0 and "duplicate dependency" in output, "duplicate physical dependency was not diagnosed", output)
+
+        duplicate_logical = test_root / "duplicate-logical.graph.build"
+        write_plan(
+            duplicate_logical,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/duplicate-logical-dependency.rxbin"
+  BUILD_NAME = duplicate_source
+  RULE = compile_program
+  INPUT = "{source}"
+END BUILD;
+BUILD "{output_dir}/duplicate-logical.rxbin"
+  RULE = compile_program
+  INPUT = "{source}"
+  DEPENDS_ON_BUILD = duplicate_source
+  DEPENDS_ON_BUILD = duplicate_source
+END BUILD;
+DEFAULT "{output_dir}/duplicate-logical.rxbin";
+''',
+        )
+        rc, output = run(exe, root, duplicate_logical)
+        require(rc != 0 and "duplicate dependency" in output, "duplicate logical dependency was not diagnosed", output)
+
         duplicate = test_root / "duplicate.graph.build"
         write_plan(
             duplicate,
@@ -276,17 +402,45 @@ BUILD "run-demo"
   DEPENDS_ON = "{output_dir}/run-program.rxbin"
   WORK_DIR = "."
   ARGUMENT = "-a" "tools/rxbuild/graph/example.graph.build"
+  RUNTIME_ARGUMENT = "tools/rxbuild/graph/example.graph.build"
+  RUNTIME_ARGUMENT = "tools/rxbuild/graph/README.md"
   STDIN = ""
 END BUILD;
 DEFAULT "run-demo";
 ''',
         )
-        rc, output = run(exe, root, run_plan)
+        rc, output = run(exe, root, run_plan, "--verbose")
         require(
             rc == 0
             and "RXBUILD: ran" in output
             and "RXBUILD DEMO: generated program executed" in output,
             "RUN graph action failed or hid program output",
+            output,
+        )
+        require(output.count("runtime_argument=") == 2, "RUN runtime arguments were not forwarded", output)
+
+        dry_run_plan = test_root / "dry-run.graph.build"
+        dry_run_output = output_dir + "/dry-run.rxbin"
+        write_plan(
+            dry_run_plan,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{dry_run_output}"
+  RULE = compile_program
+  INPUT = "{source}"
+END BUILD;
+DEFAULT "{dry_run_output}";
+''',
+        )
+        rc, output = run(exe, root, dry_run_plan, "--dry-run", "--verbose")
+        require(
+            rc == 0
+            and "state=dry-run" in output
+            and "RXBUILD: would build" in output
+            and "RXBUILD: built" not in output
+            and not (root / dry_run_output).is_file(),
+            "dry-run executed or failed to announce the build",
             output,
         )
 

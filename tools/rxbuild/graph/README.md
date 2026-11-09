@@ -10,10 +10,13 @@ behavior.
 The graph language accepts rules, build targets, physical and logical
 dependency edges, string variables, and physical or logical default targets.
 It supports the typed `COMPILE PROGRAM`,
+`COMPILE RXPP`,
 `COMPILE GRAMMAR`, `COMPILE READER`, `COMPILE APPLICATION`, `CREATE EXE`, and
 `RUN` actions. It resolves dependencies recursively, detects
 cycles and missing declarations, and skips a target when its output is newer
 than its inputs and dependencies.
+Dependency cycles and duplicate dependency references are rejected during
+graph validation before any action is executed.
 
 Build and run it from the repository root:
 
@@ -49,7 +52,19 @@ It builds the PHP grammar, reader, runtime module, and four application RXBINs,
 then runs the applications through its default target.
 
 Add `--verbose` to any invocation to print resolved source, target, dependency,
-working-directory, and action-state information.
+working-directory, runtime-argument, and action-state information. `RUN`
+supports repeatable `RUNTIME_ARGUMENT = "path"` attributes for applications
+that need multiple runtime modules after the program RXBIN.
+
+Use `--dry-run` (or `-n`) to validate and traverse a selected graph without
+executing actions or creating outputs. With `--verbose`, stale targets are
+shown with `state=dry-run` and announced as `would build`; run targets are
+announced as `would run`.
+
+Use `--dump-graph` to print the fully resolved graph after nested includes and
+variable substitution. Each target includes its source graph and local logical
+name; logical dependencies show the resolved physical output. The command then
+prints the rules and defaults and exits without executing actions.
 
 [`actions.graph.build`](actions.graph.build) demonstrates the native and
 execution actions. Run it from the repository root with:

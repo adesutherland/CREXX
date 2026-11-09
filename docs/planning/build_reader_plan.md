@@ -229,8 +229,9 @@ compatibility executable, and `crexx.exe` dispatches `.graph.build` and
 The graph language supports named rules with typed actions, physical outputs,
 logical build names, physical and logical dependencies, string variables,
 timestamp-based incremental decisions, physical or logical default targets,
-and clear diagnostics. It deliberately does not implement generic shell
-commands, parallel execution, or the complete Ninja language.
+clear diagnostics, nested `INCLUDE_GRAPH` composition, and source-aware graph
+inspection. It deliberately does not implement generic shell commands,
+parallel execution, or the complete Ninja language.
 
 ### Acceptance criteria
 
@@ -252,6 +253,18 @@ commands, parallel execution, or the complete Ninja language.
 - GAC-06: **Met locally.** `BUILD_NAME`, `DEPENDS_ON_BUILD`, and
   `DEFAULT_BUILD` provide logical graph names while preserving physical
   `DEPENDS_ON` and `DEFAULT` syntax.
+- GAC-07: **Met locally.** Nested `INCLUDE_GRAPH` files are merged with
+  graph-local variables and logical names, while physical outputs remain
+  globally unique; include cycles and ambiguous logical references fail before
+  execution.
+- GAC-08: **Met locally.** `--dry-run` validates and traverses the selected
+  dependency closure without executing actions or writing outputs.
+- GAC-09: **Met locally.** `--dump-graph` prints the resolved merged graph,
+  including each target's source graph, local name, resolved paths and
+  dependency mappings, without executing actions.
+- GAC-10: **Met locally.** Negative graph tests cover recursive dependencies,
+  duplicate physical/logical references, duplicate targets, missing targets,
+  and malformed composition.
 
 ### Implementation steps
 
@@ -271,3 +284,12 @@ commands, parallel execution, or the complete Ninja language.
   actions to the graph reader, with ordered grammar/reader dependencies, and
   provide the PHP graph example with logical names and runnable targets.
   Serves GAC-03 and GAC-04.
+- GSTEP-06: **Complete locally.** Add nested `INCLUDE_GRAPH` composition with
+  graph-local variables and logical names, root-default selection, cycle
+  detection and unique global fallback resolution. Serves GAC-07.
+- GSTEP-07: **Complete locally.** Add `--dry-run` validation-only execution
+  and a source-aware `--dump-graph` resolved-plan log. Serves GAC-08 and
+  GAC-09.
+- GSTEP-08: **Complete locally.** Extend the focused graph test with nested
+  composition, recursive dependencies, duplicate references and dump/dry-run
+  assertions. Serves GAC-07 through GAC-10.

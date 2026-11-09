@@ -28,6 +28,29 @@ Verbose output reports the action, target, input, output, dependencies,
 working directory, arguments, and whether the target is being built or is
 already up to date. The option may appear before or after the graph path.
 
+Use `--dry-run` (or `-n`) to validate and traverse the selected dependency
+closure without executing actions or creating outputs:
+
+```powershell
+.\cmake-build-release\bin\rxbuild.exe --dry-run --verbose `
+  tools\rxbuild\graph\composed\main.graph.build
+```
+
+Dry-run still checks graph syntax, variables, rules, dependencies, inputs and
+target selection. Stale actions are reported as `would build`; `RUN` actions
+are reported as `would run`. Up-to-date targets remain `up to date`.
+
+Use `--dump-graph` to print the complete resolved graph after all includes and
+variable substitutions have been processed. Each target is shown with its
+source graph, local logical name, output and resolved dependency mapping. The
+log also prints rules, defaults and run attributes, then exits without
+executing a build action:
+
+```powershell
+.\cmake-build-release\bin\rxbuild.exe --dump-graph `
+  tools\rxbuild\graph\composed\main.graph.build
+```
+
 An explicit target may be supplied as the second argument:
 
 ```powershell
@@ -105,8 +128,10 @@ END BUILD;
 DEFAULT_BUILD = reader;
 ```
 
-Logical names are simple identifiers and must be unique. The command line
-accepts either a logical name or a physical output path:
+Logical names are local to their graph file. When graphs are composed, an
+unqualified logical reference is accepted when exactly one included graph
+defines that name; ambiguous names are diagnosed. The command line accepts
+either a logical name or a physical output path:
 
 ```powershell
 .\cmake-build-release\bin\rxbuild.exe tools\rxbuild\graph\example.graph.build reader
@@ -115,6 +140,27 @@ accepts either a logical name or a physical output path:
 `DEPENDS_ON` and `DEPENDS_ON_BUILD` may both occur in one declaration. They
 are resolved in separate namespaces, and duplicate dependencies are rejected
 after resolution. A graph must not define both `DEFAULT` and `DEFAULT_BUILD`.
+
+## Composing graph plans
+
+Graph plans may include other graph plans:
+
+```text
+INCLUDE_GRAPH "ui/ispf.graph.build"
+INCLUDE_GRAPH "ui/text-inspector.graph.build"
+```
+
+Include paths are resolved relative to the graph containing the statement.
+Includes may be nested; a graph is loaded only once per invocation and include
+cycles are rejected. Variables and logical build names are evaluated in the
+local graph context. Physical output paths remain global and must not collide.
+Defaults from included graphs are not selected; the top-level graph supplies
+the effective default target.
+
+An unqualified `DEPENDS_ON_BUILD` or command-line logical target is resolved
+against the local graph first and then across included graphs. It must resolve
+to exactly one target. Names that occur in several graph contexts are reported
+as ambiguous in this phase.
 
 Native packaging and execution are separate typed actions:
 
@@ -156,10 +202,13 @@ attributes, matching the current PHP `setup.build` run parameters.
 - A target is rebuilt when its output is missing, an input is newer, or a
   dependency was rebuilt during the same invocation.
 - Existing targets are reported as `up to date`.
+- `--dry-run` validates and traverses the selected dependency closure without
+  executing actions or writing outputs.
 - The reader reports duplicate targets, unknown rules/targets, dependency
-  cycles, missing defaults, duplicate logical names, unknown logical
-  dependencies, ambiguous defaults, and variable errors.
-- Supported rule actions are `COMPILE PROGRAM`, `COMPILE GRAMMAR`,
+  cycles, missing defaults, duplicate logical names, duplicate dependency
+  references, unknown logical dependencies, ambiguous defaults, and variable
+  errors before executing the selected graph.
+- Supported rule actions are `COMPILE PROGRAM`, `COMPILE RXPP`, `COMPILE GRAMMAR`,
   `COMPILE READER`, `COMPILE APPLICATION`, `CREATE EXE`, and `RUN`.
 - Each action requires exactly one `INPUT`. The compile actions produce the
   declared `.rxbin` output through the existing cREXX toolchain. `COMPILE

@@ -13,51 +13,90 @@ main: procedure = .int
   graph = ''
   requested = ''
   verbose = 0
+  dry_run = 0
+  dump_graph = 0
   do i = 1 to argv[0]
     if argv[i] = '--verbose' | argv[i] = '-v' | argv[i] = '-verbose' | argv[i] = '-verbose1' | argv[i] = '-verbose2' | argv[i] = '-verbose3' | argv[i] = '-verbose4' then verbose = 1
     else if argv[i] = '-verbose0' then verbose = 0
+    else if argv[i] = '--dry-run' | argv[i] = '-n' then dry_run = 1
+    else if argv[i] = '--dump-graph' then dump_graph = 1
     else if argv[i] = '-keep' | argv[i] = '--keep' then iterate
     else if graph = '' then graph = argv[i]
     else if requested = '' then requested = argv[i]
     else do
-      say 'usage: rxbuild [--verbose|-v|-verbose0..4] [--keep|-keep] graph.build [target]'
+      say 'usage: rxbuild [--verbose|-v|-verbose0..4] [--dry-run|-n] [--dump-graph] [--keep|-keep] graph.build [target]'
       return 2
     end
   end
   if graph = '' then do
-    say 'usage: rxbuild [--verbose|-v|-verbose0..4] [--keep|-keep] graph.build [target]'
+    say 'usage: rxbuild [--verbose|-v|-verbose0..4] [--dry-run|-n] [--dump-graph] [--keep|-keep] graph.build [target]'
     return 2
   end
-  source = .binary
-  do
-    source = readbinary(graph)
-  on signal
-    say 'RXBUILD_IO: cannot read ' || graph
-    return 2
-  end
-  request = .lllanguage..request(rxgraphgrammar..language(),source)
-  status = request.parse()
-  if status <> 0 then do
-    say graph || ': ' || llsource..diagnostic(source,request.offset(),'RXBUILD_PARSE',request.error())
-    return status
-  end
-  tree = .lltree..view(request.tree(),request.root())
-  if tree.error() <> '' then do
-      say 'RXBUILD_TREE: ' || tree.error()
-    return 3
-  end
-  return execute_graph(tree,requested,verbose)
-
-execute_graph: procedure = .int
-  arg tree = .lltree..view, requested = .string, verbose = .int
   variables = .string[]
   rules = .string[]
   targets = .string[]
   defaults = .string[]
   default_builds = .string[]
-  rc = collect_graph(tree,tree.root(),variables,rules,targets,defaults,default_builds)
+  loaded = .string[]
+  loading = .string[]
+  rc = load_graph(graph,1,loaded,loading,rules,targets,defaults,default_builds)
   if rc <> 0 then return rc
-  if defaults[0] <> 0 & default_builds[0] <> 0 then return graph_error('both DEFAULT and DEFAULT_BUILD are defined')
+  return execute_graph(rules,targets,defaults,default_builds,requested,verbose,dry_run,dump_graph)
+
+load_graph: procedure = .int
+  arg graph = .string, is_root = .int, expose loaded = .string[], expose loading = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[]
+  i = .int
+  path = .rxfs..abspath(graph)
+  if member(loading,path) then do
+    say 'RXBUILD: graph include cycle detected:'
+    do i = 1 to loading[0]
+      say '  ' || loading[i]
+    end
+    say '  ' || path
+    return 4
+  end
+  if member(loaded,path) then return 0
+  source = .binary
+  do
+    source = readbinary(path)
+  on signal
+    say 'RXBUILD_IO: cannot read ' || path
+    return 2
+  end
+  request = .lllanguage..request(rxgraphgrammar..language(),source)
+  status = request.parse()
+  if status <> 0 then do
+    say path || ': ' || llsource..diagnostic(source,request.offset(),'RXBUILD_PARSE',request.error())
+    return status
+  end
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'RXBUILD_TREE: ' || tree.error()
+    return 3
+  end
+  loaded[loaded[0] + 1] = path
+  loading[loading[0] + 1] = path
+  variables = .string[]
+  rc = collect_graph(tree,tree.root(),variables,rules,targets,defaults,default_builds,path,is_root,loaded,loading)
+  depth = loading[0] - 1
+  previous_loading = .string[]
+  do i = 1 to depth
+    previous_loading[i] = loading[i]
+  end
+  call arraydrop loading
+  do i = 1 to previous_loading[0]
+    loading[i] = previous_loading[i]
+  end
+  return rc
+
+execute_graph: procedure = .int
+  arg rules = .string[], targets = .string[], defaults = .string[], default_builds = .string[], requested = .string, verbose = .int, dry_run = .int, dump_graph = .int
+  rc = validate_graph(rules,targets,defaults,default_builds)
+  if rc <> 0 then return rc
+  if dump_graph <> 0 then do
+    call dump_resolved_graph(rules,targets,defaults,default_builds)
+    return 0
+  end
   if requested = '' then do
     if default_builds[0] <> 0 then requested = default_builds[1]
     else if defaults[0] <> 0 then requested = defaults[1]
@@ -66,20 +105,163 @@ execute_graph: procedure = .int
       return 4
     end
   end
-  requested = substitute_value(requested,variables)
-  if substitution_error(requested) then do
-    say 'RXBUILD: ' || requested
-    return 4
-  end
   requested_target = resolve_target(targets,requested)
+  if requested_target = '__RXBUILD_AMBIGUOUS__' then return graph_error('ambiguous BUILD_NAME ' || requested)
   if requested_target = '' then return graph_error('unknown target ' || requested)
   visiting = .string[]
   completed = .string[]
   rebuilt = .string[]
-  return build_target(requested_target,rules,targets,visiting,completed,rebuilt,verbose)
+  return build_target(requested_target,rules,targets,visiting,completed,rebuilt,verbose,dry_run)
+
+dump_resolved_graph: procedure
+  arg rules = .string[], targets = .string[], defaults = .string[], default_builds = .string[]
+  i = .int
+  j = .int
+  logical_target = .int
+  scope_separator = .int
+  target_scope = .string
+  source_graph = .string
+  local_name = .string
+  logical_output = .string
+  say 'RXBUILD GRAPH BEGIN'
+  say 'RULES'
+  do i = 1 to rules[0] by 3
+    say '  rule=' || rules[i] || ' action=' || rules[i + 1] || ' description=' || rules[i + 2]
+  end
+  say 'TARGETS'
+  do i = 1 to targets[0] by 11
+    say '  target=' || targets[i]
+    source_graph = ''
+    target_scope = targets[i + 1]
+    if target_scope <> '' then do
+      scope_separator = lastpos('::',target_scope)
+      if scope_separator > 0 then do
+        source_graph = left(target_scope,scope_separator - 1)
+        local_name = substr(target_scope,scope_separator + 2)
+        say '    source_graph=' || source_graph
+        say '    name=' || local_name
+      end
+      else say '    name=' || target_scope
+    end
+    say '    rule=' || targets[i + 2]
+    inputs = split_paths(targets[i + 3])
+    do j = 1 to inputs[0]
+      say '    input=' || project_path(inputs[j])
+    end
+    dependencies = split_paths(targets[i + 4])
+    do j = 1 to dependencies[0]
+      say '    depends=' || project_path(dependencies[j])
+    end
+    logical_dependencies = split_paths(targets[i + 5])
+    do j = 1 to logical_dependencies[0]
+      logical_target = resolve_logical_target(targets,logical_dependencies[j],source_graph)
+      if logical_target > 0 then do
+        logical_output = targets[(logical_target - 1) * 11 + 1]
+        say '    depends_build=' || logical_dependencies[j] || ' -> output=' || logical_output
+      end
+      else say '    depends_build=' || logical_dependencies[j]
+    end
+    if targets[i + 6] <> '' then say '    workdir=' || project_path(targets[i + 6])
+    if targets[i + 7] <> '' then say '    argument=' || targets[i + 7] || ' ' || targets[i + 8]
+    if targets[i + 9] <> '' then say '    stdin=' || targets[i + 9]
+    runtime_arguments = split_paths(targets[i + 10])
+    do j = 1 to runtime_arguments[0]
+      say '    runtime_argument=' || project_path(runtime_arguments[j])
+    end
+  end
+  do i = 1 to defaults[0]
+    say 'DEFAULT=' || defaults[i]
+  end
+  do i = 1 to default_builds[0]
+    say 'DEFAULT_BUILD=' || default_builds[i]
+  end
+  say 'RXBUILD GRAPH END'
+  return
+
+validate_graph: procedure = .int
+  arg rules = .string[], targets = .string[], defaults = .string[], default_builds = .string[]
+  i = .int
+  j = .int
+  rc = .int
+  physical_deps = .string[]
+  physical_dependency = .string
+  target_dependencies = .string[]
+  logical_target = .int
+  logical_output = .string
+  if defaults[0] <> 0 & default_builds[0] <> 0 then return graph_error('both DEFAULT and DEFAULT_BUILD are defined')
+  do i = 1 to targets[0] by 11
+    target_name = targets[i]
+    rule_name = targets[i + 2]
+    if rule_index(rules,rule_name) = 0 then return graph_error('unknown rule ' || rule_name || ' for ' || target_name)
+    target_scope = targets[i + 1]
+    scope_separator = lastpos('::',target_scope)
+    if scope_separator > 0 then target_scope = left(target_scope,scope_separator - 1)
+    logical_deps = split_paths(targets[i + 5])
+    call arraydrop target_dependencies
+    physical_deps = split_paths(targets[i + 4])
+    do j = 1 to physical_deps[0]
+      physical_dependency = physical_deps[j]
+      if member(target_dependencies,physical_dependency) then return graph_error('duplicate dependency ' || physical_dependency || ' for ' || target_name)
+      target_dependencies[target_dependencies[0] + 1] = physical_dependency
+    end
+    do j = 1 to logical_deps[0]
+      logical_target = resolve_logical_target(targets,logical_deps[j],target_scope)
+      if logical_target < 0 then return graph_error('ambiguous build target name: ' || logical_deps[j] || ' for ' || target_name)
+      if logical_target = 0 then return graph_error('Unknown build target name: ' || logical_deps[j] || ' for ' || target_name)
+      logical_output = targets[(logical_target - 1) * 11 + 1]
+      if member(target_dependencies,logical_output) then return graph_error('duplicate dependency ' || logical_deps[j] || ' for ' || target_name)
+      target_dependencies[target_dependencies[0] + 1] = logical_output
+    end
+  end
+  visiting = .string[]
+  completed = .string[]
+  do i = 1 to targets[0] by 11
+    rc = validate_dependency_cycle(targets,targets[i],visiting,completed)
+    if rc <> 0 then return rc
+  end
+  do i = 1 to defaults[0]
+    if target_index(targets,defaults[i]) = 0 then return graph_error('unknown default target ' || defaults[i])
+  end
+  do i = 1 to default_builds[0]
+    resolved_default = resolve_target(targets,default_builds[i])
+    if resolved_default = '__RXBUILD_AMBIGUOUS__' then return graph_error('ambiguous default BUILD_NAME ' || default_builds[i])
+    if resolved_default = '' then return graph_error('unknown default BUILD_NAME ' || default_builds[i])
+  end
+  return 0
+
+validate_dependency_cycle: procedure = .int
+  arg targets = .string[], name = .string, expose visiting = .string[], expose completed = .string[]
+  i = .int
+  rc = .int
+  logical_target = .int
+  if member(completed,name) then return 0
+  if member(visiting,name) then return graph_error('dependency cycle at ' || name)
+  t = target_index(targets,name)
+  if t = 0 then return graph_error('unknown target ' || name)
+  visiting[visiting[0] + 1] = name
+  dependencies = .string[]
+  physical_deps = split_paths(targets[(t - 1) * 11 + 5])
+  do i = 1 to physical_deps[0]
+    if target_index(targets,physical_deps[i]) <> 0 then dependencies[dependencies[0] + 1] = physical_deps[i]
+  end
+  logical_deps = split_paths(targets[(t - 1) * 11 + 6])
+  target_scope = targets[(t - 1) * 11 + 2]
+  scope_separator = lastpos('::',target_scope)
+  if scope_separator > 0 then target_scope = left(target_scope,scope_separator - 1)
+  do i = 1 to logical_deps[0]
+    logical_target = resolve_logical_target(targets,logical_deps[i],target_scope)
+    if logical_target > 0 then dependencies[dependencies[0] + 1] = targets[(logical_target - 1) * 11 + 1]
+  end
+  do i = 1 to dependencies[0]
+    rc = validate_dependency_cycle(targets,dependencies[i],visiting,completed)
+    if rc <> 0 then return rc
+  end
+  visiting[visiting[0]] = ''
+  completed[completed[0] + 1] = name
+  return 0
 
 collect_graph: procedure = .int
-  arg tree = .lltree..view, container = .int, expose variables = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[]
+  arg tree = .lltree..view, container = .int, expose variables = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], origin = .string, is_root = .int, expose loaded = .string[], expose loading = .string[]
   name=.string
   child=.string
   j=.int
@@ -119,8 +301,11 @@ collect_graph: procedure = .int
         end
       end
       if name = '' | action = '' then return graph_error('RULE requires a name and ACTION')
-      if rule_index(rules,name) <> 0 then return graph_error('duplicate rule ' || name)
-      call append_rule rules,name,action,description
+      existing_rule = rule_index(rules,name)
+      if existing_rule <> 0 then do
+        if upper(rules[(existing_rule - 1) * 3 + 2]) <> upper(action) | rules[(existing_rule - 1) * 3 + 3] <> description then return graph_error('conflicting rule ' || name)
+      end
+      else call append_rule rules,name,action,description
     end
     else if kind = 'build.statement' then do
       name = ''
@@ -160,9 +345,10 @@ collect_graph: procedure = .int
       if substitution_error(name) then return graph_error(name)
       if name = '' | rule = '' then return graph_error('BUILD requires an output and RULE')
       if build_name <> '' & name = build_name then return graph_error('BUILD_NAME must differ from its physical output ' || name)
-      if build_name <> '' & target_name_index(targets,build_name) <> 0 then return graph_error('duplicate BUILD_NAME ' || build_name)
+      scoped_build_name = ''
+      if build_name <> '' then scoped_build_name = origin || '::' || build_name
       if target_index(targets,name) <> 0 then return graph_error('duplicate target ' || name)
-      call append_target targets,name,build_name,rule,join_paths(inputs),join_paths(deps),join_paths(logical_deps),workdir,argument,argument_value,stdin,join_paths(runtime_args)
+      call append_target targets,name,scoped_build_name,rule,join_paths(inputs),join_paths(deps),join_paths(logical_deps),workdir,argument,argument_value,stdin,join_paths(runtime_args)
     end
     else if kind = 'default.statement' then do
       value = substitute_value(unquote(tree.text(tree.child(node,2))),variables)
@@ -170,14 +356,21 @@ collect_graph: procedure = .int
       defaults[defaults[0] + 1] = value
     end
     else if kind = 'default.build.statement' then do
-      default_builds[default_builds[0] + 1] = strip(tree.text(tree.child(node,3)))
+      if is_root <> 0 then default_builds[default_builds[0] + 1] = strip(tree.text(tree.child(node,3)))
+    end
+    else if kind = 'include.statement' then do
+      include_path = substitute_value(unquote(tree.text(tree.child(node,2))),variables)
+      if substitution_error(include_path) then return graph_error(include_path)
+      include_path = resolve_include_path(origin,include_path)
+      rc = load_graph(include_path,0,loaded,loading,rules,targets,defaults,default_builds)
+      if rc <> 0 then return rc
     end
     else return graph_error('unknown statement ' || kind)
   end
   return 0
 
 build_target: procedure = .int
-  arg name = .string, rules = .string[], targets = .string[], expose visiting = .string[], expose completed = .string[], expose rebuilt = .string[], verbose = .int
+  arg name = .string, rules = .string[], targets = .string[], expose visiting = .string[], expose completed = .string[], expose rebuilt = .string[], verbose = .int, dry_run = .int
   rc=.int
   if member(completed,name) then return 0
   if member(visiting,name) then return graph_error('dependency cycle at ' || name)
@@ -191,13 +384,17 @@ build_target: procedure = .int
   action = upper(rules[(rule_i - 1) * 3 + 2])
   physical_deps = split_paths(targets[(t - 1) * 11 + 5])
   logical_deps = split_paths(targets[(t - 1) * 11 + 6])
+  target_scope = targets[(t - 1) * 11 + 2]
+  scope_separator = lastpos('::',target_scope)
+  if scope_separator > 0 then target_scope = left(target_scope,scope_separator - 1)
   deps = .string[]
   do i = 1 to physical_deps[0]
     if member(deps,physical_deps[i]) then return graph_error('duplicate dependency ' || physical_deps[i] || ' for ' || name)
     deps[deps[0] + 1] = physical_deps[i]
   end
   do i = 1 to logical_deps[0]
-    logical_target = target_name_index(targets,logical_deps[i])
+    logical_target = resolve_logical_target(targets,logical_deps[i],target_scope)
+    if logical_target < 0 then return graph_error('ambiguous build target name: ' || logical_deps[i])
     if logical_target = 0 then return graph_error('Unknown build target name: ' || logical_deps[i])
     logical_output = targets[(logical_target - 1) * 11 + 1]
     if logical_output = name then return graph_error('target refers to itself: ' || name)
@@ -207,7 +404,7 @@ build_target: procedure = .int
   do i = 1 to deps[0]
     dep = deps[i]
     if target_index(targets,dep) <> 0 then do
-      rc = build_target(dep,rules,targets,visiting,completed,rebuilt,verbose)
+      rc = build_target(dep,rules,targets,visiting,completed,rebuilt,verbose,dry_run)
       if rc <> 0 then return rc
     end
     else if .rxfs..isfile(project_path(dep)) = 0 then return graph_error('missing dependency ' || dep || ' for ' || name)
@@ -225,6 +422,13 @@ build_target: procedure = .int
   if action = 'CREATE EXE' then output = native_executable_path(output)
 
   if action = 'RUN' then do
+    if dry_run <> 0 then do
+      if verbose <> 0 then call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,runtime_args,'dry-run'
+      say 'RXBUILD: would run ' || inputs[1]
+      visiting[visiting[0]] = ''
+      completed[completed[0] + 1] = name
+      return 0
+    end
     if verbose <> 0 then call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,runtime_args,'run'
     if inputs[0] <> 1 then return graph_error('RUN requires exactly one INPUT for ' || name)
     rc = run_program(inputs[1],workdir,argument,argument_value,stdin,runtime_args)
@@ -251,10 +455,17 @@ build_target: procedure = .int
     end
   end
   if verbose <> 0 then do
-    if stale <> 0 then call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,runtime_args,'build'
+    if stale <> 0 & dry_run <> 0 then call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,runtime_args,'dry-run'
+    else if stale <> 0 then call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,runtime_args,'build'
     else call report_target name,action,inputs,deps,workdir,argument,argument_value,stdin,runtime_args,'up-to-date'
   end
   if stale <> 0 then do
+    if dry_run <> 0 then do
+      say 'RXBUILD: would build ' || name
+      visiting[visiting[0]] = ''
+      completed[completed[0] + 1] = name
+      return 0
+    end
     if inputs[0] <> 1 then return graph_error(action || ' requires exactly one INPUT for ' || name)
     dir = dirname(name)
     output_name = basename_no_suffix(name)
@@ -286,6 +497,17 @@ resolve_target: procedure = .string
   logical = target_name_index(targets,requested)
   if logical <> 0 then return targets[(logical - 1) * 11 + 1]
   if target_index(targets,requested) <> 0 then return requested
+  matches = 0
+  result = ''
+  suffix = '::' || requested
+  do i = 1 to targets[0] by 11
+    if right(targets[i + 1],length(suffix)) = suffix then do
+      matches = matches + 1
+      result = targets[i]
+    end
+  end
+  if matches > 1 then return '__RXBUILD_AMBIGUOUS__'
+  if matches = 1 then return result
   return ''
 
 report_target: procedure
@@ -589,6 +811,22 @@ target_name_index: procedure = .int
   end
   return 0
 
+resolve_logical_target: procedure = .int
+  arg targets = .string[], name = .string, scope = .string
+  scoped = target_name_index(targets,scope || '::' || name)
+  if scoped <> 0 then return scoped
+  matches = 0
+  result = 0
+  suffix = '::' || name
+  do i = 1 to targets[0] by 11
+    if right(targets[i + 1],length(suffix)) = suffix then do
+      matches = matches + 1
+      result = ((i - 1) / 11) + 1
+    end
+  end
+  if matches > 1 then return -1
+  return result
+
 member: procedure = .int
   arg values = .string[], value = .string
   do i = 1 to values[0]
@@ -655,6 +893,14 @@ substitute_value: procedure = .string
 substitution_error: procedure = .int
   arg value = .string
   return pos('RXBUILD substitution error:',value) > 0
+
+resolve_include_path: procedure = .string
+  arg origin = .string, include_path = .string
+  if left(include_path,1) = '/' | (length(include_path) >= 2 & substr(include_path,2,1) = ':') then return .rxfs..abspath(include_path)
+  normalized_origin = translate(origin,'/','\')
+  slash = lastpos('/',normalized_origin)
+  if slash = 0 then return .rxfs..abspath(include_path)
+  return .rxfs..abspath(left(normalized_origin,slash) || include_path)
 
 project_root: procedure = .string
   root = .rxfs..cwd()
