@@ -1,0 +1,92 @@
+/* One browser Worker owns a RAG query VM; RAG owns the linked retrieval code. */
+#include <rxvml.h>
+#include <rxbin.h>
+#include <emscripten.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct Image { void *bytes; struct Image *next; } Image;
+static rxvml_context *context;
+static Image *images;
+static size_t image_bytes;
+static int running, program_rc;
+static char error_text[1024];
+
+extern void crexx_fs_init(void);
+
+static int fail(const char *message) {
+    snprintf(error_text, sizeof(error_text), "%s", message ? message : "RAG VM failure");
+    return -1;
+}
+
+EMSCRIPTEN_KEEPALIVE const char *rag_vm_error(void) { return error_text; }
+EMSCRIPTEN_KEEPALIVE int rag_vm_program_rc(void) { return program_rc; }
+
+EMSCRIPTEN_KEEPALIVE int rag_vm_destroy(void) {
+    if (running) return fail("VM is running");
+    if (context) rxvml_destroy(context);
+    context = NULL;
+    while (images) {
+        Image *image = images;
+        images = image->next;
+        free(image->bytes);
+        free(image);
+    }
+    image_bytes = 0;
+    return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE int rag_vm_create(void) {
+    if (running) return fail("VM is running");
+    rag_vm_destroy();
+    error_text[0] = 0;
+    program_rc = 0;
+    crexx_fs_init();
+    context = rxvml_create(NULL, 0);
+    return context ? 0 : fail("Cannot create RAG VM");
+}
+
+EMSCRIPTEN_KEEPALIVE int rag_vm_load(const void *bytes, size_t length) {
+    if (!context || running) return fail("VM cannot load now");
+    if (!bytes || !length || length > 16u * 1024u * 1024u - image_bytes)
+        return fail("RXBIN image budget exceeded");
+    Image *image = calloc(1, sizeof(*image));
+    if (!image) return fail("Cannot allocate image record");
+    image->bytes = malloc(length);
+    if (!image->bytes) { free(image); return fail("Cannot allocate image"); }
+    memcpy(image->bytes, bytes, length);
+    image->next = images;
+    images = image;
+    image_bytes += length;
+    if (rxvml_load_module_buffer(context, image->bytes, length) <= 0)
+        return fail(rxbin_last_error());
+    return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE int rag_vm_run(const char *question) {
+    const char *args[3];
+    const char *message = NULL;
+    size_t length;
+    int rc;
+    if (!context || running || !question) return fail("Invalid RAG query start");
+    length = 0;
+    while (length <= 1024 && question[length]) length++;
+    if (!length || length > 1024 || strchr(question, '\n') || strchr(question, '\r'))
+        return fail("Invalid RAG question");
+    args[0] = "/library";
+    args[1] = "/profile.tsv";
+    args[2] = question;
+    error_text[0] = 0;
+    program_rc = 0;
+    running = 1;
+    rc = rxvml_run(context, 3, args, &program_rc);
+    running = 0;
+    if (rc) {
+        rxvml_last_error(context, &message);
+        fail(message ? message : "RAG VM run failed");
+    }
+    if (fflush(stdout) || fflush(stderr)) return fail("RAG stream flush failed");
+    return rc;
+}

@@ -1,8 +1,8 @@
 # UI architecture and capability expansion
 
 Status: STEP01–07, STEP07A and STEP12–13 done for the selected macOS ARM64
-development profile; AC01–08 and AC14–16 verified in that profile. STEP08–11,
-AC09–13 and public delivery gates remain open.
+development profile; AC01–08 and AC14–16 verified in that profile. STEP08 is
+in progress; STEP09–11, AC09–13 and public delivery gates remain open.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not change that baseline.
@@ -56,7 +56,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | done |
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | done |
 | **UIX-STEP07A** Process-designer showcase | STEP07; independent of service steps | Add a bounded Level G linear-process example with per-selected-step editing; complete the browser/ANSI text-input host seams, then prove one application model across GTK, ANSI and both browser routes. | AC16 | done |
-| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Add `rag.query`, the hosted adapter and local transient read-only proof; compare cited evidence and compatible embeddings under D01–03. | AC09–10 | todo |
+| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Add `rag.query`, the hosted adapter and local transient read-only proof; compare cited evidence and compatible embeddings under D01–03. | AC09–10 | in progress |
 | **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
 | **UIX-STEP10** RAG cache | STEP08 transient local query proof | Prove D13 OPFS cache identity, reload, export/re-import, quota/eviction, multi-tab and cleanup, or record the conditional transient fallback. | AC12 | todo |
 | **UIX-STEP11** Local-write assessment | STEP08 and STEP10 evidence | Assess D14 browser corpus writes with the RAG owner and make a separate implementation decision from concrete evidence. | AC13 | todo |
@@ -480,10 +480,11 @@ separately if a compatible embedding provider is unavailable.
 The first STEP08 consumer is `examples/ui/rag-query`. Its Level G application
 owns `rag.query` and displays a bounded cited passage with library/generation
 identity. The hosted route declares an application service for read-only
-lexical `query.inspect` on a configured library. The local Wasm route declares
-an application executor that calls a stateless, same-origin HTTP query API;
-the UI delta/resync protocol remains inside the browser. The service makes no
-provider call or corpus write. Adrian approved internal-only service use of
+lexical `query.inspect` on a configured library. Its current browser-local UI
+shell uses an application executor that calls a stateless, same-origin HTTP
+query API; that query still runs on the server. The UI delta/resync protocol
+remains inside the browser. The service makes no provider call or corpus write.
+Adrian approved internal-only service use of
 the active Public Purpose Lab heart-failure library on 9 November 2026. The
 loopback proof uses a fixed question and compares the cited result with native
 read-only `query.inspect`; it does not publish or distribute corpus files.
@@ -493,14 +494,31 @@ SQLite/vector and hosted retrieval comparisons under D01–03; AC09–10 and the
 compatible embedding proof remain open.
 
 For the targeted browser-local route, the existing `rxsqlite` and `rxvector`
-sources compile and link into the single-thread Wasm VM; focused Level G probes
-can open a read-only MEMFS SQLite file and decode an RXVIDX/1 index. This does
-not yet run RAG's query owner or import the reference library in a browser.
-The active heart-failure sidecar is `ivf-flat-v1` JSON, not a bare RXVIDX/1
-file, and its library includes substantial operational history. The next D02
-proof must validate the RAG-owned sidecar/membership contract and compare a
-bounded serving snapshot or measured full-library import with native retrieval
-before selecting a browser storage route.
+sources compile and link into a single-thread Wasm VM together with the needed
+`rx_hash`, `rxfs` and `rxplatform` providers. A query-only Level G package
+linked from RAG's existing `ragstore`, `ragprofilefile`, `ragretrieval` and
+`ragevidence` modules runs without the native llama provider. In an actual
+browser Worker, a user-selected transient SQLite/manifest/sidecar/profile
+bundle returned the same library/generation, top citation and excerpt digest
+as native RAG for one lexical heart-failure question. The Worker used
+`openragstore(..., "readonly", ...)` and RAG's `retrieveevidence`; it did not
+reimplement retrieval in JavaScript. This establishes feasibility of a
+browser-local lexical lookup on that bounded input, not AC09–10 acceptance.
+The opt-in [`rag-query/wasm`](../../examples/ui/rag-query/wasm) build retains
+this provider-capable VM boundary separately from the ordinary UI Worker; it
+accepts RAG-owned RXBIN modules and a transient in-memory library/profile.
+
+The proof used a manually pruned copy of the active library. RAG must own a
+supported read-only serving export that preserves corpus/snapshot identity and
+validates its SQLite/sidecar membership; the proof copy is not a distributable
+format. The active sidecar is `ivf-flat-v1` JSON, not a bare RXVIDX/1 file.
+Next, RAG should provide a query-only entry/packaging contract and serving
+export, while the UI application executor imports a selected bundle into a
+separate Wasm Worker with size, identity, failure and cancellation bounds. Then
+compare representative lexical, vector and graph evidence with native RAG and
+prove compatible query embedding under D03. The full active-library import,
+sidecar validation, reload and cache behavior remain unverified; D13 owns
+persistence.
 
 D13 adds an OPFS read-only cache only after transient import works. SQLite's
 [browser VFS guidance](https://www.sqlite.org/wasm/doc/trunk/persistence.md)
