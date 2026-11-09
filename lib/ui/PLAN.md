@@ -507,9 +507,17 @@ browser-local lexical lookup on that bounded input, not AC09–10 acceptance.
 The opt-in [`rag-query/wasm`](../../examples/ui/rag-query/wasm) build retains
 this provider-capable VM boundary separately from the ordinary UI Worker; it
 accepts RAG-owned RXBIN modules and a transient in-memory library/profile.
+The unchanged active heart-failure SQLite file also passed a direct browser
+read test: a local file selection placed it in that Worker, and an `rxsqlite`
+read-only FTS query returned the same `heart` match count as native SQLite;
+an attempted write was rejected. This proves that even the full reference
+database can be looked up transiently on the selected Chromium/macOS host.
+It does not establish acceptable import cost, memory limits, persistent VFS,
+multi-tab behavior or a supported serving bundle.
 
-The proof used a manually pruned copy of the active library. RAG must own a
-supported read-only serving export that preserves corpus/snapshot identity and
+The cited RAG lookup proof used a manually pruned copy of the active library.
+RAG must own a supported read-only serving export that preserves
+corpus/snapshot identity and
 validates its SQLite/sidecar membership; the proof copy is not a distributable
 format. The active sidecar is `ivf-flat-v1` JSON, not a bare RXVIDX/1 file.
 Next, RAG should provide a query-only entry/packaging contract and serving
@@ -543,3 +551,15 @@ a selected cREXX provider or proof of RAG embedding compatibility. A port of
 the native inference engine needs a real Wasm backend; its Metal/CUDA/Vulkan
 backends do not become WebGPU automatically. D04 selects map rendering, vector
 scoring, embedding and generation acceleration separately after evidence.
+
+Browser-local small-model inference itself is feasible: on the selected
+Chromium/macOS host, a user-selected Qwen3 0.6B Q4 GGUF ran through
+[wllama](https://github.com/ngxson/wllama)'s llama.cpp Wasm CPU backend and
+produced a short completion without a model-server request. This tests model
+loading and generation in the browser, not the CREXX native `rxllama` provider,
+the `.llm` service adapter, WebGPU, answer quality, citation validation or
+RAG-compatible BGE query embeddings. STEP09 should connect a bounded
+application-owned compute Worker to the existing effect contract and qualify
+those behaviors independently; it need not wait for D03 embedding proof.
+Browser API and model-runtime glue may use JavaScript while the application
+state and decisions remain in Level G.
