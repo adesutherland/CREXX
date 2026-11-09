@@ -108,9 +108,9 @@ which route must still pass after any agreed fallback.
 | ID | Settled direction | Remaining gate |
 | --- | --- | --- |
 | **UIX-D01** | Hosted and browser-local read-only cited RAG query share `rag.query`; hosted-only is the conditional fallback. Local ingestion stays separate. | D02 local proof. |
-| **UIX-D02** | Evaluate matching `rxsqlite`/`rxvector` Wasm builds and a validated cited lexical/vector/graph query using D03. | Implementation feasibility; D13 owns persistence proof. |
-| **UIX-D03** | Hosted and compatible browser-local query embeddings share one contract; hosted-only is the conditional fallback. | Model/input/dimension compatibility and local CPU/Wasm or WebGPU backend. |
-| **UIX-D04** | Evaluate GPU acceleration independently per workload. Canvas 2D maps and exact CPU `rxvector` are baselines; browser-local models do not require WebGPU. | Representative correctness, latency, resource, device-loss and fallback proof for each selected accelerator. |
+| **UIX-D02** | Evaluate matching `rxsqlite`/`rxvector` Wasm builds and a validated cited lexical/vector/graph query using D03. | Lexical and vector lookup work in the selected browser profile; graph comparison, supported serving export and full acceptance remain open. D13 owns persistence proof. |
+| **UIX-D03** | Hosted and compatible browser-local query embeddings share one contract; hosted-only is the conditional fallback. | Browser CPU and WebGPU BGE embeddings run; pinned native model/input/profile compatibility and provider failure remain open. |
+| **UIX-D04** | Evaluate GPU acceleration independently per workload. Canvas 2D maps and exact CPU `rxvector` are baselines; browser-local models do not require WebGPU. | BGE WebGPU offload works on the selected host; representative speed/resource, device-loss and fallback proof remain open for each accelerator. |
 | **UIX-D05** | Discover precise per-operation support at composition, preflight complete views/scenes, and return typed correlated refusal with last frame intact. Applications own fallbacks and command availability. | Exact manifest/API, bounded retry and no partial state/projection proof. |
 | **UIX-D06** | Capabilities stay fixed per session. Internal recovery preserves advertised semantics; otherwise typed host loss starts a new session from application-owned saved state. | Failure, in-flight work, snapshot and restart API/proof. |
 | **UIX-D07** | Both local Wasm Worker and hosted native browser sessions use one browser projection and versioned view/input/effect envelope. | Local owner-turn/runtime image and hosted auth/reconnect/revision proof. |
@@ -489,9 +489,9 @@ the active Public Purpose Lab heart-failure library on 9 November 2026. The
 loopback proof uses a fixed question and compares the cited result with native
 read-only `query.inspect`; it does not publish or distribute corpus files.
 Top-one lexical evidence is a lookup demonstration, not answer relevance or
-clinical qualification. STEP08 still requires representative local
-SQLite/vector and hosted retrieval comparisons under D01–03; AC09–10 and the
-compatible embedding proof remain open.
+clinical qualification. STEP08 still requires the supported serving route,
+graph and hosted comparisons, cancellation and compatible embedding proof;
+AC09–10 remain open.
 
 For the targeted browser-local route, the existing `rxsqlite` and `rxvector`
 sources compile and link into a single-thread Wasm VM together with the needed
@@ -515,18 +515,54 @@ database can be looked up transiently on the selected Chromium/macOS host.
 It does not establish acceptable import cost, memory limits, persistent VFS,
 multi-tab behavior or a supported serving bundle.
 
+A further transient browser proof used the full active heart-failure SQLite
+library, its manifest/profile and published `ivf-flat-v1` sidecar. Wllama
+loaded the library's BGE-small-en-v1.5 F16 GGUF model and generated a
+384-dimensional query vector. The scratch page then ran a cREXX Wasm VM on
+its main thread; RAG's `preparevectorsidecar` and
+`retrieveevidencewithsidecar` read the selected library and returned
+`active-ann-ivf-rxvector`, 12 vector candidates
+and a cited passage. Native RAG given the **same vector bytes** returned the
+same library/generation, sidecar state, candidate count, citation and excerpt
+digest. Both CPU Wasm and WebGPU-generated browser vectors passed that lookup;
+the WebGPU runtime reported four of thirteen BGE layers offloaded on the
+selected Apple Metal host. This establishes browser-local vector lookup and
+GPU execution feasibility on that host. It is not a throughput claim or a
+qualified application service. The installed native embedding provider could
+not load a verified CPU backend for a fresh native-vector comparison, so the
+browser embedding's equivalence to RAG's pinned model/input profile is still
+unproved. Preserve that profile gate rather than accepting dimensional or
+retrieval agreement as equivalence.
+
 The cited RAG lookup proof used a manually pruned copy of the active library.
 RAG must own a supported read-only serving export that preserves
 corpus/snapshot identity and
 validates its SQLite/sidecar membership; the proof copy is not a distributable
 format. The active sidecar is `ivf-flat-v1` JSON, not a bare RXVIDX/1 file.
-Next, RAG should provide a query-only entry/packaging contract and serving
-export, while the UI application executor imports a selected bundle into a
-separate Wasm Worker with size, identity, failure and cancellation bounds. Then
-compare representative lexical, vector and graph evidence with native RAG and
-prove compatible query embedding under D03. The full active-library import,
-sidecar validation, reload and cache behavior remain unverified; D13 owns
-persistence.
+The next STEP08 implementation increment follows these ownership boundaries:
+
+1. RAG owns a supported, immutable read-only serving export and query-only
+   Level G entry. It checks SQLite/manifest/sidecar membership, corpus and
+   generation identity, model/input profile and citation provenance. Generic
+   `rxsqlite` and `rxvector` remain CREXX providers.
+2. The RAG application owns its `rag.query` executor. A browser compute Worker
+   generates the query vector with a profile-selected model and CPU Wasm or
+   optional WebGPU; a separate cREXX Wasm Worker runs RAG's existing retrieval
+   code over the selected export. Browser API/model glue may be JavaScript;
+   retrieval, evidence policy and UI application decisions stay in Level G.
+   The existing hosted executor implements the same bounded effect contract.
+3. The effect carries request and corpus/profile identities, retrieval mode and
+   a bounded cited result. Its executor rejects stale completion, supports
+   cancellation and reports provider, quota, import and device failure to the
+   application. Compare lexical, vector and graph results with native RAG,
+   including a native-generated compatible query vector, before closing AC09–10.
+
+The full active-library transient import and sidecar validation now work in one
+browser profile. Moving that scratch proof to the intended separate Workers,
+and verifying reload, cache, multi-tab, resource bounds and a supported
+serving bundle remain open. D13 owns persistence. Browser GPU use is
+optional per workload, with CPU Wasm as the embedding fallback; neither UI
+rendering nor exact CPU `rxvector` scoring depends on WebGPU.
 
 D13 adds an OPFS read-only cache only after transient import works. SQLite's
 [browser VFS guidance](https://www.sqlite.org/wasm/doc/trunk/persistence.md)
