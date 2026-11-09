@@ -159,8 +159,9 @@ The current graphics profile is bounded to one scene per session, 512 items and
 drawing; ANSI chooses application-owned semantic alternatives. Object picking
 uses bounded fixed-point world coordinates and half-open item rectangles;
 edge selection, layering and accessible graph navigation remain future work.
-No GPU accelerator has been selected. RAG query, compatible embedding,
-generation and application packages are separate later plan steps.
+No GPU accelerator has been selected. RAG query, compatible embedding and
+generation remain open application-service steps. Application packages are
+implemented in the selected development profile.
 
 Peter's RXPP DEFINE-GUI is a bounded authoring façade over these contracts.
 Its generated view takes current values from an application-owned component;

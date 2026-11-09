@@ -1,8 +1,8 @@
 # UI architecture and capability expansion
 
-Status: STEP01–07 and STEP07A done for the selected macOS ARM64 development
-profile; AC01–08 and AC16 verified in that profile. AC09–15 and public delivery
-gates remain open.
+Status: STEP01–07, STEP07A and STEP12–13 done for the selected macOS ARM64
+development profile; AC01–08 and AC14–16 verified in that profile. STEP08–11,
+AC09–13 and public delivery gates remain open.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not change that baseline.
@@ -67,7 +67,8 @@ At the start of STEP08–10, place retrieval, provider and cache delivery
 criteria in the owning RAG/application plan; AC09–12 cover only UI service and
 cross-route consumer boundaries. STEP11 is an assessment under AC13; any later
 writable RAG implementation needs its own decision and owning-plan criteria.
-STEP08–13 are separate gates and do not expand STEP07 or the Release 1 baseline.
+STEP08–11 remain separate gates; STEP12–13 completed independently. None
+expands STEP07 or the Release 1 baseline.
 
 For each development increment, use the smallest changed-component build and
 behavior/contract checks, inspect representative RXAS for changed cREXX and
