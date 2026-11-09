@@ -78,7 +78,7 @@ export function renderScene(node, replica, input) {
     document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   element.dataset.nodeId = node.id;
   element.setAttribute('role', 'img');
-  element.setAttribute('aria-label', isMap ? 'Strategy map' : 'Editable graph');
+  element.setAttribute('aria-label', isMap ? 'Tile Map Demo' : 'Editable graph');
   element.tabIndex = 0;
   element.style.width = `${width}px`;
   element.style.height = `${height}px`;

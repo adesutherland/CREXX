@@ -1,7 +1,7 @@
 # Experimental cREXX UI library
 
 A driver-independent **Level G** programming model, demonstrated by Text
-Inspector, an editable graph and a strategy map across GTK, ANSI and both
+Inspector, an editable graph and Tile Map Demo across GTK, ANSI and both
 browser routes. The line TUI remains a form compatibility host. This is a
 reference implementation to extend, not a complete widget toolkit.
 

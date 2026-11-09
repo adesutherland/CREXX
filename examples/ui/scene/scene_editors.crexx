@@ -1,4 +1,4 @@
-/* Independent graph and strategy-map application features on the common UI. */
+/* Independent graph and tile-map application features on the common UI. */
 options levelg
 namespace scene_editors expose make_graph_editor_session make_map_editor_session graph_editor map_editor
 import rxfnsb
@@ -281,7 +281,7 @@ map_editor: class implements .uicomponent
     if point.valid() then _selected = _scene.pick(point)
     return
   view: method = .uiview
-    view = .uiview_impl("Strategy map")
+    view = .uiview_impl("Tile Map Demo")
     if _graphical then call view.add_scene("map", _packet, "root")
     else do
       call view.add_label("heading", "Map cell viewport 4x4", "root")

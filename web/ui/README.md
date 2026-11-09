@@ -1,12 +1,12 @@
 # Browser UI routes
 
 One Level G ui_web.crexx owner loop runs Text Inspector, the editable graph,
-the strategy map or the process designer. The local route runs its RXBIN in a
-single-threaded Wasm Worker. The hosted route runs the same RXBIN in a native VM behind a loopback
-authenticated relay. Both use projection.mjs: HTML form controls, SVG for
-the graph and Canvas 2D for the map. Browser code owns file grants and physical
-input; cREXX owns application transitions. The scene frame carries its delta
-and a full authoritative snapshot for reconnect and resync.
+Tile Map Demo or the process designer. The local route runs its RXBIN in a
+single-threaded Wasm Worker. The hosted route runs the same RXBIN in a native
+VM behind a loopback authenticated relay. Both use projection.mjs: HTML form
+controls, SVG for the graph and Canvas 2D for the map. Browser code owns file
+grants and physical input; cREXX owns application transitions. The scene frame
+carries its delta and a full authoritative snapshot for reconnect and resync.
 
 ## Build and serve
 

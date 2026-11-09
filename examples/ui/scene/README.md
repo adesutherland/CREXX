@@ -1,13 +1,13 @@
-# Graph and map UI consumers
+# Graph and tile map UI consumers
 
 scene_editors.crexx contains two independent handwritten Level G features.
-The graph owns its nodes, edges, selection and undo history. The map owns its
-terrain, unit, turn and selection state. Both publish scene revisions through
+The graph owns its nodes, edges, selection and undo history. Tile Map Demo owns
+its terrain, unit, turn and selection state. Both publish scene revisions through
 uisceneowner, accept normalized pointer and keyboard events, and choose a
 semantic fallback when a host has no scene operations. The shared UI has no
 graph or game rules.
 
-| Route | Graph | Map |
+| Route | Graph | Tile Map Demo |
 | --- | --- | --- |
 | GTK | Cairo drawing area with commands, pointer and keyboard | Cairo terrain and unit scene with turn and viewport controls |
 | ANSI | Labeled node/edge list and commands | Four by four cell viewport, detail and commands |
