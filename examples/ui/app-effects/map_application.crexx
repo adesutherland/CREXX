@@ -1,0 +1,102 @@
+/* Map-owned turn journal effects. Turn rules remain in the map feature. */
+options levelg
+namespace map_application expose make_map_application_session map_application
+import rxfnsb
+import ui
+import ui_contract
+import scene_editors
+
+make_map_application_session: procedure = .uisession
+  arg id = .string, caps = .uicapabilities
+  session = .uisession(id, caps)
+  graphical = caps.has("form.scene") & caps.has("scene.tile") & caps.has("scene.unit")
+  rc = session.add_component("root", .map_application(graphical))
+  if rc < 0 then return session
+  do index = 1 to 5
+    action = word("turn pan zoom select quit", index)
+    event = "map." || action || ".requested"
+    if action = "quit" then event = "ui.close.requested"
+    else rc = session.register_event(event)
+    rc = session.register_command(.uicommand("map." || action, action, "root", event, substr(action, 1, 1)))
+  end
+  rc = session.register_event("map.restore.requested")
+  rc = session.register_event("map.journal.appended", '{"revision":{"type":"integer","required":true,"minimum":1,"maximum":1000000}}', "completion")
+  rc = session.register_event("map.journal.loaded", '{"revision":{"type":"integer","required":true,"minimum":1,"maximum":1000000},"record":{"type":"string","required":true,"maxLength":256}}', "completion")
+  rc = session.register_effect("map.journal.append", "map.journal", '{"expected_revision":{"type":"integer","required":true,"minimum":0,"maximum":1000000},"record":{"type":"string","required":true,"maxLength":256}}', "map.journal.appended")
+  rc = session.register_effect("map.journal.load", "map.journal", '{}', "map.journal.loaded")
+  rc = session.register_command(.uicommand("map.restore", "Load turn", "root", "map.restore.requested", "l"))
+  return session
+
+map_application: class implements .uicomponent
+  _map = .map_editor
+  _revision = .int
+  _pending = .int
+  _status = .string
+  *: factory
+    arg graphical = .int
+    _map = .map_editor(graphical)
+    _revision = 0
+    _pending = 0
+    _status = "Turn not saved"
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    name = event.name()
+    effects = .uieffects()
+    if name = "map.restore.requested" then do
+      if _pending then return effects
+      call effects.add(.uimessage("map.journal.load", .uipayload(), event.target(), "effect"))
+      _pending = 1
+      _status = "Loading turn"
+    end
+    else if name = "map.journal.appended" then do
+      _revision = event.body().integer("revision")
+      _pending = 0
+      _status = "Turn saved (revision " || _revision || ")"
+    end
+    else if name = "map.journal.loaded" then do
+      _pending = 0
+      if _map.restore_turn(event.body().text("record")) then do
+        _revision = event.body().integer("revision")
+        _status = "Turn loaded (revision " || _revision || ")"
+      end
+      else _status = "Turn load rejected: invalid record"
+    end
+    else if name = "ui.effect.failed" then do
+      _pending = 0
+      _status = "Turn repository failed: " || event.body().text("code")
+    end
+    else if name = "ui.effect.cancelled" then do
+      _pending = 0
+      _status = "Turn repository cancelled: " || event.body().text("reason")
+    end
+    else do
+      before = _map.turn_record()
+      if _pending & (name = "map.turn.requested" | name = "ui.scene.key") then do
+        _status = "Finish the pending turn first"
+        return effects
+      end
+      effects = _map.update(event)
+      if _map.turn_record() \= before then do
+        body = .uipayload()
+        call body.put_integer("expected_revision", _revision)
+        call body.put_text("record", _map.turn_record())
+        call effects.add(.uimessage("map.journal.append", body, event.target(), "effect"))
+        _pending = 1
+        _status = "Saving turn"
+      end
+    end
+    return effects
+  view: method = .uiview
+    result = .uiview_impl("Tile Map Demo")
+    call _map.append_view(result)
+    call result.add_label("repository-status", _status)
+    call result.add_button("restore", "Load turn", "map.restore", "l")
+    return result
+  turn_record: method = .string
+    return _map.turn_record()
+  revision: method = .int
+    return _revision
+  status: method = .string
+    return _status
+

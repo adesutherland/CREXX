@@ -1,0 +1,160 @@
+options levelg
+namespace application_effects_test
+import rxfnsb
+import rxjson
+import ui
+import ui_contract
+import graph_application
+import map_application
+
+check: procedure = .void
+  arg condition = .int, message = .string
+  if condition then return
+  say "FAIL:" message
+  exit 1
+
+label: procedure = .string
+  arg session = .uisession, id = .string
+  view = session.view()
+  do index = 1 to view.count()
+    if view.node_id(index) = id then return view.node_text(index)
+  end
+  return ""
+
+completion: procedure = .uimessage
+  arg request = .uimessage, name = .string, body = .uipayload
+  return .uimessage(name, body, request.target(), "event", request.request_id(), request.session_id())
+
+graph_caps = .uicapabilities()
+call graph_caps.enable("graph.repository")
+graph = make_graph_application_session("graph-effects", graph_caps)
+call check(graph.command_count() = 12, "graph commands registered")
+call check(graph.invoke("graph.create") = 0, "create admitted")
+call check(graph.pump() = 1, "create handled")
+call check(pos("C: 1", label(graph, "state")) > 0, "graph created")
+call check(graph.invoke("graph.save") = 0, "graph save admitted")
+call check(graph.pump() = 1, "graph save handled")
+request = graph.take_effect()
+call check(request.name() = "graph.repository.save", "graph namespace and effect")
+graph_snapshot = request.body().text("snapshot")
+call check(jsonget(graph_snapshot, "model.created") = "1" & jsoncount(graph_snapshot, "undo") = 1, "graph model and undo serialized")
+call check(request.body().integer("expected_revision") = 0, "graph optimistic version")
+body = .uipayload()
+call body.put_integer("revision", 1)
+saved = completion(request, "graph.repository.saved", body)
+call check(graph.complete(saved) = 0, "graph save completed")
+call check(graph.complete(saved) < 0, "duplicate graph completion refused")
+call check(graph.pump() = 1, "graph save delivered")
+call check(label(graph, "repository-status") = "Graph saved (revision 1)", "graph save status")
+call check(graph.invoke("graph.delete") = 0, "graph delete admitted")
+call check(graph.pump() = 1, "graph delete handled")
+call check(pos("C: 0", label(graph, "state")) > 0, "graph deletion observed")
+call check(graph.invoke("graph.load") = 0, "graph load admitted")
+call check(graph.pump() = 1, "graph load handled")
+load_request = graph.take_effect()
+call check(load_request.name() = "graph.repository.load", "graph load effect")
+body = .uipayload()
+call body.put_integer("revision", 1)
+call body.put_text("snapshot", graph_snapshot)
+call check(graph.complete(completion(load_request, "graph.repository.loaded", body)) = 0, "graph load completed")
+call check(graph.pump() = 1, "graph load delivered")
+call check(pos("C: 1", label(graph, "state")) > 0, "graph restored")
+call check(graph.invoke("graph.undo") = 0, "restored undo admitted")
+call check(graph.pump() = 1, "restored undo handled")
+call check(pos("C: 0", label(graph, "state")) > 0, "restored graph undo history")
+
+call check(graph.invoke("graph.load") = 0, "graph invalid load admitted")
+call check(graph.pump() = 1, "graph invalid load handled")
+bad_request = graph.take_effect()
+body = .uipayload()
+call body.put_integer("revision", 2)
+call body.put_text("snapshot", '{"format":1,"model":{"ax":-1},"undo":[],"redo":[]}')
+call check(graph.complete(completion(bad_request, "graph.repository.loaded", body)) = 0, "malformed graph result admitted at schema boundary")
+call check(graph.pump() = 1, "malformed graph result delivered")
+call check(pos("C: 0", label(graph, "state")) > 0 & pos("invalid snapshot", label(graph, "repository-status")) > 0, "invalid graph load leaves model intact")
+
+call check(graph.invoke("graph.load") = 0, "graph failure admitted")
+call check(graph.pump() = 1, "graph failure request handled")
+failed_request = graph.take_effect()
+body = .uipayload()
+call body.put_text("code", "conflict")
+call body.put_text("message", "Repository version changed")
+call check(graph.complete(completion(failed_request, "ui.effect.failed", body)) = 0, "graph failure completed")
+call check(graph.pump() = 1, "graph failure delivered")
+call check(pos("conflict", label(graph, "repository-status")) > 0, "graph failure visible")
+
+call check(graph.invoke("graph.load") = 0, "graph cancel admitted")
+call check(graph.pump() = 1, "graph cancel request handled")
+cancel_request = graph.take_effect()
+call check(graph.cancel(cancel_request.request_id(), "user") = 0, "graph cancelled")
+call check(graph.complete(completion(cancel_request, "graph.repository.loaded", body)) < 0, "late graph result refused")
+call check(graph.pump() = 1, "graph cancellation delivered")
+call check(pos("cancelled", label(graph, "repository-status")) > 0, "graph cancellation visible")
+call graph.close()
+call check(graph.complete(saved) < 0, "graph completion after close refused")
+
+absent = make_graph_application_session("graph-absent", .uicapabilities())
+call check(absent.invoke("graph.save") = 0, "unsupported graph save admitted")
+call check(absent.pump() = 2, "unsupported graph result delivered")
+call check(label(absent, "repository-status") = "Graph repository failed: unsupported_capability", "graph capability fallback")
+call absent.close()
+
+map_caps = .uicapabilities()
+call map_caps.enable("map.journal")
+map = make_map_application_session("map-effects", map_caps)
+call check(map.command_count() = 6, "map commands registered")
+call check(map.invoke("map.turn") = 0, "turn admitted")
+call check(map.pump() = 1, "turn handled")
+turn_request = map.take_effect()
+call check(turn_request.name() = "map.journal.append", "map namespace and append effect")
+record = turn_request.body().text("record")
+call check(jsonget(record, "turn") = "2" & jsonget(record, "unit_x") = "20480", "map rule state in record")
+body = .uipayload()
+call body.put_integer("revision", 1)
+call check(map.complete(completion(turn_request, "map.journal.appended", body)) = 0, "turn append completed")
+call check(map.pump() = 1, "turn append delivered")
+call check(pos("Turn saved", label(map, "repository-status")) > 0, "turn save visible")
+call check(map.invoke("map.turn") = 0, "next turn admitted")
+call check(map.pump() = 1, "next turn handled")
+cancel_turn = map.take_effect()
+call check(map.cancel(cancel_turn.request_id(), "user") = 0, "turn append cancelled")
+call check(map.complete(completion(cancel_turn, "map.journal.appended", body)) < 0, "late turn completion refused")
+call check(map.pump() = 1, "turn cancellation delivered")
+call check(pos("Turn: 3", label(map, "state")) > 0, "cancel does not rewrite game rules")
+call check(map.invoke("map.restore") = 0, "turn restore admitted")
+call check(map.pump() = 1, "turn restore handled")
+restore_request = map.take_effect()
+body = .uipayload()
+call body.put_integer("revision", 1)
+call body.put_text("record", record)
+call check(map.complete(completion(restore_request, "map.journal.loaded", body)) = 0, "turn restore completed")
+call check(map.pump() = 1, "turn restore delivered")
+call check(pos("Turn: 2 Unit x: 20480", label(map, "state")) > 0, "map turn replay restored rule state")
+call check(map.invoke("map.restore") = 0, "invalid map restore admitted")
+call check(map.pump() = 1, "invalid map restore handled")
+bad_turn = map.take_effect()
+body = .uipayload()
+call body.put_integer("revision", 2)
+call body.put_text("record", '{"turn":3,"unit_x":4096}')
+call check(map.complete(completion(bad_turn, "map.journal.loaded", body)) = 0, "invalid turn result admitted at schema boundary")
+call check(map.pump() = 1, "invalid turn result delivered")
+call check(pos("Turn: 2 Unit x: 20480", label(map, "state")) > 0 & pos("invalid record", label(map, "repository-status")) > 0, "invalid turn leaves rules intact")
+call check(map.invoke("map.restore") = 0, "map failure admitted")
+call check(map.pump() = 1, "map failure request handled")
+failed_turn = map.take_effect()
+body = .uipayload()
+call body.put_text("code", "unavailable")
+call body.put_text("message", "Store unavailable")
+call check(map.complete(completion(failed_turn, "ui.effect.failed", body)) = 0, "map failure completed")
+call check(map.pump() = 1, "map failure delivered")
+call check(pos("unavailable", label(map, "repository-status")) > 0, "map failure visible")
+call map.close()
+
+absent_map = make_map_application_session("map-absent", .uicapabilities())
+call check(absent_map.invoke("map.turn") = 0, "unsupported turn admitted")
+call check(absent_map.pump() = 2, "unsupported turn result delivered")
+call check(pos("Turn: 2", label(absent_map, "state")) > 0, "map continues without repository")
+call check(pos("unsupported_capability", label(absent_map, "repository-status")) > 0, "map capability fallback")
+call absent_map.close()
+say "PASS: independent graph and map application effects"
+exit 0

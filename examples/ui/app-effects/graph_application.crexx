@@ -1,0 +1,87 @@
+/* Graph-owned snapshot effects. The shared UI never interprets a graph record. */
+options levelg
+namespace graph_application expose make_graph_application_session graph_application
+import rxfnsb
+import ui
+import ui_contract
+import scene_editors
+
+make_graph_application_session: procedure = .uisession
+  arg id = .string, caps = .uicapabilities
+  session = .uisession(id, caps)
+  graphical = caps.has("form.scene") & caps.has("scene.rect") & caps.has("scene.edge")
+  rc = session.add_component("root", .graph_application(graphical))
+  if rc < 0 then return session
+  do index = 1 to 10
+    action = word("create move connect delete zoom pan select undo redo quit", index)
+    event = "graph." || action || ".requested"
+    if action = "quit" then event = "ui.close.requested"
+    else rc = session.register_event(event)
+    rc = session.register_command(.uicommand("graph." || action, action, "root", event, substr(action, 1, 1)))
+  end
+  rc = session.register_event("graph.save.requested")
+  rc = session.register_event("graph.load.requested")
+  rc = session.register_event("graph.repository.saved", '{"revision":{"type":"integer","required":true,"minimum":1,"maximum":1000000}}', "completion")
+  rc = session.register_event("graph.repository.loaded", '{"revision":{"type":"integer","required":true,"minimum":1,"maximum":1000000},"snapshot":{"type":"string","required":true,"maxLength":32768}}', "completion")
+  rc = session.register_effect("graph.repository.save", "graph.repository", '{"expected_revision":{"type":"integer","required":true,"minimum":0,"maximum":1000000},"snapshot":{"type":"string","required":true,"maxLength":32768}}', "graph.repository.saved")
+  rc = session.register_effect("graph.repository.load", "graph.repository", '{}', "graph.repository.loaded")
+  rc = session.register_command(.uicommand("graph.save", "Save graph", "root", "graph.save.requested", "s"))
+  rc = session.register_command(.uicommand("graph.load", "Load graph", "root", "graph.load.requested", "l"))
+  return session
+
+graph_application: class implements .uicomponent
+  _graph = .graph_editor
+  _revision = .int
+  _status = .string
+  *: factory
+    arg graphical = .int
+    _graph = .graph_editor(graphical)
+    _revision = 0
+    _status = "Graph not saved"
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    name = event.name()
+    effects = .uieffects()
+    if name = "graph.save.requested" then do
+      body = .uipayload()
+      call body.put_integer("expected_revision", _revision)
+      call body.put_text("snapshot", _graph.saved_state())
+      call effects.add(.uimessage("graph.repository.save", body, event.target(), "effect"))
+      _status = "Saving graph"
+    end
+    else if name = "graph.load.requested" then do
+      call effects.add(.uimessage("graph.repository.load", .uipayload(), event.target(), "effect"))
+      _status = "Loading graph"
+    end
+    else if name = "graph.repository.saved" then do
+      _revision = event.body().integer("revision")
+      _status = "Graph saved (revision " || _revision || ")"
+    end
+    else if name = "graph.repository.loaded" then do
+      if _graph.load_saved_state(event.body().text("snapshot")) then do
+        _revision = event.body().integer("revision")
+        _status = "Graph loaded (revision " || _revision || ")"
+      end
+      else _status = "Graph load rejected: invalid snapshot"
+    end
+    else if name = "ui.effect.failed" then
+      _status = "Graph repository failed: " || event.body().text("code")
+    else if name = "ui.effect.cancelled" then
+      _status = "Graph repository cancelled: " || event.body().text("reason")
+    else effects = _graph.update(event)
+    return effects
+  view: method = .uiview
+    result = .uiview_impl("Editable graph")
+    call _graph.append_view(result)
+    call result.add_label("repository-status", _status)
+    call result.add_button("save", "Save graph", "graph.save", "s")
+    call result.add_button("load", "Load graph", "graph.load", "l")
+    return result
+  saved_state: method = .string
+    return _graph.saved_state()
+  revision: method = .int
+    return _revision
+  status: method = .string
+    return _status
+

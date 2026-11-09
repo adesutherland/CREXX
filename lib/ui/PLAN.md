@@ -60,7 +60,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
 | **UIX-STEP10** RAG cache | STEP08 transient local query proof | Prove D13 OPFS cache identity, reload, export/re-import, quota/eviction, multi-tab and cleanup, or record the conditional transient fallback. | AC12 | todo |
 | **UIX-STEP11** Local-write assessment | STEP08 and STEP10 evidence | Assess D14 browser corpus writes with the RAG owner and make a separate implementation decision from concrete evidence. | AC13 | todo |
-| **UIX-STEP12** Application effects | STEP02–05; may run beside STEP08–10 | Prove D15 independent graph/map application effects on the shared lifecycle; keep repository and conflict policy application-owned. | AC14 | todo |
+| **UIX-STEP12** Application effects | STEP02–05; may run beside STEP08–10 | Prove D15 independent graph/map application effects on the shared lifecycle; keep repository and conflict policy application-owned. | AC14 | done |
 | **UIX-STEP13** Application packages | STEP04–05 and STEP12 | Define D16 package declarations and host assembly; preflight two applications for contract, capabilities and assets, and document installation. | AC15 | todo |
 
 At the start of STEP08–10, place retrieval, provider and cache delivery
@@ -91,7 +91,7 @@ sanitizer and delivery QA belong to named milestones under repository policy.
 | **UIX-AC11** | The same application-service generation request/result contract supports native/hosted and targeted browser-local small-LLM providers, independently of query embedding and UI rendering. Verify bounded input/output or streaming, model identity, privacy route, cancellation, stale completion, provider/device failure and application-owned result policy. For cited RAG answers, preserve the owning RAG evidence and citation validation. If local generation is later declined under D12, record the concrete blocker and agreed effort judgment; native/hosted generation remains required. | open; conditional local generation route |
 | **UIX-AC12** | After a validated transient bundle supports local read-only cited queries, the targeted OPFS cache reloads that same corpus/evidence version across browser restarts without weakening SQLite/sidecar validation. Verify quota or eviction failure, clearing/re-import, export, multi-tab access/locking and bounded cleanup. If persistence is later declined under D13, record the concrete blocker and agreed effort judgment; the transient local query route remains the fallback. | open; conditional persistent cache |
 | **UIX-AC13** | After the read-only query and persistence stages yield implementation evidence, an owning RAG assessment maps source ingestion, provider/model identity, worker/lease behavior, review, transactional SQLite and `.rxvec` publication, multi-tab ownership and crash recovery to a browser profile. Identify the smallest representative proof and remaining risks, then record a separate implementation decision with scope and effort; native/hosted ingestion remains available throughout. | open; later feasibility decision gate |
-| **UIX-AC14** | Two independently structured Level G example applications register distinct namespaced repository/service effects and compatible payload schemas through composition without editing the UI core or global catalogue. Each receives correlated success, cancellation, failure and unsupported-capability outcomes; stale/conflicting domain writes remain application-owned. Use graph save/load and map turn persistence as different verification operations, preserving their respective model/undo or rule state without prescribing product storage policies; hosts do not inspect domain records. | open; multi-application extension gate |
+| **UIX-AC14** | Two independently structured Level G example applications register distinct namespaced repository/service effects and compatible payload schemas through composition without editing the UI core or global catalogue. Each receives correlated success, cancellation, failure and unsupported-capability outcomes; stale/conflicting domain writes remain application-owned. Use graph save/load and map turn persistence as different verification operations, preserving their respective model/undo or rule state without prescribing product storage policies; hosts do not inspect domain records. | verified in selected macOS ARM64 profile |
 | **UIX-AC15** | Two independently authored example applications produce versioned package declarations and selected native/browser artifacts without UI-core source edits. For each selected host route, verify entry composition, UI contract compatibility, dependencies/assets, required operation preflight and application-owned optional fallback; reject an incompatible package or missing required asset/capability before starting its session. Document package contents and route-specific build/install steps. Runtime hot loading is not required. | open; independent application packaging gate |
 | **UIX-AC16** | A separately authored Level G process designer shows a bounded linear graph and an editable Name, Owner and Notes form for the selected step. Add/remove/reorder/select steps, keep edges and form values synchronized, and support undo/redo with one authoritative in-memory model. GTK and both browser routes project the graph; ANSI provides a usable semantic list. The same form edits work on all four routes, with malformed, stale or oversized edits refused without corrupting state. Compare independent transition expectations, inspect representative RXAS and run focused real-host interaction and close checks. | verified in selected macOS ARM64 profile |
 
@@ -415,6 +415,31 @@ transactions, migration, storage route and conflicts. D16's versioned package
 declaration lets a host check contract, capabilities, dependencies and assets
 before starting a trusted application session; host-specific artifacts and
 runtime loading remain implementation/delivery questions.
+
+#### STEP12–13 application extension contract
+
+Use separate graph and tile-map Level G application modules over the existing
+scene features. The graph application requests a versioned document snapshot
+including undo/redo history for save/load; the map requests an append-only turn
+record and can restore a validated turn. Their effect names, payload schemas,
+repository policies and completion events stay in their respective modules.
+The common session handles correlation and unsupported capability; it neither
+parses graph documents nor interprets turns. Application tests cover success,
+failure, cancellation, stale completion and capability refusal before host
+integration. A host with no repository executor exposes the optional service
+as unavailable to the application without losing its graph/map controls.
+
+A version-1 trusted application declaration names the application entry,
+compatible UI contract, route-specific module order, required and optional
+operations, executor asset and dependencies. A generic host preflight checks
+the complete declaration, selected route's operations and every required asset
+before starting the session. Native and browser assemblies may differ. The
+graph and map declarations must pass on GTK, ANSI, local Wasm and hosted native
+browser routes without editing the UI core for each application; an
+incompatible contract, missing required asset or missing operation must fail
+before start. Optional repository support is an application-visible fallback.
+Initial declarations are trusted build inputs; runtime hot loading and
+untrusted-package isolation remain outside STEP13.
 
 [`crexxrag`](https://github.com/adesutherland/crexx-rag/blob/main/docs/architecture.md)
 is a separate Level G application. SQLite owns its corpus, graph, embeddings
