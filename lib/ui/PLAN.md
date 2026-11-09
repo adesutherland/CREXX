@@ -56,7 +56,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | done |
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | done |
 | **UIX-STEP07A** Process-designer showcase | STEP07; independent of service steps | Add a bounded Level G linear-process example with per-selected-step editing; complete the browser/ANSI text-input host seams, then prove one application model across GTK, ANSI and both browser routes. | AC16 | done |
-| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Bind one typed `rag.query` service operation to a cREXX HTTP reader first and the browser-local executor separately (D17); provide a browser-only cited-query client, then compare evidence and compatible embeddings under D01–03. | AC09–10 | in progress |
+| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Deliver Stephen's three-route cited comparison through a static browser bundle and a small Google-hosted native `rxvm` reader (D17–18), with the same RAG-owned read-only snapshot and query contract. Prove source links/locations, graph hop selection and compatible embeddings under D01–03. | AC09–10, AC17 | in progress |
 | **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
 | **UIX-STEP10** RAG cache | STEP08 transient local query proof | Prove D13 OPFS cache identity, reload, export/re-import, quota/eviction, multi-tab and cleanup, or record the conditional transient fallback. | AC12 | todo |
 | **UIX-STEP11** Local-write assessment | STEP08 and STEP10 evidence | Assess D14 browser corpus writes with the RAG owner and make a separate implementation decision from concrete evidence. | AC13 | todo |
@@ -87,7 +87,7 @@ sanitizer and delivery QA belong to named milestones under repository policy.
 | **UIX-AC06** | Unsupported view/scene operations are declared at application composition or returned as structured refusals before partial projection, and the feature selects a fallback or a specific rejection. Scene deltas validate and commit atomically; gaps, conflicting duplicates, invalid changes and route restart trigger full resync, while stale scene input is refused and retries are bounded. Absent effect capabilities retain correlated failures. Malformed assets/messages, context loss, resize, cancellation and setup/teardown failures have explicit behavior; browser resource grants cannot be forged from display text. Run focused host and scene lifecycle/negative checks. | verified in selected macOS ARM64 profile |
 | **UIX-AC07** | GTK, ANSI and both browser routes have documented build cohorts, platform/browser coverage, accessibility limits, package contents and reproducible consumer routes for their selected support levels. Complete agreed integration/milestone QA separately from each development increment. | verified in selected macOS ARM64 profile |
 | **UIX-AC08** | At each forms, graph and map stage, one handwritten Level G feature drives GTK, ANSI and both browser routes. Common actions have matching expected domain transitions and close policy; host-specific capability and effect outcomes are explicit. Record each host's native, semantic fallback or unsupported operations; verify supported paths and a representative application-visible refusal on each route without claiming visual equivalence. | verified in selected macOS ARM64 profile |
-| **UIX-AC09** | A person with only a browser can enter a question and read bounded, accessible cited evidence and corpus/snapshot identity; an agent with browser control can use the same page. The feature issues the same bounded `rag.query` effect through hosted and targeted local read-only executors with compatible query embedding, cancellation and stale-result handling. Compare representative lexical/vector/graph evidence with native RAG. If local feasibility is later declined under D01–02, document the concrete blocker and agreed effort judgment; hosted cited-query acceptance remains required. | open; conditional local route |
+| **UIX-AC09** | A person with only a browser can enter one question and compare separately labelled keyword, embedding and graph results over one corpus/snapshot, with graph generations (hops) selectable from 0–4. Show bounded cited excerpts, a validated source URL when present, the verified source position (UTF-8 span and page/section only when mapped), and corpus/model identity; an agent with browser control can use the same page. The feature issues the same bounded `rag.query` effect through hosted and targeted local read-only executors with compatible query embedding, cancellation and stale-result handling. Compare representative results and route attribution with native RAG; do not present a hybrid score as three independent routes. If local feasibility is later declined under D01–02, document the concrete blocker and agreed effort judgment; hosted cited-query acceptance remains required. | open; conditional local route |
 | **UIX-AC10** | The same query-embedding request/result contract supports hosted and targeted browser-local compatible models. For a representative corpus profile, verify model/input identity, dimensions, vector compatibility, cancellation, provider failure and privacy route; compare resulting cited retrieval to the native control. If local model support is later declined under D03, record the blocker and agreed effort judgment; hosted embedding remains required. | open; conditional local embedding route |
 | **UIX-AC11** | The same application-service generation request/result contract supports native/hosted and targeted browser-local small-LLM providers, independently of query embedding and UI rendering. Verify bounded input/output or streaming, model identity, privacy route, cancellation, stale completion, provider/device failure and application-owned result policy. For cited RAG answers, preserve the owning RAG evidence and citation validation. If local generation is later declined under D12, record the concrete blocker and agreed effort judgment; native/hosted generation remains required. | open; conditional local generation route |
 | **UIX-AC12** | After a validated transient bundle supports local read-only cited queries, the targeted OPFS cache reloads that same corpus/evidence version across browser restarts without weakening SQLite/sidecar validation. Verify quota or eviction failure, clearing/re-import, export, multi-tab access/locking and bounded cleanup. If persistence is later declined under D13, record the concrete blocker and agreed effort judgment; the transient local query route remains the fallback. | open; conditional persistent cache |
@@ -95,11 +95,13 @@ sanitizer and delivery QA belong to named milestones under repository policy.
 | **UIX-AC14** | Two independently structured Level G example applications register distinct namespaced repository/service effects and compatible payload schemas through composition without editing the UI core or global catalogue. Each receives correlated success, cancellation, failure and unsupported-capability outcomes; stale/conflicting domain writes remain application-owned. Use graph save/load and map turn persistence as different verification operations, preserving their respective model/undo or rule state without prescribing product storage policies; hosts do not inspect domain records. | verified in selected macOS ARM64 profile |
 | **UIX-AC15** | Two independently authored example applications produce versioned package declarations and selected native/browser artifacts without UI-core source edits. For each selected host route, verify entry composition, UI contract compatibility, dependencies/assets, required operation preflight and application-owned optional fallback; reject an incompatible package or missing required asset/capability before starting its session. Document package contents and route-specific build/install steps. Runtime hot loading is not required. | verified in selected macOS ARM64 profile |
 | **UIX-AC16** | A separately authored Level G process designer shows a bounded linear graph and an editable Name, Owner and Notes form for the selected step. Add/remove/reorder/select steps, keep edges and form values synchronized, and support undo/redo with one authoritative in-memory model. GTK and both browser routes project the graph; ANSI provides a usable semantic list. The same form edits work on all four routes, with malformed, stale or oversized edits refused without corrupting state. Compare independent transition expectations, inspect representative RXAS and run focused real-host interaction and close checks. | verified in selected macOS ARM64 profile |
+| **UIX-AC17** | Stephen can open a versioned static HTTPS site and run all three read-only routes locally after a validated serving-bundle download, without an installed tool or a query server; a separate access-controlled Google HTTPS route runs the same comparison in native `rxvm` with no browser corpus transfer. Verify both against the same RAG snapshot/model profile and citations, including wrong/missing asset, unsupported browser/GPU fallback, provider failure, cold start, bounded concurrency, cancellation, source-link safety and no corpus writes. Record actual bundle bytes/load time and hosted CPU/memory/latency/gross cost before setting deployment limits; credits are reported separately. Public distribution and hosted access are distinct release checks. | open; delivery qualification |
 
 ### Decisions and open gates
 
 The direction in each row is approved except D02, which is an implementation
-feasibility gate. D01, D03, D12 and D13 are **conditional local targets**. A
+feasibility gate, and the proposed D18 hosting binding, which needs the
+hosting owner's review before deployment. D01, D03, D12 and D13 are **conditional local targets**. A
 fallback requires concrete implementation evidence and a discussion with Adrian
 of reasonable remaining effort at that time; no effort limit is set now and no
 local target may be silently dropped. The owning acceptance criterion records
@@ -124,6 +126,7 @@ which route must still pass after any agreed fallback.
 | **UIX-D15** | Registered effects form the extension point for independently authored applications; teams own repositories and policies without a shared graph/map/RAG schema. | Namespacing, schema compatibility/versioning and independent-consumer proof. |
 | **UIX-D16** | Versioned application packages declare entry, UI contract, required/optional capabilities, dependencies and assets. Native/browser assembly may differ; initial packages are deployer-approved and trusted. | Manifest/package preflight and install proof; runtime hot loading and untrusted-package isolation remain outside this UI delivery. |
 | **UIX-D17** | One versioned application service operation has typed request/result/failure semantics. HTTP is its first remote binding; a later distributed channel provider may be another binding under the same contract. UI calls complete through effects, without blocking the owner turn. | Implement the cREXX HTTP reader binding, preserve local and hosted correlation/cancellation, and assess a channel transport only after an actual multi-service need. |
+| **UIX-D18** | Proposed Stephen delivery: a static Firebase-hosted, browser-executed read-only bundle and a separate, access-controlled Google Cloud Run native `rxvm` service. Both consume one RAG-owned serving snapshot and comparison contract; the hosted service starts with one container and no managed database or GKE dependency. Adrian approved corpus distribution for this demo on 9 November 2026. | Reconcile the earlier narrower corpus decision and source terms, then review actual export size, browser load/resource use, Linux native provider, direct Cloud Run access and measured gross/credit/net cost with the hosting owner before deployment. |
 
 ## Architecture details
 
@@ -565,26 +568,76 @@ retrieval agreement as equivalence.
 
 The cited RAG lookup proof used a manually pruned copy of the active library.
 RAG must own a supported read-only serving export that preserves
-corpus/snapshot identity and
-validates its SQLite/sidecar membership; the proof copy is not a distributable
-format. The active sidecar is `ivf-flat-v1` JSON, not a bare RXVIDX/1 file.
-The next STEP08 implementation increment follows these ownership boundaries:
+corpus/snapshot identity and validates its SQLite/sidecar membership; the proof
+copy is not a distributable format. The active sidecar is `ivf-flat-v1` JSON,
+not a bare RXVIDX/1 file. The active database alone is 755 MiB; `job_events`,
+`job_items` and `maintenance_tasks` account for most of that size. Export size,
+transfer time and browser memory must be measured rather than inferred from
+those table totals. Adrian approved distribution of the public-information
+corpus for Stephen's demo on 9 November 2026; the earlier narrower Public
+Purpose Lab corpus decision needs owner reconciliation before release.
 
-1. RAG owns a supported, immutable read-only serving export and query-only
-   Level G entry. It checks SQLite/manifest/sidecar membership, corpus and
-   generation identity, model/input profile and citation provenance. Generic
-   `rxsqlite` and `rxvector` remain CREXX providers.
-2. The RAG application owns its `rag.query` executor. A browser compute Worker
-   generates the query vector with a profile-selected model and CPU Wasm or
-   optional WebGPU; a separate cREXX Wasm Worker runs RAG's existing retrieval
-   code over the selected export. Browser API/model glue may be JavaScript;
-   retrieval, evidence policy and UI application decisions stay in Level G.
-   The existing hosted executor implements the same bounded effect contract.
-3. The effect carries request and corpus/profile identities, retrieval mode and
-   a bounded cited result. Its executor rejects stale completion, supports
-   cancellation and reports provider, quota, import and device failure to the
-   application. Compare lexical, vector and graph results with native RAG,
-   including a native-generated compatible query vector, before closing AC09–10.
+### Stephen's read-only comparison and two hosting profiles
+
+One versioned RAG-owned `rag.query` comparison request carries a bounded
+question, requested snapshot, three separately reported routes and graph hops
+0–4. The keyword route uses lexical candidates without a query vector; the
+embedding route uses a compatible query vector without graph expansion; the
+graph route reports its anchor/seed provenance, direction and each reached
+generation. A missing anchor yields an explicit empty graph result. Each route
+returns its own ranked passages, channels/scores and truncation; a combined
+hybrid rank must not masquerade as the three comparisons. The response includes
+library/generation and model/input-profile identity. For each passage it carries
+the stable citation, bounded excerpt, title, validated `http`/`https` source
+`work_ref` when present and the actual UTF-8 span. A PDF page or section is
+included only when a verified transformation map supplies it. A span in
+captured text is not a deep link into the original PDF. Never expose local
+source paths or invent a URL/location.
+
+RAG publishes one immutable serving bundle: compact read-only SQLite with the
+current FTS, vector membership, graph and citation/source metadata; aligned
+vector sidecar; selected profile and BGE weights; and a content-hashed manifest
+binding all parts to the library/generation and model input envelope. The
+export excludes job/maintenance history and write credentials. It is built
+atomically from a validated native snapshot and tested against native lexical,
+vector and graph results. Generic `rxsqlite`/`rxvector` remain CREXX providers;
+RAG owns retrieval, source mapping, publication and validation. The same
+bundle bytes feed both deployments.
+
+| Profile | Small first deployment | Runtime and boundary |
+| --- | --- | --- |
+| Static browser | Separate Firebase Hosting demo release in the existing Google project, with immutable hashed assets and a short manifest. Initial download includes the approved serving bundle and model; subsequent download/cache behavior is measured under D13. | Same-origin cREXX Wasm Worker runs RAG's query-only RXBIN with read-only SQLite/vector/graph data. A browser compute Worker makes the query embedding using CPU Wasm, with optional WebGPU. JavaScript handles browser APIs and model glue; no query API or installed client is required. Validate bundle hashes before execution and use correct Wasm MIME/CSP. Public Firebase preview/default URLs are genuinely public. |
+| Google hosted | One access-controlled Cloud Run service serves the browser UI and bounded query API at one origin. Begin with an immutable serving bundle in the container image, native `rxvm`, the RAG query-only Level G entry and cREXX HTTP server. | Cloud Run terminates TLS; cREXX listens on `0.0.0.0:$PORT` behind it. Direct Cloud Run IAP can admit Stephen's Google identity and protect the default URL without a load balancer, subject to real account/access verification. Start with request billing, zero minimum instances, one maximum instance and one concurrent query; revise CPU, memory and concurrency only after cold/warm measurements. No Cloud SQL, GKE, durable writable volume or browser corpus download is needed for this fixed read-only snapshot. |
+
+The two profiles have separate URLs and cache/storage behavior but share the
+same application effect, RAG comparison semantics and source-link rules. The
+Google route initially serves its own protected static assets so that a public
+Firebase origin cannot bypass its access boundary. A later public Firebase UI
+with an authenticated Cloud Run rewrite is a separate deployment choice. The
+hosting owner checks current credit eligibility and records gross usage,
+applied credits and net cost separately; the existing gross budget alert is
+not a spending cap. Neither deployment is qualified by the loopback Node
+adapter or the earlier scratch Wasm proof.
+Hosting implementation references are [Firebase Hosting configuration](https://firebase.google.com/docs/hosting/full-config),
+[Cloud Run container contract](https://docs.cloud.google.com/run/docs/container-contract),
+[direct Cloud Run IAP](https://docs.cloud.google.com/run/docs/securing/identity-aware-proxy-cloud-run),
+and [Cloud Run pricing](https://cloud.google.com/run/pricing).
+
+STEP08 implementation order is:
+
+1. RAG publishes and validates the supported serving bundle, citation URL/
+   position mapping and three-route read-only comparison contract, including
+   graph hop bounds, no-write and wrong-snapshot failures. Reconcile source
+   attribution and distribution records before public asset release.
+2. Run that bundle in the browser's two Workers, compare each route with native
+   RAG on fixed questions and verify compatible query vectors, cancellation,
+   stale results, invalid assets and CPU fallback. Package the site as a
+   standalone static release and measure transfer/load/memory.
+3. Bind the same RAG operation to the cREXX HTTP server and native `rxvm`, then
+   qualify a local Linux container against the static route. Deploy the small
+   Cloud Run profile only after hosting/access/cost review, and verify Stephen's
+   actual sign-in and cited result. Preserve normal hosted failure and cleanup
+   checks; broader UI/platform QA stays open under AC09–10 and AC17.
 
 The full active-library transient import and sidecar validation now work in one
 browser profile. Moving that scratch proof to the intended separate Workers,
