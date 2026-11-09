@@ -1,7 +1,9 @@
-# rxbuild user guide
+# Legacy `rxbuild-legacy` user guide (`.build`)
 
-rxbuild reads a .build file and executes its declared build phases directly.
-It is the build tool for Level L grammars and their compatible cREXX readers.
+`rxbuild-legacy` reads a `.build` file and executes its declared sequential
+build phases directly. It is the compatibility build tool for Level L grammars
+and their compatible cREXX readers. Canonical graph plans use the separate
+`.graph.build` format; see [the graph-build guide](../tools/rxbuild/graph/cREXX_Graph_Builds.md).
 The .build file is a runtime input; it is not compiled into an .rxpp file.
 
 ## Quick start
@@ -9,26 +11,26 @@ The .build file is a runtime input; it is not compiled into an .rxpp file.
 Run these commands from the CREXX repository root:
 
 ~~~powershell
-cmake --build cmake-build-release --target rxbuild --parallel 1
+cmake --build cmake-build-release --target rxbuild_legacy --parallel 1
 
-.\cmake-build-release\bin\rxbuild.exe tools\build\example.build
+.\cmake-build-release\bin\rxbuild-legacy.exe tools\rxbuild\example.build
 ~~~
 
 The same plan can also be started through the cREXX front door, which is
 convenient for a single CLion external-tool action:
 
 ~~~powershell
-.\cmake-build-release\bin\crexx.exe tools\build\example.build
+.\cmake-build-release\bin\crexx.exe tools\rxbuild\example.build
 ~~~
 
 When the input has a `.build` suffix, `crexx.exe` delegates it to the sibling
-`rxbuild.exe`. The plan remains an external runtime input; only one `.build`
+`rxbuild-legacy.exe`. The plan remains an external runtime input; only one `.build`
 file may be supplied in that invocation.
 
 The recursive selection sample is:
 
 ~~~powershell
-.\cmake-build-release\bin\rxbuild.exe tools\build\selection.build
+.\cmake-build-release\bin\rxbuild-legacy.exe tools\rxbuild\selection.build
 ~~~
 
 It selects build.levell, nested/deep.levell, and tiny.levell, compiles them,
@@ -38,13 +40,13 @@ For the smallest plan, use simple.build. It has literal paths only, with no
 variables and no DO OVER loop:
 
 ~~~powershell
-.\cmake-build-release\bin\rxbuild.exe tools\build\simple.build
+.\cmake-build-release\bin\rxbuild-legacy.exe tools\rxbuild\simple.build
 ~~~
 
 The MiniBASIC example uses the same reader process:
 
 ~~~powershell
-.\cmake-build-release\bin\rxbuild.exe examples\minibasic\BUILD\build-minibasic.build
+.\cmake-build-release\bin\rxbuild-legacy.exe examples\minibasic\BUILD\build-minibasic.build
 ~~~
 
 The report-writer RXPP sample uses the same front door for preprocessing,
@@ -157,6 +159,11 @@ COMPILE READER
   DEPENDS_ON = "rxbuildgrammar"
   OUTPUT = "build_reader";
 
+COMPILE PROGRAM
+  OUTPUT_DIR = "${BUILD_DIR}"
+  SOURCE = "tools/rxbuild/build_demo.crexx"
+  OUTPUT = "build_demo";
+
 RUN
   WORK_DIR = "${BUILD_DIR}"
   PROGRAM = "build_demo"
@@ -237,7 +244,7 @@ For reliable invocation, start rxbuild from the repository root:
 
 ~~~powershell
 cd C:\Users\PeterJ\CLionProjects\CREXX\Beta2.1
-.\cmake-build-release\bin\rxbuild.exe tools\build\selection.build
+.\cmake-build-release\bin\rxbuild-legacy.exe tools\rxbuild\selection.build
 ~~~
 
 The current implementation does not use CREXX_HOME. Installed deployments

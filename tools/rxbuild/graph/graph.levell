@@ -10,11 +10,14 @@ defaultword: token
 actionword: token
 descriptionword: token
 inputword: token
+outputword: token
 dependsword: token
 dependsbuildword: token
 buildnameword: token
 defaultbuildword: token
 includeword: token
+asword: token
+dot: token
 workdirword: token
 argumentword: token
 runtimeargumentword: token
@@ -37,6 +40,7 @@ scan: lexer input utf8bytes
   string.literal: rule = '"' (string.body | '""')* '"' then emit string
   equals.literal: rule = "=" then emit equals
   terminator.literal: rule = ";" then emit terminator
+  dot.literal: rule = "." then emit dot
   name.literal: rule = name.pattern then emit identifier
 
 parse: parser semantics contextfree input tokens start program
@@ -50,19 +54,22 @@ parse: parser semantics contextfree input tokens start program
   description.attribute: rule = descriptionword equals string
   build.statement: rule = buildword string build.attributes endword buildword terminator
   build.attributes: rule = build.attribute*
-  build.attribute: rule = rule.reference.attribute | build.name.attribute | input.attribute | depends.attribute | depends.build.attribute | workdir.attribute | argument.attribute | runtime.argument.attribute | stdin.attribute
+  build.attribute: rule = rule.reference.attribute | build.name.attribute | input.attribute | output.attribute | depends.attribute | depends.build.attribute | workdir.attribute | argument.attribute | runtime.argument.attribute | stdin.attribute
   rule.reference.attribute: rule = ruleword equals identifier
   build.name.attribute: rule = buildnameword equals identifier
   input.attribute: rule = inputword equals string
+  output.attribute: rule = outputword equals string
   depends.attribute: rule = dependsword equals string
-  depends.build.attribute: rule = dependsbuildword equals identifier
+  depends.build.attribute: rule = dependsbuildword equals qualified.identifier
   workdir.attribute: rule = workdirword equals string
   argument.attribute: rule = argumentword equals string string
   runtime.argument.attribute: rule = runtimeargumentword equals string
   stdin.attribute: rule = stdinword equals string
   default.statement: rule = defaultword string terminator
   default.build.statement: rule = defaultbuildword equals identifier terminator
-  include.statement: rule = includeword string terminator | includeword string
+  include.statement: rule = includeword string include.alias terminator | includeword string include.alias | includeword string terminator | includeword string
+  include.alias: rule = asword identifier
+  qualified.identifier: rule = identifier (dot identifier)*
 
 classify: tokenstage start 1
   word.rule:
@@ -83,6 +90,9 @@ classify: tokenstage start 1
   word.input:
     transform stage classify state 1
       take identifier text "INPUT" emit inputword next 1
+  word.output:
+    transform stage classify state 1
+      take identifier text "OUTPUT" emit outputword next 1
   word.depends:
     transform stage classify state 1
       take identifier text "DEPENDS_ON" emit dependsword next 1
@@ -98,6 +108,9 @@ classify: tokenstage start 1
   word.include:
     transform stage classify state 1
       take identifier text "INCLUDE_GRAPH" emit includeword next 1
+  word.as:
+    transform stage classify state 1
+      take identifier text "AS" emit asword next 1
   word.workdir:
     transform stage classify state 1
       take identifier text "WORK_DIR" emit workdirword next 1

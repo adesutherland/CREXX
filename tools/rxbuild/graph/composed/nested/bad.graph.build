@@ -1,0 +1,11 @@
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+
+BUILD ".crexx-build/bad.rxbin"
+  RULE = compile_program
+  INPUT = "tools/rxbuild/build_demo.crexx"
+  DEPENDS_ON = ".crexx-build/bad.rxbin"
+END BUILD;
+
+DEFAULT ".crexx-build/bad.rxbin";

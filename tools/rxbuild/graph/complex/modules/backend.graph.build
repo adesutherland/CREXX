@@ -1,0 +1,13 @@
+/* Backend module in the complex graph example. */
+SOURCE = "tools/rxbuild/build_demo.crexx";
+
+RULE compile_backend
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "BACKEND $out"
+END RULE;
+
+BUILD ".crexx-build/graph-complex-backend.rxbin"
+  BUILD_NAME = runtime
+  RULE = compile_backend
+  INPUT = "${SOURCE}"
+END BUILD;

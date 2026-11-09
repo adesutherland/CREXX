@@ -1,0 +1,42 @@
+/* Slightly more complex graph example: two namespaced modules feed one
+ * package target, followed by a run-only target. */
+INCLUDE_GRAPH "modules/frontend.graph.build" AS frontend
+INCLUDE_GRAPH "modules/backend.graph.build" AS backend
+
+/* The same tiny source is reused by all three compile targets so this example
+ * stays self-contained; the names represent graph roles, not separate
+ * frontend, backend, and package implementations. */
+SOURCE = "tools/rxbuild/build_demo.crexx";
+
+RULE compile_package
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "PACKAGE $out"
+END RULE;
+
+RULE run_package
+  ACTION = "RUN"
+  DESCRIPTION = "RUN $in"
+END RULE;
+
+BUILD ".crexx-build/graph-complex-package.rxbin"
+  BUILD_NAME = package
+  RULE = compile_package
+  INPUT = "${SOURCE}"
+  DEPENDS_ON_BUILD = frontend.reader
+  DEPENDS_ON_BUILD = backend.runtime
+END BUILD;
+
+/* RUN targets are phony and execute whenever selected. INPUT is the RXBIN
+ * passed to the VM; DEPENDS_ON expresses the prerequisite edge that ensures
+ * the package target is checked first. */
+BUILD "run_complex"
+  RULE = run_package
+  INPUT = ".crexx-build/graph-complex-package.rxbin"
+  DEPENDS_ON = ".crexx-build/graph-complex-package.rxbin"
+  WORK_DIR = "."
+  ARGUMENT = "-a" "tools/rxbuild/graph/complex/complex.graph.build"
+  RUNTIME_ARGUMENT = "tools/rxbuild/graph/README.md"
+  STDIN = ""
+END BUILD;
+
+DEFAULT_BUILD = run_complex;

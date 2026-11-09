@@ -27,8 +27,13 @@ BUILD "${BUILD_DIR}/build_demo.rxbin"
   INPUT = "${SOURCE}"
 END BUILD;
 
+/* RUN targets are phony actions: this name is a logical target identity, not
+ * an output file that RUN is expected to create. */
 BUILD "run-build-demo"
   RULE = run_program
+  /* INPUT is the program consumed by RUN. DEPENDS_ON makes the same program
+   * an explicit prerequisite, so its build target is visited first and its
+   * freshness is considered before execution. */
   INPUT = "${BUILD_DIR}/build_demo.rxbin"
   DEPENDS_ON = "${BUILD_DIR}/build_demo.rxbin"
 END BUILD;

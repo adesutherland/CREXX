@@ -36,9 +36,11 @@ closure without executing actions or creating outputs:
   tools\rxbuild\graph\composed\main.graph.build
 ```
 
-Dry-run still checks graph syntax, variables, rules, dependencies, inputs and
-target selection. Stale actions are reported as `would build`; `RUN` actions
-are reported as `would run`. Up-to-date targets remain `up to date`.
+Dry-run performs graph-level checks for syntax, variables, rules, dependencies,
+inputs, and target selection. Stale actions are reported as `would build`;
+`RUN` actions are reported as `would run`. Up-to-date targets remain `up to
+date`. Some action-specific execution checks are deferred until the action
+would actually run.
 
 Use `--dump-graph` to print the complete resolved graph after all includes and
 variable substitutions have been processed. Each target is shown with its
@@ -50,6 +52,56 @@ executing a build action:
 .\cmake-build-release\bin\rxbuild.exe --dump-graph `
   tools\rxbuild\graph\composed\main.graph.build
 ```
+
+Use `--dump-graph=json` instead for machine-readable output. The JSON object
+contains `rules`, `targets`, `defaults`, and `default_builds`; target records
+include outputs, source scopes, inputs, physical and logical dependencies,
+working directories, arguments, standard input, and runtime arguments.
+
+Use `--explain` (or `-why`) to report the freshness decision for every target
+visited by the selected build. Reasons include a missing output, a newer input
+or dependency, a dependency rebuilt during the same invocation, and `up to
+date`.
+
+The graph can also be queried without running actions. `--list-targets` prints
+resolved outputs with their logical names and source graphs;
+`--show-dependencies <target>` prints transitive prerequisites; and
+`--reverse-dependencies <target>` prints the transitive consumers. The
+`--show-graph <target>` form renders a semi-graphic prerequisite tree including
+source inputs. These commands validate the complete graph first and use normal
+qualified or unqualified target selection.
+
+The reader also records a SHA-256 sidecar state file next to each successful
+non-`RUN` primary output. The state covers input, dependency, output, action,
+and execution attributes, so content or configuration changes trigger a
+rebuild even when timestamps remain unchanged.
+
+Tool lookup normally uses the runtime load path. For reproducible builds, pass
+`--toolchain-dir <directory>` to select the directory containing `crexx`,
+`rxpp`, `rxvm`, `rxc`, and `rxas` explicitly. The directory is resolved using
+the host filesystem rules, executable suffixes are selected by the host, and
+the resulting executable paths are passed as argument-array entries rather than
+through a shell. Verbose and dry-run builds report the selected toolchain root.
+
+Child-process environment can be controlled with repeatable
+`--env NAME=VALUE` and `--unset-env NAME` options. The overrides are applied
+through the platform-neutral cREXX process environment before each direct
+argv launch and restored afterward, while the parent process environment is
+left unchanged.
+Toolchain paths and environment settings participate in incremental state; the
+state stores hashes of environment values, not their clear-text contents.
+
+Human-readable and JSON graph dumps include the resolved toolchain directory
+and the names of environment overrides/removals. Values are intentionally
+omitted from diagnostics and JSON output.
+
+An `.in-progress` marker is published beside the state file before an action
+starts and removed only after outputs and state have been published. A stale
+marker therefore forces recovery on the next invocation.
+
+Semantic diagnostics are prefixed with the graph file that owns the invalid
+declaration. Syntax diagnostics include line and column information, while
+include-cycle diagnostics print the complete include stack.
 
 An explicit target may be supplied as the second argument:
 
@@ -141,6 +193,11 @@ either a logical name or a physical output path:
 are resolved in separate namespaces, and duplicate dependencies are rejected
 after resolution. A graph must not define both `DEFAULT` and `DEFAULT_BUILD`.
 
+The `BUILD` path is the primary output and target identity. Repeatable
+`OUTPUT = "path"` attributes declare secondary outputs. All declared outputs
+participate in freshness checks, must be globally unique, and must exist after
+the action completes.
+
 ## Composing graph plans
 
 Graph plans may include other graph plans:
@@ -150,10 +207,28 @@ INCLUDE_GRAPH "ui/ispf.graph.build"
 INCLUDE_GRAPH "ui/text-inspector.graph.build"
 ```
 
+An included graph may be given an explicit namespace:
+
+```text
+INCLUDE_GRAPH "languages/php.graph.build" AS php
+INCLUDE_GRAPH "languages/fortran_iv.graph.build" AS fortran_iv
+DEPENDS_ON_BUILD = php.reader
+DEPENDS_ON_BUILD = fortran_iv.reader
+```
+
+The alias qualifies logical target references and allows multiple included
+graphs to use the same local `BUILD_NAME`. Qualified names are also accepted
+when selecting a target on the command line, for example:
+
+```powershell
+.\cmake-build-release\bin\rxbuild.exe plan.graph.build php.reader
+```
+
 Include paths are resolved relative to the graph containing the statement.
 Includes may be nested; a graph is loaded only once per invocation and include
 cycles are rejected. Variables and logical build names are evaluated in the
 local graph context. Physical output paths remain global and must not collide.
+Duplicate graph aliases are rejected.
 Defaults from included graphs are not selected; the top-level graph supplies
 the effective default target.
 
@@ -196,14 +271,27 @@ also accepts optional `WORK_DIR`, two-value `ARGUMENT`, repeatable
 `RUNTIME_ARGUMENT`, and `STDIN`
 attributes, matching the current PHP `setup.build` run parameters.
 
+In `actions.graph.build`, `run-demo` is intentionally a phony/run-only target:
+its name identifies the action and `RUN` is not expected to create a file at
+that path. `INPUT` names the RXBIN consumed by the VM. `DEPENDS_ON` is the
+dependency edge that makes the same RXBIN target or file get checked and built
+before the run action. Using the same path for both is therefore deliberate.
+
+`RUN` targets are always executed when selected; they are not made up to date
+by the presence of a file named after the target. `ARGUMENT = "name" "value"`
+supplies one VM option/value pair before runtime arguments. Each repeatable
+`RUNTIME_ARGUMENT = "path"` is appended as an additional argument after the
+program path.
+
 ## Current behavior
 
 - Dependencies are visited before their dependent target.
 - A target is rebuilt when its output is missing, an input is newer, or a
   dependency was rebuilt during the same invocation.
 - Existing targets are reported as `up to date`.
-- `--dry-run` validates and traverses the selected dependency closure without
-  executing actions or writing outputs.
+- `--dry-run` performs graph-level validation and traverses the selected
+  dependency closure without executing actions or writing outputs; some
+  action-specific execution checks are deferred.
 - The reader reports duplicate targets, unknown rules/targets, dependency
   cycles, missing defaults, duplicate logical names, duplicate dependency
   references, unknown logical dependencies, ambiguous defaults, and variable
@@ -259,3 +347,12 @@ harness: it creates temporary graph files, invokes canonical `rxbuild`, checks
 diagnostics and incremental behavior, and removes its temporary outputs. The
 graph implementation itself remains `graph.levell` plus
 `graph_reader.crexx`.
+
+## Future planned work
+
+Remaining Phase 9 work covers a sealed or allow-listed environment policy,
+graph-file toolchain/environment declarations, tool/version validation, and
+Windows/Linux/macOS qualification. Phase 10 is planned for bounded dependency
+scheduling, resource controls, serialized resource groups, cancellation,
+cleanup, and repeatability diagnostics. Phase 9 must establish the complete
+process contract before actions are scheduled concurrently.

@@ -265,6 +265,34 @@ parallel execution, or the complete Ninja language.
 - GAC-10: **Met locally.** Negative graph tests cover recursive dependencies,
   duplicate physical/logical references, duplicate targets, missing targets,
   and malformed composition.
+- GAC-11: **Met locally.** Included graphs may declare explicit aliases, and
+  qualified logical references select identically named targets without
+  ambiguity.
+- GAC-12: **Met locally.** `--explain` reports why visited targets are rebuilt
+  or remain up to date.
+- GAC-13: **Met locally.** `--dump-graph=json` emits a valid machine-readable
+  representation of the resolved graph for tooling consumers.
+- GAC-14: **Met locally.** A target may declare repeatable secondary outputs;
+  freshness and post-action validation cover every declared output.
+- GAC-15: **Met locally.** Successful targets retain content-based state, and
+  a content or action-attribute change rebuilds even when timestamps are
+  preserved.
+- GAC-16: **In progress.** Interrupted actions leave recoverable markers and
+  force a clean rebuild on the next invocation; fully atomic publication of
+  every action's artifacts remains open.
+- GAC-17: **Met locally.** Graph-local semantic diagnostics identify their
+  owning graph, while syntax and include-cycle diagnostics retain location and
+  include-stack information.
+- GAC-18: **Met locally.** Read-only target, forward-dependency, and
+  reverse-dependency queries validate the resolved graph and accept normal
+  target aliases without executing actions.
+- GAC-19: **Met locally.** A selected target can be rendered as a deterministic
+  semi-graphic prerequisite tree, including source inputs, without executing
+  actions.
+- GAC-20: **In progress.** A build can select an explicit host toolchain
+  directory and control child-process environment overrides through the
+  platform-neutral process runner; broader inherited-environment sealing
+  remains open.
 
 ### Implementation steps
 
@@ -293,3 +321,76 @@ parallel execution, or the complete Ninja language.
 - GSTEP-08: **Complete locally.** Extend the focused graph test with nested
   composition, recursive dependencies, duplicate references and dump/dry-run
   assertions. Serves GAC-07 through GAC-10.
+- GSTEP-09: **Complete locally.** Add explicit include aliases and qualified target
+  references, preserving unqualified resolution for unique names. Serves
+  GAC-11.
+- GSTEP-10: **Complete locally.** Add `--explain` freshness diagnostics and focused
+  assertions for missing-output and up-to-date decisions. Serves GAC-12.
+- GSTEP-11: **Complete locally.** Add JSON graph dumping with focused parsing and
+  schema-content assertions. Serves GAC-13.
+- GSTEP-12: **Complete locally.** Add repeatable `OUTPUT` declarations, duplicate
+  output diagnostics, multi-output freshness checks, and post-action output
+  validation. Serves GAC-14.
+- GSTEP-13: **Complete locally.** Add SHA-256 target sidecars, state comparison,
+  post-action publication, and a preserved-mtime content-change regression.
+  Serves GAC-15.
+- GSTEP-14: **Complete locally.** Add in-progress markers, recovery detection,
+  marker cleanup after successful publication, and a Windows-focused recovery
+  regression. Serves the recovery portion of GAC-16; action-specific output
+  staging remains open.
+- GSTEP-15: **Complete locally.** Prefix graph-local semantic errors with their
+  source graph and add focused source-qualified diagnostic coverage. Serves
+  GAC-17; documented parser APIs do not currently expose semantic node
+  line/column offsets to this reader.
+- GSTEP-16: **Complete locally.** Add deterministic list, forward dependency,
+  and reverse dependency queries with focused non-execution assertions. Serves
+  GAC-18.
+- GSTEP-17: **Complete locally.** Add the semi-graphic prerequisite-tree query
+  and focused output/non-execution coverage. Serves GAC-19.
+- GSTEP-18: **Complete locally.** Add explicit toolchain-directory selection,
+  host-aware executable suffix handling, reporting, and a focused real-build
+  regression. Serves the tool-selection portion of GAC-20; environment
+  inheritance/sealing remains open.
+- GSTEP-19: **Complete locally.** Add repeatable child environment overrides
+  and removals, apply them before direct argv launches, and cover them in the
+  focused RUN regression. Serves the environment-control portion of GAC-20;
+  full allow-list/sealed inheritance remains open.
+- GSTEP-20: **Complete locally.** Include the selected toolchain and hashed
+  environment configuration in target fingerprints, with focused rebuild
+  assertions for changed environment values. Serves the reproducibility portion
+  of GAC-20; per-child immutable snapshots and full allow-list policy remain
+  open.
+- GSTEP-21: **Complete locally.** Capture and restore overridden worker
+  environment entries around each direct launch, preserving the runtime's
+  immutable child snapshot and preventing cross-action leakage. Serves the
+  per-action isolation portion of GAC-20; full allow-list policy remains open.
+- GSTEP-22: **Complete locally.** Add redacted toolchain and environment
+  metadata to human-readable and JSON graph diagnostics, with a focused check
+  that environment values are not emitted. Serves the diagnostics portion of
+  GAC-20.
+
+### Future planned graph-build work
+
+The following items are planned work, not acceptance claims for the current
+increment:
+
+- PHASE9-F01: Define the environment inheritance policy, including a
+  controlled baseline, allow-list, explicit additions/removals, and treatment
+  of sensitive host variables.
+- PHASE9-F02: Add graph-file declarations for toolchain and environment
+  settings, with include-scope and override rules matching graph composition.
+- PHASE9-F03: Validate required tools and report cross-platform tool versions.
+- PHASE9-F04: Qualify Windows, Linux, and macOS behavior, including path
+  separators, executable suffixes, Unicode paths, and failure restoration.
+- PHASE10-F01: Add dependency-ready scheduling for independent targets while
+  preserving deterministic validation, diagnostics, and failure propagation.
+- PHASE10-F02: Add configurable worker limits and resource controls, including
+  serialized groups for actions sharing a tree or tool resource.
+- PHASE10-F03: Add cancellation, interruption, and cleanup semantics for
+  parallel actions while retaining recoverable markers and truthful state.
+- PHASE10-F04: Add focused ordering, contention, cancellation, and
+  repeatability tests.
+
+Phase 9 policy and graph declarations precede Phase 10 scheduling: parallel
+execution needs a complete per-action toolchain, environment, working-directory,
+output, and resource contract.

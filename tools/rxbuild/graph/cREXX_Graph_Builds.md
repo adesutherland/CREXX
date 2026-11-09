@@ -105,9 +105,21 @@ The current graph reader and runner support the essential dependency-based build
 - dependency-cycle detection;
 - recursive include-cycle detection;
 - graph composition through `INCLUDE_GRAPH`;
+- explicit include namespaces through `INCLUDE_GRAPH ... AS ...`;
 - local variable and logical-name scopes for included graphs;
 - source-aware resolved graph inspection through `--dump-graph`;
-- validation-only traversal through `--dry-run`;
+- freshness explanations through `--explain`;
+- machine-readable resolved graph output through `--dump-graph=json`;
+- read-only target and dependency queries through `--list-targets`,
+  `--show-dependencies`, `--reverse-dependencies`, and `--show-graph`;
+- secondary outputs through repeatable `OUTPUT` attributes;
+- content-based incremental state through SHA-256 target fingerprints;
+- interrupted-action recovery through in-progress markers;
+- explicit cross-platform toolchain selection through `--toolchain-dir`;
+- redacted toolchain/environment diagnostics through graph dumps;
+- graph-owned semantic diagnostics and include-stack reporting;
+- graph-level validation and dependency traversal through `--dry-run` (some
+  action-specific execution checks remain deferred);
 - duplicate physical and logical dependency diagnostics before execution;
 - variable and default-target validation;
 - typed actions for the existing cREXX toolchain.
@@ -145,7 +157,8 @@ DEPENDS_ON_BUILD = grammar
 ```
 
 This refers to a `BUILD_NAME` declared in the current graph or in one of its
-included graphs.
+included graphs. An included graph alias may qualify the name, such as
+`php.reader`, to select a target whose local name is `reader`.
 
 Both forms may occur in one build declaration. This is useful when a target depends on both a generated build target and an external file:
 
@@ -190,7 +203,6 @@ The current system is therefore more specialised than Ninja, but also more close
 The current implementation does not yet support all features found in Ninja. In particular, it does not currently provide:
 
 - generic command templates;
-- multiple outputs from one build edge;
 - dynamic dependencies;
 - compiler-generated dependency files;
 - parallel graph execution;
@@ -211,10 +223,9 @@ Not all of them are equally important.
 
 The most useful future additions would probably be:
 
-1. multiple outputs, for actions producing several artefacts;
-2. clean and rebuild operations;
-3. graphical dependency visualisation;
-4. generic command templates, if users need custom actions.
+1. clean and rebuild operations;
+2. graphical dependency visualisation;
+3. generic command templates, if users need custom actions.
 
 ### Features that can wait
 
@@ -265,3 +276,8 @@ incremental rebuilding
 It is not a complete Ninja replacement, and it does not need to become one. Its main purpose is to provide a cREXX-native build description that is more declarative and dependency-aware than the original fixed sequence of build commands.
 
 The existing legacy build process should remain unchanged. The graph implementation should continue to evolve as a separate build model until its syntax and behaviour have been evaluated through real examples such as PHP, MiniBASIC and the cREXX build itself.
+
+Future work includes explicit environment policy and graph-declared process
+settings in Phase 9, followed by bounded parallel scheduling, resource locks,
+cancellation, and repeatability diagnostics in Phase 10. Parallel execution is
+intentionally dependent on the completed process contract.

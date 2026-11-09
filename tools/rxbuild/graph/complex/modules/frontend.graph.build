@@ -1,0 +1,13 @@
+/* Frontend module in the complex graph example. */
+SOURCE = "tools/rxbuild/build_demo.crexx";
+
+RULE compile_frontend
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "FRONTEND $out"
+END RULE;
+
+BUILD ".crexx-build/graph-complex-frontend.rxbin"
+  BUILD_NAME = reader
+  RULE = compile_frontend
+  INPUT = "${SOURCE}"
+END BUILD;

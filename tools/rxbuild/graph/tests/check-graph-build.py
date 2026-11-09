@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import shutil
 import subprocess
 import sys
@@ -11,8 +13,11 @@ from pathlib import Path
 
 
 def run(exe: Path, root: Path, plan: Path, *target: str) -> tuple[int, str]:
+    command = [str(exe), str(plan), *target]
+    if "--toolchain-dir" not in target:
+        command.extend(["--toolchain-dir", str(exe.parent)])
     completed = subprocess.run(
-        [str(exe), str(plan), *target],
+        command,
         cwd=root,
         text=True,
         stdout=subprocess.PIPE,
@@ -38,6 +43,7 @@ def main() -> int:
     args = parser.parse_args()
     root = args.source.resolve()
     exe = args.rxbuild.resolve()
+    toolchain_dir = exe.parent
     test_root = root / ".crexx-build" / ("graph-test-" + uuid.uuid4().hex)
     test_root.mkdir(parents=True, exist_ok=False)
     plan = test_root / "graph.build"
@@ -64,9 +70,14 @@ DEFAULT "${{BUILD_DIR}}/final.rxbin";
 ''',
         )
 
-        rc, output = run(exe, root, plan)
+        rc, output = run(exe, root, plan, "--toolchain-dir", str(toolchain_dir), "--verbose")
         require(rc == 0, "default graph build failed", output)
-        require(output.count("built") == 2, "default graph did not build both targets", output)
+        require(
+            output.count("built") == 2
+            and "RXBUILD TOOLCHAIN: root=" in output,
+            "default graph did not use the explicit toolchain",
+            output,
+        )
 
         rc, output = run(exe, root, plan, "--verbose", output_dir + "/final.rxbin")
         require(
@@ -87,16 +98,82 @@ DEFAULT "${{BUILD_DIR}}/final.rxbin";
             output,
         )
 
-        rc, output = run(exe, root, plan)
+        rc, output = run(exe, root, plan, "--explain")
         require(rc == 0, "incremental graph build failed", output)
-        require(output.count("up to date") == 2, "incremental graph was not a no-op", output)
+        require(
+            output.count("RXBUILD: up to date") == 2
+            and output.count("reason=up to date") == 2,
+            "incremental graph was not a no-op or explanation was missing",
+            output,
+        )
+
+        content_source = test_root / "content-source.crexx"
+        content_source.write_text("options levelb\nmain: procedure = .int\n  say 'content-one'\n  return 0\n", encoding="utf-8", newline="\n")
+        content_plan = test_root / "content-state.graph.build"
+        content_output = output_dir + "/content-state.rxbin"
+        write_plan(
+            content_plan,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{content_output}"
+  RULE = compile_program
+  INPUT = "{content_source.as_posix()}"
+END BUILD;
+DEFAULT "{content_output}";
+''',
+        )
+        rc, output = run(exe, root, content_plan)
+        require(rc == 0 and "built" in output, "content-state initial build failed", output)
+        rc, output = run(exe, root, content_plan, "--explain")
+        require(rc == 0 and "reason=up to date" in output, "content-state no-op failed", output)
+        marker = root / (content_output + ".rxbuild-state.in-progress")
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text("RXBUILD IN PROGRESS", encoding="utf-8")
+        rc, output = run(exe, root, content_plan, "--explain")
+        require(
+            rc == 0
+            and "reason=interrupted previous action" in output
+            and "built" in output
+            and not marker.exists(),
+            "interrupted action marker was not recovered",
+            output,
+        )
+        original_mtime = content_source.stat().st_mtime_ns
+        content_source.write_text("options levelb\nmain: procedure = .int\n  say 'content-two'\n  return 0\n", encoding="utf-8", newline="\n")
+        os.utime(content_source, ns=(original_mtime, original_mtime))
+        rc, output = run(exe, root, content_plan, "--explain")
+        require(
+            rc == 0
+            and "reason=content or action changed" in output
+            and "built" in output,
+            "content change with preserved mtime was not detected",
+            output,
+        )
+        rc, output = run(exe, root, content_plan, "--env", "RXBUILD_PHASE93=one", "--explain")
+        require(
+            rc == 0 and "reason=content or action changed" in output and "built" in output,
+            "environment change was not included in target state",
+            output,
+        )
+        rc, output = run(exe, root, content_plan, "--env", "RXBUILD_PHASE93=two", "--explain")
+        require(
+            rc == 0 and "reason=content or action changed" in output and "built" in output,
+            "environment value change was not included in target state",
+            output,
+        )
 
         final_output = root / output_dir / "final.rxbin"
         final_output.unlink()
-        rc, output = run(exe, root, plan, output_dir + "/final.rxbin")
+        rc, output = run(exe, root, plan, "--explain", output_dir + "/final.rxbin")
         require(rc == 0, "explicit target rebuild failed", output)
-        require("up to date " + output_dir + "/prepare.rxbin" in output, "dependency was rebuilt unexpectedly", output)
-        require("built " + output_dir + "/final.rxbin" in output, "explicit target was not rebuilt", output)
+        require(
+            "up to date " + output_dir + "/prepare.rxbin" in output
+            and "reason=output missing" in output
+            and "built " + output_dir + "/final.rxbin" in output,
+            "explicit target was not rebuilt or explanation was missing",
+            output,
+        )
 
         logical = test_root / "logical.graph.build"
         logical_output_dir = output_dir + "/logical"
@@ -179,6 +256,203 @@ DEFAULT_BUILD = parent;
             "resolved graph dump was incomplete or executed an action",
             output,
         )
+        rc, json_output = run(exe, root, composed, "--dump-graph=json")
+        try:
+            graph_json = json.loads(json_output)
+        except json.JSONDecodeError as error:
+            raise AssertionError("JSON graph dump was invalid: " + str(error) + "\n" + json_output) from error
+        require(
+            rc == 0
+            and isinstance(graph_json.get("targets"), list)
+            and any(target.get("name") == "child" for target in graph_json["targets"])
+            and any(target.get("name") == "parent" for target in graph_json["targets"]),
+            "JSON graph dump was incomplete",
+            json_output,
+        )
+        rc, json_output = run(
+            exe,
+            root,
+            composed,
+            "--dump-graph=json",
+            "--env",
+            "RXBUILD_DIAGNOSTIC=hidden",
+            "--unset-env",
+            "RXBUILD_DIAGNOSTIC_UNUSED",
+        )
+        diagnostic_json = json.loads(json_output)
+        require(
+            rc == 0
+            and "toolchain_dir" in diagnostic_json
+            and diagnostic_json["environment"]["overrides"] == ["RXBUILD_DIAGNOSTIC"]
+            and diagnostic_json["environment"]["unset"] == ["RXBUILD_DIAGNOSTIC_UNUSED"]
+            and "hidden" not in json_output,
+            "graph diagnostics exposed incorrect toolchain or environment data",
+            json_output,
+        )
+        rc, output = run(exe, root, composed, "--list-targets")
+        require(
+            rc == 0
+            and "TARGET output=" in output
+            and "name=child" in output
+            and "name=parent" in output
+            and "RXBUILD: built" not in output,
+            "target query was incomplete or executed an action",
+            output,
+        )
+        rc, output = run(exe, root, composed, "--show-dependencies", "parent")
+        require(
+            rc == 0
+            and "TARGET " in output
+            and "depends_build=child -> target=" in output
+            and "RXBUILD: built" not in output,
+            "dependency query was incomplete or executed an action",
+            output,
+        )
+        rc, output = run(exe, root, composed, "--reverse-dependencies", "child")
+        require(
+            rc == 0
+            and "TARGET " in output
+            and "dependent=" in output
+            and "parent.rxbin" in output
+            and "RXBUILD: built" not in output,
+            "reverse dependency query was incomplete or executed an action",
+            output,
+        )
+        rc, output = run(exe, root, composed, "--show-graph", "parent")
+        require(
+            rc == 0
+            and "TARGET " in output
+            and "child" in output
+            and "input " in output
+            and "RXBUILD: built" not in output,
+            "ASCII graph query was incomplete or executed an action",
+            output,
+        )
+
+        namespaced = test_root / "namespaced.graph.build"
+        php_graph = test_root / "php.graph.build"
+        fortran_graph = test_root / "fortran_iv.graph.build"
+        write_plan(
+            php_graph,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/php-reader.rxbin"
+  BUILD_NAME = reader
+  RULE = compile_program
+  INPUT = "{source}"
+END BUILD;
+''',
+        )
+        write_plan(
+            fortran_graph,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/fortran-reader.rxbin"
+  BUILD_NAME = reader
+  RULE = compile_program
+  INPUT = "{source}"
+END BUILD;
+''',
+        )
+        write_plan(
+            namespaced,
+            f'''INCLUDE_GRAPH "php.graph.build" AS php
+INCLUDE_GRAPH "fortran_iv.graph.build" AS fortran_iv
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/namespaced.rxbin"
+  BUILD_NAME = all_readers
+  RULE = compile_program
+  INPUT = "{source}"
+  DEPENDS_ON_BUILD = php.reader
+  DEPENDS_ON_BUILD = fortran_iv.reader
+END BUILD;
+DEFAULT_BUILD = all_readers;
+''',
+        )
+        rc, output = run(exe, root, namespaced)
+        require(rc == 0 and output.count("built") == 3, "namespaced graph build failed", output)
+        rc, output = run(exe, root, namespaced, "php.reader")
+        require(rc == 0 and "up to date" in output, "qualified logical target selection failed", output)
+        rc, output = run(exe, root, namespaced, "--dump-graph")
+        require(
+            rc == 0
+            and "source_graph=php" in output
+            and "source_graph=fortran_iv" in output
+            and "depends_build=php.reader -> output=" in output
+            and "depends_build=fortran_iv.reader -> output=" in output,
+            "namespaced graph dump was incomplete",
+            output,
+        )
+
+        multi_output = test_root / "multi-output.graph.build"
+        write_plan(
+            multi_output,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/multi-output.rxbin"
+  RULE = compile_program
+  INPUT = "{source}"
+  OUTPUT = "tools/rxbuild/build_demo.crexx"
+END BUILD;
+DEFAULT "{output_dir}/multi-output.rxbin";
+''',
+        )
+        rc, output = run(exe, root, multi_output, "--dump-graph=json")
+        try:
+            multi_output_json = json.loads(output)
+        except json.JSONDecodeError as error:
+            raise AssertionError("multi-output JSON dump was invalid: " + str(error) + "\n" + output) from error
+        require(
+            rc == 0
+            and [value.replace("\\", "/") for value in multi_output_json["targets"][0]["outputs"]]
+            == [str((root / "tools/rxbuild/build_demo.crexx").resolve()).replace("\\", "/")],
+            "secondary output declaration was not preserved",
+            output,
+        )
+        duplicate_output = test_root / "duplicate-output.graph.build"
+        write_plan(
+            duplicate_output,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/duplicate-output.rxbin"
+  RULE = compile_program
+  INPUT = "{source}"
+  OUTPUT = "{output_dir}/duplicate.map"
+  OUTPUT = "{output_dir}/duplicate.map"
+END BUILD;
+DEFAULT "{output_dir}/duplicate-output.rxbin";
+''',
+        )
+        rc, output = run(exe, root, duplicate_output)
+        require(
+            rc != 0
+            and "duplicate output" in output
+            and str(duplicate_output).replace("\\", "/") in output.replace("\\", "/"),
+            "source-qualified duplicate output diagnostic was missing",
+            output,
+        )
+        missing_output = test_root / "missing-output.graph.build"
+        write_plan(
+            missing_output,
+            f'''RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{output_dir}/missing-output.rxbin"
+  RULE = compile_program
+  INPUT = "{source}"
+  OUTPUT = "{output_dir}/not-produced.rxbin"
+END BUILD;
+DEFAULT "{output_dir}/missing-output.rxbin";
+''',
+        )
+        rc, output = run(exe, root, missing_output)
+        require(rc != 0 and "action did not produce" in output and "not-produced.rxbin" in output, "missing secondary output was not rejected", output)
 
         include_cycle_a = test_root / "include-cycle-a.graph.build"
         include_cycle_b = test_root / "include-cycle-b.graph.build"
@@ -409,11 +683,21 @@ END BUILD;
 DEFAULT "run-demo";
 ''',
         )
-        rc, output = run(exe, root, run_plan, "--verbose")
+        rc, output = run(
+            exe,
+            root,
+            run_plan,
+            "--verbose",
+            "--env",
+            "RXBUILD_PHASE92=enabled",
+            "--unset-env",
+            "RXBUILD_PHASE92_UNUSED",
+        )
         require(
             rc == 0
             and "RXBUILD: ran" in output
-            and "RXBUILD DEMO: generated program executed" in output,
+            and "RXBUILD DEMO: generated program executed" in output
+            and "RXBUILD ENVIRONMENT: overrides=1 unset=1" in output,
             "RUN graph action failed or hid program output",
             output,
         )
