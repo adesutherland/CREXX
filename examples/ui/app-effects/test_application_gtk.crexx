@@ -1,0 +1,43 @@
+options levelg
+namespace application_gtk_test
+import ui_contract
+import ui_gtk
+import ui_gtk_test
+import graph_application
+import map_application
+
+main: procedure = .int
+  driver = .gtkdriver()
+  steps = .string[]
+  steps[1] = "expect-scene-count|graph|3"
+  steps[2] = "click|create"
+  steps[3] = "expect|state|A: 7680 C: 1 Edge AC: 0 Selected: "
+  steps[4] = "click|save"
+  steps[5] = "expect|repository-status|Graph repository failed: unsupported_capability"
+  steps[6] = "click|quit"
+  if ui_gtk_test..start(steps) < 0 then return 1
+  session = make_graph_application_session("gtk-graph-application", ui_gtk..capabilities())
+  run_rc = driver.run(session)
+  test_rc = ui_gtk_test..finish()
+  if run_rc \= 0 | test_rc \= 0 then do
+    say "FAIL: GTK graph application" run_rc test_rc driver.error()
+    return 1
+  end
+
+  steps = .string[]
+  call arraydrop steps
+  steps[1] = "expect-scene-count|map|17"
+  steps[2] = "click|turn"
+  steps[3] = "expect|state|Turn: 2 Unit x: 20480 Selected: "
+  steps[4] = "expect|repository-status|Turn repository failed: unsupported_capability"
+  steps[5] = "click|quit"
+  if ui_gtk_test..start(steps) < 0 then return 1
+  session = make_map_application_session("gtk-map-application", ui_gtk..capabilities())
+  run_rc = driver.run(session)
+  test_rc = ui_gtk_test..finish()
+  if run_rc \= 0 | test_rc \= 0 then do
+    say "FAIL: GTK map application" run_rc test_rc driver.error()
+    return 1
+  end
+  say "PASS: GTK application package compositions"
+  return 0

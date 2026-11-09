@@ -1,0 +1,11 @@
+options levelg
+namespace map_application_web
+import ui_web
+import map_application
+main: procedure = .int
+  arg arguments = .string[]
+  if arguments[0] < 1 then return 2
+  caps = ui_web..capabilities()
+  call caps.enable("map.journal")
+  driver = .webdriver()
+  return driver.run(make_map_application_session(arguments[1], caps))

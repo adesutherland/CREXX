@@ -1,0 +1,7 @@
+options levelg
+namespace graph_application_ansi
+import ui_ansi
+import graph_application
+session = make_graph_application_session("ansi-graph-application", ui_ansi..capabilities())
+driver = .ansidriver()
+exit driver.run(session)

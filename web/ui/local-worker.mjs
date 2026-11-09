@@ -1,4 +1,5 @@
 /* Asyncify suspends the VM only while its single owner reads stdin. */
+import {preflightBrowserPackage} from './package-registry.mjs';
 const common = ['library', 'ui', 'ui_catalog', 'ui_contract', 'ui_scene', 'ui_web'];
 const applications = {
   text: ['text_inspector', 'text_inspector_web'],
@@ -64,15 +65,22 @@ self.onmessage = async ({data}) => {
       return;
     }
     if (data?.type !== 'start' || started || typeof data.session !== 'string' ||
-        !Object.hasOwn(applications, data.app))
+        typeof data.app !== 'string')
       throw new Error('Invalid UI Worker start');
     started = true;
+    const manifest = await (await fetch(new URL('./manifest.json', import.meta.url))).json();
+    const packaged = Object.hasOwn(manifest.packages ?? {}, data.app);
+    const checked = packaged ? await preflightBrowserPackage(manifest, data.app, 'local') : null;
+    if (!packaged && !Object.hasOwn(applications, data.app))
+      throw new Error('Unknown UI application');
+    const modules = checked ? [...common, ...checked.modules.map(record => record.name)] :
+      [...common, ...applications[data.app]];
     const {default: createVM} = await import('./vm/crexx_ui_vm.mjs');
     vm = await createVM({noInitialRun: true,
       locateFile: name => new URL(`./vm/${name}`, import.meta.url).href,
       uiRead: read, uiWrite: write});
     check(vm._ui_vm_create());
-    for (const name of [...common, ...applications[data.app]]) {
+    for (const name of modules) {
       const response = await fetch(new URL(`./modules/${name}.rxbin`, import.meta.url));
       if (!response.ok) throw new Error(`Missing RXBIN: ${name}`);
       const bytes = new Uint8Array(await response.arrayBuffer());

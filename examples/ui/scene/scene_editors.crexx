@@ -121,7 +121,7 @@ graph_editor: class implements .uicomponent
   load_saved_state: method = .int
     arg saved = .string
     index = .int
-    if length(saved) > 32768 | jsonvalid(saved) = 0 then return 0
+    if length(saved) > 16384 | jsonvalid(saved) = 0 then return 0
     if jsonget(saved, "format") \= "1" | jsontype(saved, "model") \= "object" | jsontype(saved, "undo") \= "array" | jsontype(saved, "redo") \= "array" then return 0
     incoming = jsonget(saved, "model")
     if valid_graph_model(incoming) = 0 then return 0

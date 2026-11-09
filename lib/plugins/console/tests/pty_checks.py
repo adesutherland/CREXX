@@ -103,7 +103,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--build", required=True, type=pathlib.Path)
     parser.add_argument("--source", required=True, type=pathlib.Path)
-    parser.add_argument("--mode", choices=["console", "app", "app-gui", "host-edges", "scene", "scene-editors", "process-designer"], required=True)
+    parser.add_argument("--mode", choices=["console", "app", "app-gui", "host-edges", "scene", "scene-editors", "process-designer", "application-packages"], required=True)
     parser.add_argument("--variant", choices=["noopt", "opt"], default="opt")
     args = parser.parse_args()
     build, source = args.build.resolve(), args.source.resolve()
@@ -182,6 +182,27 @@ def main():
             terminal.finish()
         finally:
             terminal.close()
+    elif args.mode == "application-packages":
+        for app in ("graph", "map"):
+            terminal = Terminal(["node", str(source / "web/ui/run-package.mjs"),
+                                 str(source / f"examples/ui/app-effects/{app}.package.json"),
+                                 str(build), "ansi"], source)
+            try:
+                if app == "graph":
+                    terminal.expect(b"Graph objects")
+                    terminal.send(b"c")
+                    terminal.expect(b"C: 1")
+                    terminal.send(b"v")
+                    terminal.expect(b"unsupported_capability")
+                else:
+                    terminal.expect(b"Map cell viewport 4x4")
+                    terminal.send(b"t")
+                    terminal.expect(b"Turn: 2 Unit x: 20480")
+                    terminal.expect(b"unsupported_capability")
+                terminal.send(b"q")
+                terminal.finish()
+            finally:
+                terminal.close()
     elif args.mode == "scene-editors":
         shared = [binary / name for name in ("ui_ansi", "ui_dialogs", "ui_terminal_view",
                   "ui_local_resources", "ui_scene", "ui_contract", "ui_catalog", "ui", "library")]

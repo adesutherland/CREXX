@@ -1,0 +1,37 @@
+{
+  "format": 1,
+  "id": "map_app",
+  "contract": 1,
+  "modules": [
+    {"name": "scene_editors", "path": "examples/ui/scene/scene_editors.rxbin"},
+    {"name": "map_application", "path": "examples/ui/app-effects/map_application.rxbin"}
+  ],
+  "routes": {
+    "gtk": {
+      "entry": {"name": "map_application_gtk", "path": "examples/ui/app-effects/map_application_gtk.rxbin"},
+      "requiredOperations": ["form.label", "form.button"],
+      "requiredCapabilities": [],
+      "optionalOperations": ["form.scene", "scene.tile", "scene.unit"]
+    },
+    "ansi": {
+      "entry": {"name": "map_application_ansi", "path": "examples/ui/app-effects/map_application_ansi.rxbin"},
+      "requiredOperations": ["form.label", "form.button"],
+      "requiredCapabilities": [],
+      "optionalOperations": ["form.scene", "scene.tile", "scene.unit"]
+    },
+    "local": {
+      "entry": {"name": "map_application_web", "path": "examples/ui/app-effects/map_application_web.rxbin"},
+      "requiredOperations": ["form.label", "form.button"],
+      "requiredCapabilities": [],
+      "optionalOperations": ["form.scene", "scene.tile", "scene.unit"],
+      "executor": {"path": "map-repository.mjs", "target": "apps/map-repository.mjs", "export": "mapRepository", "capability": "map.journal"}
+    },
+    "hosted": {
+      "entry": {"name": "map_application_web", "path": "examples/ui/app-effects/map_application_web.rxbin"},
+      "requiredOperations": ["form.label", "form.button"],
+      "requiredCapabilities": [],
+      "optionalOperations": ["form.scene", "scene.tile", "scene.unit"],
+      "executor": {"path": "map-repository.mjs", "target": "apps/map-repository.mjs", "export": "mapRepository", "capability": "map.journal"}
+    }
+  }
+}

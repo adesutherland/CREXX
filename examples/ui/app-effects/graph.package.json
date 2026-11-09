@@ -1,0 +1,37 @@
+{
+  "format": 1,
+  "id": "graph_app",
+  "contract": 1,
+  "modules": [
+    {"name": "scene_editors", "path": "examples/ui/scene/scene_editors.rxbin"},
+    {"name": "graph_application", "path": "examples/ui/app-effects/graph_application.rxbin"}
+  ],
+  "routes": {
+    "gtk": {
+      "entry": {"name": "graph_application_gtk", "path": "examples/ui/app-effects/graph_application_gtk.rxbin"},
+      "requiredOperations": ["form.label", "form.button"],
+      "requiredCapabilities": [],
+      "optionalOperations": ["form.scene", "scene.rect", "scene.edge"]
+    },
+    "ansi": {
+      "entry": {"name": "graph_application_ansi", "path": "examples/ui/app-effects/graph_application_ansi.rxbin"},
+      "requiredOperations": ["form.label", "form.button"],
+      "requiredCapabilities": [],
+      "optionalOperations": ["form.scene", "scene.rect", "scene.edge"]
+    },
+    "local": {
+      "entry": {"name": "graph_application_web", "path": "examples/ui/app-effects/graph_application_web.rxbin"},
+      "requiredOperations": ["form.label", "form.button"],
+      "requiredCapabilities": [],
+      "optionalOperations": ["form.scene", "scene.rect", "scene.edge"],
+      "executor": {"path": "graph-repository.mjs", "target": "apps/graph-repository.mjs", "export": "graphRepository", "capability": "graph.repository"}
+    },
+    "hosted": {
+      "entry": {"name": "graph_application_web", "path": "examples/ui/app-effects/graph_application_web.rxbin"},
+      "requiredOperations": ["form.label", "form.button"],
+      "requiredCapabilities": [],
+      "optionalOperations": ["form.scene", "scene.rect", "scene.edge"],
+      "executor": {"path": "graph-repository.mjs", "target": "apps/graph-repository.mjs", "export": "graphRepository", "capability": "graph.repository"}
+    }
+  }
+}

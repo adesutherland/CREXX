@@ -94,6 +94,8 @@ call graph.close()
 call check(graph.complete(saved) < 0, "graph completion after close refused")
 
 absent = make_graph_application_session("graph-absent", .uicapabilities())
+call check(absent.invoke("graph.create") = 0, "unsupported graph create admitted")
+call check(absent.pump() = 1, "unsupported graph create handled")
 call check(absent.invoke("graph.save") = 0, "unsupported graph save admitted")
 call check(absent.pump() = 2, "unsupported graph result delivered")
 call check(label(absent, "repository-status") = "Graph repository failed: unsupported_capability", "graph capability fallback")

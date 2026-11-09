@@ -1,0 +1,11 @@
+options levelg
+namespace graph_application_web
+import ui_web
+import graph_application
+main: procedure = .int
+  arg arguments = .string[]
+  if arguments[0] < 1 then return 2
+  caps = ui_web..capabilities()
+  call caps.enable("graph.repository")
+  driver = .webdriver()
+  return driver.run(make_graph_application_session(arguments[1], caps))

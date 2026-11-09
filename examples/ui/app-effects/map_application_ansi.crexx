@@ -1,0 +1,7 @@
+options levelg
+namespace map_application_ansi
+import ui_ansi
+import map_application
+session = make_map_application_session("ansi-map-application", ui_ansi..capabilities())
+driver = .ansidriver()
+exit driver.run(session)

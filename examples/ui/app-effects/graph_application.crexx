@@ -22,10 +22,10 @@ make_graph_application_session: procedure = .uisession
   rc = session.register_event("graph.save.requested")
   rc = session.register_event("graph.load.requested")
   rc = session.register_event("graph.repository.saved", '{"revision":{"type":"integer","required":true,"minimum":1,"maximum":1000000}}', "completion")
-  rc = session.register_event("graph.repository.loaded", '{"revision":{"type":"integer","required":true,"minimum":1,"maximum":1000000},"snapshot":{"type":"string","required":true,"maxLength":32768}}', "completion")
-  rc = session.register_effect("graph.repository.save", "graph.repository", '{"expected_revision":{"type":"integer","required":true,"minimum":0,"maximum":1000000},"snapshot":{"type":"string","required":true,"maxLength":32768}}', "graph.repository.saved")
+  rc = session.register_event("graph.repository.loaded", '{"revision":{"type":"integer","required":true,"minimum":1,"maximum":1000000},"snapshot":{"type":"string","required":true,"maxLength":16384}}', "completion")
+  rc = session.register_effect("graph.repository.save", "graph.repository", '{"expected_revision":{"type":"integer","required":true,"minimum":0,"maximum":1000000},"snapshot":{"type":"string","required":true,"maxLength":16384}}', "graph.repository.saved")
   rc = session.register_effect("graph.repository.load", "graph.repository", '{}', "graph.repository.loaded")
-  rc = session.register_command(.uicommand("graph.save", "Save graph", "root", "graph.save.requested", "s"))
+  rc = session.register_command(.uicommand("graph.save", "Save graph", "root", "graph.save.requested", "v"))
   rc = session.register_command(.uicommand("graph.load", "Load graph", "root", "graph.load.requested", "l"))
   return session
 
@@ -75,7 +75,7 @@ graph_application: class implements .uicomponent
     result = .uiview_impl("Editable graph")
     call _graph.append_view(result)
     call result.add_label("repository-status", _status)
-    call result.add_button("save", "Save graph", "graph.save", "s")
+    call result.add_button("save", "Save graph", "graph.save", "v")
     call result.add_button("load", "Load graph", "graph.load", "l")
     return result
   saved_state: method = .string

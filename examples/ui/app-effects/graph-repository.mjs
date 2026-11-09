@@ -18,7 +18,7 @@ export function graphRepository(storage) {
       const expected = request.payload?.expected_revision;
       const snapshot = request.payload?.snapshot;
       if (!Number.isSafeInteger(expected) || expected < 0 || expected > 1000000 ||
-          typeof snapshot !== 'string' || snapshot.length > 32768)
+          typeof snapshot !== 'string' || snapshot.length > 16384)
         throw new Error('Invalid graph save request');
       const parsed = JSON.parse(snapshot);
       if (parsed?.format !== 1 || !parsed.model || !Array.isArray(parsed.undo) ||

@@ -6,6 +6,7 @@ import {readFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {StringDecoder} from 'node:string_decoder';
+import {CORE_MODULES, preflightPackage, siteAssets} from './package-registry.mjs';
 
 const token = process.env.CREXX_UI_TOKEN;
 if (!token || token.length < 16) throw new Error('Set CREXX_UI_TOKEN (at least 16 characters)');
@@ -25,6 +26,7 @@ const image = name => join(build, name.startsWith('text_') || name === 'web_serv
   'examples/ui/process-designer' : 'bin', `${name}.rxbin`);
 const sessions = new Map();
 const site = resolve(fileURLToPath(new URL('.', import.meta.url)));
+const siteManifest = JSON.parse(await readFile(join(site, 'manifest.json'), 'utf8'));
 
 function authorized(request) {
   const header = request.headers.authorization ?? '';
@@ -45,11 +47,26 @@ async function body(request) {
   }
   return JSON.parse(text);
 }
-function createSession(app) {
-  if (!Object.hasOwn(applications, app)) throw new Error('Unknown UI application');
+async function createSession(app) {
+  const pkg = siteManifest.packages?.[app];
+  if (!pkg && !Object.hasOwn(applications, app)) throw new Error('Unknown UI application');
   if (sessions.size >= 16) throw new Error('Hosted UI session limit reached');
+  let images;
+  if (pkg) {
+    const checked = preflightPackage(pkg, 'hosted');
+    for (const path of siteAssets(checked)) {
+      if (!siteManifest.assets?.[path] || !(await readFile(join(site, path))).length)
+        throw new Error(`Missing required UI asset: ${path}`);
+    }
+    const records = [checked.selected.entry, ...[...pkg.modules].reverse()];
+    images = [...records.map(record => join(build, record.path)),
+      ...CORE_MODULES.hosted.map(name => join(build, 'bin', `${name}.rxbin`))];
+    for (const path of images) {
+      if (!(await readFile(path)).length) throw new Error(`Missing required UI asset: ${path}`);
+    }
+  } else images = [...applications[app], ...common].map(image);
   const id = `hosted-${randomUUID()}`;
-  const process = spawn(vm, [...applications[app], ...common].map(image).concat('-a', id),
+  const process = spawn(vm, images.concat('-a', id),
     {stdio: ['pipe', 'pipe', 'pipe']});
   const session = {id, process, frames: [], sequence: 0, latest: null,
     ended: false, lastTouched: Date.now()};
@@ -88,14 +105,14 @@ function createSession(app) {
   return session;
 }
 
-const contentTypes = {'.html': 'text/html', '.mjs': 'text/javascript',
+const contentTypes = {'.html': 'text/html', '.mjs': 'text/javascript', '.json': 'application/json',
   '.wasm': 'application/wasm', '.rxbin': 'application/octet-stream'};
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
     if (!url.pathname.startsWith('/api/')) {
       const path = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
-      if (!/^(index\.html|[a-z-]+\.mjs|vm\/crexx_ui_vm\.(mjs|wasm)|modules\/[a-z_]+\.rxbin)$/.test(path))
+      if (!/^(index\.html|manifest\.json|[a-z-]+\.mjs|apps\/[a-z][a-z0-9_-]*\.mjs|vm\/crexx_ui_vm\.(mjs|wasm)|modules\/[a-z][a-z0-9_]*\.rxbin)$/.test(path))
         return reply(response, 404, {error: 'Not found'});
       const bytes = await readFile(join(site, path));
       const ext = path.slice(path.lastIndexOf('.'));
@@ -105,7 +122,7 @@ const server = createServer(async (request, response) => {
     if (!authorized(request)) return reply(response, 401, {error: 'Unauthorized'});
     if (url.pathname === '/api/sessions' && request.method === 'POST') {
       const selection = await body(request);
-      return reply(response, 201, {session: createSession(selection.app ?? 'text').id});
+      return reply(response, 201, {session: (await createSession(selection.app ?? 'text')).id});
     }
     const match = /^\/api\/sessions\/([a-z0-9-]+)(\/input)?$/.exec(url.pathname);
     const session = match && sessions.get(match[1]);

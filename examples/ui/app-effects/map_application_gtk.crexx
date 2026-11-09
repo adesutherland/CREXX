@@ -1,0 +1,7 @@
+options levelg
+namespace map_application_gtk
+import ui_gtk
+import map_application
+session = make_map_application_session("gtk-map-application", ui_gtk..capabilities())
+driver = .gtkdriver()
+exit driver.run(session)

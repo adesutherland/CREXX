@@ -1,0 +1,7 @@
+options levelg
+namespace graph_application_gtk
+import ui_gtk
+import graph_application
+session = make_graph_application_session("gtk-graph-application", ui_gtk..capabilities())
+driver = .gtkdriver()
+exit driver.run(session)
