@@ -89,6 +89,7 @@ rag_query_component: class implements .uicomponent
         _pending = 1
         _request_revision = _input_revision
         _status = "Comparing keyword, embedding and graph evidence"
+        _library = ""; _generation = 0; _model = ""
         _keyword = ""; _embedding = ""; _graph = ""
       end
     end

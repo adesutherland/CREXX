@@ -58,35 +58,44 @@ CREXX_UI_BUILD="$PWD/cmake-build-ui" \
   node cmake-build-ui-web-site/hosted-server.mjs
 ~~~
 
-The `?app=rag_demo` Wasm UI route currently uses an application-owned HTTP
-executor. It calls the same read-only RAG operation through a stateless,
-same-origin query API; browser-local RAG execution remains an open STEP08
-gate. For the approved heart-failure corpus, first run RAG's
-`library serving-export --output PATH` with admin access. This produces a
-redacted serving snapshot with the corpus, schema-required generation metadata
-and aligned sidecar; supply a compatible
-BGE model through the chosen config. Then serve the packaged site and API
-together on loopback:
+The `?app=rag_demo` route runs the query locally: a browser compute Worker
+creates a BGE vector with CPU Wasm, and a separate cREXX Wasm VM Worker runs
+RAG's read-only comparison RXBIN against an immutable SQLite/vector snapshot.
+No query server or installed client is needed. The generic `package-site.mjs`
+output contains the UI route only; assemble a corpus-bearing bundle separately.
+First run RAG's `library serving-export --output PATH` with admin access and
+include its compatible BGE GGUF model. With the UI site and opt-in RAG Wasm VM
+built, use a **new, empty output directory**:
 
 ~~~sh
-CREXX_UI_PORT=8788 \
-CREXX_UI_RAG_CORPUS=heart-failure \
-CREXX_UI_RAG_BINARY=/absolute/path/to/crexxrag \
-CREXX_UI_RAG_LIBRARY=/absolute/path/to/serving-snapshot \
-CREXX_UI_RAG_CONFIG=/absolute/path/to/compatible/crexxrag.conf \
-  node examples/ui/rag-query/query-api-server.mjs cmake-build-ui-web-site
+(cd examples/ui/rag-query && npm ci)
+emcmake cmake -S examples/ui/rag-query/wasm -B cmake-build-rag-query-wasm -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug -DCREXX_GENERATED_DIR="$PWD/cmake-build-ui/generated"
+cmake --build cmake-build-rag-query-wasm --target crexx_rag_query_vm --parallel 4
+node examples/ui/rag-query/package-static.mjs \
+  cmake-build-ui-web-site cmake-build-rag-query-wasm \
+  /absolute/path/to/crexxrag-wasm-reader.rxbin \
+  /absolute/path/to/serving-snapshot \
+  /absolute/path/to/compatible/profile.tsv \
+  /absolute/path/to/compatible/crexxrag.conf \
+  cmake-build-rag-query-static
+python3 -m http.server 8788 --bind 127.0.0.1 --directory cmake-build-rag-query-static
 ~~~
 
-Open `http://127.0.0.1:8788/?app=rag_demo`. The adapter returns independently
+Open `http://127.0.0.1:8788/?app=rag_demo`. The browser returns independently
 ranked keyword, embedding and graph excerpts with library/generation/model
 identity, source URL, citation ID and captured UTF-8 span. The graph control
-accepts 0–4 generations. It uses the configured local embedding model without
-provider credentials or durable provider receipts; the result reports one
-local embedding call and zero query-gap writes. The API refuses
-foreign origins and does not serve the corpus or server-side service module.
-The default question demonstrates route differences, not answer quality or
-clinical use. An internal deployment needs authenticated access and TLS; this
-loopback process is only a development proof.
+accepts 0–4 generations. The package checks snapshot, model and asset hashes
+before retrieval; it makes no provider call or query-gap write. The query VM
+opens SQLite read-only and primes FTS5 on a separate read-only connection to
+avoid a cold `fts5vocab` re-entry observed in the selected Wasm build. The
+default question demonstrates route differences, not answer quality or
+clinical use. This is a local development proof. Public static release still
+requires source-by-source distribution-rights review and HTTPS/browser/resource
+qualification under STEP08.
+
+The older same-origin Node query API remains a loopback integration fixture;
+it is not used by this local route.
 A user of an internal deployment needs only a browser. The question input,
 graph generation field, Search button, cited excerpts and source positions are ordinary HTML
 controls and text, so an agent with browser control can use the same page.
@@ -95,9 +104,10 @@ agent host must have its own browser tool and permission to reach the URL.
 For direct machine access, cREXX-RAG also exposes the `query.compare` CLI/MCP
 operation. Its separate Level G HTTP reader now serves this package and the
 same query contract through native `rxvm`; the Google-hosted pilot uses IAP at
-the service origin. The Node adapter remains a loopback proof. The static
-browser-local reader, model/profile identity closure, source-rights release
-check and complete STEP08 qualification remain open.
+the service origin. The Node adapter remains a loopback proof. The
+browser-local reader has a selected Chrome/macOS proof. Source-rights release,
+Stephen's sign-in, cross-browser/resource checks and complete STEP08
+qualification remain open.
 
 ## Application packages
 

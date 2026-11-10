@@ -33,6 +33,8 @@ install(FILES "${_rag_query_app}"
         "${CMAKE_CURRENT_BINARY_DIR}/rag_query_web_local.rxbin"
         "${CMAKE_CURRENT_BINARY_DIR}/rag_query_web_hosted.rxbin"
         rag-query.package.json rag-query.css hosted_service.mjs query-http.mjs query-api-server.mjs
+        query-local.mjs rag-bundle.mjs rag-embed-worker.mjs rag-vm-worker.mjs
+        package-static.mjs package.json package-lock.json
         DESTINATION examples/ui/rag-query)
 set_property(GLOBAL APPEND PROPERTY CREXX_INSTALLED_PRODUCT_TARGETS
         example_ui_rag_query_browser)

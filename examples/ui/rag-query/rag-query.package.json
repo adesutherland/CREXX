@@ -13,9 +13,9 @@
       "requiredCapabilities": ["rag.query"],
       "optionalOperations": [],
       "executor": {
-        "path": "query-http.mjs",
-        "target": "apps/rag-query-http.mjs",
-        "export": "ragQueryHttp",
+        "path": "query-local.mjs",
+        "target": "apps/rag-query-local.mjs",
+        "export": "ragQueryLocal",
         "capability": "rag.query",
         "requiresStorage": false
       }

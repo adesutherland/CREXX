@@ -124,6 +124,8 @@ async function route(kind) {
         {code: 'service_failed', message: 'Application service failed'})});
       view = await next();
       assert.equal(label(view, 'status'), 'Query failed: service_failed');
+      assert.equal(label(view, 'identity'), 'Library:  · Generation: 0 · Embedding model: ');
+      assert.equal(label(view, 'keyword-result'), '');
     }
     send('command', view.revision, {command: 'rag.quit'});
     assert.equal((await next()).type, 'closed');

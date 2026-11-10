@@ -1,8 +1,9 @@
 # UI architecture and capability expansion
 
 Status: STEP01–07, STEP07A and STEP12–13 done for the selected macOS ARM64
-development profile; AC01–08 and AC14–16 verified in that profile. STEP08 is
-in progress; STEP09–11, AC09–13 and public delivery gates remain open.
+development profile; AC01–08 and AC14–16 verified in that profile. STEP08 has
+a protected hosted pilot and a local static-browser proof; delivery and
+cross-route qualification remain open. STEP09–11, AC09–13 and AC17 remain open.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not change that baseline.
@@ -56,7 +57,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | done |
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | done |
 | **UIX-STEP07A** Process-designer showcase | STEP07; independent of service steps | Add a bounded Level G linear-process example with per-selected-step editing; complete the browser/ANSI text-input host seams, then prove one application model across GTK, ANSI and both browser routes. | AC16 | done |
-| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Deliver Stephen's three-route cited comparison through a static browser bundle and a small Google-hosted native `rxvm` reader (D17–18), with the same RAG-owned read-only snapshot and query contract. Prove source links/locations, graph hop selection and compatible embeddings under D01–03. | AC09–10, AC17 | in progress: hosted pilot live; static reader and two-person access check open |
+| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Deliver Stephen's three-route cited comparison through a static browser bundle and a small Google-hosted native `rxvm` reader (D17–18), with the same RAG-owned read-only snapshot and query contract. Prove source links/locations, graph hop selection and compatible embeddings under D01–03. | AC09–10, AC17 | in progress: hosted pilot live; local static Chrome proof; public static release, Stephen's sign-in and delivery qualification open |
 | **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
 | **UIX-STEP10** RAG cache | STEP08 transient local query proof | Prove D13 OPFS cache identity, reload, export/re-import, quota/eviction, multi-tab and cleanup, or record the conditional transient fallback. | AC12 | todo |
 | **UIX-STEP11** Local-write assessment | STEP08 and STEP10 evidence | Assess D14 browser corpus writes with the RAG owner and make a separate implementation decision from concrete evidence. | AC13 | todo |
@@ -126,7 +127,7 @@ which route must still pass after any agreed fallback.
 | **UIX-D15** | Registered effects form the extension point for independently authored applications; teams own repositories and policies without a shared graph/map/RAG schema. | Namespacing, schema compatibility/versioning and independent-consumer proof. |
 | **UIX-D16** | Versioned application packages declare entry, UI contract, required/optional capabilities, dependencies and assets. Native/browser assembly may differ; initial packages are deployer-approved and trusted. | Manifest/package preflight and install proof; runtime hot loading and untrusted-package isolation remain outside this UI delivery. |
 | **UIX-D17** | One versioned application service operation has typed request/result/failure semantics. HTTP is its first remote binding; a later distributed channel provider may be another binding under the same contract. UI calls complete through effects, without blocking the owner turn. | Implement the cREXX HTTP reader binding, preserve local and hosted correlation/cancellation, and assess a channel transport only after an actual multi-service need. |
-| **UIX-D18** | Proposed Stephen delivery: a static Firebase-hosted, browser-executed read-only bundle and a separate, access-controlled Google Cloud Run native `rxvm` service. Both consume one RAG-owned serving snapshot and comparison contract; the hosted service starts with one container and no managed database or GKE dependency. Adrian approved corpus distribution for this demo on 9 November 2026. | Reconcile the earlier narrower corpus decision and source terms, then review actual export size, browser load/resource use, Linux native provider, direct Cloud Run access and measured gross/credit/net cost with the hosting owner before deployment. |
+| **UIX-D18** | Proposed Stephen delivery: a static Firebase-hosted, browser-executed read-only bundle and a separate, access-controlled Google Cloud Run native `rxvm` service. Both consume one RAG-owned serving snapshot and comparison contract; the hosted service starts with one container and no managed database or GKE dependency. Adrian approved distributing the public-information corpus for this demo on 9 November 2026. | The protected Cloud Run pilot is live. Reconcile source-specific licence notes and the private corpus workspace's publication restriction before a genuinely public static release; verify Stephen's sign-in, browser load/resource use and gross/credit/net cost before final limits. |
 | **UIX-D19** | The first hosted research reader uses an immutable SQLite serving snapshot. Mutable application data, if later required, uses a separate application-owned Firestore capability and does not mutate the RAG snapshot. No Firestore database is provisioned for the read-only demonstrator. | Add a concrete mutable-data consumer and bounded Firestore contract before provisioning; keep source and query ownership in RAG. |
 
 ## Architecture details
@@ -513,19 +514,22 @@ owns `rag.query` and displays three separately labelled, bounded cited results,
 graph generations 0–4, source URLs and captured UTF-8 spans with library,
 generation and embedding-model identity. Its browser package includes
 presentation-only CSS for long cited text; the shared projection has no RAG
-node IDs. The present executor calls a stateless, same-origin loopback HTTP API;
-the comparison still runs on the server through RAG's Level G `query.compare`
-and local BGE embedding model. The UI delta/resync protocol remains in the
-browser. RAG's `library serving-export` now emits a compact SQLite corpus
+node IDs. The hosted executor calls RAG's Level G HTTP reader in native `rxvm`
+behind direct Cloud Run IAP. The local executor runs a BGE CPU Wasm embedding
+Worker and RAG's query-only RXBIN in a separate cREXX Wasm VM Worker. Both
+return the same three-route comparison through the UI effect contract; the UI
+delta/resync protocol remains in the browser. RAG's `library serving-export`
+emits a compact SQLite corpus
 and aligned sidecar snapshot, removing bulk operational audit rows and
 redacting local source/config paths while retaining schema-required generation metadata;
 an explicit model option copies and hashes the embedding weights.
-The export and query have passed focused native checks and one live heart-failure
-loopback browser result; this is a development increment, not delivery or
-clinical qualification. The graph card shows a bounded first claim path;
-complete per-hop presentation, relocatable model/profile validation, the
-cREXX HTTP reader, protected Cloud Run deployment, static browser-local reader and
-source-rights release check keep AC09–10 and AC17 open.
+The export and query have passed focused native checks. The protected Cloud
+Run pilot and a locally served static browser bundle both return cited
+heart-failure comparisons; this is a development increment, not public
+delivery or clinical qualification. The graph card shows a bounded first
+claim path. Public source-rights reconciliation, Stephen's direct sign-in,
+resource/cost measurement and broader browser delivery checks keep AC09–10
+and AC17 open.
 
 For the targeted browser-local route, the existing `rxsqlite` and `rxvector`
 sources compile and link into a single-thread Wasm VM together with the needed
@@ -562,22 +566,22 @@ digest. Both CPU Wasm and WebGPU-generated browser vectors passed that lookup;
 the WebGPU runtime reported four of thirteen BGE layers offloaded on the
 selected Apple Metal host. This establishes browser-local vector lookup and
 GPU execution feasibility on that host. It is not a throughput claim or a
-qualified application service. The installed native embedding provider could
-not load a verified CPU backend for a fresh native-vector comparison, so the
-browser embedding's equivalence to RAG's pinned model/input profile is still
-unproved. Preserve that profile gate rather than accepting dimensional or
-retrieval agreement as equivalence.
+qualified application service. A later comparison with RAG's pinned native
+model and query envelope found full-vector cosine similarity 0.999999429 to
+browser CPU Wasm for the selected question, with maximum component difference
+0.00035435. This verifies numerical compatibility in that profile, not every
+model backend or device.
 
-The cited RAG lookup proof used a manually pruned copy of the active library.
-RAG must own a supported read-only serving export that preserves
-corpus/snapshot identity and validates its SQLite/sidecar membership; the proof
-copy is not a distributable format. The active sidecar is `ivf-flat-v1` JSON,
-not a bare RXVIDX/1 file. The active database alone is 755 MiB; `job_events`,
-`job_items` and `maintenance_tasks` account for most of that size. Export size,
-transfer time and browser memory must be measured rather than inferred from
-those table totals. Adrian approved distribution of the public-information
-corpus for Stephen's demo on 9 November 2026; the earlier narrower Public
-Purpose Lab corpus decision needs owner reconciliation before release.
+The earlier cited lookup used a manually pruned copy. RAG now owns the
+supported read-only serving export, preserving corpus/snapshot and SQLite/
+sidecar identity; the manually pruned copy is not a distributable format.
+The active sidecar is `ivf-flat-v1` JSON, not a bare RXVIDX/1 file. The active
+database alone is 755 MiB; `job_events`, `job_items` and `maintenance_tasks`
+account for most of that size. Measure serving export transfer and browser
+memory directly. Adrian approved distributing the public-information corpus
+for Stephen's demo on 9 November 2026; source-specific licence notes and the
+private workspace's publication restriction still need reconciliation before
+a public Firebase release.
 
 ### Stephen's read-only comparison and two hosting profiles
 
@@ -631,27 +635,28 @@ Hosting implementation references are [Firebase Hosting configuration](https://f
 [direct Cloud Run IAP](https://docs.cloud.google.com/run/docs/securing/identity-aware-proxy-cloud-run),
 and [Cloud Run pricing](https://cloud.google.com/run/pricing).
 
-STEP08 work packages are below. Packages 2 and 3 can proceed independently
-after package 1; native/browser parity closes only after both are ready.
+STEP08 work packages retain these remaining gates:
 
-1. RAG publishes and validates the supported serving bundle, citation URL/
-   position mapping and three-route read-only comparison contract, including
-   graph hop bounds, no-write and wrong-snapshot failures. Reconcile source
-   attribution and distribution records before public asset release.
-2. Run that bundle in the browser's two Workers, compare each route with native
-   RAG on fixed questions and verify compatible query vectors, cancellation,
-   stale results, invalid assets and CPU fallback. Package the site as a
-   standalone static release and measure transfer/load/memory.
-3. Bind the same RAG operation to the cREXX HTTP server and native `rxvm`, then
-   qualify a local Linux container against the native RAG contract. Deploy the small
-   Cloud Run profile only after hosting/access/cost review, and verify Stephen's
-   actual sign-in and cited result. Preserve normal hosted failure and cleanup
-   checks; broader UI/platform QA stays open under AC09–10 and AC17.
+1. **RAG snapshot/contract — development done; release open.** Keep the
+   supported serving export, citation URL/position mapping and three-route
+   read-only comparison contract aligned. Reconcile each source's attribution
+   and distribution terms before releasing public assets.
+2. **Static browser — local proof done; delivery open.** Qualify wrong/corrupt
+   assets, cancellation, stale results, 0–4 hops, browser/CPU fallback and
+   reload behavior; measure transfer, load and memory. Publish a versioned
+   HTTPS site only after the source-rights gate.
+3. **Google hosted — protected pilot done; acceptance open.** Verify Stephen's
+   own IAP sign-in and cited result, cold/warm resource use, bounded concurrency,
+   gross cost and cleanup. Keep broader UI/platform QA open under AC09–10 and
+   AC17.
 
-The full active-library transient import and sidecar validation now work in one
-browser profile. Moving that scratch proof to the intended separate Workers,
-and verifying reload, cache, multi-tab, resource bounds and a supported
-serving bundle remain open. D13 owns persistence. Browser GPU use is
+The supported serving bundle now runs in separate browser Workers with RAG's
+query RXBIN. The Wasm VM needs one read-only FTS5 initialization query on a
+separate connection before the `fts5vocab` census; the cold cREXX-only path
+otherwise recurses in SQLite's `data_version` VDBE. This bounded host
+preparation does not produce a RAG answer. Its cause and any general provider
+repair remain a platform follow-up. Reload, cache, multi-tab and resource
+bounds remain open; D13 owns persistence. Browser GPU use is
 optional per workload, with CPU Wasm as the embedding fallback; neither UI
 rendering nor exact CPU `rxvector` scoring depends on WebGPU.
 

@@ -51,5 +51,5 @@ target_link_options(crexx_rag_query_vm PRIVATE --no-entry
         -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=134217728
         -sMAXIMUM_MEMORY=1073741824 -sSTACK_SIZE=1048576
         -sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=worker,node
-        "-sEXPORTED_FUNCTIONS=['_rag_vm_create','_rag_vm_destroy','_rag_vm_load','_rag_vm_run','_rag_vm_program_rc','_rag_vm_error','_malloc','_free']"
+        "-sEXPORTED_FUNCTIONS=['_rag_vm_prepare_fts','_rag_vm_create','_rag_vm_destroy','_rag_vm_load','_rag_vm_run','_rag_vm_program_rc','_rag_vm_error','_malloc','_free']"
         "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','HEAPU8']")

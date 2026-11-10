@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sqlite3.h>
 
 typedef struct Image { void *bytes; struct Image *next; } Image;
 static rxvml_context *context;
@@ -15,6 +16,22 @@ static int running, program_rc;
 static char error_text[1024];
 
 extern void crexx_fs_init(void);
+static int fail(const char *message);
+
+/* Prime FTS5 on its own connection before the VM enters the read-only query.
+ * This avoids a cold fts5vocab/data_version re-entry in the Wasm VM path. */
+EMSCRIPTEN_KEEPALIVE int rag_vm_prepare_fts(void) {
+    sqlite3 *db = NULL;
+    sqlite3_stmt *stmt = NULL;
+    int rc = sqlite3_open_v2("/library/library.sqlite", &db,
+                             SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, NULL);
+    if (rc == SQLITE_OK) rc = sqlite3_prepare_v2(db,
+        "SELECT count(*) FROM chunks_fts WHERE chunks_fts MATCH 'heart'", -1, &stmt, NULL);
+    if (rc == SQLITE_OK) rc = sqlite3_step(stmt);
+    if (stmt) sqlite3_finalize(stmt);
+    if (db) sqlite3_close_v2(db);
+    return rc == SQLITE_ROW ? 0 : fail("Cannot prepare corpus FTS index");
+}
 
 static int fail(const char *message) {
     snprintf(error_text, sizeof(error_text), "%s", message ? message : "RAG VM failure");
@@ -65,19 +82,19 @@ EMSCRIPTEN_KEEPALIVE int rag_vm_load(const void *bytes, size_t length) {
     return 0;
 }
 
-EMSCRIPTEN_KEEPALIVE int rag_vm_run(const char *question) {
+EMSCRIPTEN_KEEPALIVE int rag_vm_run(const char *request_json) {
     const char *args[3];
     const char *message = NULL;
     size_t length;
     int rc;
-    if (!context || running || !question) return fail("Invalid RAG query start");
+    if (!context || running || !request_json) return fail("Invalid RAG query start");
     length = 0;
-    while (length <= 1024 && question[length]) length++;
-    if (!length || length > 1024 || strchr(question, '\n') || strchr(question, '\r'))
-        return fail("Invalid RAG question");
+    while (length <= 8192 && request_json[length]) length++;
+    if (!length || length > 8192 || strchr(request_json, '\n') || strchr(request_json, '\r'))
+        return fail("Invalid RAG request");
     args[0] = "/library";
     args[1] = "/profile.tsv";
-    args[2] = question;
+    args[2] = request_json;
     error_text[0] = 0;
     program_rc = 0;
     running = 1;

@@ -101,7 +101,7 @@ try {
   assert.ok(manifest.assets['apps/graph-repository.mjs']);
   assert.ok(manifest.packages.rag_demo);
   assert.ok(manifest.assets['services/rag-query.mjs']);
-  assert.ok(manifest.assets['apps/rag-query-http.mjs']);
+  assert.ok(manifest.assets['apps/rag-query-local.mjs']);
   assert.ok(manifest.assets['styles/rag-query.css']);
 } finally { await rm(scratch, {recursive: true, force: true}); }
 console.log('PASS: independent UI packages and preflight refusals');
