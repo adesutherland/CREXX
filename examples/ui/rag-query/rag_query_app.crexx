@@ -7,10 +7,33 @@ import ui
 import ui_contract
 
 make_rag_query_session: procedure = .uisession
-  arg id = .string, caps = .uicapabilities, corpus = "heart-failure", question = "heart failure treatment pathway"
+  arg id = .string, caps = .uicapabilities, corpus = "heart-failure", question = "heart failure treatment pathway", answer_available = 1
   session = .uisession(id, caps)
-  rc = session.add_component("root", .rag_query_component(corpus, question))
+  rc = session.add_component("root", .rag_query_component(corpus, question, answer_available))
   rc = session.register_event("rag.search.requested")
+  rc = session.register_event("rag.ask.requested")
+  rc = session.register_event("rag.explore.requested")
+  rc = session.register_event("rag.drawer.requested")
+  rc = session.register_event("rag.dialogue.requested")
+  rc = session.register_event("rag.activity.requested")
+  rc = session.register_event("rag.source.close.requested")
+  rc = session.register_event("rag.context.requested")
+  rc = session.register_event("rag.answer.completed", '{"answer_json":{"type":"string","required":true,"maxLength":49152}}', "completion")
+  rc = session.register_event("rag.source.completed", '{"source_json":{"type":"string","required":true,"maxLength":49152}}', "completion")
+  rc = session.register_effect("rag.answer", "rag.answer", '{"corpus":{"type":"string","required":true,"maxLength":64},"question":{"type":"string","required":true,"maxLength":1024}}', "rag.answer.completed")
+  rc = session.register_effect("rag.source", "rag.source", '{"corpus":{"type":"string","required":true,"maxLength":64},"citation":{"type":"string","required":true,"maxLength":512}}', "rag.source.completed")
+  rc = session.register_command(.uicommand("rag.ask", "Ask", "root", "rag.ask.requested", ""))
+  rc = session.register_command(.uicommand("rag.explore", "Explore corpus", "root", "rag.explore.requested", ""))
+  rc = session.register_command(.uicommand("rag.drawer", "Dialogue and activity", "root", "rag.drawer.requested", ""))
+  rc = session.register_command(.uicommand("rag.dialogue", "Dialogue", "root", "rag.dialogue.requested", ""))
+  rc = session.register_command(.uicommand("rag.activity", "Activity", "root", "rag.activity.requested", ""))
+  rc = session.register_command(.uicommand("rag.source.close", "Back to answer", "root", "rag.source.close.requested", ""))
+  rc = session.register_command(.uicommand("rag.context", "Read captured context", "root", "rag.context.requested", ""))
+  do i = 1 to 8
+    suffix = word("one two three four five six seven eight", i)
+    rc = session.register_event("rag.source." || suffix || ".requested")
+    rc = session.register_command(.uicommand("rag.source." || suffix, "View source " || i, "root", "rag.source." || suffix || ".requested", ""))
+  end
   rc = session.register_event("rag.query.completed", '{"comparison_json":{"type":"string","required":true,"maxLength":16384}}', "completion")
   rc = session.register_effect("rag.query", "rag.query", '{"corpus":{"type":"string","required":true,"maxLength":64},"question":{"type":"string","required":true,"maxLength":256},"mode":{"type":"string","required":true,"enum":["compare"]},"hops":{"type":"integer","required":true,"minimum":0,"maximum":4}}', "rag.query.completed")
   rc = session.register_command(.uicommand("rag.search", "Search", "root", "rag.search.requested", ""))
@@ -31,9 +54,32 @@ rag_query_component: class implements .uicomponent
   _pending = .int
   _input_revision = .int
   _request_revision = .int
+  _answer_available = .int
+  _answer_question = .string
+  _answer_input_revision = .int
+  _answer_request_revision = .int
+  _answer_json = .string
+  _answer_status = .string
+  _answer_pending = .int
+  _answer_request = .string
+  _answered_question = .string
+  _search_open = .int
+  _drawer_open = .int
+  _drawer_tab = .string
+  _activity = .string
+  _activity_count = .int
+  _dialogue = .string
+  _source_index = .int
+  _context_pending = .int
+  _context_request = .string
+  _context_citation = .string
+  _source_context = .string
+  _source_status = .string
+  _focus = .string
 
   *: factory
-    arg corpus = .string, question = .string
+    arg corpus = .string, question = .string, answer_available = 1
+    _answer_available = answer_available
     _corpus = corpus
     _question = question
     _status = "Ready to compare three read-only routes"
@@ -45,6 +91,28 @@ rag_query_component: class implements .uicomponent
     _pending = 0
     _input_revision = 0
     _request_revision = 0
+    _answer_question = question
+    _answer_input_revision = 0
+    _answer_request_revision = 0
+    _answer_json = ""
+    _answer_status = "Ask a broad question about the corpus."
+    if _answer_available = 0 then _answer_status = "Answers are available on the protected server site. This local demo supports the three read-only search routes."
+    _answer_pending = 0
+    _answer_request = ""
+    _answered_question = ""
+    _search_open = 1
+    _drawer_open = 0
+    _drawer_tab = "activity"
+    _activity = "No question submitted."
+    _activity_count = 0
+    _dialogue = "Questions and completed responses appear here."
+    _source_index = 0
+    _context_pending = 0
+    _context_request = ""
+    _context_citation = ""
+    _source_context = ""
+    _source_status = ""
+    _focus = ""
     return
 
   update: method = .uieffects
@@ -52,8 +120,17 @@ rag_query_component: class implements .uicomponent
     effects = .uieffects()
     name = event.name()
     candidate = ""
+    body = .uipayload
     if name = "widget.value.committed" then do
-      if event.body().text("node") = "question" then do
+      if event.body().text("node") = "ask-question" then do
+        _answer_question = strip(event.body().text("value"))
+        _answer_input_revision = _answer_input_revision + 1
+        if _answer_question = "" | length(_answer_question) > 1024 then
+          _answer_status = "Enter a question of 1 to 1024 characters."
+        else if _answer_pending then _answer_status = "Question changed. The current request still uses the submitted question."
+        else _answer_status = "Ready to ask about this corpus."
+      end
+      else if event.body().text("node") = "question" then do
         candidate = strip(event.body().text("value"))
         if candidate = "" | length(candidate) > 256 | pos('0A'x, candidate) > 0 | pos('0D'x, candidate) > 0 then
           _status = "Enter a question of 1 to 256 characters."
@@ -77,8 +154,121 @@ rag_query_component: class implements .uicomponent
         end
       end
     end
+    else if name = "rag.explore.requested" then do
+      _search_open = 1 - _search_open
+      _source_index = 0
+      _focus = "explore"
+    end
+    else if name = "rag.drawer.requested" then do
+      _drawer_open = 1 - _drawer_open
+      if _drawer_open then _focus = "live-drawer"
+      else _focus = "drawer-toggle"
+    end
+    else if name = "rag.dialogue.requested" then do
+      _drawer_tab = "dialogue"
+      _focus = "dialogue-content"
+    end
+    else if name = "rag.activity.requested" then do
+      _drawer_tab = "activity"
+      _focus = "activity-content"
+    end
+    else if name = "rag.source.close.requested" then do
+      _focus = "rag.source." || word("one two three four five six seven eight", _source_index)
+      _source_index = 0
+    end
+    else if wordpos(name, "rag.source.one.requested rag.source.two.requested rag.source.three.requested rag.source.four.requested rag.source.five.requested rag.source.six.requested rag.source.seven.requested rag.source.eight.requested") > 0 then do
+      selected = wordpos(name, "rag.source.one.requested rag.source.two.requested rag.source.three.requested rag.source.four.requested rag.source.five.requested rag.source.six.requested rag.source.seven.requested rag.source.eight.requested")
+      if selected <= jsoncount(_answer_json, "sources") then do
+        _source_index = selected
+        _source_context = ""
+        _source_status = "Supporting passage captured in this corpus snapshot."
+        _focus = "source-view"
+      end
+    end
+    else if name = "rag.ask.requested" then do
+      if _answer_available = 0 then _answer_status = "Answers require the protected server site; corpus search remains available here."
+      else if _answer_pending | _pending | _context_pending then _answer_status = "Wait for the active operation or stop the current question."
+      else if _answer_question = "" | length(_answer_question) > 1024 then
+        _answer_status = "Enter a question of 1 to 1024 characters."
+      else do
+        body = .uipayload()
+        call body.put_text("corpus", _corpus)
+        call body.put_text("question", _answer_question)
+        call effects.add(.uimessage("rag.answer", body, event.target(), "effect"))
+        _answer_pending = 1
+        _answer_request = ""
+        _answer_request_revision = _answer_input_revision
+        _answer_status = "Waiting for the server to assess the question and retrieve evidence."
+        _activity = "Question submitted to the server."
+        _activity_count = 1
+        _dialogue = "You: " || _answer_question
+        _source_index = 0
+      end
+    end
+    else if name = "ui.effect.progress" then do
+      if _answer_pending then do
+        _answer_request = event.request_id()
+        progress_message = left(event.body().text("message"), 1024)
+        if progress_message \= "" then do
+          _answer_status = progress_message
+          _dialogue = left(_dialogue || '0A0A'x || "Service: " || progress_message, 32768)
+          if _activity_count < 32 then do
+            _activity = _activity || '0A'x || progress_message
+            _activity_count = _activity_count + 1
+          end
+        end
+      end
+    end
+    else if name = "rag.answer.completed" then do
+      _answer_pending = 0
+      _answer_request = ""
+      if _answer_request_revision \= _answer_input_revision then do
+        _answer_status = "The question changed while the server worked. Ask again to answer the current draft."
+        return effects
+      end
+      answer_candidate = event.body().text("answer_json")
+      if jsonvalid(answer_candidate) \= 1 | jsonget(answer_candidate, "schema") \= "crexx-rag.answer/1" then
+        _answer_status = "The answer service returned an invalid response. Try again explicitly."
+      else do
+        _answer_json = answer_candidate
+        _answered_question = _answer_question
+        answer_outcome = jsonget(_answer_json, "status")
+        if answer_outcome = "answered" then _answer_status = "Answer complete. Review the supporting sources."
+        else if answer_outcome = "scope_refused" then _answer_status = "This question falls outside the corpus scope."
+        else _answer_status = "The corpus does not contain enough supporting evidence."
+        _activity = left(_activity || '0A'x || _answer_status, 32768)
+        _dialogue = left(_dialogue || '0A0A'x || "Response: " || jsonget(_answer_json, "answer"), 32768)
+        _source_index = 0
+      end
+    end
+    else if name = "rag.context.requested" then do
+      if _source_index > 0 & _context_pending = 0 & _answer_pending = 0 & _pending = 0 then do
+        _context_citation = jsonget(_answer_json, "sources." || _source_index || ".citation")
+        body = .uipayload()
+        call body.put_text("corpus", _corpus)
+        call body.put_text("citation", _context_citation)
+        call effects.add(.uimessage("rag.source", body, event.target(), "effect"))
+        _context_pending = 1
+        _context_request = ""
+        _source_status = "Reading captured source context from the server."
+      end
+    end
+    else if name = "rag.source.completed" then do
+      _context_pending = 0
+      _context_request = ""
+      context_candidate = event.body().text("source_json")
+      if jsonvalid(context_candidate) \= 1 | jsonget(context_candidate, "schema") \= "crexx-rag.source-context/1" then
+        _source_status = "The source context response was invalid."
+      else if _source_index > 0 then do
+        if jsonget(context_candidate, "citation") = jsonget(_answer_json, "sources." || _source_index || ".citation") & jsonget(context_candidate, "library_id") = jsonget(_answer_json, "library_id") & jsonget(context_candidate, "generation") = jsonget(_answer_json, "generation") then do
+          _source_context = context_candidate
+          _source_status = "Captured source context loaded."
+        end
+        else _source_status = "Source selection or snapshot changed. Request its context again."
+      end
+    end
     else if name = "rag.search.requested" then do
-      if _pending then _status = "Wait for the current query."
+      if _pending | _answer_pending | _context_pending then _status = "Wait for the current operation."
       else do
         body = .uipayload()
         call body.put_text("corpus", _corpus)
@@ -149,32 +339,201 @@ rag_query_component: class implements .uicomponent
       end
     end
     else if name = "ui.effect.failed" then do
-      _pending = 0
-      _status = "Query failed: " || event.body().text("code")
+      if _answer_pending & (_answer_request = "" | _answer_request = event.request_id()) then do
+        _answer_pending = 0
+        _answer_request = ""
+        _answer_status = "Answer failed: " || event.body().text("message") || " (" || event.body().text("code") || "). Retry explicitly."
+        _activity = left(_activity || '0A'x || _answer_status, 32768)
+      end
+      else if _context_pending then do
+        _context_pending = 0
+        _source_status = "Source context failed: " || event.body().text("code")
+      end
+      else do
+        _pending = 0
+        _status = "Query failed: " || event.body().text("code")
+      end
     end
     else if name = "ui.effect.cancelled" then do
-      _pending = 0
-      _status = "Query cancelled"
+      if _answer_pending & (_answer_request = "" | _answer_request = event.request_id()) then do
+        _answer_pending = 0
+        _answer_request = ""
+        _answer_status = "Question cancelled. The previous completed answer is retained."
+        _activity = left(_activity || '0A'x || "Question cancelled.", 32768)
+      end
+      else if _context_pending then do
+        _context_pending = 0
+        _source_status = "Source context cancelled."
+      end
+      else do
+        _pending = 0
+        _status = "Query cancelled"
+      end
     end
     if name = "ui.close.requested" then
       call effects.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))
     return effects
 
   view: method = .uiview
-    result = .uiview_impl("Explore the heart failure corpus")
-    call result.add_label("intro", "Compare the same corpus using words, semantic similarity and graph connections. Sources are research evidence, not clinical advice.", "root")
-    call result.add_label("question-label", "Question")
-    call result.add_input("question", _question, "right", "question-label")
-    call result.add_label("hops-label", "Graph generations (0–4)", "below", "question-label")
-    call result.add_input("hops", _hops as .string, "right", "hops-label")
-    call result.add_button("search", "Search", "rag.search", "", "below", "hops-label")
-    call result.add_label("status", _status, "below", "search")
-    call result.add_label("identity", "Library: " || _library || " · Generation: " || _generation || " · Embedding model: " || _model)
-    call result.add_label("keyword-heading", "01  Keyword")
-    call result.add_label("keyword-result", _keyword)
-    call result.add_label("embedding-heading", "02  Embedding")
-    call result.add_label("embedding-result", _embedding)
-    call result.add_label("graph-heading", "03  Graph · " || _hops || " generations")
-    call result.add_label("graph-result", _graph)
-    call result.add_button("quit", "Quit", "rag.quit", "")
+    result = .uiview_impl("Ask the heart failure corpus")
+    call result.add_label("intro", "Ask a broad question and inspect the evidence behind the answer. Research demonstrator; sources are research evidence, not clinical advice.", "root")
+    call result.add_button("explore", "Explore corpus", "rag.explore", "")
+    ignored = result.set_properties("explore", '{"expanded":' || booljson(_search_open) || ',"controls":"search-panel","focus":' || jsonquote(_focus) || '}')
+    call result.add_group("answer-panel", "Question and answer")
+    call result.add_label("ask-label", "Your question (up to 1024 characters)")
+    ignored = result.set_properties("ask-label", '{"parent":"answer-panel"}')
+    call result.add_textarea("ask-question", _answer_question)
+    ignored = result.set_properties("ask-question", '{"parent":"answer-panel","label":"Your question","description":"Ask a question about this corpus. Maximum 1024 characters.","maxLength":1024}')
+    call result.add_button("ask", "Ask", "rag.ask", "")
+    ignored = result.set_properties("ask", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending | _pending | _context_pending | (_answer_available = 0)) || '}')
+    if _answer_pending then do
+      call result.add_button("stop", "Stop question", "", "")
+      ignored = result.set_properties("stop", '{"parent":"answer-panel","cancel":"rag.answer"}')
+    end
+    call result.add_statusbar("answer-status", _answer_status)
+    ignored = result.set_properties("answer-status", '{"parent":"answer-panel"}')
+    if _answer_json \= "" then do
+      call result.add_label("answered-question", "Submitted question: " || _answered_question)
+      ignored = result.set_properties("answered-question", '{"parent":"answer-panel"}')
+      call result.add_document("answer", document_for_answer(jsonget(_answer_json, "answer"), jsoncount(_answer_json, "sources")))
+      ignored = result.set_properties("answer", '{"parent":"answer-panel","label":"Evidence grounded answer"}')
+      call result.add_label("answer-identity", "Library: " || jsonget(_answer_json, "library_id") || " · Snapshot: " || jsonget(_answer_json, "generation") || " · Provider: " || jsonget(_answer_json, "provider") || " · Model: " || jsonget(_answer_json, "model"))
+      ignored = result.set_properties("answer-identity", '{"parent":"answer-panel"}')
+      do source_number = 1 to jsoncount(_answer_json, "sources")
+        if source_number > 8 then leave
+        source_id = "source-" || source_number
+        call result.add_button(source_id, "[" || source_number || "] " || jsonget(_answer_json, "sources." || source_number || ".title"), "rag.source." || word("one two three four five six seven eight", source_number), "")
+        ignored = result.set_properties(source_id, '{"parent":"answer-panel"}')
+      end
+    end
+    if _source_index > 0 then do
+      source = jsonget(_answer_json, "sources." || _source_index)
+      call result.add_group("source-view", "Source [" || _source_index || "]", "right", "answer-panel")
+      ignored = result.set_properties("source-view", '{"role":"complementary"}')
+      call result.add_button("source-back", "Back to answer", "rag.source.close", "")
+      ignored = result.set_properties("source-back", '{"parent":"source-view"}')
+      call result.add_label("source-title", jsonget(source, "title"))
+      ignored = result.set_properties("source-title", '{"parent":"source-view"}')
+      call result.add_document("source-excerpt", plain_document(jsonget(source, "excerpt")))
+      ignored = result.set_properties("source-excerpt", '{"parent":"source-view","label":"Supporting excerpt"}')
+      call result.add_label("source-position", "Captured UTF-8 bytes " || jsonget(source, "span_start") || "–" || jsonget(source, "span_end") || '0A'x || jsonget(source, "citation"))
+      ignored = result.set_properties("source-position", '{"parent":"source-view"}')
+      if jsonget(source, "source_url") \= "" then do
+        call result.add_link("source-original", "Open source website (new tab)", jsonget(source, "source_url"))
+        ignored = result.set_properties("source-original", '{"parent":"source-view"}')
+      end
+      call result.add_button("source-context", "Read captured context", "rag.context", "")
+      ignored = result.set_properties("source-context", '{"parent":"source-view","disabled":' || booljson(_context_pending) || '}')
+      call result.add_statusbar("source-status", _source_status)
+      ignored = result.set_properties("source-status", '{"parent":"source-view"}')
+      if _context_pending then do
+        call result.add_button("source-stop", "Stop reading context", "", "")
+        ignored = result.set_properties("source-stop", '{"parent":"source-view","cancel":"rag.source"}')
+      end
+      if _source_context \= "" then do
+        call result.add_label("context-position", "Captured context UTF-8 bytes " || jsonget(_source_context, "context_start") || "–" || jsonget(_source_context, "context_end"))
+        ignored = result.set_properties("context-position", '{"parent":"source-view"}')
+        call result.add_document("source-context-text", plain_document(jsonget(_source_context, "context_text")))
+        ignored = result.set_properties("source-context-text", '{"parent":"source-view","label":"Wider captured source context"}')
+        if jsonget(_source_context, "original_url") \= "" then do
+          call result.add_link("source-captured-original", "Open captured original (new tab)", jsonget(_source_context, "original_url"))
+          ignored = result.set_properties("source-captured-original", '{"parent":"source-view"}')
+        end
+      end
+    end
+    else if _search_open then do
+      call result.add_group("search-panel", "Search the corpus", "right", "answer-panel")
+      ignored = result.set_properties("search-panel", '{"role":"complementary"}')
+      call result.add_label("question-label", "Search question (up to 256 characters)")
+      ignored = result.set_properties("question-label", '{"parent":"search-panel"}')
+      call result.add_input("question", _question, "below", "question-label")
+      ignored = result.set_properties("question", '{"parent":"search-panel","label":"Corpus search question","maxLength":256}')
+      call result.add_label("hops-label", "Graph generations (0–4)")
+      ignored = result.set_properties("hops-label", '{"parent":"search-panel"}')
+      call result.add_input("hops", _hops as .string)
+      ignored = result.set_properties("hops", '{"parent":"search-panel","label":"Graph generations, zero to four","maxLength":1}')
+      call result.add_button("search", "Compare three routes", "rag.search", "")
+      ignored = result.set_properties("search", '{"parent":"search-panel","disabled":' || booljson(_pending | _answer_pending | _context_pending) || '}')
+      call result.add_statusbar("status", _status)
+      ignored = result.set_properties("status", '{"parent":"search-panel"}')
+      call result.add_label("identity", "Library: " || _library || " · Generation: " || _generation || " · Embedding model: " || _model)
+      ignored = result.set_properties("identity", '{"parent":"search-panel"}')
+      call result.add_group("keyword-group", "Keyword")
+      ignored = result.set_properties("keyword-group", '{"parent":"search-panel","level":3}')
+      call result.add_label("keyword-result", _keyword)
+      ignored = result.set_properties("keyword-result", '{"parent":"keyword-group"}')
+      call result.add_group("embedding-group", "Embedding")
+      ignored = result.set_properties("embedding-group", '{"parent":"search-panel","level":3}')
+      call result.add_label("embedding-result", _embedding)
+      ignored = result.set_properties("embedding-result", '{"parent":"embedding-group"}')
+      call result.add_group("graph-group", "Graph · " || _hops || " generations")
+      ignored = result.set_properties("graph-group", '{"parent":"search-panel","level":3}')
+      call result.add_label("graph-result", _graph)
+      ignored = result.set_properties("graph-result", '{"parent":"graph-group"}')
+    end
+    call result.add_button("drawer-toggle", "Dialogue and activity", "rag.drawer", "")
+    ignored = result.set_properties("drawer-toggle", '{"expanded":' || booljson(_drawer_open) || ',"controls":"live-drawer"}')
+    if _drawer_open then do
+      call result.add_group("live-drawer", "Live dialogue and activity")
+      call result.add_button("dialogue-tab", "Dialogue", "rag.dialogue", "")
+      ignored = result.set_properties("dialogue-tab", '{"parent":"live-drawer","expanded":' || booljson(_drawer_tab = "dialogue") || ',"controls":"dialogue-content"}')
+      call result.add_button("activity-tab", "Activity", "rag.activity", "")
+      ignored = result.set_properties("activity-tab", '{"parent":"live-drawer","expanded":' || booljson(_drawer_tab = "activity") || ',"controls":"activity-content"}')
+      if _drawer_tab = "dialogue" then do
+        call result.add_document("dialogue-content", plain_document(_dialogue))
+        ignored = result.set_properties("dialogue-content", '{"parent":"live-drawer","label":"Question and response dialogue"}')
+      end
+      else do
+        call result.add_document("activity-content", plain_document(_activity))
+        ignored = result.set_properties("activity-content", '{"parent":"live-drawer","label":"Completed server activity"}')
+      end
+    end
+    call result.add_button("quit", "Close", "rag.quit", "")
     return result
+
+booljson: procedure = .string
+  arg value = .int
+  if value then return "true"
+  return "false"
+
+plain_document: procedure = .string
+  arg text = .string
+  remaining = left(text, 32768)
+  blocks = ""
+  do until remaining = ""
+    if blocks \= "" then blocks = blocks || ","
+    blocks = blocks || '{"kind":"paragraph","runs":[{"text":' || jsonquote(left(remaining, 16000)) || '}]}'
+    remaining = substr(remaining, 16001)
+  end
+  return '{"blocks":[' || blocks || ']}'
+
+/** Map validated server citation indexes into generic command runs. Never HTML. */
+document_for_answer: procedure = .string
+  arg text = .string, source_count = .int
+  runs = ""
+  remaining = left(text, 12000)
+  pieces = 0
+  do while remaining \= "" & pieces < 48
+    opening = pos("[", remaining)
+    if opening = 0 then leave
+    before = left(remaining, opening - 1)
+    marker = substr(remaining, opening, 3)
+    digit = substr(marker, 2, 1)
+    if length(marker) = 3 & right(marker, 1) = "]" & pos(digit, "12345678") > 0 then do
+      number = digit as .int
+      if number <= source_count then do
+        if runs \= "" then runs = runs || ","
+        runs = runs || '{"text":' || jsonquote(before) || '},{"text":' || jsonquote(marker) || ',"action":"rag.source.' || word("one two three four five six seven eight", number) || '"}'
+        remaining = substr(remaining, opening + 3)
+        pieces = pieces + 1
+        iterate
+      end
+    end
+    if runs \= "" then runs = runs || ","
+    runs = runs || '{"text":' || jsonquote(left(remaining, opening)) || '}'
+    remaining = substr(remaining, opening + 1)
+    pieces = pieces + 1
+  end
+  if runs \= "" then runs = runs || ","
+  runs = runs || '{"text":' || jsonquote(remaining) || '}'
+  return '{"blocks":[{"kind":"paragraph","runs":[' || runs || ']}]}'

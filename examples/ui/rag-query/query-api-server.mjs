@@ -2,6 +2,8 @@
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {extname, join, resolve} from 'node:path';
+import {Readable} from 'node:stream';
+import {pipeline} from 'node:stream/promises';
 import {run} from './hosted_service.mjs';
 
 if (!process.argv[2]) throw new Error('Pass the packaged browser site directory');
@@ -45,6 +47,45 @@ async function parseBody(request) {
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, origin);
+    const answerRoute = ['/api/rag/v1/answer/prepare', '/api/rag/v1/answer', '/api/rag/v1/source'].includes(url.pathname);
+    const originalRoute = /^\/api\/rag\/v1\/original\/[A-Za-z0-9_-]+$/.test(url.pathname);
+    if (answerRoute || originalRoute) {
+      if (request.headers.host !== origin.host ||
+          (request.headers.origin && request.headers.origin !== origin.origin))
+        return json(response, 403, {error: 'Origin refused'});
+      if ((answerRoute && request.method !== 'POST') ||
+          (originalRoute && !['GET', 'HEAD'].includes(request.method)))
+        return json(response, 405, {error: 'Method not allowed'});
+      if (inFlight >= 8) return json(response, 503, {error: 'Service capacity reached'});
+      const configured = process.env.CREXX_UI_RAG_HTTP_ORIGIN;
+      if (!configured) return json(response, 503, {error: 'Server answer service is not configured'});
+      const upstream = new URL(configured);
+      if (!['http:', 'https:'].includes(upstream.protocol) || upstream.username || upstream.password)
+        throw new Error('Invalid backend origin');
+      const input = answerRoute ? await parseBody(request) : null;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 120000);
+      response.once('close', () => { if (!response.writableEnded) controller.abort(); });
+      inFlight++;
+      try {
+        const remote = await fetch(new URL(url.pathname, upstream), {
+          method: request.method, signal: controller.signal,
+          ...(input ? {headers: {'Content-Type': 'application/json'}, body: JSON.stringify(input)} : {}),
+        });
+        response.writeHead(remote.status, {
+          'Content-Type': remote.headers.get('content-type') ?? 'application/octet-stream',
+          'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
+          ...(originalRoute ? {'Content-Disposition': remote.headers.get('content-disposition') ?? 'inline'} : {}),
+        });
+        if (request.method === 'HEAD' || !remote.body) response.end();
+        else await pipeline(Readable.fromWeb(remote.body), response);
+      } catch {
+        if (!controller.signal.aborted && !response.headersSent)
+          json(response, 502, {error: 'Server answer service unavailable'});
+        else response.destroy();
+      } finally { clearTimeout(timer); inFlight--; }
+      return;
+    }
     if (url.pathname === '/api/rag/v1/query') {
       if (request.method !== 'POST') return json(response, 405, {error: 'Method not allowed'});
       if (request.headers.host !== origin.host ||

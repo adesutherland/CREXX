@@ -5,10 +5,101 @@ import {promisify} from 'node:util';
 const execute = promisify(execFile);
 
 export function supports(effect) {
-  return effect?.name === 'rag.query';
+  return ['rag.query', 'rag.answer', 'rag.source'].includes(effect?.name);
 }
 
-export async function run(effect, {signal} = {}) {
+async function httpService(effect, {signal, progress} = {}) {
+  const configured = process.env.CREXX_UI_RAG_HTTP_ORIGIN;
+  if (!configured) throw new Error('Hosted answer service is not configured');
+  const origin = new URL(configured);
+  if (!['http:', 'https:'].includes(origin.protocol) || origin.username || origin.password)
+    throw new Error('Invalid hosted answer origin');
+  const corpus = process.env.CREXX_UI_RAG_CORPUS;
+  const payload = effect.payload;
+  if (!corpus || payload?.corpus !== corpus ||
+      (effect.name === 'rag.answer' && (typeof payload.question !== 'string' ||
+        !payload.question.trim() || payload.question.length > 1024)) ||
+      (effect.name === 'rag.source' && (typeof payload.citation !== 'string' ||
+        !payload.citation.startsWith('crexx-rag:') || payload.citation.length > 512)))
+    throw new Error('Invalid hosted answer request');
+  const post = async (path, body, request_id = effect.request_id) => {
+    const response = await fetch(new URL(path, origin), {method: 'POST', signal,
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({version: 1, ...body, request_id})});
+    if (!response.ok) throw new Error('Hosted RAG HTTP request failed');
+    const text = await response.text();
+    if (text.length > 262144) throw new Error('Hosted RAG response exceeds limit');
+    const result = JSON.parse(text);
+    if (result.version !== 1 || result.request_id !== request_id)
+      throw new Error('Hosted RAG response correlation failed');
+    return result;
+  };
+  if (effect.name === 'rag.source') {
+    const source = await post('/api/rag/v1/source', payload);
+    const source_json = source.source_json ?? JSON.stringify(source);
+    const context = JSON.parse(source_json);
+    if (source_json.length > 49152 || context.schema !== 'crexx-rag.source-context/1' ||
+        context.citation !== payload.citation) throw new Error('Invalid captured source response');
+    /* This older bearer-token UI relay has no original-file navigation route.
+     * The direct same-origin HTTP assembly keeps its approved original URL. */
+    if (typeof context.original_url === 'string' && context.original_url.startsWith('/'))
+      context.original_url = '';
+    return {name: 'rag.source.completed', payload: {source_json: JSON.stringify(context)}};
+  }
+  let completed = 0;
+  const report = async message => {
+    if (progress && !signal?.aborted && message)
+      await progress({name: 'ui.effect.progress', payload: {completed: ++completed, message: message.slice(0, 1024)}});
+  };
+  const prepare = await post('/api/rag/v1/answer/prepare', payload);
+  if (prepare.schema !== 'crexx-rag.answer-preparation/1' || prepare.question !== payload.question ||
+      !['ready', 'insufficient_evidence', 'scope_refused'].includes(prepare.status) ||
+      typeof prepare.library_id !== 'string' || !Number.isSafeInteger(prepare.generation) ||
+      !Array.isArray(prepare.activities) || prepare.activities.length > 16 ||
+      !Array.isArray(prepare.research?.searches) || prepare.research.searches.length > 2 ||
+      prepare.research.searches.some(text => typeof text !== 'string' || text.length > 256) ||
+      !Array.isArray(prepare.research?.reads) || prepare.research.reads.length > 4 ||
+      prepare.research.reads.some(citation => typeof citation !== 'string' || citation.length > 512 ||
+        !citation.startsWith(`crexx-rag:${prepare.library_id}:`)))
+    throw new Error('Invalid hosted answer preparation');
+  for (const activity of prepare.activities)
+    if (typeof activity?.message === 'string' && activity.message.length <= 512)
+      await report(activity.message);
+  if (prepare.status === 'ready') {
+    for (const [index, citation] of prepare.research.reads.entries()) {
+      const raw = await post('/api/rag/v1/source', {corpus, citation}, `${effect.request_id}-read-${index + 1}`);
+      const source = raw.source_json ? JSON.parse(raw.source_json) : raw;
+      if (source.schema !== 'crexx-rag.source-context/1' || source.citation !== citation ||
+          source.library_id !== prepare.library_id || source.generation !== prepare.generation ||
+          typeof source.title !== 'string' || typeof source.excerpt !== 'string')
+        throw new Error('Invalid prepared source read');
+      await report(`Read captured source: ${source.title}\n${source.excerpt}`);
+    }
+  }
+  const final = await post('/api/rag/v1/answer', {...payload, prepared: {
+    library_id: prepare.library_id, generation: prepare.generation,
+    searches: prepare.research.searches, reads: prepare.research.reads,
+  }});
+  const answer_json = final.answer_json ?? JSON.stringify(final);
+  const answer = JSON.parse(answer_json);
+  if (answer_json.length > 49152 || answer.schema !== 'crexx-rag.answer/1' ||
+      !['answered', 'insufficient_evidence', 'scope_refused'].includes(answer.status) ||
+      answer.library_id !== prepare.library_id || answer.generation !== prepare.generation ||
+      answer.question !== payload.question || typeof answer.answer !== 'string' || answer.answer.length > 12000 ||
+      !Array.isArray(answer.sources) || answer.sources.length > 8)
+    throw new Error('Invalid hosted cited answer');
+  for (const activity of (Array.isArray(answer.activities) ? answer.activities.slice(0, 16) : []))
+    if (typeof activity?.message === 'string' && activity.message.length <= 512)
+      await report(activity.message);
+  for (const source of answer.sources)
+    if (typeof source.original_url === 'string' && source.original_url.startsWith('/'))
+      source.original_url = '';
+  return {name: 'rag.answer.completed', payload: {answer_json: JSON.stringify(answer)}};
+}
+
+export async function run(effect, context = {}) {
+  const {signal} = context;
+  if (['rag.answer', 'rag.source'].includes(effect.name)) return httpService(effect, context);
   const corpus = process.env.CREXX_UI_RAG_CORPUS;
   const binary = process.env.CREXX_UI_RAG_BINARY;
   const library = process.env.CREXX_UI_RAG_LIBRARY;

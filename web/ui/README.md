@@ -215,3 +215,73 @@ The browser check covers both routes' forms, graph and map interactions,
 application-service results and capability refusal, file selection, close,
 Worker restart, hosted reconnect and authentication. The selected support
 profile and later platform gates are in the [UI plan](../../lib/ui/PLAN.md).
+
+## Semantic browser forms and asynchronous input
+
+The browser supports explicit `form.group`, `form.textarea`, `form.document`,
+`form.link`, `form.properties` and `form.statusbar` operations in addition to the original forms.
+These are direct-consumer additions. They do not imply native-host or RXPP
+facade coverage. A group has a stable ID and accessible heading; a child names
+an earlier group in its `parent` property. The projection validates every
+parent, property, document and link before replacing the last valid view.
+
+`uiview_impl.set_properties(id, json)` stores at most 4096 characters of semantic
+metadata. The browser accepts only these fields:
+
+| Property | Meaning |
+| --- | --- |
+| `parent` | Earlier group ID; omission preserves the original flat grid. |
+| `label`, `description` | Accessible name and description. |
+| `disabled` | Boolean input/button availability; features still validate intent. |
+| `expanded`, `controls` | Boolean disclosure state and controlled group ID. |
+| `role` | `region`, `complementary`, `log` or `status`. |
+| `level` | Group heading level, 2–6. |
+| `maxLength` | Text editor limit, 1–1024. |
+| `focus` | Stable node ID or command action to focus when this directive changes; a separate command button is a fallback when no inline document action exists. |
+| `cancel` | Effect name cancelled by this button, logically and physically. |
+
+Any nonempty properties object requires `form.properties` at whole-view
+preflight. A host that only supports the original kind cannot silently ignore
+disabled, grouping or accessibility semantics.
+
+A `document` node's value is JSON `{blocks:[{kind,runs:[{text,action?,href?}]}]}`.
+It is bounded to 49152 characters, 64 blocks and 512 total runs; a block contains
+at most 128 runs and a run's text at most 16384 characters. `paragraph`,
+`heading` and `list-item` blocks are accepted. An action invokes an application
+command; a link opens a validated HTTP(S) URL with `noopener noreferrer`.
+Root-relative same-origin locators are supported; protocol-relative URLs,
+credentials, control characters and non-HTTP schemes are refused. Text always
+uses DOM text nodes. This is not Markdown/HTML interpretation or a RAG schema.
+
+The projection preserves local drafts, focused node/selection and inner scroll
+positions across owner views. Text changes and commands are queued in order.
+An optional bounded `input_id` is echoed by an owner view with numeric
+`accepted` 0/1. Only an explicitly unadmitted stale input may be resubmitted
+against the new view; accepted commands are never automatically repeated.
+Detached text-control changes retain their originating view revision.
+Asynchronous completions use request/session/target ownership independently of
+an unrelated intervening view revision. Stale/duplicate completions are still
+rejected by the session.
+
+Application extension schemas can opt into scalar text bounds up to 49152
+characters for bounded structured completions. The ordinary scalar default and
+individual `strings` array-item limit remain 16384; the complete payload/wire
+limits remain 262144. A larger explicit schema is rejected at registration.
+
+Browser executors receive an optional third `{signal}` argument. Stop/session
+teardown aborts physical browser work; `cancel` input also cancels the session's
+active operation. Hosted services receive `{signal, progress}`; `progress`
+admits only the existing correlated `ui.effect.progress` outcome. The executor
+must report completed work truthfully and preserve the terminal lifecycle.
+
+A trusted executor or service declaration can optionally list a bounded,
+duplicate-free `capabilities` array containing its original `capability` value.
+Package preflight checks all required effect capabilities against that list;
+legacy declarations retain their single-capability behavior. Declaring support
+does not implement an executor or replace the entry composition's capability
+registration.
+
+The [RAG question example](../../examples/ui/rag-query/README.md) uses these
+contracts without application-specific node IDs or retrieval rules in the
+projection. Its server-backed and browser-local corpus assemblies remain
+separate deployment profiles.

@@ -17,7 +17,8 @@ uiview: interface
   count: method = .int
   /** @param index one-based node index
    * @return `label`, `statusbar`, `line`, `input`, `button`, `checkbox`,
-   * `progress`, `choice`, `combo`, or `integer`
+   * `progress`, `choice`, `combo`, `integer`, `textarea`, `group`, `document`,
+   * or `link`. Hosts advertise each supported operation separately.
    */
   node_kind: method = .string
     arg index = .int
@@ -64,6 +65,10 @@ uiview: interface
   /** @param index one-based node index @return current editable/selected value */
   node_value: method = .string
     arg index = .int
+  /** @param index node index @return bounded semantic presentation properties
+   * as JSON; an empty object means the original flat-view behavior. */
+  node_properties: method = .string
+    arg index = .int
   /** @param index one-based node index @return single-choice option count */
   node_option_count: method = .int
     arg index = .int
@@ -99,6 +104,7 @@ uiview_impl: class implements .uiview
   _rows = .int[]
   _columns = .int[]
   _values = .string[]
+  _properties = .string[]
   _option_counts = .int[]
   _option_offsets = .int[]
   _option_ids = .string[]
@@ -200,6 +206,63 @@ uiview_impl: class implements .uiview
     _values[_count] = text
     return
 
+  /** Append a multiline text editor. The feature validates its committed value;
+   * properties supply its accessible label and maximum length (at most 1024).
+   * @param id stable field identity @param text current editable value
+   * @param relation placement @param anchor stable preceding node */
+  add_textarea: method = .void
+    arg id = .string, text = .string, relation = "below", anchor = ""
+    call add_input(id, text, relation, anchor)
+    _kinds[_count] = "textarea"
+    return
+
+  /** Append a labelled semantic group. Its children name this ID in their
+   * parent property. Unsupported hosts refuse before partial projection.
+   * @param id stable group identity @param text accessible group title
+   * @param relation placement @param anchor stable preceding node */
+  add_group: method = .void
+    arg id = .string, text = .string, relation = "below", anchor = ""
+    call add_label(id, text, relation, anchor)
+    _kinds[_count] = "group"
+    return
+
+  /** Append a bounded semantic document, never HTML. Its JSON value contains
+   * paragraph/heading/list blocks and text, action or HTTP(S) link runs.
+   * @param id stable document identity @param document semantic document JSON
+   * @param relation placement @param anchor stable preceding node */
+  add_document: method = .void
+    arg id = .string, document = .string, relation = "below", anchor = ""
+    call add_label(id, "", relation, anchor)
+    _kinds[_count] = "document"
+    _values[_count] = document
+    return
+
+  /** Append an external HTTP(S) link. The host validates its URL before use.
+   * @param id stable node identity @param text link label @param url locator
+   * @param relation placement @param anchor stable preceding node */
+  add_link: method = .void
+    arg id = .string, text = .string, url = .string, relation = "below", anchor = ""
+    call add_label(id, text, relation, anchor)
+    _kinds[_count] = "link"
+    _values[_count] = url
+    return
+
+  /** Set optional semantic properties on an existing node. The browser validates
+   * the complete view atomically. Properties are presentation, never domain
+   * authority: parent, label, description, disabled, expanded, controls, role,
+   * level, maxLength and focus. @param id stable node ID @param properties JSON
+   * @return 1 when stored, 0 for an unknown ID or an oversized value */
+  set_properties: method = .int
+    arg id = .string, properties = .string
+    if length(properties) > 4096 then return 0
+    do i = 1 to _count
+      if _ids[i] = id then do
+        _properties[i] = properties
+        return 1
+      end
+    end
+    return 0
+
   /** Append a boolean checkbox. The value is `0` or `1`. */
   add_checkbox: method = .void
     arg id = .string, text = .string, checked = "0", relation = "below", anchor = ""
@@ -291,6 +354,7 @@ uiview_impl: class implements .uiview
   /** Initialise optional fields for the just-added logical node. */
   initialise_control: method = .void
     _values[_count] = ""
+    _properties[_count] = "{}"
     _option_counts[_count] = 0
     _option_offsets[_count] = 0
     _minimums[_count] = 0
@@ -326,6 +390,9 @@ uiview_impl: class implements .uiview
     else if kind = "checkbox" then call add_checkbox(id, text, "0", relation, anchor)
     else if kind = "progress" then call add_progress(id, text, relation, anchor)
     else if kind = "input" then call add_input(id, text, relation, anchor)
+    else if kind = "textarea" then call add_textarea(id, text, relation, anchor)
+    else if kind = "group" then call add_group(id, text, relation, anchor)
+    else if kind = "document" then call add_document(id, text, relation, anchor)
     else if kind = "line" then call add_line(id, relation, anchor)
     else if kind = "button" then call add_button(id, text, action, shortcut, relation, anchor)
     return
@@ -392,6 +459,11 @@ uiview_impl: class implements .uiview
     arg index = .int
     if index < 1 | index > _count then return ""
     return _kinds[index]
+
+  node_properties: method = .string
+    arg index = .int
+    if index < 1 | index > _count then return "{}"
+    return _properties[index]
 
   node_id: method = .string
     arg index = .int

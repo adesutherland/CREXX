@@ -113,8 +113,13 @@ async function createSession(app) {
               session.services.has(request.request_id) || !session.latest)
             throw new Error('Invalid hosted service request');
           const controller = new AbortController();
+          controller.effectName = request.name;
           session.services.set(request.request_id, controller);
-          void Promise.resolve().then(() => service.run(request, {signal: controller.signal}))
+          void Promise.resolve().then(() => service.run(request, {signal: controller.signal,
+            progress: outcome => {
+              if (controller.signal.aborted || outcome?.name !== 'ui.effect.progress') return;
+              completeService(session, request, outcome);
+            }}))
             .then(outcome => {
               if (!controller.signal.aborted) completeService(session, request, outcome);
             })
@@ -195,8 +200,11 @@ const server = createServer(async (request, response) => {
           !Number.isSafeInteger(input.base) || input.base < 0)
         return reply(response, 400, {error: 'Invalid input'});
       if (input.type === 'cancel' && input.base === session.latest?.revision &&
-          typeof input.request_id === 'string')
-        session.services.get(input.request_id)?.abort();
+          (typeof input.request_id === 'string' || typeof input.effect === 'string')) {
+        if (input.request_id) session.services.get(input.request_id)?.abort();
+        else for (const controller of session.services.values())
+          if (controller.effectName === input.effect) controller.abort();
+      }
       session.process.stdin.write(JSON.stringify(input) + '\n');
       return reply(response, 202, {accepted: true});
     }

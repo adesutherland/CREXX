@@ -24,7 +24,7 @@ capabilities: procedure = .uicapabilities
 
 /** Bounded browser form and scene operation profile. */
 operations: procedure = .uioperations
-  return .uioperations("form.label form.line form.input form.button form.scene scene.rect scene.edge scene.tile scene.unit input.pointer input.keyboard")
+  return .uioperations("form.label form.statusbar form.line form.input form.textarea form.button form.group form.document form.link form.properties form.scene scene.rect scene.edge scene.tile scene.unit input.pointer input.keyboard")
 
 webdriver: class implements .uidriver
   _session = .uisession
@@ -35,6 +35,8 @@ webdriver: class implements .uidriver
   _outgoing = .string[]
   _scene = .uiscenereplica
   _scene_node_id = .string
+  _input_token = .string
+  _input_accepted = .int
 
   *: factory
     _operations = operations()
@@ -44,6 +46,8 @@ webdriver: class implements .uidriver
     call arraydrop _outgoing
     _scene = .uiscenereplica()
     _scene_node_id = ""
+    _input_token = ""
+    _input_accepted = 0
     return
 
   /** Each line is one owner turn; the VM suspends only in stdin read. */
@@ -58,6 +62,8 @@ webdriver: class implements .uidriver
     call arraydrop _outgoing
     _scene = .uiscenereplica()
     _scene_node_id = ""
+    _input_token = ""
+    _input_accepted = 0
     if _session.post(.uimessage("ui.ready", .uipayload())) < 0 then _error = "cannot admit ui.ready"
     if _error = "" then call service()
     if _error = "" then call emit_view()
@@ -76,7 +82,12 @@ webdriver: class implements .uidriver
         call emit_refusal("invalid_input", "browser", "session or version mismatch")
         iterate
       end
-      if jsontype(wire, "base") \= "number" | jsonget(wire, "base") \= (_revision as .string) then do
+      /* Completion ownership is request/session/target based. An unrelated
+       * progress view must not discard a valid asynchronous completion. */
+      _input_token = jsonget(wire, "input_id")
+      if length(_input_token) > 64 then _input_token = ""
+      _input_accepted = 0
+      if jsontype(wire, "base") \= "number" | (jsonget(wire, "type") \= "complete" & jsonget(wire, "base") \= (_revision as .string)) then do
         call emit_view()
         iterate
       end
@@ -89,7 +100,7 @@ webdriver: class implements .uidriver
         current = _session.view()
         if jsontype(wire, "node") = "string" & jsontype(wire, "value") = "string" & length(value) <= 1024 then do
           do index = 1 to current.count()
-            if current.node_id(index) = node & current.node_kind(index) = "input" then do
+            if current.node_id(index) = node & wordpos(current.node_kind(index), "input textarea") > 0 then do
               body = .uipayload()
               call body.put_text("node", node)
               call body.put_text("value", value)
@@ -103,7 +114,10 @@ webdriver: class implements .uidriver
         message = .uimessage.from_json(jsonget(wire, "message"))
         if message.wire_error() = "" then rc = _session.complete(message)
       end
-      else if kind = "cancel" then rc = _session.cancel(jsonget(wire, "request_id"))
+      else if kind = "cancel" then do
+        if jsonget(wire, "request_id") \= "" then rc = _session.cancel(jsonget(wire, "request_id"))
+        else rc = _session.cancel_effect(jsonget(wire, "effect"))
+      end
       else if kind = "pointer" then do
         pointer = .uipointer.from_json(jsonget(wire, "pointer"))
         if jsonget(wire, "node") = _scene_node_id & _scene_node_id \= "" & _scene.accept_pointer(pointer).ok() & wordpos(jsonget(wire, "phase"), "press release move") > 0 then do
@@ -132,6 +146,7 @@ webdriver: class implements .uidriver
         call emit_refusal("invalid_input", kind, "input or completion rejected")
         iterate
       end
+      _input_accepted = 1
       call service()
       if _error = "" & _running then do
         call emit_view()
@@ -236,14 +251,17 @@ webdriver: class implements .uidriver
     do index = 1 to view.count()
       if index > 1 then nodes = nodes || ","
       nodes = nodes || '{"kind":' || jsonquote(view.node_kind(index)) || ',"id":' || jsonquote(view.node_id(index)) || ',"text":' || jsonquote(view.node_text(index)) || ',"action":' || jsonquote(view.node_action(index)) || ',"row":' || view.node_row(index) || ',"column":' || view.node_column(index)
-      if view.node_kind(index) = "input" then nodes = nodes || ',"value":' || jsonquote(view.node_value(index))
+      nodes = nodes || ',"properties":' || jsonquote(view.node_properties(index))
+      if wordpos(view.node_kind(index), "input textarea document link") > 0 then nodes = nodes || ',"value":' || jsonquote(view.node_value(index))
       if view.node_kind(index) = "scene" then
         nodes = nodes || ',"scenePacket":' || jsonquote(view.node_value(index)) || ',"sceneFull":' || jsonquote(_scene.frame())
       nodes = nodes || '}'
     end
     nodes = nodes || "]"
     _revision = _revision + 1
-    say '{"version":1,"type":"view","session":' || jsonquote(_session.id()) || ',"revision":' || _revision || ',"view":{"title":' || jsonquote(view.title()) || ',"nodes":' || nodes || '}}'
+    acknowledgement = ""
+    if _input_token \= "" then acknowledgement = ',"input_id":' || jsonquote(_input_token) || ',"accepted":' || _input_accepted
+    say '{"version":1,"type":"view","session":' || jsonquote(_session.id()) || ',"revision":' || _revision || acknowledgement || ',"view":{"title":' || jsonquote(view.title()) || ',"nodes":' || nodes || '}}'
     return
 
   emit_refusal: method = .void

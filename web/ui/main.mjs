@@ -41,8 +41,8 @@ try {
     const handler = (executor.requiresStorage === false || storage) ? module[executor.export](storage) :
       async (request, complete) => complete(request, 'ui.effect.failed',
         {code: 'unsupported_capability', message: executor.capability});
-    ui = new BrowserUI(root, route, {executeEffect: async request => {
-      if (await handler(request, ui.complete.bind(ui)) === false) await ui.fileEffect(request);
+    ui = new BrowserUI(root, route, {executeEffect: async (request, context) => {
+      if (await handler(request, ui.complete.bind(ui), context) === false) await ui.fileEffect(request);
     }});
   } else ui = new BrowserUI(root, route);
   await ui.start();

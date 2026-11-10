@@ -56,5 +56,22 @@ try {
   const slow = run(request('slow'), {signal: abort.signal});
   abort.abort();
   await assert.rejects(slow, /AbortError|aborted/i);
+  process.env.CREXX_UI_RAG_HTTP_ORIGIN = 'http://fixture.invalid';
+  const citation = 'crexx-rag:library-test:source';
+  globalThis.fetch = async (_url, options) => {
+    const input = JSON.parse(options.body);
+    return Response.json({schema: 'crexx-rag.source-context/1', version: 1,
+      request_id: input.request_id, citation, library_id: 'library-test', generation: 2,
+      title: 'Source document', excerpt: 'Cited source text',
+      source_url: 'https://example.org/source.pdf',
+      original_url: '/api/rag/v1/original/approved-asset', context_text: 'Wider captured context.'});
+  };
+  const context = await run({name: 'rag.source', request_id: 'source-relay-1', payload: {
+    corpus: 'tutorial', citation,
+  }});
+  const source = JSON.parse(context.payload.source_json);
+  assert.equal(source.original_url, '', 'Older relay must not display an unsupported original-file route');
+  assert.equal(source.source_url, 'https://example.org/source.pdf');
+  assert.equal(source.context_text, 'Wider captured context.');
 } finally { await rm(scratch, {recursive: true, force: true}); }
 console.log('PASS: hosted RAG adapter validates three routes, citations and abort');

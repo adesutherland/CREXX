@@ -63,6 +63,8 @@ uioperations: class
       ids = ids || " " || id
       operation = "form." || view.node_kind(i)
       if \has(operation) then return .uiresult("unsupported", operation, "host cannot project this control")
+      if view.node_properties(i) \= "{}" & \has("form.properties") then
+        return .uiresult("unsupported", "form.properties", "host cannot project semantic properties")
     end
     return .uiresult("")
 

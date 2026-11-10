@@ -2,15 +2,36 @@
   "format": 1,
   "id": "rag_demo",
   "contract": 1,
-  "browserStyle": {"path": "rag-query.css", "target": "styles/rag-query.css"},
+  "browserStyle": {
+    "path": "rag-query.css",
+    "target": "styles/rag-query.css"
+  },
   "modules": [
-    {"name": "rag_query_app", "path": "examples/ui/rag-query/rag_query_app.rxbin"}
+    {
+      "name": "rag_query_app",
+      "path": "examples/ui/rag-query/rag_query_app.rxbin"
+    }
   ],
   "routes": {
     "local": {
-      "entry": {"name": "rag_query_web_local", "path": "examples/ui/rag-query/rag_query_web_local.rxbin"},
-      "requiredOperations": ["form.label", "form.input", "form.button"],
-      "requiredCapabilities": ["rag.query"],
+      "entry": {
+        "name": "rag_query_web_local",
+        "path": "examples/ui/rag-query/rag_query_web_local.rxbin"
+      },
+      "requiredOperations": [
+        "form.label",
+        "form.input",
+        "form.button",
+        "form.textarea",
+        "form.group",
+        "form.document",
+        "form.link",
+        "form.statusbar",
+        "form.properties"
+      ],
+      "requiredCapabilities": [
+        "rag.query"
+      ],
       "optionalOperations": [],
       "executor": {
         "path": "query-local.mjs",
@@ -21,14 +42,36 @@
       }
     },
     "hosted": {
-      "entry": {"name": "rag_query_web_hosted", "path": "examples/ui/rag-query/rag_query_web_hosted.rxbin"},
-      "requiredOperations": ["form.label", "form.input", "form.button"],
-      "requiredCapabilities": ["rag.query"],
+      "entry": {
+        "name": "rag_query_web_hosted",
+        "path": "examples/ui/rag-query/rag_query_web_hosted.rxbin"
+      },
+      "requiredOperations": [
+        "form.label",
+        "form.input",
+        "form.button",
+        "form.textarea",
+        "form.group",
+        "form.document",
+        "form.link",
+        "form.statusbar",
+        "form.properties"
+      ],
+      "requiredCapabilities": [
+        "rag.query",
+        "rag.answer",
+        "rag.source"
+      ],
       "optionalOperations": [],
       "service": {
         "path": "hosted_service.mjs",
         "target": "services/rag-query.mjs",
-        "capability": "rag.query"
+        "capability": "rag.query",
+        "capabilities": [
+          "rag.query",
+          "rag.answer",
+          "rag.source"
+        ]
       }
     }
   }

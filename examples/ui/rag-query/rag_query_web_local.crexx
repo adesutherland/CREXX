@@ -8,4 +8,4 @@ main: procedure = .int
   caps = ui_web..capabilities()
   call caps.enable("rag.query")
   driver = .webdriver()
-  return driver.run(make_rag_query_session(arguments[1], caps))
+  return driver.run(make_rag_query_session(arguments[1], caps, "heart-failure", "heart failure treatment pathway", 0))

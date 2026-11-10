@@ -27,10 +27,18 @@ function runWorker(url, payload, signal, timeoutMs, transfers = []) {
 
 export function ragQueryLocal() {
   let active;
-  return async (effect, complete) => {
+  return async (effect, complete, {signal} = {}) => {
+    if (['rag.answer', 'rag.source'].includes(effect.name)) {
+      await complete(effect, 'ui.effect.failed', {code: 'unsupported_capability',
+        message: 'Answers and captured source context require the protected server site. Local corpus search remains available.'});
+      return true;
+    }
     if (effect.name !== 'rag.query') return false;
     active?.abort();
     const controller = new AbortController();
+    const abort = () => controller.abort();
+    signal?.addEventListener('abort', abort, {once: true});
+    if (signal?.aborted) controller.abort();
     active = controller;
     try {
       const vector = await runWorker(new URL('./rag-embed-worker.mjs', import.meta.url),
@@ -57,6 +65,7 @@ export function ragQueryLocal() {
         await complete(effect, 'ui.effect.failed',
           {code: 'service_failed', message: 'Browser corpus reader unavailable'});
     } finally {
+      signal?.removeEventListener('abort', abort);
       if (active === controller) active = null;
     }
     return true;

@@ -6,9 +6,9 @@ export const HOST_OPERATIONS = Object.freeze({
     'input.pointer', 'input.keyboard'],
   ansi: ['form.label', 'form.statusbar', 'form.line', 'form.input', 'form.button',
     'form.choice', 'form.integer', 'input.pointer', 'input.keyboard'],
-  local: ['form.label', 'form.line', 'form.input', 'form.button', 'form.scene',
+  local: ['form.label', 'form.statusbar', 'form.line', 'form.input', 'form.textarea', 'form.button', 'form.group', 'form.document', 'form.link', 'form.properties', 'form.scene',
     'scene.rect', 'scene.edge', 'scene.tile', 'scene.unit', 'input.pointer', 'input.keyboard'],
-  hosted: ['form.label', 'form.line', 'form.input', 'form.button', 'form.scene',
+  hosted: ['form.label', 'form.statusbar', 'form.line', 'form.input', 'form.textarea', 'form.button', 'form.group', 'form.document', 'form.link', 'form.properties', 'form.scene',
     'scene.rect', 'scene.edge', 'scene.tile', 'scene.unit', 'input.pointer', 'input.keyboard'],
 });
 
@@ -81,9 +81,17 @@ export function preflightPackage(pkg, route, operations = HOST_OPERATIONS[route]
       !/^services\/[a-z][a-z0-9_-]*\.mjs$/.test(selected.service.target ?? '') ||
       !/^[a-z][a-z0-9_.]*$/.test(selected.service.capability ?? '')))
     throw new Error('Invalid hosted UI service declaration');
+  for (const adapter of [selected.executor, selected.service].filter(Boolean)) {
+    if (adapter.capabilities !== undefined && (!Array.isArray(adapter.capabilities) ||
+        !adapter.capabilities.length || adapter.capabilities.length > 16 ||
+        new Set(adapter.capabilities).size !== adapter.capabilities.length ||
+        !adapter.capabilities.includes(adapter.capability) ||
+        adapter.capabilities.some(name => typeof name !== 'string' || !/^[a-z][a-z0-9_.]*$/.test(name))))
+      throw new Error('Invalid UI adapter capabilities');
+  }
   const capabilities = [...HOST_CAPABILITIES[route],
-    ...(selected.executor ? [selected.executor.capability] : []),
-    ...(selected.service ? [selected.service.capability] : [])];
+    ...(selected.executor ? selected.executor.capabilities ?? [selected.executor.capability] : []),
+    ...(selected.service ? selected.service.capabilities ?? [selected.service.capability] : [])];
   for (const capability of selected.requiredCapabilities) {
     if (typeof capability !== 'string' || !capabilities.includes(capability))
       throw new Error(`Missing required UI capability: ${capability}`);

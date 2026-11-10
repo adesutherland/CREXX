@@ -577,8 +577,10 @@ uisession: class
       missing = 0
       do index = 1 to requested.count()
         effect = requested.item(index)
-        if _registry.validate(effect) \= "" | effect.direction() \= "effect" | effect.target() \= event.target() | effect.request_id() \= "" | effect.sequence() \= 0 | effect.session_id() \= "" then
-          _fault = "invalid component effect batch"
+        validation = _registry.validate(effect)
+        if validation \= "" then _fault = "invalid component effect " || effect.name() || ": " || validation
+        else if effect.direction() \= "effect" | effect.target() \= event.target() | effect.request_id() \= "" | effect.sequence() \= 0 | effect.session_id() \= "" then
+          _fault = "invalid component effect envelope: " || effect.name()
         spec = _registry.definition(effect.name())
         if \_capabilities.has(jsonget(spec, "capability")) then missing = missing + 1
       end
@@ -682,6 +684,23 @@ uisession: class
       return 0
     end
     return -1
+
+  /** Cancel active operations of one declared effect name. This is a host input
+   * convenience; correlation and terminal admission still use cancel().
+   * @param name effect name @return number cancelled, or -1 for no active work */
+  cancel_effect: method = .int
+    arg name = .string
+    cancelled = 0
+    do index = 1 to _states[0]
+      if _states[index] = 0 then iterate
+      request = _work[index]
+      if request.name() \= name then iterate
+      rc = cancel(request.request_id())
+      if rc < 0 then return rc
+      cancelled = cancelled + 1
+    end
+    if cancelled = 0 then return -1
+    return cancelled
 
   /** @param id component identity @return current logical view */
   view: method = .uiview
@@ -790,7 +809,9 @@ valid_fields: procedure = .int
         if doc.node_int(doc.find(property), number) \= 0 then return 0
         if number < -9007199254740991 | number > 9007199254740991 then return 0
         if wordpos(property, "minLength maxLength maxItems") > 0 & number < 0 then return 0
-        if wordpos(property, "minLength maxLength") > 0 & number > 16384 then return 0
+        /* Explicit scalar text bounds may carry a bounded structured result.
+         * The ordinary default and strings-array item limit remain 16384. */
+        if wordpos(property, "minLength maxLength") > 0 & number > 49152 then return 0
         if property = "maxItems" & number > 4096 then return 0
       end
       if property = "enum" then do

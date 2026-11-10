@@ -1,0 +1,13 @@
+options levelg
+namespace rag_query_web_server
+import ui_web
+import rag_query_app
+main: procedure = .int
+  arg arguments = .string[]
+  if arguments[0] < 1 then return 2
+  caps = ui_web..capabilities()
+  call caps.enable("rag.query")
+  call caps.enable("rag.answer")
+  call caps.enable("rag.source")
+  driver = .webdriver()
+  return driver.run(make_rag_query_session(arguments[1], caps))

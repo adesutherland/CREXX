@@ -12,7 +12,7 @@ add_custom_command(OUTPUT "${_rag_query_app}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
 add_custom_target(example_ui_rag_query DEPENDS "${_rag_query_app}")
 
-foreach(_launcher IN ITEMS rag_query_web_local rag_query_web_hosted)
+foreach(_launcher IN ITEMS rag_query_web_local rag_query_web_hosted rag_query_web_server)
     set(_output "${CMAKE_CURRENT_BINARY_DIR}/${_launcher}.rxbin")
     add_custom_command(OUTPUT "${_output}"
             COMMAND $<TARGET_FILE:rxc> --no-exe-import
@@ -27,12 +27,13 @@ foreach(_launcher IN ITEMS rag_query_web_local rag_query_web_hosted)
 endforeach()
 add_custom_target(example_ui_rag_query_browser)
 add_dependencies(example_ui_rag_query_browser rag_query_web_local_artifact
-        rag_query_web_hosted_artifact)
+        rag_query_web_hosted_artifact rag_query_web_server_artifact)
 
 install(FILES "${_rag_query_app}"
         "${CMAKE_CURRENT_BINARY_DIR}/rag_query_web_local.rxbin"
         "${CMAKE_CURRENT_BINARY_DIR}/rag_query_web_hosted.rxbin"
-        rag-query.package.json rag-query.css hosted_service.mjs query-http.mjs query-api-server.mjs
+        "${CMAKE_CURRENT_BINARY_DIR}/rag_query_web_server.rxbin"
+        rag-query.package.json rag-answer.package.json README.md rag-query.css hosted_service.mjs query-http.mjs query-api-server.mjs
         query-local.mjs rag-bundle.mjs rag-embed-worker.mjs rag-vm-worker.mjs
         package-static.mjs package.json package-lock.json
         DESTINATION examples/ui/rag-query)
@@ -58,5 +59,21 @@ if(BUILD_TESTING)
                         "${CMAKE_CURRENT_SOURCE_DIR}/test-query-http.mjs")
         set_tests_properties(ui_rag_query_http_executor PROPERTIES TIMEOUT 30
                 LABELS "examples;ui;browser;rag;service")
+        add_test(NAME ui_rag_answer_effect
+                COMMAND "${CREXX_UI_NODE_EXECUTABLE}"
+                        "${CMAKE_CURRENT_SOURCE_DIR}/test-rag-answer.mjs" "${CMAKE_BINARY_DIR}")
+        set_tests_properties(ui_rag_answer_effect PROPERTIES TIMEOUT 30
+                LABELS "examples;ui;browser;rag;effects"
+                CREXX_PREP_TARGETS "example_ui_rag_query_browser;rxvm")
+        add_test(NAME ui_rag_answer_http_executor
+                COMMAND "${CREXX_UI_NODE_EXECUTABLE}"
+                        "${CMAKE_CURRENT_SOURCE_DIR}/test-answer-http.mjs")
+        set_tests_properties(ui_rag_answer_http_executor PROPERTIES TIMEOUT 30
+                LABELS "examples;ui;browser;rag;service")
+        add_test(NAME ui_web_semantic_contract
+                COMMAND "${CREXX_UI_NODE_EXECUTABLE}"
+                        "${PROJECT_SOURCE_DIR}/web/ui/test-semantic.mjs")
+        set_tests_properties(ui_web_semantic_contract PROPERTIES TIMEOUT 30
+                LABELS "ui;browser;contract")
     endif()
 endif()

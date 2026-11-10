@@ -3,7 +3,9 @@
 Status: STEP01–07, STEP07A and STEP12–13 done for the selected macOS ARM64
 development profile; AC01–08 and AC14–16 verified in that profile. STEP08 has
 a protected hosted pilot and a local static-browser proof; delivery and
-cross-route qualification remain open. STEP09–11, AC09–13 and AC17 remain open.
+cross-route qualification remain open. STEP09 has a deployed protected answer
+workspace; its browser-local generation route remains open. STEP09–11,
+AC09–13 and AC17 remain open.
 This is the authoritative UI expansion plan. The
 [portfolio roadmap](../../docs/ROADMAP.md) owns Release 1 ordering and the
 January platform freeze; this plan does not change that baseline.
@@ -58,7 +60,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | done |
 | **UIX-STEP07A** Process-designer showcase | STEP07; independent of service steps | Add a bounded Level G linear-process example with per-selected-step editing; complete the browser/ANSI text-input host seams, then prove one application model across GTK, ANSI and both browser routes. | AC16 | done |
 | **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Deliver Stephen's three-route cited comparison through a static browser bundle and a small Google-hosted native `rxvm` reader (D17–18), with the same RAG-owned read-only snapshot and query contract. Prove source links/locations, graph hop selection and compatible embeddings under D01–03. | AC09–10, AC17 | in progress: hosted pilot live; local static Chrome proof; public static release, Stephen's sign-in and delivery qualification open |
-| **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
+| **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | First deliver Stephen's protected, server-backed, corpus-only answer workspace over the RAG-owned read-only snapshot and OpenAI provider, with live bounded activity and source inspection. Then address the separate targeted browser-local small-LLM route under D12. | AC11 | in progress: protected hosted answer workspace deployed; Stephen's own sign-in and broader answer review, then local generation, remain open |
 | **UIX-STEP10** RAG cache | STEP08 transient local query proof | Prove D13 OPFS cache identity, reload, export/re-import, quota/eviction, multi-tab and cleanup, or record the conditional transient fallback. | AC12 | todo |
 | **UIX-STEP11** Local-write assessment | STEP08 and STEP10 evidence | Assess D14 browser corpus writes with the RAG owner and make a separate implementation decision from concrete evidence. | AC13 | todo |
 | **UIX-STEP12** Application effects | STEP02–05; may run beside STEP08–10 | Prove D15 independent graph/map application effects on the shared lifecycle; keep repository and conflict policy application-owned. | AC14 | done |
@@ -129,6 +131,46 @@ which route must still pass after any agreed fallback.
 | **UIX-D17** | One versioned application service operation has typed request/result/failure semantics. HTTP is its first remote binding; a later distributed channel provider may be another binding under the same contract. UI calls complete through effects, without blocking the owner turn. | Implement the cREXX HTTP reader binding, preserve local and hosted correlation/cancellation, and assess a channel transport only after an actual multi-service need. |
 | **UIX-D18** | Proposed Stephen delivery: a static Firebase-hosted, browser-executed read-only bundle and a separate, access-controlled Google Cloud Run native `rxvm` service. Both consume one RAG-owned serving snapshot and comparison contract; the hosted service starts with one container and no managed database or GKE dependency. Adrian approved distributing the public-information corpus for this demo on 9 November 2026. | The protected Cloud Run pilot is live. Reconcile source-specific licence notes and the private corpus workspace's publication restriction before a genuinely public static release; verify Stephen's sign-in, browser load/resource use and gross/credit/net cost before final limits. |
 | **UIX-D19** | The first hosted research reader uses an immutable SQLite serving snapshot. Mutable application data, if later required, uses a separate application-owned Firestore capability and does not mutate the RAG snapshot. No Firestore database is provisioned for the read-only demonstrator. | Add a concrete mutable-data consumer and bounded Firestore contract before provisioning; keep source and query ownership in RAG. |
+
+#### STEP09 protected answer workspace — approved increment
+
+Adrian approved a server-backed answer experience on 10 November 2026 for the
+account-protected Stephen/Adrian pilot. The first deployment requires a server
+and browser; it does not require local browser generation, GTK or ANSI delivery.
+It preserves the broader conditional local-generation criterion in AC11.
+
+1. Extend the existing RAG serving contract with read-only, bounded citation
+   resolution and source-context reads. Bind original source assets to source and
+   revision IDs with an immutable digest manifest, rights disposition and a
+   validated URL. Show captured UTF-8 spans; show PDF pages only when mapped.
+2. Expose one application-owned `rag.answer` effect and correlated progress,
+   terminal, failure and cancellation events. The Level G RAG owner performs
+   corpus-scope assessment, bounded follow-up retrieval, source reading,
+   provider orchestration and answer/citation validation. The HTTP adapter
+   transports these results; the UI and browser do not own answer policy.
+3. Add the smallest generic view contracts for multiline questions, safe
+   actionable citations, semantic answer content, accessible side panel/activity
+   drawer and stable focus across updates. The app keeps the raw independent
+   three-route search. Unsupported hosts declare a fallback/refusal.
+4. Deploy the protected site with the OpenAI key held by the server, no corpus
+   writes or mandatory mutable database. Verify two-account access, source
+   visibility, question scope/insufficiency, citations, provider failure,
+   cancellation, stream interruption, cold/warm latency and gross spend.
+
+The live activity feed shows observable searches, source reads, validation and
+terminal status, not hidden model reasoning or unvalidated answer text. No paid
+request retries automatically after an uncertain disconnect. The answer is
+published only after schema, citation and snapshot checks. Corpus text is
+untrusted input to the provider; the provider cannot acquire arbitrary SQL,
+filesystem or web tools. The protected deployment may include the research
+originals approved for Stephen's validation; any genuinely public static
+distribution retains its independent source-rights gate in STEP08.
+
+The protected site and original routes are deployed behind the existing
+two-account IAP policy. Adrian's signed-in answer, source-context, original-PDF
+and independent three-route journeys passed. Stephen's own sign-in and question
+review, hosted interruption/resource review and the separate browser-local
+generation criterion remain open.
 
 ## Architecture details
 

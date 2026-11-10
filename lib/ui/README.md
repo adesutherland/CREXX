@@ -150,6 +150,17 @@ Browser JavaScript is the platform bridge for DOM, file grants and transport;
 application decisions stay in cREXX. The local Worker suspends only for owner
 stdin input. The hosted relay uses one authenticated session process and
 reconnects from its latest full view. Both use versioned input and view frames.
+
+The browser additionally advertises `form.group`, `form.textarea`,
+`form.document`, `form.link`, `form.properties` and `form.statusbar`. Direct consumers can use
+`add_group`, `add_textarea`, `add_document` and `add_link`, with bounded
+`set_properties` metadata for accessible labels, parent groups, disabled and
+disclosure state, focus and cancellation. Documents contain semantic text/action/
+HTTP(S)-link runs, never arbitrary HTML. The whole candidate view is validated
+before replacing its last projection. GTK/ANSI do not advertise these new
+controls; their existing whole-view preflight refuses them explicitly.
+Nonempty semantic properties also require `form.properties`, including when
+attached to an otherwise familiar label or button.
 The graph and map examples use the same handwritten features across graphical
 and semantic routes. See [scene consumers](../../examples/ui/scene/README.md)
 and [browser routes](../../web/ui/README.md) for build and check commands.
