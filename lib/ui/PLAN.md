@@ -56,7 +56,7 @@ below abbreviate the stable `UIX-ACnn` and `UIX-Dnn` IDs.
 | **UIX-STEP06** RXPP authoring | STEP02–05 | Reconcile `DEFINE-GUI` after direct consumers; generate wiring, repair missing graph inputs and prove dynamic values, source maps and invalid-declaration errors. | AC01–02 | done |
 | **UIX-STEP07** Core milestone QA | STEP03–06; agreed milestone | Qualify selected host/generated combinations, fallback/refusal, lifecycle, host packages and supported browsers/platforms; reconcile Release 1 separately. | AC01–08 | done |
 | **UIX-STEP07A** Process-designer showcase | STEP07; independent of service steps | Add a bounded Level G linear-process example with per-selected-step editing; complete the browser/ANSI text-input host seams, then prove one application model across GTK, ANSI and both browser routes. | AC16 | done |
-| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Deliver Stephen's three-route cited comparison through a static browser bundle and a small Google-hosted native `rxvm` reader (D17–18), with the same RAG-owned read-only snapshot and query contract. Prove source links/locations, graph hop selection and compatible embeddings under D01–03. | AC09–10, AC17 | in progress |
+| **UIX-STEP08** RAG query/embedding | STEP04 service boundary; independent of STEP05–07 | Deliver Stephen's three-route cited comparison through a static browser bundle and a small Google-hosted native `rxvm` reader (D17–18), with the same RAG-owned read-only snapshot and query contract. Prove source links/locations, graph hop selection and compatible embeddings under D01–03. | AC09–10, AC17 | in progress: hosted pilot live; static reader and two-person access check open |
 | **UIX-STEP09** Generation | STEP04 service boundary; independent of STEP05–08 | Add D12 native/hosted and targeted local generation consumers; choose local backend under D04 and prove bounded, cancelled, failed and cited results. | AC11 | todo |
 | **UIX-STEP10** RAG cache | STEP08 transient local query proof | Prove D13 OPFS cache identity, reload, export/re-import, quota/eviction, multi-tab and cleanup, or record the conditional transient fallback. | AC12 | todo |
 | **UIX-STEP11** Local-write assessment | STEP08 and STEP10 evidence | Assess D14 browser corpus writes with the RAG owner and make a separate implementation decision from concrete evidence. | AC13 | todo |
@@ -631,7 +631,8 @@ Hosting implementation references are [Firebase Hosting configuration](https://f
 [direct Cloud Run IAP](https://docs.cloud.google.com/run/docs/securing/identity-aware-proxy-cloud-run),
 and [Cloud Run pricing](https://cloud.google.com/run/pricing).
 
-STEP08 implementation order is:
+STEP08 work packages are below. Packages 2 and 3 can proceed independently
+after package 1; native/browser parity closes only after both are ready.
 
 1. RAG publishes and validates the supported serving bundle, citation URL/
    position mapping and three-route read-only comparison contract, including
@@ -642,7 +643,7 @@ STEP08 implementation order is:
    stale results, invalid assets and CPU fallback. Package the site as a
    standalone static release and measure transfer/load/memory.
 3. Bind the same RAG operation to the cREXX HTTP server and native `rxvm`, then
-   qualify a local Linux container against the static route. Deploy the small
+   qualify a local Linux container against the native RAG contract. Deploy the small
    Cloud Run profile only after hosting/access/cost review, and verify Stephen's
    actual sign-in and cited result. Preserve normal hosted failure and cleanup
    checks; broader UI/platform QA stays open under AC09–10 and AC17.
