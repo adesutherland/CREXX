@@ -28,6 +28,20 @@ Verbose output reports the action, target, input, output, dependencies,
 working directory, arguments, and whether the target is being built or is
 already up to date. The option may appear before or after the graph path.
 
+The root graph may provide execution-policy defaults for a composed build:
+
+```text
+VERBOSE = "true";
+DRY_RUN = "true";
+EXPLAIN = "true";
+TOOLCHAIN_DIR = "cmake-build-release/bin";
+```
+
+These settings apply to the root and all included graphs. Definitions with
+these names inside included graphs are ignored. Command-line settings take
+precedence; use `--no-dry-run` or `--execute` to override a root dry-run policy,
+and `--no-explain` to suppress root explanation output.
+
 Use `--dry-run` (or `-n`) to validate and traverse the selected dependency
 closure without executing actions or creating outputs:
 
@@ -116,6 +130,47 @@ The same graph plan can be invoked through `crexx.exe`:
 .\cmake-build-release\bin\crexx.exe examples\php\setup.graph.build run-php-string
 ```
 
+## Source-discovered build groups
+
+The graph reader can discover source files and expand them into ordinary
+program compilation targets. Discovery is deterministic and, with
+`RECURSIVE`, preserves each source's path relative to the selected directory:
+
+```text
+SOURCES = FILES IN "src"
+          RECURSIVE
+          EXTENSION ".crexx";
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+
+BUILD_GROUP "programs"
+  RULE = compile_program
+  SOURCES = SOURCES
+  OUTPUT_DIR = "build"
+END BUILD_GROUP;
+
+DEFAULT_BUILD = programs;
+```
+
+The group expands to one `COMPILE PROGRAM` target per matching source and one
+virtual aggregate target. The aggregate has no output file; selecting it
+selects its member closure. The discovered manifest is sorted and included in
+incremental fingerprints, so source additions and removals invalidate group
+consumers. Existing output files are not deleted when a source disappears.
+Build groups support `COMPILE PROGRAM`, `COMPILE RXPP`, and composite
+`COMPILE RXPP PROGRAM` rules. For RXPP groups, `.rxpp` sources become `.crexx`
+outputs while retaining their relative directories. The composite action then
+passes that generated source to the normal program compiler and publishes the
+`.rxbin` as the group target output. The maintained example contains both
+groups; select the RXPP aggregate explicitly with `preprocessed`.
+
+A group may order itself after another virtual group with
+`DEPENDS_ON_BUILD`. This is useful when one group prepares persistent generated
+sources for another group; it establishes build order without making the
+generated files part of the consuming group's handwritten source set.
+
 For legacy compatibility, a file ending in `.build` is dispatched by
 `crexx.exe` to `rxbuild-legacy` instead:
 
@@ -197,6 +252,14 @@ The `BUILD` path is the primary output and target identity. Repeatable
 `OUTPUT = "path"` attributes declare secondary outputs. All declared outputs
 participate in freshness checks, must be globally unique, and must exist after
 the action completes.
+
+Graph plans support nested block comments and `--` line comments. A line
+comment may follow functional syntax and ends at the physical newline:
+
+```text
+-- full-line comment
+VERBOSE = "true"; -- trailing comment
+```
 
 ## Composing graph plans
 
@@ -296,8 +359,16 @@ program path.
   cycles, missing defaults, duplicate logical names, duplicate dependency
   references, unknown logical dependencies, ambiguous defaults, and variable
   errors before executing the selected graph.
-- Supported rule actions are `COMPILE PROGRAM`, `COMPILE RXPP`, `COMPILE GRAMMAR`,
-  `COMPILE READER`, `COMPILE APPLICATION`, `CREATE EXE`, and `RUN`.
+- Supported rule actions are `COMPILE PROGRAM`, `COMPILE RXPP`,
+  `COMPILE RXPP PROGRAM`, `COMPILE GRAMMAR`, `COMPILE READER`,
+  `COMPILE APPLICATION`, `CREATE EXE`, `RUN`, and `COMMAND`.
+- `COMMAND` launches a directly named executable through the platform-neutral
+  cREXX process environment. Repeatable single-value `ARGUMENT` attributes
+  form its argument vector; no shell parsing, wildcard expansion, pipes, or
+  redirection are performed. The `BUILD` path is the primary declared output;
+  repeatable `OUTPUT` attributes may declare additional outputs. `WORK_DIR`
+  temporarily changes the command's logical working directory, and verbose
+  output reports the resolved executable, arguments, and working directory.
 - Each action requires exactly one `INPUT`. The compile actions produce the
   declared `.rxbin` output through the existing cREXX toolchain. `COMPILE
   READER` requires one grammar dependency. `COMPILE APPLICATION` requires

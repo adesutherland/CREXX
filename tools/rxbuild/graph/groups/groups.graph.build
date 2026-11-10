@@ -1,0 +1,31 @@
+/* Source-discovered group example. */
+SOURCES = FILES IN "tools/rxbuild/graph/groups/sources"
+          RECURSIVE
+          EXTENSION ".crexx";
+
+RXPP_SOURCES = FILES IN "tools/rxbuild/graph/groups/rxpp"
+               RECURSIVE
+               EXTENSION ".rxpp";
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+
+RULE compile_rxpp
+  ACTION = "COMPILE RXPP PROGRAM"
+END RULE;
+
+BUILD_GROUP "programs"
+  RULE = compile_program
+  SOURCES = SOURCES
+  DEPENDS_ON_BUILD = preprocessed
+  OUTPUT_DIR = ".crexx-build/graph-groups"
+END BUILD_GROUP;
+
+BUILD_GROUP "preprocessed"
+  RULE = compile_rxpp
+  SOURCES = RXPP_SOURCES
+  OUTPUT_DIR = ".crexx-build/graph-groups-rxpp"
+END BUILD_GROUP;
+
+DEFAULT_BUILD = programs;

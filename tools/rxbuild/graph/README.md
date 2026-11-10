@@ -53,6 +53,101 @@ The example intentionally has two program targets so the dependency edge and
 default-target selection are visible. Generic shell commands and parallel
 execution are outside the current graph language.
 
+Root graphs may set execution defaults for the complete composed graph:
+
+```text
+VERBOSE = "true";
+DRY_RUN = "true";
+EXPLAIN = "true";
+TOOLCHAIN_DIR = "cmake-build-release/bin";
+```
+
+Included graphs cannot override these root settings. Use `--no-dry-run` or
+`--execute` when an invocation must execute despite a root dry-run default, or
+`--no-explain` to suppress root explanation output.
+
+Both block comments and trailing `--` line comments are supported:
+
+```text
+BUILD_NAME = copy_fixture; -- logical target name
+```
+
+Source-discovered build groups are available for self-contained program trees.
+`FILES IN` creates a deterministic source manifest, and `BUILD_GROUP` expands
+it into one ordinary `COMPILE PROGRAM` target per source plus a virtual
+aggregate target:
+
+```text
+SOURCES = FILES IN "src"
+          RECURSIVE
+          EXTENSION ".crexx";
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+
+BUILD_GROUP "programs"
+  RULE = compile_program
+  SOURCES = SOURCES
+  OUTPUT_DIR = "build"
+END BUILD_GROUP;
+
+DEFAULT_BUILD = programs;
+```
+
+Recursive members retain their source-relative directories under `OUTPUT_DIR`.
+The group is a virtual aggregate, so selecting `programs` builds its members
+but does not create a file named `programs` or remove outputs for deleted
+sources. The sorted source manifest is part of incremental state, so additions
+and removals invalidate consumers. The maintained example is
+`tools/rxbuild/graph/groups/groups.graph.build`:
+
+```powershell
+& .\cmake-build-release\bin\rxbuild.exe `
+  tools\rxbuild\graph\groups\groups.graph.build `
+  --toolchain-dir .\cmake-build-release\bin --list-targets
+```
+
+The same example also contains an `RXPP_SOURCES` file set and a
+`preprocessed` group. It expands two `.rxpp` files into persistent `.crexx`
+intermediates and then `.rxbin` outputs using the composite
+`COMPILE RXPP PROGRAM` action:
+
+```powershell
+& .\cmake-build-release\bin\rxbuild.exe `
+  tools\rxbuild\graph\groups\groups.graph.build `
+  --toolchain-dir .\cmake-build-release\bin preprocessed
+```
+
+The `programs` group declares `DEPENDS_ON_BUILD = preprocessed`, so selecting
+`programs` orders preprocessing first while keeping the generated `.crexx`
+files owned by the RXPP group.
+
+For direct external tools, use the `COMMAND` action. This invokes the
+executable without a shell; repeated `ARGUMENT` entries form the argument
+vector. The maintained example uses CMake's portable `-E copy` helper:
+
+```text
+RULE run_tool
+  ACTION = "COMMAND"
+END RULE;
+
+BUILD ".crexx-build/graph-command/output.dat"
+  RULE = run_tool
+  INPUT = "source/input.dat"
+  WORK_DIR = "tools/rxbuild/graph/command"
+  ARGUMENT = "cmake"
+  ARGUMENT = "-E"
+  ARGUMENT = "copy"
+  ARGUMENT = "${input}"
+  ARGUMENT = "${output}"
+END BUILD;
+```
+
+For `COMMAND`, `${input}` resolves to the primary declared input and
+`${output}` resolves to the primary `BUILD` output before the argv vector is
+launched.
+
 Use `BUILD_NAME` to give a target a stable logical name, then refer to it with
 `DEPENDS_ON_BUILD` or `DEFAULT_BUILD`. Existing `DEPENDS_ON` and `DEFAULT`
 forms remain supported.

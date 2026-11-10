@@ -1,0 +1,18 @@
+/* These policies must be ignored because this is not the root graph. */
+VERBOSE = "false";
+DRY_RUN = "true";
+
+RULE run_tool
+  ACTION = "COMMAND"
+END RULE;
+
+BUILD "tools/rxbuild/graph/policy/output.dat"
+  BUILD_NAME = policy_copy
+  RULE = run_tool
+  INPUT = "tools/rxbuild/graph/command/source/input.dat"
+  ARGUMENT = "cmake"
+  ARGUMENT = "-E"
+  ARGUMENT = "copy"
+  ARGUMENT = "${input}"
+  ARGUMENT = "${output}"
+END BUILD;

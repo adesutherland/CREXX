@@ -1,0 +1,9 @@
+/* Root execution policy applies to the included graph. */
+VERBOSE = "true"; -- root verbosity policy
+DRY_RUN = "true";          -- root dry-run policy, applies to all included graphs
+EXPLAIN = "true";          -- root explain policy, applies to all included graphs
+TOOLCHAIN_DIR = "cmake-build-release/bin";
+
+INCLUDE_GRAPH "child.graph.build";
+
+DEFAULT_BUILD = policy_copy;

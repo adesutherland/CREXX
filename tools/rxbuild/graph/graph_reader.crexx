@@ -15,17 +15,34 @@ main: procedure = .int
   requested = ''
   verbose = 0
   dry_run = 0
+  verbose_explicit = 0
+  dry_run_explicit = 0
   dump_graph = ''
   explain = 0
+  explain_explicit = 0
   query_mode = ''
   toolchain_dir = ''
+  toolchain_explicit = 0
   environment_names = .string[]
   environment_values = .string[]
   unset_environment = .string[]
   do i = 1 to argv[0]
-    if argv[i] = '--verbose' | argv[i] = '-v' | argv[i] = '-verbose' | argv[i] = '-verbose1' | argv[i] = '-verbose2' | argv[i] = '-verbose3' | argv[i] = '-verbose4' then verbose = 1
-    else if argv[i] = '-verbose0' then verbose = 0
-    else if argv[i] = '--dry-run' | argv[i] = '-n' then dry_run = 1
+    if argv[i] = '--verbose' | argv[i] = '-v' | argv[i] = '-verbose' | argv[i] = '-verbose1' | argv[i] = '-verbose2' | argv[i] = '-verbose3' | argv[i] = '-verbose4' then do
+      verbose = 1
+      verbose_explicit = 1
+    end
+    else if argv[i] = '-verbose0' then do
+      verbose = 0
+      verbose_explicit = 1
+    end
+    else if argv[i] = '--dry-run' | argv[i] = '-n' then do
+      dry_run = 1
+      dry_run_explicit = 1
+    end
+    else if argv[i] = '--no-dry-run' | argv[i] = '--execute' then do
+      dry_run = 0
+      dry_run_explicit = 1
+    end
     else if argv[i] = '--dump-graph=json' then dump_graph = 'json'
     else if argv[i] = '--dump-graph' then dump_graph = 'text'
     else if argv[i] = '--list-targets' then query_mode = 'list'
@@ -39,6 +56,7 @@ main: procedure = .int
         return 2
       end
       toolchain_dir = argv[i]
+      toolchain_explicit = 1
     end
     else if argv[i] = '--env' then do
       i = i + 1
@@ -63,7 +81,14 @@ main: procedure = .int
       end
       unset_environment[unset_environment[0] + 1] = argv[i]
     end
-    else if argv[i] = '--explain' | argv[i] = '-why' then explain = 1
+    else if argv[i] = '--explain' | argv[i] = '-why' then do
+      explain = 1
+      explain_explicit = 1
+    end
+    else if argv[i] = '--no-explain' then do
+      explain = 0
+      explain_explicit = 1
+    end
     else if argv[i] = '-keep' | argv[i] = '--keep' then iterate
     else if graph = '' then graph = argv[i]
     else if requested = '' then requested = argv[i]
@@ -81,14 +106,26 @@ main: procedure = .int
   targets = .string[]
   defaults = .string[]
   default_builds = .string[]
+  graph_verbose = 0
+  graph_dry_run = 0
+  graph_verbose_defined = 0
+  graph_dry_run_defined = 0
+  graph_explain = 0
+  graph_explain_defined = 0
+  graph_toolchain_dir = ''
+  graph_toolchain_defined = 0
   loaded = .string[]
   loading = .string[]
-  rc = load_graph(graph,1,'',loaded,loading,rules,targets,defaults,default_builds)
+  rc = load_graph(graph,1,'',loaded,loading,rules,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined)
   if rc <> 0 then return rc
+  if verbose_explicit = 0 & graph_verbose_defined <> 0 then verbose = graph_verbose
+  if dry_run_explicit = 0 & graph_dry_run_defined <> 0 then dry_run = graph_dry_run
+  if explain_explicit = 0 & graph_explain_defined <> 0 then explain = graph_explain
+  if toolchain_explicit = 0 & graph_toolchain_defined <> 0 then toolchain_dir = graph_toolchain_dir
   return execute_graph(rules,targets,defaults,default_builds,requested,verbose,dry_run,dump_graph,explain,query_mode,toolchain_dir,environment_names,environment_values,unset_environment)
 
 load_graph: procedure = .int
-  arg graph = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[]
+  arg graph = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int
   i = .int
   path = .rxfs..abspath(graph)
   if member(loading,path) then do
@@ -122,7 +159,7 @@ load_graph: procedure = .int
   loading[loading[0] + 1] = path
   variables = .string[]
   if scope = '' & is_root = 0 then scope = path
-  rc = collect_graph(tree,tree.root(),variables,rules,targets,defaults,default_builds,path,is_root,scope,loaded,loading)
+  rc = collect_graph(tree,tree.root(),variables,rules,targets,defaults,default_builds,path,is_root,scope,loaded,loading,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined)
   depth = loading[0] - 1
   previous_loading = .string[]
   do i = 1 to depth
@@ -156,7 +193,7 @@ execute_graph: procedure = .int
     if requested = '' then return graph_error('query requires a target')
     requested_target = resolve_target(targets,requested)
     if requested_target = '__RXBUILD_AMBIGUOUS__' then return graph_error('ambiguous BUILD_NAME ' || requested)
-    if requested_target = '' then return graph_error('unknown target ' || requested)
+    if requested_target = '' then return unknown_target_error(targets,requested)
     seen = .string[]
     if query_mode = 'dependencies' then call show_dependencies(targets,requested_target,seen)
     else if query_mode = 'reverse' then call show_reverse_dependencies(targets,requested_target,seen)
@@ -181,7 +218,7 @@ execute_graph: procedure = .int
   end
   requested_target = resolve_target(targets,requested)
   if requested_target = '__RXBUILD_AMBIGUOUS__' then return graph_error('ambiguous BUILD_NAME ' || requested)
-  if requested_target = '' then return graph_error('unknown target ' || requested)
+  if requested_target = '' then return unknown_target_error(targets,requested)
   visiting = .string[]
   completed = .string[]
   rebuilt = .string[]
@@ -206,7 +243,7 @@ list_targets: procedure
       end
       else local_name = target_scope
     end
-    say 'TARGET output=' || project_path(targets[i]) || ' name=' || local_name || ' source_graph=' || source_graph
+    say 'TARGET output=' || target_display(targets[i]) || ' name=' || local_name || ' source_graph=' || source_graph
   end
   return
 
@@ -225,13 +262,13 @@ show_dependencies: procedure
   index = target_index(targets,name)
   if index = 0 then return
   base = (index - 1) * 12 + 1
-  say 'TARGET ' || project_path(name)
+  say 'TARGET ' || target_display(name)
   dependencies = split_paths(targets[base + 4])
   do i = 1 to dependencies[0]
     dependency_target = target_index(targets,dependencies[i])
     if dependency_target <> 0 then do
       dependency_output = targets[(dependency_target - 1) * 12 + 1]
-      say '  depends=' || project_path(dependencies[i]) || ' -> target=' || project_path(dependency_output)
+      say '  depends=' || project_path(dependencies[i]) || ' -> target=' || target_display(dependency_output)
       call show_dependencies(targets,dependency_output,seen)
     end
     else say '  depends=' || project_path(dependencies[i])
@@ -245,7 +282,7 @@ show_dependencies: procedure
     dependency_target = resolve_logical_target(targets,logical_dependencies[i],source_graph)
     if dependency_target > 0 then do
       dependency_output = targets[(dependency_target - 1) * 12 + 1]
-      say '  depends_build=' || logical_dependencies[i] || ' -> target=' || project_path(dependency_output)
+      say '  depends_build=' || logical_dependencies[i] || ' -> target=' || target_display(dependency_output)
       call show_dependencies(targets,dependency_output,seen)
     end
     else say '  depends_build=' || logical_dependencies[i]
@@ -265,7 +302,7 @@ show_reverse_dependencies: procedure
   dependency_output = .string
   if member(seen,name) <> 0 then return
   seen[seen[0] + 1] = name
-  say 'TARGET ' || project_path(name)
+  say 'TARGET ' || target_display(name)
   do i = 1 to targets[0] by 12
     candidate = targets[i]
     if candidate = name then iterate
@@ -292,7 +329,7 @@ show_reverse_dependencies: procedure
       end
     end
     if found <> 0 then do
-      say '  dependent=' || project_path(candidate)
+      say '  dependent=' || target_display(candidate)
       call show_reverse_dependencies(targets,candidate,seen)
     end
   end
@@ -316,11 +353,11 @@ show_graph: procedure
     prefix = prefix || '    '
   end
   if member(seen,name) <> 0 then do
-    say prefix || '└── ' || project_path(name) || ' (already shown)'
+    say prefix || '└── ' || target_display(name) || ' (already shown)'
     return
   end
   seen[seen[0] + 1] = name
-  say prefix || 'TARGET ' || project_path(name)
+  say prefix || 'TARGET ' || target_display(name)
   index = target_index(targets,name)
   if index = 0 then return
   base = (index - 1) * 12 + 1
@@ -329,7 +366,7 @@ show_graph: procedure
     dependency_target = target_index(targets,dependencies[i])
     if dependency_target <> 0 then do
       dependency_output = targets[(dependency_target - 1) * 12 + 1]
-      say prefix || '└── ' || project_path(dependency_output)
+      say prefix || '└── ' || target_display(dependency_output)
       call show_graph(targets,dependency_output,seen,depth + 1)
     end
     else say prefix || '└── input ' || project_path(dependencies[i])
@@ -348,9 +385,11 @@ show_graph: procedure
     end
     else say prefix || '└── unresolved ' || logical_dependencies[i]
   end
-  inputs = split_paths(targets[base + 3])
-  do i = 1 to inputs[0]
-    say prefix || '└── input ' || project_path(inputs[i])
+  if targets[base + 2] <> '__RXBUILD_GROUP__' then do
+    inputs = split_paths(targets[base + 3])
+    do i = 1 to inputs[0]
+      say prefix || '└── input ' || project_path(inputs[i])
+    end
   end
   return
 
@@ -636,15 +675,28 @@ validate_dependency_cycle: procedure = .int
   return 0
 
 collect_graph: procedure = .int
-  arg tree = .lltree..view, container = .int, expose variables = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], origin = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[]
+  arg tree = .lltree..view, container = .int, expose variables = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], origin = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int
   name=.string
   child=.string
+  argchild=.string
   j=.int
   k=.int
+  m=.int
+  n=.int
   attr=.string
   attrwrap=.string
   value=.string
   kind=.string
+  recursive=.int
+  extension=.string
+  candidate=.string
+  attributes_text=.string
+  extension_pos=.int
+  quote_start=.int
+  quote_end=.int
+  source_path=.string
+  output_path=.string
+  group_action=.string
 
   do i = 1 to tree.count(container)
     wrapper = tree.child(container,i)
@@ -656,6 +708,52 @@ collect_graph: procedure = .int
       name = upper(strip(tree.text(tree.child(node,1))))
       value = substitute_value(unquote(tree.text(tree.child(node,3))),variables)
       if substitution_error(value) then return graph_error_at(origin,value)
+      if name = 'VERBOSE' | name = 'DRY_RUN' | name = 'DRYRUN' | name = 'EXPLAIN' | name = 'TOOLCHAIN_DIR' then do
+        if is_root = 0 then iterate
+        if name = 'TOOLCHAIN_DIR' then do
+          graph_toolchain_dir = value
+          graph_toolchain_defined = 1
+          iterate
+        end
+        enabled = graph_boolean(value)
+        if enabled < 0 then return graph_error_at(origin,name || ' must be true or false')
+        if name = 'VERBOSE' then do
+          graph_verbose = enabled
+          graph_verbose_defined = 1
+        end
+        else if name = 'EXPLAIN' then do
+          graph_explain = enabled
+          graph_explain_defined = 1
+        end
+        else do
+          graph_dry_run = enabled
+          graph_dry_run_defined = 1
+        end
+      end
+      else call set_variable variables,name,value
+    end
+    else if kind = 'file.selection.assignment' | kind = 'sources.selection.assignment' then do
+      name = upper(strip(tree.text(tree.child(node,1))))
+      directory = substitute_value(unquote(tree.text(tree.child(node,5))),variables)
+      recursive = 0
+      extension = ''
+      do j = 1 to tree.count(node)
+        child = tree.child(node,j)
+        if tree.name(child) = 'file.selection.attributes' then do
+          attributes_text = tree.text(child)
+          if pos('RECURSIVE',upper(attributes_text)) > 0 then recursive = 1
+          extension_pos = pos('EXTENSION',upper(attributes_text))
+          if extension_pos > 0 then do
+            quote_start = pos('"',attributes_text,extension_pos)
+            quote_end = pos('"',attributes_text,quote_start + 1)
+            if quote_start > 0 & quote_end > quote_start then extension = substitute_value(unquote(substr(attributes_text,quote_start,quote_end - quote_start + 1)),variables)
+          end
+        end
+      end
+      if extension = '' then return graph_error_at(origin,'FILES selection requires EXTENSION')
+      if substitution_error(directory) then return graph_error_at(origin,directory)
+      if substitution_error(extension) then return graph_error_at(origin,extension)
+      value = '__RXBUILD_FILESET__' || '0a'x || directory || '0a'x || recursive || '0a'x || extension
       call set_variable variables,name,value
     end
     else if kind = 'rule.statement' then do
@@ -695,6 +793,9 @@ collect_graph: procedure = .int
       argument_value = ''
       runtime_args = .string[]
       stdin = ''
+      command_arguments = .string[]
+      argument_values = .string[]
+      argument_action = ''
       do j = 1 to tree.count(node)
         child = tree.child(node,j)
         if tree.name(child) = 'string' & name = '' then name = substitute_value(unquote(tree.text(child)),variables)
@@ -711,8 +812,21 @@ collect_graph: procedure = .int
             if tree.name(attr) = 'depends.build.attribute' then call append_path logical_deps,strip(tree.text(tree.child(attr,3)))
             if tree.name(attr) = 'workdir.attribute' then workdir = substitute_value(unquote(tree.text(tree.child(attr,3))),variables)
             if tree.name(attr) = 'argument.attribute' then do
-              argument = substitute_value(unquote(tree.text(tree.child(attr,3))),variables)
-              argument_value = substitute_value(unquote(tree.text(tree.child(attr,4))),variables)
+              call arraydrop argument_values
+              do m = 1 to tree.count(attr)
+                argchild = tree.child(attr,m)
+                if tree.name(argchild) = 'string' then call append_path argument_values,unquote(tree.text(argchild))
+                if tree.name(argchild) = 'argument.tail' then do
+                  do n = 1 to tree.count(argchild)
+                    if tree.name(tree.child(argchild,n)) = 'string' then call append_path argument_values,unquote(tree.text(tree.child(argchild,n)))
+                  end
+                end
+              end
+              do m = 1 to argument_values[0]
+                call append_path command_arguments,argument_values[m]
+              end
+              if argument_values[0] >= 1 then argument = argument_values[1]
+              if argument_values[0] >= 2 then argument_value = argument_values[2]
             end
             if tree.name(attr) = 'runtime.argument.attribute' then call append_path runtime_args,substitute_value(unquote(tree.text(tree.child(attr,3))),variables)
             if tree.name(attr) = 'stdin.attribute' then stdin = substitute_value(unquote(tree.text(tree.child(attr,3))),variables)
@@ -722,6 +836,26 @@ collect_graph: procedure = .int
       if substitution_error(name) then return graph_error_at(origin,name)
       do j = 1 to outputs[0]
         if substitution_error(outputs[j]) then return graph_error_at(origin,outputs[j])
+      end
+      rule_i = rule_index(rules,rule)
+      if rule_i <> 0 then argument_action = upper(rules[(rule_i - 1) * 3 + 2])
+      if argument_action = 'COMMAND' then do
+        if command_arguments[0] = 0 then return graph_error_at(origin,'COMMAND requires at least one ARGUMENT')
+        argument = substitute_command_value(command_arguments[1],name,inputs,outputs,variables)
+        if substitution_error(argument) then return graph_error_at(origin,argument)
+        argument_value = ''
+        call arraydrop runtime_args
+        do j = 2 to command_arguments[0]
+          value = substitute_command_value(command_arguments[j],name,inputs,outputs,variables)
+          if substitution_error(value) then return graph_error_at(origin,value)
+          call append_path runtime_args,value
+        end
+      end
+      else do
+        argument = substitute_value(argument,variables)
+        argument_value = substitute_value(argument_value,variables)
+        if substitution_error(argument) then return graph_error_at(origin,argument)
+        if substitution_error(argument_value) then return graph_error_at(origin,argument_value)
       end
       if name = '' | rule = '' then return graph_error_at(origin,'BUILD requires an output and RULE')
       if build_name <> '' & name = build_name then return graph_error_at(origin,'BUILD_NAME must differ from its physical output ' || name)
@@ -734,6 +868,64 @@ collect_graph: procedure = .int
       if build_name <> '' then scoped_build_name = scope || '::' || build_name
       if target_index(targets,name) <> 0 then return graph_error_at(origin,'duplicate target ' || name)
       call append_target targets,name,scoped_build_name,rule,join_paths(inputs),join_paths(deps),join_paths(logical_deps),workdir,argument,argument_value,stdin,join_paths(runtime_args),join_paths(outputs)
+    end
+    else if kind = 'build.group.statement' then do
+      group_name = ''
+      group_rule = ''
+      source_reference = ''
+      group_output_dir = ''
+      group_logical_deps = .string[]
+      do j = 1 to tree.count(node)
+        child = tree.child(node,j)
+        if tree.name(child) = 'string' & group_name = '' then group_name = substitute_value(unquote(tree.text(child)),variables)
+        if tree.name(child) = 'build.group.attributes' then do
+          do k = 1 to tree.count(child)
+            attrwrap = tree.child(child,k)
+            if tree.count(attrwrap) < 1 then iterate
+            attr = tree.child(attrwrap,1)
+            if tree.name(attr) = 'rule.reference.attribute' then group_rule = strip(tree.text(tree.child(attr,3)))
+            if tree.name(attr) = 'sources.reference.attribute' then source_reference = upper(strip(tree.text(tree.child(attr,3))))
+            if tree.name(attr) = 'output.dir.attribute' then group_output_dir = substitute_value(unquote(tree.text(tree.child(attr,3))),variables)
+            if tree.name(attr) = 'depends.build.attribute' then call append_path group_logical_deps,strip(tree.text(tree.child(attr,3)))
+          end
+        end
+      end
+      if group_name = '' | group_rule = '' | source_reference = '' | group_output_dir = '' then return graph_error_at(origin,'BUILD_GROUP requires a name, RULE, SOURCES, and OUTPUT_DIR')
+      source_spec = variable_value(variables,source_reference)
+      if left(source_spec,19) <> '__RXBUILD_FILESET__' then return graph_error_at(origin,'SOURCES must reference a FILES selection: ' || source_reference)
+      source_lines = split_paths(source_spec)
+      if source_lines[0] < 4 then return graph_error_at(origin,'invalid FILES selection ' || source_reference)
+      discovery_dir = source_lines[2]
+      recursive = source_lines[3] as .int
+      extension = source_lines[4]
+      discovered = discover_group_files(discovery_dir,extension,recursive)
+      if discovered[0] = 0 then return graph_error_at(origin,'no matching files for BUILD_GROUP ' || group_name || ' in ' || project_path(discovery_dir))
+      group_rule_index = rule_index(rules,group_rule)
+      if group_rule_index = 0 then return graph_error_at(origin,'unknown group rule ' || group_rule)
+      group_action = upper(rules[(group_rule_index - 1) * 3 + 2])
+      if group_action <> 'COMPILE PROGRAM' & group_action <> 'COMPILE RXPP' & group_action <> 'COMPILE RXPP PROGRAM' then return graph_error_at(origin,'BUILD_GROUP currently supports COMPILE PROGRAM, COMPILE RXPP, and COMPILE RXPP PROGRAM')
+      group_scope_name = scope || '::' || group_name
+      group_token = '@group/' || group_scope_name
+      if target_index(targets,group_token) <> 0 | target_name_index(targets,group_scope_name) <> 0 then return graph_error_at(origin,'duplicate BUILD_GROUP ' || group_name)
+      member_outputs = .string[]
+      group_outputs = .string[]
+      do j = 1 to discovered[0]
+        source_path = join_group_path(discovery_dir,discovered[j])
+        output_path = group_output_path(group_output_dir,discovered[j],group_action)
+        if output_target_index(targets,output_path) <> 0 | member(group_outputs,output_path) <> 0 then return graph_error_at(origin,'duplicate BUILD_GROUP output ' || output_path)
+        if target_index(targets,output_path) <> 0 then return graph_error_at(origin,'BUILD_GROUP output collides with target ' || output_path)
+        call append_path group_outputs,output_path
+        call append_path member_outputs,output_path
+      end
+      if rule_index(rules,'__RXBUILD_GROUP__') = 0 then call append_rule rules,'__RXBUILD_GROUP__','__RXBUILD_GROUP__','virtual aggregate'
+      do j = 1 to discovered[0]
+        source_path = join_group_path(discovery_dir,discovered[j])
+        output_path = member_outputs[j]
+        intermediate_output = ''
+        if group_action = 'COMPILE RXPP PROGRAM' then intermediate_output = group_intermediate_path(output_path)
+        call append_target targets,output_path,'',group_rule,source_path,'','','','','','', '',intermediate_output
+      end
+      call append_target targets,group_token,group_scope_name,'__RXBUILD_GROUP__',join_paths(discovered),join_paths(member_outputs),join_paths(group_logical_deps),group_output_dir,'','','',join_paths(discovered),''
     end
     else if kind = 'default.statement' then do
       value = substitute_value(unquote(tree.text(tree.child(node,2))),variables)
@@ -754,7 +946,7 @@ collect_graph: procedure = .int
       if substitution_error(include_path) then return graph_error_at(origin,include_path)
       include_path = resolve_include_path(origin,include_path)
       if include_alias <> '' & scope_exists(targets,include_alias) then return graph_error_at(origin,'duplicate graph alias ' || include_alias)
-      rc = load_graph(include_path,0,include_alias,loaded,loading,rules,targets,defaults,default_builds)
+      rc = load_graph(include_path,0,include_alias,loaded,loading,rules,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined)
       if rc <> 0 then return rc
     end
     else return graph_error_at(origin,'unknown statement ' || kind)
@@ -800,6 +992,19 @@ build_target: procedure = .int
       if rc <> 0 then return rc
     end
     else if .rxfs..isfile(project_path(dep)) = 0 then return graph_error('missing dependency ' || dep || ' for ' || name)
+  end
+  if action = '__RXBUILD_GROUP__' then do
+    if member(rebuilt,name) = 0 then do
+      do i = 1 to deps[0]
+        if member(rebuilt,deps[i]) then do
+          rebuilt[rebuilt[0] + 1] = name
+          leave
+        end
+      end
+    end
+    visiting[visiting[0]] = ''
+    completed[completed[0] + 1] = name
+    return 0
   end
   inputs = split_paths(targets[(t - 1) * 12 + 4])
   workdir = targets[(t - 1) * 12 + 7]
@@ -864,7 +1069,7 @@ build_target: procedure = .int
     end
   end
   if stale = 0 then do
-    current_signature = target_fingerprint(action,name,inputs,deps,output_paths,workdir,argument,argument_value,stdin,runtime_args,toolchain_dir,environment_names,environment_values,unset_environment)
+    current_signature = target_fingerprint(action,name,inputs,deps,output_paths,workdir,argument,argument_value,stdin,runtime_args,targets,toolchain_dir,environment_names,environment_values,unset_environment)
     saved_signature = read_target_state(name)
     if saved_signature = '' then do
       stale = 1
@@ -911,10 +1116,15 @@ build_target: procedure = .int
       return 0
     end
     if write_target_marker(name) <> 0 then return graph_error('cannot create in-progress marker for ' || name)
+    do i = 1 to output_paths[0]
+      if ensure_directory_tree(project_path(dirname(output_paths[i]))) <> 0 then return graph_error('cannot create output directory for ' || name)
+    end
     if inputs[0] <> 1 then return graph_error(action || ' requires exactly one INPUT for ' || name)
     dir = dirname(name)
     output_name = basename_no_suffix(name)
     if action = 'COMPILE RXPP' then rc = compile_rxpp(name,inputs[1],deps,toolchain_dir,environment_names,environment_values,unset_environment)
+    else if action = 'COMPILE RXPP PROGRAM' then rc = compile_rxpp_program(name,inputs[1],deps,toolchain_dir,environment_names,environment_values,unset_environment)
+    else if action = 'COMMAND' then rc = run_command_action(workdir,argument,argument_value,runtime_args,environment_names,environment_values,unset_environment)
     else if action = 'COMPILE PROGRAM' then rc = compile_program(dir,inputs[1],output_name,deps,toolchain_dir,environment_names,environment_values,unset_environment)
     else if action = 'COMPILE GRAMMAR' then rc = compile_grammar(dir,inputs[1],output_name,toolchain_dir,environment_names,environment_values,unset_environment)
     else if action = 'COMPILE READER' then do
@@ -931,7 +1141,7 @@ build_target: procedure = .int
     do i = 1 to output_paths[0]
       if .rxfs..isfile(project_path(output_paths[i])) = 0 then return graph_error('action did not produce ' || output_paths[i])
     end
-    if write_target_state(name,target_fingerprint(action,name,inputs,deps,output_paths,workdir,argument,argument_value,stdin,runtime_args,toolchain_dir,environment_names,environment_values,unset_environment)) <> 0 then return graph_error('cannot write build state for ' || name)
+    if write_target_state(name,target_fingerprint(action,name,inputs,deps,output_paths,workdir,argument,argument_value,stdin,runtime_args,targets,toolchain_dir,environment_names,environment_values,unset_environment)) <> 0 then return graph_error('cannot write build state for ' || name)
     if clear_target_marker(name) <> 0 then return graph_error('cannot clear in-progress marker for ' || name)
     rebuilt[rebuilt[0] + 1] = name
     say 'RXBUILD: built ' || name
@@ -987,6 +1197,14 @@ report_target: procedure
     end
     if stdin <> '' then say '  stdin=' || stdin
   end
+  else if action = 'COMMAND' then do
+    say '  executable=' || argument
+    if argument_value <> '' then say '  argument=' || argument_value
+    do i = 1 to runtime_args[0]
+      say '  argument=' || runtime_args[i]
+    end
+    if workdir <> '' then say '  workdir=' || project_path(workdir)
+  end
 
 native_output_path: procedure = .string
   arg name = .string, action = .string
@@ -1036,6 +1254,13 @@ compile_rxpp: procedure = .int
   argv[8] = macro_lib
   input_lines = .string[]
   return run_command('RXPP',argv,input_lines,environment_names,environment_values,unset_environment)
+
+compile_rxpp_program: procedure = .int
+  arg target = .string, source = .string, deps = .string[], toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[]
+  generated = left(target,lastpos('.',target) - 1) || '.crexx'
+  rc = compile_rxpp(generated,source,deps,toolchain_dir,environment_names,environment_values,unset_environment)
+  if rc <> 0 then return rc
+  return compile_program(dirname(target),generated,basename_no_suffix(target),deps,toolchain_dir,environment_names,environment_values,unset_environment)
 
 create_exe: procedure = .int
   arg name = .string, source = .string, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[]
@@ -1121,6 +1346,36 @@ run_command: procedure = .int
     do i = 1 to errors[0]
       say errors[i]
     end
+  end
+  return rc
+
+run_command_action: procedure = .int
+  arg workdir = .string, executable = .string, first_argument = .string, arguments = .string[], environment_names = .string[], environment_values = .string[], unset_environment = .string[]
+  argv = .string[]
+  pushed = 0
+  restore_rc = 0
+  run_rc = 0
+  if executable = '' then return graph_error('COMMAND requires an executable')
+  argv[1] = executable
+  if first_argument <> '' then argv[2] = first_argument
+  do i = 1 to arguments[0]
+    if first_argument = '' then argv[i + 1] = arguments[i]
+    else argv[i + 2] = arguments[i]
+  end
+  input_lines = .string[]
+  if workdir <> '' then do
+    resolved_workdir = project_path(workdir)
+    address crexx "pushd :resolved_workdir"
+    if rc <> 0 then return graph_error('COMMAND working directory is unavailable: ' || workdir)
+    pushed = 1
+  end
+  rc = run_command('COMMAND',argv,input_lines,environment_names,environment_values,unset_environment)
+  run_rc = rc
+  if pushed <> 0 then do
+    address crexx "popd"
+    restore_rc = rc
+    rc = run_rc
+    if rc = 0 & restore_rc <> 0 then rc = restore_rc
   end
   return rc
 
@@ -1343,6 +1598,66 @@ split_paths: procedure = .string[]
   end
   return values
 
+discover_group_files: procedure = .string[]
+  arg directory = .string, extension = .string, recursive = .int
+  results = .string[]
+  root = project_path(directory)
+  if .rxfs..pathkind(root) <> 2 then return results
+  error_path = collect_group_files(root,'',extension,recursive,results)
+  if error_path <> '' then do
+    call arraydrop results
+    return results
+  end
+  call arraysort results
+  return results
+
+collect_group_files: procedure = .string
+  arg path = .string, relative = .string, extension = .string, recursive = .int, expose results = .string[]
+  entries = .string[]
+  count = .rxfs..listdir(path,entries)
+  if count < 0 then return path
+  call arraysort entries
+  wanted = upper(extension)
+  do i = 1 to entries[0]
+    entry = entries[i]
+    full_path = path || '/' || entry
+    kind = .rxfs..pathkind(full_path)
+    if kind = 2 then do
+      if recursive = 0 then iterate
+      nested = entry
+      if relative <> '' then nested = relative || '/' || entry
+      error_path = collect_group_files(full_path,nested,extension,recursive,results)
+      if error_path <> '' then return error_path
+      iterate
+    end
+    if kind <> 1 then iterate
+    if right(upper(entry),length(wanted)) <> wanted then iterate
+    item = entry
+    if relative <> '' then item = relative || '/' || entry
+    results[results[0] + 1] = item
+  end
+  return ''
+
+join_group_path: procedure = .string
+  arg directory = .string, relative = .string
+  if directory = '' then return relative
+  return directory || '/' || relative
+
+group_output_path: procedure = .string
+  arg output_dir = .string, relative = .string, action = .string
+  dot = lastpos('.',relative)
+  if upper(action) = 'COMPILE RXPP' then suffix = '.crexx'
+  else suffix = '.rxbin'
+  if dot > lastpos('/',relative) then relative = left(relative,dot - 1) || suffix
+  else relative = relative || suffix
+  return join_group_path(output_dir,relative)
+
+group_intermediate_path: procedure = .string
+  arg output = .string
+  dot = lastpos('.',output)
+  if dot > lastpos('/',output) then return left(output,dot - 1) || '.crexx'
+  return output || '.crexx'
+
 rule_index: procedure = .int
   arg rules = .string[], name = .string
   do i = 1 to rules[0] by 3
@@ -1360,13 +1675,20 @@ target_index: procedure = .int
 output_target_index: procedure = .int
   arg targets = .string[], name = .string
   do i = 1 to targets[0] by 12
-    if targets[i] = name then return ((i - 1) / 12) + 1
+    if output_equal(targets[i],name) then return ((i - 1) / 12) + 1
     outputs = split_paths(targets[i + 11])
     do j = 1 to outputs[0]
-      if outputs[j] = name then return ((i - 1) / 12) + 1
+      if output_equal(outputs[j],name) then return ((i - 1) / 12) + 1
     end
   end
   return 0
+
+output_equal: procedure = .int
+  arg left_path = .string, right_path = .string
+  version = ''
+  assembler rxvers version
+  if upper(word(version,1)) = 'WINDOWS' then return upper(left_path) = upper(right_path)
+  return left_path = right_path
 
 target_name_index: procedure = .int
   arg targets = .string[], name = .string
@@ -1465,14 +1787,14 @@ write_target_state: procedure = .int
   return .rxfs..rename(temporary,path)
 
 target_fingerprint: procedure = .string
-  arg action = .string, name = .string, inputs = .string[], deps = .string[], outputs = .string[], workdir = .string, argument = .string, argument_value = .string, stdin = .string, runtime_args = .string[], toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[]
+  arg action = .string, name = .string, inputs = .string[], deps = .string[], outputs = .string[], workdir = .string, argument = .string, argument_value = .string, stdin = .string, runtime_args = .string[], targets = .string[], toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[]
   i = .int
   key = 'action=' || action || '|target=' || name || '|workdir=' || workdir || '|argument=' || argument || '|argument_value=' || argument_value || '|stdin=' || stdin || '|toolchain=' || project_path(toolchain_dir)
   do i = 1 to inputs[0]
     key = key || '|input=' || inputs[i] || ':' || file_fingerprint(inputs[i])
   end
   do i = 1 to deps[0]
-    key = key || '|dependency=' || deps[i] || ':' || file_fingerprint(deps[i])
+    key = key || '|dependency=' || deps[i] || ':' || dependency_fingerprint(deps[i],targets)
   end
   do i = 1 to outputs[0]
     key = key || '|output=' || outputs[i] || ':' || file_fingerprint(outputs[i])
@@ -1488,6 +1810,21 @@ target_fingerprint: procedure = .string
   end
   return rxhash..sha256hex(key as .binary)
 
+dependency_fingerprint: procedure = .string
+  arg dependency = .string, targets = .string[]
+  target_number = target_index(targets,dependency)
+  if target_number = 0 then return file_fingerprint(dependency)
+  base = (target_number - 1) * 12 + 1
+  if targets[base + 2] = '__RXBUILD_GROUP__' then do
+    key = 'group=' || dependency || '|manifest=' || targets[base + 3]
+    members = split_paths(targets[base + 4])
+    do i = 1 to members[0]
+      key = key || '|member=' || members[i] || ':' || file_fingerprint(members[i])
+    end
+    return rxhash..sha256hex(key as .binary)
+  end
+  return file_fingerprint(dependency)
+
 file_fingerprint: procedure = .string
   arg path = .string
   resolved = project_path(path)
@@ -1497,6 +1834,21 @@ file_fingerprint: procedure = .string
 graph_error: procedure = .int
   arg message = .string
   say 'RXBUILD: ' || message
+  return 4
+
+unknown_target_error: procedure = .int
+  arg targets = .string[], requested = .string
+  say 'RXBUILD: unknown target ' || requested
+  say 'RXBUILD: available targets:'
+  do i = 1 to targets[0] by 12
+    scope = targets[i + 1]
+    if scope <> '' then do
+      separator = lastpos('::',scope)
+      if separator > 0 then say '  ' || substr(scope,separator + 2) || ' -> ' || target_display(targets[i])
+      else say '  ' || scope || ' -> ' || target_display(targets[i])
+    end
+    else say '  ' || target_display(targets[i])
+  end
   return 4
 
 graph_error_at: procedure = .int
@@ -1558,9 +1910,26 @@ substitute_value: procedure = .string
   end
   return result
 
+substitute_command_value: procedure = .string
+  arg value = .string, primary_output = .string, inputs = .string[], outputs = .string[], variables = .string[]
+  result = value
+  if pos('${input}',result) > 0 then do
+    if inputs[0] < 1 then return 'RXBUILD substitution error: COMMAND requires an INPUT for ${input}'
+    result = changestr('${input}',result,project_path(inputs[1]))
+  end
+  if pos('${output}',result) > 0 then result = changestr('${output}',result,project_path(primary_output))
+  return substitute_value(result,variables)
+
 substitution_error: procedure = .int
   arg value = .string
   return pos('RXBUILD substitution error:',value) > 0
+
+graph_boolean: procedure = .int
+  arg value = .string
+  normalized = lower(strip(value))
+  if normalized = 'true' | normalized = 'yes' | normalized = '1' then return 1
+  if normalized = 'false' | normalized = 'no' | normalized = '0' then return 0
+  return -1
 
 resolve_include_path: procedure = .string
   arg origin = .string, include_path = .string
@@ -1584,6 +1953,11 @@ project_path: procedure = .string
   arg path = .string
   if left(path,1) = '/' | (length(path) >= 2 & substr(path,2,1) = ':') then return .rxfs..abspath(path)
   return .rxfs..abspath(project_root() || '/' || path)
+
+target_display: procedure = .string
+  arg path = .string
+  if left(path,7) = '@group/' then return path
+  return project_path(path)
 
 ensure_project_directories: procedure = .int
   arg dir = .string, output = .string

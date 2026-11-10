@@ -216,4 +216,32 @@ if(BUILD_TESTING)
     set_tests_properties(rxbuild_graph PROPERTIES
         LABELS "tools;rxbuild;essential" TIMEOUT 180
         CREXX_PREP_TARGETS "rxbuild;crexx;${CREXX_DEFAULT_VM_TARGET}")
+    add_test(NAME rxbuild_graph_complex
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/graph/tests/check-complex-graph.py
+                --rxbuild $<TARGET_FILE:rxbuild>
+                --source "${CMAKE_SOURCE_DIR}")
+    set_tests_properties(rxbuild_graph_complex PROPERTIES
+        LABELS "tools;rxbuild" TIMEOUT 180 RUN_SERIAL TRUE
+        CREXX_PREP_TARGETS "rxbuild;crexx;${CREXX_DEFAULT_VM_TARGET}")
+    add_test(NAME rxbuild_graph_groups
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/graph/tests/check-build-groups.py
+                --rxbuild $<TARGET_FILE:rxbuild>
+                --source "${CMAKE_SOURCE_DIR}")
+    set_tests_properties(rxbuild_graph_groups PROPERTIES
+        LABELS "tools;rxbuild" TIMEOUT 180 RUN_SERIAL TRUE
+        CREXX_PREP_TARGETS "rxbuild;crexx;${CREXX_DEFAULT_VM_TARGET}")
+    add_test(NAME rxbuild_graph_command
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/graph/tests/check-command.py
+                --rxbuild $<TARGET_FILE:rxbuild>
+                --source "${CMAKE_SOURCE_DIR}")
+    set_tests_properties(rxbuild_graph_command PROPERTIES
+        LABELS "tools;rxbuild" TIMEOUT 180 RUN_SERIAL TRUE
+        CREXX_PREP_TARGETS "rxbuild;crexx;${CREXX_DEFAULT_VM_TARGET}")
+    add_test(NAME rxbuild_graph_policy
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/graph/tests/check-graph-policy.py
+                --rxbuild $<TARGET_FILE:rxbuild>
+                --source "${CMAKE_SOURCE_DIR}")
+    set_tests_properties(rxbuild_graph_policy PROPERTIES
+        LABELS "tools;rxbuild" TIMEOUT 180 RUN_SERIAL TRUE
+        CREXX_PREP_TARGETS "rxbuild;crexx;${CREXX_DEFAULT_VM_TARGET}")
 endif()

@@ -229,9 +229,10 @@ compatibility executable, and `crexx.exe` dispatches `.graph.build` and
 The graph language supports named rules with typed actions, physical outputs,
 logical build names, physical and logical dependencies, string variables,
 timestamp-based incremental decisions, physical or logical default targets,
-clear diagnostics, nested `INCLUDE_GRAPH` composition, and source-aware graph
-inspection. It deliberately does not implement generic shell commands,
-parallel execution, or the complete Ninja language.
+clear diagnostics, nested `INCLUDE_GRAPH` composition, source-aware graph
+inspection, and explicit direct-process `COMMAND` actions. It does not
+implement implicit shell syntax, parallel execution, or the complete Ninja
+language.
 
 ### Acceptance criteria
 
@@ -293,6 +294,17 @@ parallel execution, or the complete Ninja language.
   directory and control child-process environment overrides through the
   platform-neutral process runner; broader inherited-environment sealing
   remains open.
+- GAC-21: **Met locally.** A `COMMAND` action launches a declared executable
+  through the platform-neutral direct-process environment, accepts repeated
+  argument-vector entries, honors `WORK_DIR`, reports its resolved argv in
+  verbose mode, validates declared outputs, and participates in dry-run and
+  incremental state without invoking a shell.
+- GAC-22: **Met locally.** Root graph `VERBOSE` and `DRY_RUN` assignments apply
+  across included graphs, included definitions cannot override them, and
+  explicit command-line execution options take precedence.
+- GAC-23: **Met locally.** Root graph `EXPLAIN` and `TOOLCHAIN_DIR` assignments
+  provide composed-build defaults, while explicit command-line values take
+  precedence.
 
 ### Implementation steps
 
@@ -394,3 +406,29 @@ increment:
 Phase 9 policy and graph declarations precede Phase 10 scheduling: parallel
 execution needs a complete per-action toolchain, environment, working-directory,
 output, and resource contract.
+
+### Source-discovered build groups
+
+The next agreed graph increment adds explicit `FILES` discovery and
+`BUILD_GROUP` expansion for `COMPILE PROGRAM`. Groups are virtual aggregate
+targets with deterministic manifests; they do not delete outputs for removed
+sources. The implementation must preserve ordinary target validation and
+selection semantics, including namespaced included graphs.
+
+- GROUP-01: Add `FILES IN`, optional `RECURSIVE`, and `EXTENSION` discovery
+  expressions to the graph grammar.
+- GROUP-02: Add `BUILD_GROUP` declarations using an existing `RULE` and
+  `OUTPUT_DIR`, supporting `COMPILE PROGRAM`, `COMPILE RXPP`, and composite
+  `COMPILE RXPP PROGRAM` source/output expansion.
+- GROUP-03: Represent groups as explicit virtual aggregate targets rather than
+  fake file outputs; expose generated members to selection, queries, dumps, and
+  dry-run.
+- GROUP-04: Use sorted normalized manifests, preserve recursive relative paths,
+  and reject empty matches, invalid rules, duplicate groups, and output
+  collisions with platform-aware path comparison.
+- GROUP-05: Include group manifests and member outputs in dependency state so
+  additions/removals invalidate group consumers without deleting orphaned files.
+- GROUP-06: Add focused CTest coverage for expansion, incremental changes,
+  selection, diagnostics, queries, and included-graph scope.
+- GROUP-07: Allow a group to depend on another virtual group so generated
+  persistent sources can be prepared before a consuming group is built.

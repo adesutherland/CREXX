@@ -1,0 +1,19 @@
+/* Direct process command example. */
+
+RULE run_tool
+  ACTION = "COMMAND"
+END RULE;
+
+BUILD ".crexx-build/graph-command/output.dat"
+  BUILD_NAME = copy_fixture
+  RULE = run_tool
+  INPUT = "tools/rxbuild/graph/command/source/input.dat"
+  WORK_DIR = "tools/rxbuild/graph/command"
+  ARGUMENT = "cmake"
+  ARGUMENT = "-E"
+  ARGUMENT = "copy"
+  ARGUMENT = "${input}"
+  ARGUMENT = "${output}"
+END BUILD;
+
+DEFAULT_BUILD = copy_fixture;
