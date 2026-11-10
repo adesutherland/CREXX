@@ -49,6 +49,16 @@ try {
   releaseFinal();
   await page.locator('[data-node-id="answer"]').getByText('A supported statement', {exact: false}).waitFor();
   assert.equal(finalCount, 1);
+  assert.ok((await page.locator('[data-node-id="answer"]').innerText()).length < 256,
+    'Short answers must not be padded to the document limit');
+  const activityText = await page.locator('[data-node-id="activity-content"]').innerText();
+  assert.match(activityText, /Answer complete/);
+  assert.ok(activityText.length < 1024, 'Short progress messages must not fill the activity limit');
+  await page.locator('[data-node-id="dialogue-tab"]').click();
+  const dialogueText = await page.locator('[data-node-id="dialogue-content"]').innerText();
+  assert.match(dialogueText, /Service: Initial evidence search completed/);
+  assert.match(dialogueText, /Response: <script>literal text<\/script> A supported statement/);
+  assert.ok(dialogueText.length < 2048, 'The final response must fit after progress messages');
   assert.equal(await page.locator('[data-node-id="answer"] script').count(), 0);
   assert.equal(await page.locator('[data-node-id="answer"] button').count(), 0,
     'Marker-free prose does not require an invented inline citation');

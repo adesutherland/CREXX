@@ -166,6 +166,12 @@ filesystem or web tools. The protected deployment may include the research
 originals approved for Stephen's validation; any genuinely public static
 distribution retains its independent source-rights gate in STEP08.
 
+The STEP09 presentation caps dialogue, activity and answer text without
+space-padding short values, so completed progress messages and the final answer
+remain visible in the separate drawer. After Adrian and Stephen's question
+review, compare a lower-cost model on the same supported cases before deciding
+whether to expose a small server-approved model choice in this UI.
+
 The protected site and original routes are deployed behind the existing
 two-account IAP policy. Adrian's signed-in answer, source-context, original-PDF
 and independent three-route journeys passed. Stephen's own sign-in and question

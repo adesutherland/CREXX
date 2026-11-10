@@ -208,10 +208,10 @@ rag_query_component: class implements .uicomponent
     else if name = "ui.effect.progress" then do
       if _answer_pending then do
         _answer_request = event.request_id()
-        progress_message = left(event.body().text("message"), 1024)
+        progress_message = clip_text(event.body().text("message"), 1024)
         if progress_message \= "" then do
           _answer_status = progress_message
-          _dialogue = left(_dialogue || '0A0A'x || "Service: " || progress_message, 32768)
+          _dialogue = clip_text(_dialogue || '0A0A'x || "Service: " || progress_message, 32768)
           if _activity_count < 32 then do
             _activity = _activity || '0A'x || progress_message
             _activity_count = _activity_count + 1
@@ -236,8 +236,8 @@ rag_query_component: class implements .uicomponent
         if answer_outcome = "answered" then _answer_status = "Answer complete. Review the supporting sources."
         else if answer_outcome = "scope_refused" then _answer_status = "This question falls outside the corpus scope."
         else _answer_status = "The corpus does not contain enough supporting evidence."
-        _activity = left(_activity || '0A'x || _answer_status, 32768)
-        _dialogue = left(_dialogue || '0A0A'x || "Response: " || jsonget(_answer_json, "answer"), 32768)
+        _activity = clip_text(_activity || '0A'x || _answer_status, 32768)
+        _dialogue = clip_text(_dialogue || '0A0A'x || "Response: " || jsonget(_answer_json, "answer"), 32768)
         _source_index = 0
       end
     end
@@ -343,7 +343,7 @@ rag_query_component: class implements .uicomponent
         _answer_pending = 0
         _answer_request = ""
         _answer_status = "Answer failed: " || event.body().text("message") || " (" || event.body().text("code") || "). Retry explicitly."
-        _activity = left(_activity || '0A'x || _answer_status, 32768)
+        _activity = clip_text(_activity || '0A'x || _answer_status, 32768)
       end
       else if _context_pending then do
         _context_pending = 0
@@ -359,7 +359,7 @@ rag_query_component: class implements .uicomponent
         _answer_pending = 0
         _answer_request = ""
         _answer_status = "Question cancelled. The previous completed answer is retained."
-        _activity = left(_activity || '0A'x || "Question cancelled.", 32768)
+        _activity = clip_text(_activity || '0A'x || "Question cancelled.", 32768)
       end
       else if _context_pending then do
         _context_pending = 0
@@ -496,13 +496,19 @@ booljson: procedure = .string
   if value then return "true"
   return "false"
 
+clip_text: procedure = .string
+  arg text = .string, maximum = .int
+  if maximum <= 0 then return ""
+  if length(text) <= maximum then return text
+  return left(text, maximum)
+
 plain_document: procedure = .string
   arg text = .string
-  remaining = left(text, 32768)
+  remaining = clip_text(text, 32768)
   blocks = ""
   do until remaining = ""
     if blocks \= "" then blocks = blocks || ","
-    blocks = blocks || '{"kind":"paragraph","runs":[{"text":' || jsonquote(left(remaining, 16000)) || '}]}'
+    blocks = blocks || '{"kind":"paragraph","runs":[{"text":' || jsonquote(clip_text(remaining, 16000)) || '}]}'
     remaining = substr(remaining, 16001)
   end
   return '{"blocks":[' || blocks || ']}'
@@ -511,7 +517,7 @@ plain_document: procedure = .string
 document_for_answer: procedure = .string
   arg text = .string, source_count = .int
   runs = ""
-  remaining = left(text, 12000)
+  remaining = clip_text(text, 12000)
   pieces = 0
   do while remaining \= "" & pieces < 48
     opening = pos("[", remaining)
