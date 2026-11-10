@@ -93,10 +93,11 @@ controls and text, so an agent with browser control can use the same page.
 This does not automatically grant Codex, Claude or Gemini browser access: each
 agent host must have its own browser tool and permission to reach the URL.
 For direct machine access, cREXX-RAG also exposes the `query.compare` CLI/MCP
-operation. A cREXX HTTP reader binding, static browser-local reader, pinned
-model/profile configuration for relocation, protected Google deployment and
-delivery qualification remain
-STEP08 work. The current Node adapter is a loopback proof.
+operation. Its separate Level G HTTP reader now serves this package and the
+same query contract through native `rxvm`; the Google-hosted pilot uses IAP at
+the service origin. The Node adapter remains a loopback proof. The static
+browser-local reader, model/profile identity closure, source-rights release
+check and complete STEP08 qualification remain open.
 
 ## Application packages
 

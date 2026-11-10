@@ -166,7 +166,7 @@ rag_query_component: class implements .uicomponent
     call result.add_input("question", _question, "right", "question-label")
     call result.add_label("hops-label", "Graph generations (0–4)", "below", "question-label")
     call result.add_input("hops", _hops as .string, "right", "hops-label")
-    call result.add_button("search", "Search", "rag.search", "", "below", "question-label")
+    call result.add_button("search", "Search", "rag.search", "", "below", "hops-label")
     call result.add_label("status", _status, "below", "search")
     call result.add_label("identity", "Library: " || _library || " · Generation: " || _generation || " · Embedding model: " || _model)
     call result.add_label("keyword-heading", "01  Keyword")
