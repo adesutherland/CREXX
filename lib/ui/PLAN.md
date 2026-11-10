@@ -127,6 +127,7 @@ which route must still pass after any agreed fallback.
 | **UIX-D16** | Versioned application packages declare entry, UI contract, required/optional capabilities, dependencies and assets. Native/browser assembly may differ; initial packages are deployer-approved and trusted. | Manifest/package preflight and install proof; runtime hot loading and untrusted-package isolation remain outside this UI delivery. |
 | **UIX-D17** | One versioned application service operation has typed request/result/failure semantics. HTTP is its first remote binding; a later distributed channel provider may be another binding under the same contract. UI calls complete through effects, without blocking the owner turn. | Implement the cREXX HTTP reader binding, preserve local and hosted correlation/cancellation, and assess a channel transport only after an actual multi-service need. |
 | **UIX-D18** | Proposed Stephen delivery: a static Firebase-hosted, browser-executed read-only bundle and a separate, access-controlled Google Cloud Run native `rxvm` service. Both consume one RAG-owned serving snapshot and comparison contract; the hosted service starts with one container and no managed database or GKE dependency. Adrian approved corpus distribution for this demo on 9 November 2026. | Reconcile the earlier narrower corpus decision and source terms, then review actual export size, browser load/resource use, Linux native provider, direct Cloud Run access and measured gross/credit/net cost with the hosting owner before deployment. |
+| **UIX-D19** | The first hosted research reader uses an immutable SQLite serving snapshot. Mutable application data, if later required, uses a separate application-owned Firestore capability and does not mutate the RAG snapshot. No Firestore database is provisioned for the read-only demonstrator. | Add a concrete mutable-data consumer and bounded Firestore contract before provisioning; keep source and query ownership in RAG. |
 
 ## Architecture details
 
@@ -508,22 +509,23 @@ holds the corpus and model. Browser-local snapshot use remains a separate
 optional route under D01–03 and D13.
 
 The first STEP08 consumer is `examples/ui/rag-query`. Its Level G application
-owns `rag.query` and displays a bounded cited passage with library/generation
-identity. Its browser package may include presentation-only CSS for long cited
-text; package preflight must validate that asset without teaching the shared
-projection RAG-specific node IDs. The hosted route declares an application service for read-only
-lexical `query.inspect` on a configured library. Its current browser-local UI
-shell uses an application executor that calls a stateless, same-origin HTTP
-query API; that query still runs on the server. The UI delta/resync protocol
-remains inside the browser. The service makes no provider call or corpus write.
-Adrian approved internal-only service use of
-the active Public Purpose Lab heart-failure library on 9 November 2026. The
-loopback proof uses a fixed question and compares the cited result with native
-read-only `query.inspect`; it does not publish or distribute corpus files.
-Top-one lexical evidence is a lookup demonstration, not answer relevance or
-clinical qualification. STEP08 still requires the supported serving route,
-graph and hosted comparisons, cancellation and compatible embedding proof;
-AC09–10 remain open.
+owns `rag.query` and displays three separately labelled, bounded cited results,
+graph generations 0–4, source URLs and captured UTF-8 spans with library,
+generation and embedding-model identity. Its browser package includes
+presentation-only CSS for long cited text; the shared projection has no RAG
+node IDs. The present executor calls a stateless, same-origin loopback HTTP API;
+the comparison still runs on the server through RAG's Level G `query.compare`
+and local BGE embedding model. The UI delta/resync protocol remains in the
+browser. RAG's `library serving-export` now emits a compact SQLite corpus
+and aligned sidecar snapshot, removing bulk operational audit rows and
+redacting local source/config paths while retaining schema-required generation metadata;
+an explicit model option copies and hashes the embedding weights.
+The export and query have passed focused native checks and one live heart-failure
+loopback browser result; this is a development increment, not delivery or
+clinical qualification. The graph card shows a bounded first claim path;
+complete per-hop presentation, relocatable model/profile validation, the
+cREXX HTTP reader, protected Cloud Run deployment, static browser-local reader and
+source-rights release check keep AC09–10 and AC17 open.
 
 For the targeted browser-local route, the existing `rxsqlite` and `rxvector`
 sources compile and link into a single-thread Wasm VM together with the needed
@@ -618,6 +620,12 @@ hosting owner checks current credit eligibility and records gross usage,
 applied credits and net cost separately; the existing gross budget alert is
 not a spending cap. Neither deployment is qualified by the loopback Node
 adapter or the earlier scratch Wasm proof.
+Adrian also has a stated USD 200 OpenAI API credit allowance alongside a
+Gemini API allowance. These are optional application-provider budgets for a
+later bounded cited-answer feature, separate from local embedding and the
+three comparison routes. Provider keys stay server-side, with RAG-owned
+citation policy and usage reporting. Check actual credit eligibility and
+expiry before budgeting work against either allowance.
 Hosting implementation references are [Firebase Hosting configuration](https://firebase.google.com/docs/hosting/full-config),
 [Cloud Run container contract](https://docs.cloud.google.com/run/docs/container-contract),
 [direct Cloud Run IAP](https://docs.cloud.google.com/run/docs/securing/identity-aware-proxy-cloud-run),

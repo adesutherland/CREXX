@@ -1,26 +1,113 @@
-/* Presentation for the independently packaged cited-query application. */
-#app .ui-grid {
-  grid-template-columns: minmax(10rem, 12rem) minmax(0, 1fr);
-  align-items: start;
+/* Application presentation. The cREXX session still owns values and actions. */
+:root { color-scheme: light; }
+body {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(1rem, 4vw, 3.5rem);
+  background: #f3f6f5;
+  color: #172b32;
+  font: 16px/1.55 system-ui, sans-serif;
 }
-
+#app::before {
+  content: "PUBLIC PURPOSE LAB  /  RESEARCH DEMONSTRATOR";
+  display: block;
+  margin-bottom: 1.4rem;
+  color: #305a60;
+  font-size: .72rem;
+  font-weight: 750;
+  letter-spacing: .14em;
+}
+#app > h1 {
+  max-width: 18ch;
+  margin: 0 0 1.5rem;
+  color: #123b46;
+  font-size: clamp(2rem, 5vw, 3.3rem);
+  font-weight: 720;
+  letter-spacing: -.045em;
+  line-height: 1.09;
+}
+#app .ui-grid {
+  display: grid;
+  grid-template-columns: minmax(11rem, 13rem) minmax(0, 1fr);
+  gap: .9rem 1.3rem;
+  align-items: center;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border: 1px solid #d9e5e2;
+  border-radius: 1.15rem;
+  background: #fff;
+  box-shadow: 0 16px 44px #163f4320;
+}
 #app .ui-grid > :is([data-node-id="intro"], [data-node-id="status"],
-  [data-node-id="identity"], [data-node-id="excerpt"],
-  [data-node-id="citation"]) {
+  [data-node-id="identity"], [data-node-id$="-heading"],
+  [data-node-id$="-result"]) {
   grid-column: 1 / -1 !important;
   overflow-wrap: anywhere;
 }
-
-#app .ui-grid > [data-node-id="excerpt"] {
+#app [data-node-id="intro"] {
+  padding-bottom: .8rem;
+  border-bottom: 1px solid #e0eae7;
+  color: #49646a;
+}
+#app [data-node-id="question-label"] { font-weight: 690; }
+#app [data-node-id="question"], #app [data-node-id="hops"] {
+  padding: .85rem 1rem;
+  border: 1px solid #a5bdba;
+  border-radius: .65rem;
+  background: #fbfdfc;
+  color: #172b32;
+}
+#app [data-node-id="question"]:focus-visible,
+#app [data-node-id="hops"]:focus-visible,
+#app button:focus-visible { outline: 3px solid #f2a63d; outline-offset: 2px; }
+#app button {
+  border: 1px solid #0f6467;
+  border-radius: .6rem;
+  background: #0e676a;
+  color: white;
+  font-weight: 650;
+  transition: background .16s ease;
+}
+#app button:hover { background: #084f52; }
+#app [data-node-id="quit"] {
+  border-color: #b9ccca;
+  background: #f2f7f5;
+  color: #24565b;
+}
+#app [data-node-id="status"] {
+  padding: .7rem .9rem;
+  border-radius: .55rem;
+  background: #eaf5f2;
+  color: #175851;
+  font-weight: 650;
+}
+#app [data-node-id="identity"] {
+  color: #5c7377;
+  font-size: .82rem;
+  overflow-wrap: anywhere;
+}
+#app [data-node-id$="-heading"] {
+  margin-top: .5rem;
+  padding: .45rem .8rem;
+  border-bottom: 1px solid #d6e7e2;
+  color: #205b61;
+  font-size: .78rem;
+  font-weight: 750;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+#app [data-node-id$="-result"] {
+  max-height: 28rem;
+  overflow: auto;
+  padding: 1.2rem;
+  border-left: 4px solid #2c8580;
+  border-radius: .25rem .7rem .7rem .25rem;
+  background: #f6faf8;
   white-space: pre-wrap;
-  line-height: 1.45;
+  line-height: 1.6;
 }
-
-#app .ui-grid > [data-node-id="citation"] {
-  font-size: .875rem;
-}
-
-@media (max-width: 600px) {
+#app [data-node-id="embedding-result"] { border-left-color: #607dba; background: #f7f8fc; }
+#app [data-node-id="graph-result"] { border-left-color: #b47a41; background: #fcf9f4; }
+@media (max-width: 650px) {
   #app .ui-grid { grid-template-columns: minmax(0, 1fr); }
   #app .ui-grid > * { grid-column: 1 !important; grid-row: auto !important; }
 }

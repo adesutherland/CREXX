@@ -5,6 +5,18 @@ import {join, resolve} from 'node:path';
 
 const build = resolve(process.argv[2] ?? 'cmake-build-ui');
 const modules = ['ui_web', 'ui_scene', 'ui_contract', 'ui_catalog', 'ui', 'library'];
+const comparisonJson = (generation, excerpt) => JSON.stringify({
+  schema: 'crexx-rag.query-comparison/1', library_id: 'library-test', generation,
+  embedding_profile_id: 'embedding-test', model: 'bge-test', graph_hops: 2,
+  routes: ['keyword', 'embedding', 'graph'].map(route => ({route,
+    candidate_count: 1, passages: [{rank: 1, title: 'Source document',
+      excerpt, source_url: 'https://example.org/source.pdf',
+      citation: 'crexx-rag:library-test:source', span_start: 42, span_end: 59}],
+    ...(route === 'graph' ? {graph: {anchor_count: 1, anchors: ['concept-1'],
+      direction: 'both', claim_count: 1, claims: [{claim_id: 'claim-1', hop: 1,
+        subject: 'Heart failure', relationship: 'treated by', object: 'Therapy',
+        stored_direction: 'forward', path: {claim_ids: ['claim-1']}}]}} : {})})),
+});
 
 async function route(kind) {
   const id = `rag-${kind}`;
@@ -51,15 +63,18 @@ async function route(kind) {
       const effect = (await next()).message;
       assert.equal(effect.name, 'rag.query');
       assert.equal(effect.payload.corpus, 'heart-failure');
-      assert.equal(effect.payload.mode, 'lexical');
-      assert.match(effect.payload.question, /before speaking to a healthcare professional/);
+      assert.equal(effect.payload.mode, 'compare');
+      assert.equal(effect.payload.hops, 2);
+      assert.equal(effect.payload.question, 'heart failure treatment pathway');
       send('complete', view.revision, {message: completion(effect, 'rag.query.completed', {
-        library_id: 'library-test', generation: 2308,
-        citation: 'crexx-rag:library-test:source', excerpt: 'Cited source text',
+        comparison_json: comparisonJson(2308, 'Cited source text'),
       })});
       view = await next();
-      assert.equal(label(view, 'status'), 'Cited passage found');
+      assert.equal(label(view, 'status'), 'Three read-only routes compared');
       assert.match(label(view, 'identity'), /Generation: 2308/);
+      assert.match(label(view, 'keyword-result'), /Cited source text/);
+      assert.match(label(view, 'graph-result'), /https:\/\/example.org/);
+      assert.match(label(view, 'graph-result'), /Heart failure.*hop 1/);
     } else {
       send('value', view.revision, {node: 'question', value: '   '});
       view = await next();
@@ -68,29 +83,40 @@ async function route(kind) {
       view = await next();
       let effect = (await next()).message;
       assert.equal(effect.name, 'rag.query');
-      assert.deepEqual(effect.payload, {corpus: 'tutorial',
-        question: 'What does BillingService depend on?', mode: 'lexical'});
+      assert.deepEqual(effect.payload, {corpus: 'heart-failure',
+        question: 'heart failure treatment pathway', mode: 'compare', hops: 2});
       send('cancel', view.revision, {request_id: effect.request_id});
       view = await next();
       assert.equal(label(view, 'status'), 'Query cancelled');
       send('complete', view.revision, {message: completion(effect, 'rag.query.completed', {
-        library_id: 'stale', generation: 1, citation: 'stale', excerpt: 'stale',
+        comparison_json: comparisonJson(1, 'stale'),
       })});
       assert.equal((await next()).result.code, 'invalid_input');
       send('command', view.revision, {command: 'rag.search'});
       view = await next();
       effect = (await next()).message;
       const success = completion(effect, 'rag.query.completed', {
-        library_id: 'library-test', generation: 2, citation: 'cite:test',
-        excerpt: 'BillingService depends on CustomerDatabase.',
+        comparison_json: comparisonJson(2, 'BillingService depends on CustomerDatabase.'),
       });
       send('complete', view.revision, {message: success});
       view = await next();
-      assert.equal(label(view, 'status'), 'Cited passage found');
-      assert.equal(label(view, 'identity'), 'Library: library-test Generation: 2');
-      assert.equal(label(view, 'citation'), 'cite:test');
+      assert.equal(label(view, 'status'), 'Three read-only routes compared');
+      assert.match(label(view, 'identity'), /Library: library-test · Generation: 2/);
+      assert.match(label(view, 'keyword-result'), /BillingService depends on CustomerDatabase/);
       send('complete', view.revision, {message: success});
       assert.equal((await next()).result.code, 'invalid_input');
+      send('command', view.revision, {command: 'rag.search'});
+      view = await next();
+      effect = (await next()).message;
+      send('value', view.revision, {node: 'hops', value: '3'});
+      view = await next();
+      assert.equal(label(view, 'graph-result'), '');
+      send('complete', view.revision, {message: completion(effect, 'rag.query.completed', {
+        comparison_json: comparisonJson(3, 'old input'),
+      })});
+      view = await next();
+      assert.match(label(view, 'status'), /changed; search again/);
+      assert.equal(label(view, 'keyword-result'), '');
       send('command', view.revision, {command: 'rag.search'});
       view = await next();
       effect = (await next()).message;

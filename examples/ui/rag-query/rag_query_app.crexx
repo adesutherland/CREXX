@@ -2,16 +2,17 @@
 options levelg
 namespace rag_query_app expose make_rag_query_session rag_query_component
 import rxfnsb
+import rxjson
 import ui
 import ui_contract
 
 make_rag_query_session: procedure = .uisession
-  arg id = .string, caps = .uicapabilities, corpus = "tutorial", question = "What does BillingService depend on?"
+  arg id = .string, caps = .uicapabilities, corpus = "heart-failure", question = "heart failure treatment pathway"
   session = .uisession(id, caps)
   rc = session.add_component("root", .rag_query_component(corpus, question))
   rc = session.register_event("rag.search.requested")
-  rc = session.register_event("rag.query.completed", '{"library_id":{"type":"string","required":true,"maxLength":128},"generation":{"type":"integer","required":true,"minimum":0},"citation":{"type":"string","required":true,"maxLength":512},"excerpt":{"type":"string","required":true,"maxLength":2048}}', "completion")
-  rc = session.register_effect("rag.query", "rag.query", '{"corpus":{"type":"string","required":true,"maxLength":64},"question":{"type":"string","required":true,"maxLength":256},"mode":{"type":"string","required":true,"enum":["lexical"]}}', "rag.query.completed")
+  rc = session.register_event("rag.query.completed", '{"comparison_json":{"type":"string","required":true,"maxLength":16384}}', "completion")
+  rc = session.register_effect("rag.query", "rag.query", '{"corpus":{"type":"string","required":true,"maxLength":64},"question":{"type":"string","required":true,"maxLength":256},"mode":{"type":"string","required":true,"enum":["compare"]},"hops":{"type":"integer","required":true,"minimum":0,"maximum":4}}', "rag.query.completed")
   rc = session.register_command(.uicommand("rag.search", "Search", "root", "rag.search.requested", ""))
   rc = session.register_command(.uicommand("rag.quit", "Quit", "root", "ui.close.requested", ""))
   return session
@@ -20,28 +21,37 @@ rag_query_component: class implements .uicomponent
   _corpus = .string
   _question = .string
   _status = .string
+  _hops = .int
   _library = .string
   _generation = .int
-  _citation = .string
-  _excerpt = .string
+  _model = .string
+  _keyword = .string
+  _embedding = .string
+  _graph = .string
   _pending = .int
+  _input_revision = .int
+  _request_revision = .int
 
   *: factory
     arg corpus = .string, question = .string
     _corpus = corpus
     _question = question
-    _status = "Ready: read-only lexical evidence"
+    _status = "Ready to compare three read-only routes"
+    _hops = 2
     _library = ""
     _generation = 0
-    _citation = ""
-    _excerpt = ""
+    _model = ""
+    _keyword = ""; _embedding = ""; _graph = ""
     _pending = 0
+    _input_revision = 0
+    _request_revision = 0
     return
 
   update: method = .uieffects
     arg event = .uimessage
     effects = .uieffects()
     name = event.name()
+    candidate = ""
     if name = "widget.value.committed" then do
       if event.body().text("node") = "question" then do
         candidate = strip(event.body().text("value"))
@@ -49,7 +59,21 @@ rag_query_component: class implements .uicomponent
           _status = "Enter a question of 1 to 256 characters."
         else do
           _question = candidate
-          _status = "Ready: read-only lexical evidence"
+          _input_revision = _input_revision + 1
+          _status = "Ready to compare three read-only routes"
+          _library = ""; _generation = 0; _model = ""
+          _keyword = ""; _embedding = ""; _graph = ""
+        end
+      end
+      else if event.body().text("node") = "hops" then do
+        candidate = strip(event.body().text("value"))
+        if length(candidate) \= 1 | pos(candidate, "01234") = 0 then _status = "Graph generations must be 0 to 4."
+        else do
+          _hops = candidate as .int
+          _input_revision = _input_revision + 1
+          _status = "Ready to compare three read-only routes"
+          _library = ""; _generation = 0; _model = ""
+          _keyword = ""; _embedding = ""; _graph = ""
         end
       end
     end
@@ -59,22 +83,69 @@ rag_query_component: class implements .uicomponent
         body = .uipayload()
         call body.put_text("corpus", _corpus)
         call body.put_text("question", _question)
-        call body.put_text("mode", "lexical")
+        call body.put_text("mode", "compare")
+        call body.put_integer("hops", _hops)
         call effects.add(.uimessage("rag.query", body, event.target(), "effect"))
         _pending = 1
-        _status = "Searching cited evidence"
-        _citation = ""
-        _excerpt = ""
+        _request_revision = _input_revision
+        _status = "Comparing keyword, embedding and graph evidence"
+        _keyword = ""; _embedding = ""; _graph = ""
       end
     end
     else if name = "rag.query.completed" then do
       _pending = 0
-      _library = event.body().text("library_id")
-      _generation = event.body().integer("generation")
-      _citation = event.body().text("citation")
-      _excerpt = event.body().text("excerpt")
-      if _citation = "" then _status = "No cited passage found"
-      else _status = "Cited passage found"
+      if _request_revision \= _input_revision then do
+        _status = "Question or graph generations changed; search again."
+        return effects
+      end
+      comparison = .jsondocument(event.body().text("comparison_json"))
+      if comparison.valid() \= 1 then _status = "Comparison response was invalid"
+      else do
+        root = comparison.root(); routes = comparison.member(root, "routes")
+        ignored = comparison.node_string(comparison.member(root, "library_id"), _library)
+        ignored = comparison.node_int(comparison.member(root, "generation"), _generation)
+        ignored = comparison.node_string(comparison.member(root, "model"), _model)
+        _keyword = "No cited passage"; _embedding = "No cited passage"; _graph = "No graph anchor or cited passage"
+        do i = 1 to comparison.node_count(routes)
+          route = comparison.element(routes, i); name = ""
+          ignored = comparison.node_string(comparison.member(route, "route"), name)
+          passages = comparison.member(route, "passages")
+          graph_summary = ""
+          if name = "graph" then do
+            graph = comparison.member(route, "graph")
+            anchors = 0; direction = ""
+            ignored = comparison.node_int(comparison.member(graph, "anchor_count"), anchors)
+            ignored = comparison.node_string(comparison.member(graph, "direction"), direction)
+            graph_summary = "Anchors: " || anchors || " · traversal: " || direction
+            claims = comparison.member(graph, "claims")
+            if comparison.node_count(claims) > 0 then do
+              claim = comparison.element(claims, 1)
+              hop = 0; subject = ""; relationship = ""; object = ""
+              ignored = comparison.node_int(comparison.member(claim, "hop"), hop)
+              ignored = comparison.node_string(comparison.member(claim, "subject"), subject)
+              ignored = comparison.node_string(comparison.member(claim, "relationship"), relationship)
+              ignored = comparison.node_string(comparison.member(claim, "object"), object)
+              graph_summary = graph_summary || '0A'x || "Reached claim: " || subject || " —" || relationship || "→ " || object || " (hop " || hop || ")"
+            end
+            _graph = graph_summary || '0A'x || "No cited passage"
+          end
+          if comparison.node_count(passages) > 0 then do
+            passage = comparison.element(passages, 1)
+            title = ""; excerpt = ""; citation = ""; url = ""; first = 0; last = 0
+            ignored = comparison.node_string(comparison.member(passage, "title"), title)
+            ignored = comparison.node_string(comparison.member(passage, "excerpt"), excerpt)
+            ignored = comparison.node_string(comparison.member(passage, "citation"), citation)
+            ignored = comparison.node_string(comparison.member(passage, "source_url"), url)
+            ignored = comparison.node_int(comparison.member(passage, "span_start"), first)
+            ignored = comparison.node_int(comparison.member(passage, "span_end"), last)
+            summary = title || '0A'x || excerpt || '0A'x || url || '0A'x || "Captured UTF-8 bytes " || first || "–" || last || '0A'x || citation
+            if name = "keyword" then _keyword = summary
+            else if name = "embedding" then _embedding = summary
+            else if name = "graph" then _graph = graph_summary || '0A'x || "Top cited passage:" || '0A'x || summary
+          end
+        end
+        _status = "Three read-only routes compared"
+      end
     end
     else if name = "ui.effect.failed" then do
       _pending = 0
@@ -89,14 +160,20 @@ rag_query_component: class implements .uicomponent
     return effects
 
   view: method = .uiview
-    result = .uiview_impl("Cited RAG query")
-    call result.add_label("intro", "Read-only source evidence from " || _corpus || "; no answer generation", "root")
+    result = .uiview_impl("Explore the heart failure corpus")
+    call result.add_label("intro", "Compare the same corpus using words, semantic similarity and graph connections. Sources are research evidence, not clinical advice.", "root")
     call result.add_label("question-label", "Question")
     call result.add_input("question", _question, "right", "question-label")
+    call result.add_label("hops-label", "Graph generations (0–4)", "below", "question-label")
+    call result.add_input("hops", _hops as .string, "right", "hops-label")
     call result.add_button("search", "Search", "rag.search", "", "below", "question-label")
     call result.add_label("status", _status, "below", "search")
-    call result.add_label("identity", "Library: " || _library || " Generation: " || _generation)
-    call result.add_label("excerpt", _excerpt)
-    call result.add_label("citation", _citation)
+    call result.add_label("identity", "Library: " || _library || " · Generation: " || _generation || " · Embedding model: " || _model)
+    call result.add_label("keyword-heading", "01  Keyword")
+    call result.add_label("keyword-result", _keyword)
+    call result.add_label("embedding-heading", "02  Embedding")
+    call result.add_label("embedding-result", _embedding)
+    call result.add_label("graph-heading", "03  Graph · " || _hops || " generations")
+    call result.add_label("graph-result", _graph)
     call result.add_button("quit", "Quit", "rag.quit", "")
     return result

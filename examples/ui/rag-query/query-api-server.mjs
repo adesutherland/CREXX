@@ -58,6 +58,7 @@ const server = createServer(async (request, response) => {
       try {
         const result = await run({name: 'rag.query', payload: {
           corpus: input.corpus, question: input.question, mode: input.mode,
+          hops: input.hops,
         }}, {signal: controller.signal});
         if (result.name !== 'rag.query.completed')
           throw new Error('Unexpected query result');

@@ -42,56 +42,61 @@ reports the same application-visible failure and retains the editing controls.
 The models and schemas remain in the application modules; the browser routes
 deliver effects to the declared executor or hosted service.
 
-The `?app=rag_demo&hosted=1` route is a STEP08 read-only lexical consumer.
-Its package declares a server-only `rag.query` service; the generic relay
-handles correlation and cancellation while the application service runs
-`crexxrag query inspect` with explicit read access. Configure a pre-ingested
-synthetic RAG tutorial library before starting the relay:
+The `?app=rag_demo&hosted=1` route is a STEP08 three-route comparison
+consumer. Its package declares an application-owned `rag.query` service; the
+generic relay handles correlation and cancellation while the service runs
+`crexxrag query compare` with read access. A compatible local embedding model
+and vector sidecar are required. For a pre-ingested RAG library, set:
 
 ~~~sh
-CREXX_UI_RAG_CORPUS=tutorial \
+CREXX_UI_RAG_CORPUS=heart-failure \
 CREXX_UI_RAG_BINARY=/absolute/path/to/crexxrag \
-CREXX_UI_RAG_LIBRARY=/absolute/path/to/tutorial/library \
-CREXX_UI_RAG_CONFIG=/absolute/path/to/tutorial/crexxrag.conf \
+CREXX_UI_RAG_LIBRARY=/absolute/path/to/serving-snapshot \
+CREXX_UI_RAG_CONFIG=/absolute/path/to/compatible/crexxrag.conf \
 CREXX_UI_TOKEN=your-private-token-at-least-16-characters \
 CREXX_UI_BUILD="$PWD/cmake-build-ui" \
   node cmake-build-ui-web-site/hosted-server.mjs
 ~~~
 
-The `?app=rag_demo` local Wasm route uses an application-owned HTTP executor.
-It calls the same read-only adapter through a stateless, same-origin query API;
-no browser database access or query logic is in the shared UI host. For the
-approved internal heart-failure demonstrator, serve the packaged site and API
+The `?app=rag_demo` Wasm UI route currently uses an application-owned HTTP
+executor. It calls the same read-only RAG operation through a stateless,
+same-origin query API; browser-local RAG execution remains an open STEP08
+gate. For the approved heart-failure corpus, first run RAG's
+`library serving-export --output PATH` with admin access. This produces a
+redacted serving snapshot with the corpus, schema-required generation metadata
+and aligned sidecar; supply a compatible
+BGE model through the chosen config. Then serve the packaged site and API
 together on loopback:
 
 ~~~sh
 CREXX_UI_PORT=8788 \
 CREXX_UI_RAG_CORPUS=heart-failure \
 CREXX_UI_RAG_BINARY=/absolute/path/to/crexxrag \
-CREXX_UI_RAG_LIBRARY=/absolute/path/to/heart-failure/library \
-CREXX_UI_RAG_CONFIG=/absolute/path/to/heart-failure/crexxrag.conf \
+CREXX_UI_RAG_LIBRARY=/absolute/path/to/serving-snapshot \
+CREXX_UI_RAG_CONFIG=/absolute/path/to/compatible/crexxrag.conf \
   node examples/ui/rag-query/query-api-server.mjs cmake-build-ui-web-site
 ~~~
 
-Open `http://127.0.0.1:8788/?app=rag_demo`. The adapter returns one bounded
-cited excerpt with library and generation identity; it runs without provider
-credentials and rejects a provider call or query-gap write. The API refuses
+Open `http://127.0.0.1:8788/?app=rag_demo`. The adapter returns independently
+ranked keyword, embedding and graph excerpts with library/generation/model
+identity, source URL, citation ID and captured UTF-8 span. The graph control
+accepts 0–4 generations. It uses the configured local embedding model without
+provider credentials or durable provider receipts; the result reports one
+local embedding call and zero query-gap writes. The API refuses
 foreign origins and does not serve the corpus or server-side service module.
-The browser default question demonstrates a source lookup, not answer quality
-or clinical use. Use the [cREXX-RAG tutorial](https://github.com/adesutherland/crexx-rag/blob/main/docs/tutorial/README.md)
-for a synthetic corpus. An internal deployment needs its usual authenticated
-reverse proxy and TLS; this loopback process is only a development proof.
+The default question demonstrates route differences, not answer quality or
+clinical use. An internal deployment needs authenticated access and TLS; this
+loopback process is only a development proof.
 A user of an internal deployment needs only a browser. The question input,
-Search button, cited excerpt and library/generation text are ordinary HTML
+graph generation field, Search button, cited excerpts and source positions are ordinary HTML
 controls and text, so an agent with browser control can use the same page.
 This does not automatically grant Codex, Claude or Gemini browser access: each
 agent host must have its own browser tool and permission to reach the URL.
-For direct machine access, cREXX-RAG already has a read-only MCP/CLI query
-surface; a cREXX HTTP reader binding under the same application service
-contract is the next STEP08 server increment. The current Node adapter is a
-loopback proof. Browser-local SQLite/vector lookup has been proved separately
-in one browser profile, but its packaged executor, compatible embeddings and
-wider retrieval comparisons remain STEP08 work.
+For direct machine access, cREXX-RAG also exposes the `query.compare` CLI/MCP
+operation. A cREXX HTTP reader binding, static browser-local reader, pinned
+model/profile configuration for relocation, protected Google deployment and
+delivery qualification remain
+STEP08 work. The current Node adapter is a loopback proof.
 
 ## Application packages
 
