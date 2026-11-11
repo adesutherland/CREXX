@@ -49,6 +49,25 @@ assert.throws(() => validateAnswer({...answer, question: 'Another question'}, ef
 assert.throws(() => validateAnswer({...answer, usage: {provider_calls: -1}}, effect.payload));
 assert.throws(() => validateSource({...context, original_url: '//evil.example/file'}, source.citation));
 assert.throws(() => validateSource({...context, context_end: 21}, source.citation));
+const refusedEffect = {...effect, request_id: 'scope-refusal/1', payload: {...effect.payload,
+  question: 'What is the weather in London today?'}};
+const refusedEvents = [];
+globalThis.fetch = async (path, options) => {
+  const input = JSON.parse(options.body);
+  if (path.endsWith('/prepare')) return Response.json({...prepared, request_id: input.request_id,
+    question: input.question, status: 'scope_refused',
+    activities: [{stage: 'scope', message: 'External question refused before provider work'}],
+    research: {searches: [], reads: []},
+    usage: {provider_calls: 0, input_tokens: 0, output_tokens: 0, cost_microunits: 0}});
+  return Response.json({...answer, request_id: input.request_id, question: input.question,
+    status: 'scope_refused', answer: 'This reader answers corpus questions only.', sources: [],
+    activities: [{stage: 'scope', message: 'External question refused before provider work'}],
+    usage: {provider_calls: 0, input_tokens: 0, output_tokens: 0, cost_microunits: 0}});
+};
+await handler(refusedEffect, async (_request, name, payload) => refusedEvents.push({name, payload}));
+assert.equal(refusedEvents.some(item => item.name === 'ui.effect.progress' &&
+  JSON.parse(item.payload.message).id === 'model'), false, 'Zero-call refusal has no model review stage');
+assert.equal(JSON.parse(refusedEvents.at(-1).payload.answer_json).workflow_usage.provider_calls, 0);
 completed.length = 0;
 let paidCalls = 0;
 globalThis.fetch = async (path, options) => {

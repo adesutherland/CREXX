@@ -44,6 +44,7 @@ reader's bounded explanation when one is available. Progress messages describe a
 work or an explicit wait, never simulated percentages. Answer Markdown is
 rendered as semantic headings, lists and emphasis without interpreting HTML;
 validated citation buttons remain active.
+An off-topic refusal shows zero provider calls and no model-review stage.
 The previous completed answer remains available during another request and
 following cancellation or failure. Editing a submitted question prevents its
 late result from replacing the current answer.

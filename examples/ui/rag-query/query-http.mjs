@@ -152,8 +152,8 @@ export function ragQueryHttp() {
             input: String(input).slice(0, 1024),
             output: output.slice(0, 1800)});
         };
-        await progress({id: 'scope', state: 'waiting', title: 'Scope and search plan',
-          summary: `Waiting for ${model} to assess this question and plan corpus searches`,
+        await progress({id: 'scope', state: 'busy', title: 'Scope and search plan',
+          summary: 'Checking corpus scope and planning searches if evidence is available',
           input: effect.payload.question, output: 'No result yet.'});
         const prepared = await post('/api/rag/v1/answer/prepare', effect.payload);
         if (prepared.schema !== 'crexx-rag.answer-preparation/1' ||
@@ -174,7 +174,7 @@ export function ragQueryHttp() {
         if (prepared.status === 'ready') await progress({id: 'scope', state: 'done', title: 'Scope and search plan',
           summary: 'Question accepted; bounded follow-up searches and reads selected',
           input: effect.payload.question,
-          output: `Follow-up searches: ${research.searches.length ? research.searches.join('; ') : 'none'}\nCaptured reads: ${research.reads.length ? research.reads.join('; ') : 'none'}`});
+          output: `Follow-up searches: ${research.searches.length ? research.searches.join('; ') : 'none'}\nCaptured reads: ${research.reads.length ? research.reads.join('; ') : 'none'}\nPreparation model calls: ${prepared.usage.provider_calls}`});
         if (prepared.status === 'ready') {
           for (const [index, citation] of research.reads.entries()) {
             const id = `read-${index + 1}`;
@@ -189,7 +189,7 @@ export function ragQueryHttp() {
               summary: `Read ${source.title}`, input: citation, output: source.excerpt.slice(0, 1800)});
           }
         }
-        await progress({id: 'model', state: 'waiting', title: 'Model evidence review',
+        if (prepared.status === 'ready') await progress({id: 'model', state: 'waiting', title: 'Model evidence review',
           summary: `Waiting for ${model} to review evidence and draft a cited answer`,
           input: `Question: ${effect.payload.question}\nCorpus: ${effect.payload.corpus}`, output: 'No result yet.'});
         const final = await post('/api/rag/v1/answer', {...effect.payload, prepared: {
@@ -206,7 +206,7 @@ export function ragQueryHttp() {
           cost_microunits: prepared.usage.cost_microunits + answer.usage.cost_microunits,
         };
         answer.workflow_usage.cost_usd = `$${(answer.workflow_usage.cost_microunits / 1000000).toFixed(6)}`;
-        await progress({id: 'model', state: 'done', title: 'Model evidence review',
+        if (prepared.status === 'ready') await progress({id: 'model', state: 'done', title: 'Model evidence review',
           summary: `${answer.model} returned a draft for citation checks`,
           input: `Question: ${effect.payload.question}\nCorpus: ${effect.payload.corpus}`,
           output: `Status: ${answer.status}\nSources cited: ${answer.sources.length}`});

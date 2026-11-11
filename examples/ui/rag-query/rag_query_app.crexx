@@ -214,8 +214,8 @@ rag_query_component: class implements .uicomponent
         _answer_pending = 1
         _answer_request = ""
         _answer_request_revision = _answer_input_revision
-        _answer_status = "Checking corpus scope and planning evidence with " || model_label(_model_profile) || "."
-        _answer_tone = "waiting"
+        _answer_status = "Checking corpus scope and planning evidence."
+        _answer_tone = "busy"
         call arraydrop _stages
         _stage_count = 0
         _expanded_stage = 0
@@ -557,11 +557,6 @@ selected_label: procedure = .string
   arg selected = .int
   if selected then return " · selected"
   return ""
-
-model_label: procedure = .string
-  arg profile = .string
-  if profile = "fast" then return "GPT-6 Luna"
-  return "GPT-6.1 Sol"
 
 stage_document: procedure = .string
   arg input = .string, output = .string
