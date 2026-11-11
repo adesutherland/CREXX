@@ -535,7 +535,7 @@ rag_query_component: class implements .uicomponent
     ignored = result.set_properties("drawer-toggle", '{"expanded":' || booljson(_drawer_open) || ',"controls":"live-drawer"}')
     if _drawer_open then do
       call result.add_group("live-drawer", "How this answer was built")
-      call result.add_label("stage-intro", "Each stage shows what was sent and what came back. Open a stage to inspect its public input and output.")
+      call result.add_label("stage-intro", "Stages show public summaries. The model stage lists exact previews from the initial captured passage text sent to OpenAI; open a source for its wider context.")
       ignored = result.set_properties("stage-intro", '{"parent":"live-drawer"}')
       if _stage_count = 0 then do
         call result.add_label("stage-empty", "Ask a question to see the research stages.")

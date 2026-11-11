@@ -47,6 +47,12 @@ reader's bounded explanation when one is available. Progress messages describe a
 work or an explicit wait, never simulated percentages. Answer Markdown is
 rendered as semantic headings, lists and emphasis without interpreting HTML;
 validated citation buttons remain active.
+One pointer click on Ask commits a draft question and submits it. The model
+stage shows bounded exact previews and byte counts from the server's
+`initial_model_context` receipt; a completed captured-source read says whether
+the selected passage reached the initial model context. The preview is the
+first 400 characters of a selected read (120 for other passages), not the
+model's private reasoning.
 An off-topic refusal shows zero provider calls and no model-review stage.
 The previous completed answer remains available during another request and
 following cancellation or failure. Editing a submitted question prevents its
@@ -61,6 +67,10 @@ sources, corpus/snapshot and provider/model identity, and one of `answered`,
 `insufficient_evidence` or `scope_refused`. Sources retain their title, excerpt,
 canonical citation, safe source URL and UTF-8 span. The RAG server owns retrieval,
 scope policy, generation and final citation validation.
+The answer response also includes a bounded `initial_model_context` receipt
+derived from the passages sent to the first answer model turn. The adapter
+rejects a response that omits an explicitly selected citation from that
+receipt.
 The same-origin adapter validates and adds `workflow_usage` from the separate
 preparation and final response usage; the underlying server responses retain
 their per-request `usage` fields.

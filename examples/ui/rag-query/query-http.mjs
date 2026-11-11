@@ -37,6 +37,17 @@ export function validateAnswer(value, request) {
   }
   if (value.status === 'answered' && !value.sources.length)
     throw new Error('Uncited answer refused');
+  const context = value.initial_model_context;
+  if (!context || context.schema !== 'crexx-rag.initial-model-context/1' ||
+      !Number.isSafeInteger(context.passage_count) || context.passage_count < 0 || context.passage_count > 28 ||
+      !Array.isArray(context.passages) || context.passages.length !== context.passage_count ||
+      context.passages.some(passage => !passage || !/^E[1-9][0-9]*$/.test(passage.reference) ||
+        typeof passage.citation !== 'string' || passage.citation.length > 512 ||
+        !passage.citation.startsWith(`crexx-rag:${value.library_id}:`) ||
+        typeof passage.title !== 'string' || passage.title.length > 256 ||
+        !Number.isSafeInteger(passage.text_bytes) || passage.text_bytes < 1 || passage.text_bytes > 24576 ||
+        typeof passage.preview !== 'string' || !passage.preview || passage.preview.length > 400))
+    throw new Error('Invalid initial model context receipt');
   if (JSON.stringify(value).length > 49152) throw new Error('Answer exceeds limit');
   return value;
 }
@@ -131,8 +142,9 @@ export function ragQueryHttp() {
           throw new Error('Invalid answer model profile');
         const model = {economy: 'GPT-6 Luna', standard: 'GPT-6.1 Terra', advanced: 'GPT-6.1 Sol'}[effect.payload.model_profile];
         const seen = new Set();
+        const contextByCitation = new Map();
         const publicActivity = async (activity, phase) => {
-          const output = activityText(activity);
+          let output = activityText(activity);
           if (!output || seen.has(output)) return;
           seen.add(output);
           let id = `${phase}-${seen.size}`;
@@ -145,6 +157,9 @@ export function ragQueryHttp() {
           else if (activity.stage === 'read') title = 'Captured source read';
           else if (activity.stage === 'answer') { id = 'answer'; title = 'Answer and citation checks'; }
           else if (activity.stage === 'validation') title = 'Evidence validation';
+          const citation = activity.stage === 'read' ? activity.sources?.[0]?.citation : '';
+          const included = contextByCitation.get(citation);
+          if (included) output = `Included in the initial model context (${included.text_bytes} UTF-8 bytes). Exact text preview:\n${included.preview}`;
           const input = activity.stage === 'scope' ? effect.payload.question :
             activity.stage === 'search' ? (activity.message.includes(': ') ? activity.message.split(': ').slice(1).join(': ') : effect.payload.question) :
               activity.stage === 'read' ? (activity.sources?.[0]?.citation ?? 'Selected corpus citation') : 'Selected corpus evidence';
@@ -199,6 +214,10 @@ export function ragQueryHttp() {
         const answer = validateAnswer(final.answer_json ? JSON.parse(final.answer_json) : final, effect.payload);
         if (answer.library_id !== prepared.library_id || answer.generation !== prepared.generation)
           throw new Error('Answer snapshot changed during preparation');
+        for (const passage of answer.initial_model_context.passages)
+          contextByCitation.set(passage.citation, passage);
+        if (prepared.status === 'ready' && research.reads.some(citation => !contextByCitation.has(citation)))
+          throw new Error('A selected source was omitted from the initial model context');
         answer.workflow_usage = {
           provider_calls: prepared.usage.provider_calls + answer.usage.provider_calls,
           input_tokens: prepared.usage.input_tokens + answer.usage.input_tokens,
@@ -208,7 +227,9 @@ export function ragQueryHttp() {
         answer.workflow_usage.cost_usd = `$${(answer.workflow_usage.cost_microunits / 1000000).toFixed(6)}`;
         if (prepared.status === 'ready') await progress({id: 'model', state: 'done', title: 'Model evidence review',
           summary: `${answer.model} returned a draft for citation checks`,
-          input: `Question: ${effect.payload.question}\nCorpus: ${effect.payload.corpus}`,
+          input: (`Question: ${effect.payload.question}\nInitial model context: ${answer.initial_model_context.passage_count} captured passages. Exact previews:\n` +
+            answer.initial_model_context.passages.map(passage =>
+              `${passage.reference} · ${passage.title} · ${passage.text_bytes} UTF-8 bytes\n${passage.preview}`).join('\n\n')).slice(0, 5000),
           output: `Status: ${answer.status}\nSources cited: ${answer.sources.length}`});
         for (const activity of (Array.isArray(answer.activities) ? answer.activities.slice(0, 16) : []))
           await publicActivity(activity, 'answer');

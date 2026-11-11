@@ -204,6 +204,16 @@ profile forwarding through prepare/final, and a protected candidate before
 promotion. The price ratios are 0.1:1:2 at equal uncached input/output tokens;
 measured answer quality and actual token use remain open.
 
+STEP09 reader feedback increment (11 November, done for the protected pilot):
+make one pointer click submit a
+fresh textarea draft, including when blur commits the value; retain keyboard
+activation and exactly-once paid effects. In the protected research view,
+distinguish an activity summary from model input and show a bounded receipt of
+the actual captured passages included in the initial OpenAI context. A selected
+source that cannot fit must be reported before answer generation, rather than
+appearing as a title-only successful read. Check a rapid first click, selected
+passage text and receipt correspondence, limits and the signed-in browser flow.
+
 ## Architecture details
 
 ### Existing UI and RXPP baseline

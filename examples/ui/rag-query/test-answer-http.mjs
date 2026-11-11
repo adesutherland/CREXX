@@ -8,6 +8,11 @@ const source = {title: 'Source title', excerpt: 'Captured supporting text.',
 const answer = {schema: 'crexx-rag.answer/1', version: 1, request_id: effect.request_id,
   library_id: 'test-library', generation: 7, provider: 'fixture', model: 'fixture', question,
   status: 'answered', answer: 'A supported finding with its evidence listed separately.', sources: [source],
+  initial_model_context: {schema: 'crexx-rag.initial-model-context/1', passage_count: 1,
+    passages: [{reference: 'E1', citation: source.citation, title: source.title,
+      text_bytes: 25, preview: source.excerpt}]},
+  activities: [{stage: 'read', message: 'Captured source passage read: Source title',
+    route: 'source', candidate_count: 1, sources: [source]}],
   usage: {provider_calls: 2, input_tokens: 2100, output_tokens: 400, cost_microunits: 620}};
 const context = {schema: 'crexx-rag.source-context/1', version: 1, library_id: 'test-library', generation: 7,
   ...source, context_text: 'Wider source context with supporting text.', context_start: 0, context_end: 60,
@@ -34,6 +39,8 @@ assert.deepEqual(calls.map(call => call.path), ['/api/rag/v1/answer/prepare', '/
 assert.ok(completed.filter(item => item.name === 'ui.effect.progress').length >= 5);
 assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
   JSON.parse(item.payload.message).summary === 'Read Source title'));
+assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
+  JSON.parse(item.payload.message).output.includes('Included in the initial model context')));
 assert.equal(calls[0].input.model_profile, 'standard');
 assert.equal(calls[2].input.model_profile, 'standard');
 assert.equal(completed.at(-1).name, 'rag.answer.completed');
@@ -46,6 +53,7 @@ assert.throws(() => validateAnswer({...answer, answer: 'Unknown reference [2].'}
 assert.throws(() => validateAnswer({...answer, sources: []}, effect.payload));
 assert.throws(() => validateAnswer({...answer, sources: [{...source, source_url: 'file:///private/document'}]}, effect.payload));
 assert.throws(() => validateAnswer({...answer, question: 'Another question'}, effect.payload));
+assert.throws(() => validateAnswer({...answer, initial_model_context: {schema: 'crexx-rag.initial-model-context/1', passage_count: 1, passages: []}}, effect.payload));
 assert.throws(() => validateAnswer({...answer, usage: {provider_calls: -1}}, effect.payload));
 assert.throws(() => validateSource({...context, original_url: '//evil.example/file'}, source.citation));
 assert.throws(() => validateSource({...context, context_end: 21}, source.citation));

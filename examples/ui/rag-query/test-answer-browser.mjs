@@ -31,6 +31,11 @@ try {
       result = {...base, schema: 'crexx-rag.answer/1', status: 'answered', question: input.question,
         provider: 'fixture', model: {economy: 'gpt-6-luna', standard: 'gpt-6.1-terra', advanced: 'gpt-6.1-sol'}[input.model_profile],
         answer: '## Findings\n**A supported statement [1]**.\n- <script>literal text</script>', sources: [source],
+        initial_model_context: {schema: 'crexx-rag.initial-model-context/1', passage_count: 1,
+          passages: [{reference: 'E1', citation: source.citation, title: source.title,
+            text_bytes: 29, preview: 'Captured supporting evidence.'}]},
+        activities: [{stage: 'read', message: 'Captured source passage read: Fixture research source',
+          route: 'source', candidate_count: 1, sources: [source]}],
         usage: {provider_calls: 3, input_tokens: 2810, output_tokens: 412, cost_microunits: 487}};
     } else if (path.endsWith('/query')) result = {version: 1, request_id: input.request_id,
       comparison_json: JSON.stringify({schema: 'crexx-rag.query-comparison/1', library_id: 'fixture', generation: 7,
@@ -48,7 +53,12 @@ try {
   const composer = page.getByRole('textbox', {name: 'Your question', exact: true});
   await composer.waitFor({timeout: 30000});
   await composer.fill(question);
-  await page.locator('[data-node-id="ask"]').click();
+  const askBounds = await page.locator('[data-node-id="ask"]').boundingBox();
+  assert.ok(askBounds);
+  await page.mouse.move(askBounds.x + askBounds.width / 2, askBounds.y + askBounds.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(150); // Let a blur value commit replace the view before mouseup.
+  await page.mouse.up();
   await page.locator('[data-node-id="stop"]').waitFor();
   assert.equal(await page.locator('[data-node-id="model-economy"]').isDisabled(), true);
   await page.locator('[data-node-id="stage-3"]').waitFor();
@@ -59,6 +69,10 @@ try {
   releaseFinal();
   await page.locator('[data-node-id="answer"] strong').getByText('A supported statement').waitFor();
   assert.equal(finalCount, 1);
+  await page.locator('[data-node-id="stage-4"]').click();
+  await page.locator('[data-node-id="stage-detail"]').getByText('Captured supporting evidence.', {exact: false}).waitFor();
+  await page.locator('[data-node-id="stage-5"]').click();
+  await page.locator('[data-node-id="stage-detail"]').getByText('Included in the initial model context', {exact: false}).waitFor();
   assert.ok((await page.locator('[data-node-id="answer"]').innerText()).length < 256,
     'Short answers must not be padded to the document limit');
   assert.equal(await page.locator('[data-node-id="answer-status"]').getAttribute('data-tone'), 'answer');
@@ -91,7 +105,8 @@ try {
   await page.locator('[data-node-id="drawer-toggle"]').click();
   assert.equal(await composer.inputValue(), question);
   finalGate = new Promise(resolve => { releaseFinal = resolve; });
-  await page.locator('[data-node-id="ask"]').click();
+  await page.locator('[data-node-id="ask"]').focus();
+  await page.locator('[data-node-id="ask"]').press('Enter');
   await page.locator('[data-node-id="stop"]').waitFor();
   await page.locator('[data-node-id="stop"]').click();
   await page.locator('[data-node-id="answer-status"]').getByText('cancelled', {exact: false}).waitFor();
@@ -99,5 +114,5 @@ try {
   assert.match(await page.locator('[data-node-id="answer"]').innerText(), /supported statement/);
   await page.locator('[data-node-id="quit"]').click();
   await page.waitForFunction(() => document.querySelector('#app').children.length === 0);
-  console.log('PASS: multiline submit, actual activity, safe citations, source context, independent search, mobile layout and Stop');
+  console.log('PASS: pointer and keyboard Ask, multiline submit, actual activity, safe citations, source context, independent search, mobile layout and Stop');
 } finally { releaseFinal?.(); await page.close(); await browser.close(); }

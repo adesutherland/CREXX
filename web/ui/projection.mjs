@@ -323,6 +323,15 @@ export class BrowserUI {
         element.type = 'button';
         element.textContent = node.text;
         element.disabled = props.disabled ?? false;
+        /* A pointer press on a button must not blur a dirty editor before the
+         * click: the resulting value view can replace the pressed button. The
+         * click handler commits the draft before sending its command. */
+        element.addEventListener('pointerdown', event => {
+          const active = document.activeElement;
+          if (event.button === 0 && active && this.root.contains(active) &&
+              active.matches('input,textarea') && this.drafts.has(active.dataset.nodeId))
+            event.preventDefault();
+        });
         element.addEventListener('click', () => void (props.cancel ? this.cancelEffect(props.cancel) :
           this.activate(node.action)));
       } else if (['input', 'textarea'].includes(node.kind)) {
