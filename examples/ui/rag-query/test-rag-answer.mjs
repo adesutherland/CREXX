@@ -96,6 +96,16 @@ try {
   assert.match(node(view, 'answer').value, /bounded statement/);
   send('command', view.revision - 1, {command: 'rag.ask', input_id: 'stale-command'}); view = await next();
   assert.equal(view.input_id, 'stale-command'); assert.equal(view.accepted, 0);
+  send('command', view.revision, {command: 'rag.ask'}); view = await next();
+  const failed = (await next()).message;
+  const failureStage = {schema: 'rag-ui.stage/1', id: 'error', state: 'error', title: 'Request failed',
+    summary: 'The answer service could not complete this request', input: 'A different question', output: 'RAG HTTP 503'};
+  send('complete', view.revision, {message: outcome(failed, 'ui.effect.progress', {completed: 1, message: JSON.stringify(failureStage)})});
+  view = await next();
+  assert.match(node(view, 'stage-1').text, /Request failed/);
+  send('complete', view.revision, {message: outcome(failed, 'ui.effect.failed', {code: 'service_failed', message: 'Answer service unavailable'})});
+  view = await next();
+  assert.match(node(view, 'answer-status').properties, /"tone":"error"/);
   send('command', view.revision, {command: 'rag.quit'});
   assert.equal((await next()).type, 'closed'); child.stdin.end();
   assert.equal(await new Promise(resolveExit => child.on('exit', resolveExit)), 0, diagnostics);
