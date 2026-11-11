@@ -28,7 +28,9 @@ try {
     else if (path.endsWith('/answer')) {
       finalCount++; await finalGate;
       result = {...base, schema: 'crexx-rag.answer/1', status: 'answered', question: input.question,
-        provider: 'fixture', model: 'fixture', answer: '<script>literal text</script> A supported statement with evidence listed separately.', sources: [source]};
+        provider: 'fixture', model: input.model_profile === 'fast' ? 'gpt-6-luna' : 'gpt-6.1-sol',
+        answer: '## Findings\n**A supported statement [1]**.\n- <script>literal text</script>', sources: [source],
+        usage: {provider_calls: 3, input_tokens: 2810, output_tokens: 412, cost_microunits: 487}};
     } else if (path.endsWith('/query')) result = {version: 1, request_id: input.request_id,
       comparison_json: JSON.stringify({schema: 'crexx-rag.query-comparison/1', library_id: 'fixture', generation: 7,
         model: 'fixture', embedding_profile_id: 'fixture', graph_hops: input.hops,
@@ -38,30 +40,34 @@ try {
     await route.fulfill({json: result});
   });
   await page.goto(`${origin}/?app=rag_demo`);
+  assert.equal(await page.locator('[data-node-id="search-panel"]').count(), 0);
+  assert.match(await page.locator('[data-node-id="model-thorough"]').innerText(), /selected/);
+  await page.locator('[data-node-id="model-fast"]').click();
+  await page.locator('[data-node-id="model-fast"]').getByText('selected', {exact: false}).waitFor();
   const composer = page.getByRole('textbox', {name: 'Your question', exact: true});
   await composer.waitFor({timeout: 30000});
   await composer.fill(question);
   await page.locator('[data-node-id="ask"]').click();
   await page.locator('[data-node-id="stop"]').waitFor();
-  await page.locator('[data-node-id="drawer-toggle"]').click();
-  await page.locator('[data-node-id="activity-content"]').getByText('Read captured source:', {exact: false}).waitFor();
+  assert.equal(await page.locator('[data-node-id="model-fast"]').isDisabled(), true);
+  await page.locator('[data-node-id="stage-3"]').waitFor();
+  assert.match(await page.locator('[data-node-id="answer-status"]').getAttribute('data-tone'), /waiting|busy|done/);
+  await page.locator('[data-node-id="stage-3"]').click();
+  await page.locator('[data-node-id="stage-detail"]').getByText('Captured supporting evidence.', {exact: false}).waitFor();
   assert.equal(await composer.inputValue(), question, 'Clicking Ask commits the current multiline draft');
   releaseFinal();
-  await page.locator('[data-node-id="answer"]').getByText('A supported statement', {exact: false}).waitFor();
+  await page.locator('[data-node-id="answer"] strong').getByText('A supported statement').waitFor();
   assert.equal(finalCount, 1);
   assert.ok((await page.locator('[data-node-id="answer"]').innerText()).length < 256,
     'Short answers must not be padded to the document limit');
-  const activityText = await page.locator('[data-node-id="activity-content"]').innerText();
-  assert.match(activityText, /Answer complete/);
-  assert.ok(activityText.length < 1024, 'Short progress messages must not fill the activity limit');
-  await page.locator('[data-node-id="dialogue-tab"]').click();
-  const dialogueText = await page.locator('[data-node-id="dialogue-content"]').innerText();
-  assert.match(dialogueText, /Service: Initial evidence search completed/);
-  assert.match(dialogueText, /Response: <script>literal text<\/script> A supported statement/);
-  assert.ok(dialogueText.length < 2048, 'The final response must fit after progress messages');
+  assert.equal(await page.locator('[data-node-id="answer-status"]').getAttribute('data-tone'), 'answer');
+  assert.equal(await page.locator('[data-node-id="answer"] h4').innerText(), 'Findings');
   assert.equal(await page.locator('[data-node-id="answer"] script').count(), 0);
-  assert.equal(await page.locator('[data-node-id="answer"] button').count(), 0,
-    'Marker-free prose does not require an invented inline citation');
+  assert.equal(await page.locator('[data-node-id="answer"] button').count(), 1);
+  assert.equal(await page.locator('[data-node-id="answer"] strong button').count(), 1,
+    'Citations inside emphasis remain actionable');
+  assert.match(await page.locator('[data-node-id="answer"] li').innerText(), /<script>literal text<\/script>/);
+  if (process.env.CREXX_SCREENSHOT) await page.screenshot({path: process.env.CREXX_SCREENSHOT, fullPage: true});
   await page.locator('[data-node-id="source-1"]').click();
   await page.locator('[data-node-id="source-view"]').waitFor();
   assert.match(await page.locator('[data-node-id="source-excerpt"]').innerText(), /supporting evidence/);
@@ -72,6 +78,7 @@ try {
     `${origin}/api/rag/v1/original/fixture-asset`);
   await page.locator('[data-node-id="source-back"]').click();
   await page.waitForFunction(() => document.activeElement?.dataset.nodeId === 'source-1');
+  await page.locator('[data-node-id="explore"]').click();
   await page.getByRole('textbox', {name: 'Corpus search question'}).fill('A precise corpus query');
   await page.locator('[data-node-id="search"]').click();
   await page.locator('[data-node-id="keyword-result"]').getByText('Captured supporting evidence.', {exact: false}).waitFor();

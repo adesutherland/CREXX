@@ -102,10 +102,41 @@ export function ragQueryHttp() {
         await complete(effect, 'rag.source.completed', {source_json: JSON.stringify(context)});
       } else {
         let completed = 0;
-        const progress = async message => {
-          if (!controller.signal.aborted && message)
-            await complete(effect, 'ui.effect.progress', {completed: ++completed, message: message.slice(0, 1024)});
+        const progress = async stage => {
+          const message = JSON.stringify({schema: 'rag-ui.stage/1', ...stage});
+          if (message.length > 8192) throw new Error('Research stage exceeds UI limit');
+          if (!controller.signal.aborted)
+            await complete(effect, 'ui.effect.progress', {completed: ++completed,
+              message});
         };
+        if (!['thorough', 'fast'].includes(effect.payload.model_profile))
+          throw new Error('Invalid answer model profile');
+        const model = effect.payload.model_profile === 'fast' ? 'GPT-6 Luna' : 'GPT-6.1 Sol';
+        const seen = new Set();
+        const publicActivity = async (activity, phase) => {
+          const output = activityText(activity);
+          if (!output || seen.has(output)) return;
+          seen.add(output);
+          let id = `${phase}-${seen.size}`;
+          let title = 'Corpus research';
+          if (activity.stage === 'scope') {
+            id = phase === 'prepare' ? 'scope' : 'snapshot';
+            title = phase === 'prepare' ? 'Scope and search plan' : 'Snapshot revalidation';
+          }
+          else if (activity.stage === 'search') title = phase === 'prepare' ? 'Initial corpus search' : 'Follow-up corpus search';
+          else if (activity.stage === 'read') title = 'Captured source read';
+          else if (activity.stage === 'answer') { id = 'answer'; title = 'Answer and citation checks'; }
+          else if (activity.stage === 'validation') title = 'Evidence validation';
+          const input = activity.stage === 'scope' ? effect.payload.question :
+            activity.stage === 'search' ? (activity.message.includes(': ') ? activity.message.split(': ').slice(1).join(': ') : effect.payload.question) :
+              activity.stage === 'read' ? (activity.sources?.[0]?.citation ?? 'Selected corpus citation') : 'Selected corpus evidence';
+          await progress({id, state: 'done', title, summary: activity.message.slice(0, 220),
+            input: String(input).slice(0, 1024),
+            output: output.slice(0, 1800)});
+        };
+        await progress({id: 'scope', state: 'waiting', title: 'Scope and search plan',
+          summary: `Waiting for ${model} to assess this question and plan corpus searches`,
+          input: effect.payload.question, output: 'No result yet.'});
         const prepared = await post('/api/rag/v1/answer/prepare', effect.payload);
         if (prepared.schema !== 'crexx-rag.answer-preparation/1' ||
             !['ready', 'insufficient_evidence', 'scope_refused'].includes(prepared.status) ||
@@ -113,7 +144,7 @@ export function ragQueryHttp() {
             typeof prepared.library_id !== 'string' || !Number.isSafeInteger(prepared.generation) ||
             !Array.isArray(prepared.activities) || prepared.activities.length > 16)
           throw new Error('Invalid answer preparation');
-        for (const activity of prepared.activities) await progress(activityText(activity));
+        for (const activity of prepared.activities) await publicActivity(activity, 'prepare');
         const research = prepared.research ?? {searches: [], reads: []};
         if (!Array.isArray(research.searches) || research.searches.length > 2 ||
             research.searches.some(text => typeof text !== 'string' || text.length > 256) ||
@@ -121,16 +152,27 @@ export function ragQueryHttp() {
             research.reads.some(citation => typeof citation !== 'string' || citation.length > 512 ||
               !citation.startsWith(`crexx-rag:${prepared.library_id}:`)))
           throw new Error('Invalid preparation selectors');
+        if (prepared.status === 'ready') await progress({id: 'scope', state: 'done', title: 'Scope and search plan',
+          summary: 'Question accepted; bounded follow-up searches and reads selected',
+          input: effect.payload.question,
+          output: `Follow-up searches: ${research.searches.length ? research.searches.join('; ') : 'none'}\nCaptured reads: ${research.reads.length ? research.reads.join('; ') : 'none'}`});
         if (prepared.status === 'ready') {
           for (const [index, citation] of research.reads.entries()) {
+            const id = `read-${index + 1}`;
+            await progress({id, state: 'busy', title: 'Read captured source',
+              summary: 'Reading the selected passage from the immutable corpus', input: citation, output: 'No result yet.'});
             const read = await post('/api/rag/v1/source', {corpus: effect.payload.corpus, citation},
               `${effect.request_id}-read-${index + 1}`);
             const source = validateSource(read.source_json ? JSON.parse(read.source_json) : read, citation);
             if (source.library_id !== prepared.library_id || source.generation !== prepared.generation)
               throw new Error('Source snapshot changed during preparation');
-            await progress(`Read captured source: ${source.title}\n${source.excerpt}`);
+            await progress({id, state: 'done', title: 'Read captured source',
+              summary: `Read ${source.title}`, input: citation, output: source.excerpt.slice(0, 1800)});
           }
         }
+        await progress({id: 'model', state: 'waiting', title: 'Model evidence review',
+          summary: `Waiting for ${model} to review evidence and draft a cited answer`,
+          input: `Question: ${effect.payload.question}\nCorpus: ${effect.payload.corpus}`, output: 'No result yet.'});
         const final = await post('/api/rag/v1/answer', {...effect.payload, prepared: {
           library_id: prepared.library_id, generation: prepared.generation,
           searches: research.searches, reads: research.reads,
@@ -138,11 +180,24 @@ export function ragQueryHttp() {
         const answer = validateAnswer(final.answer_json ? JSON.parse(final.answer_json) : final, effect.payload);
         if (answer.library_id !== prepared.library_id || answer.generation !== prepared.generation)
           throw new Error('Answer snapshot changed during preparation');
+        await progress({id: 'model', state: 'done', title: 'Model evidence review',
+          summary: `${answer.model} returned a draft for citation checks`,
+          input: `Question: ${effect.payload.question}\nCorpus: ${effect.payload.corpus}`,
+          output: `Status: ${answer.status}\nSources cited: ${answer.sources.length}`});
         for (const activity of (Array.isArray(answer.activities) ? answer.activities.slice(0, 16) : []))
-          await progress(activityText(activity));
+          await publicActivity(activity, 'answer');
+        await progress({id: 'answer', state: 'answer', title: 'Answer and citation checks',
+          summary: answer.status === 'answered' ? `Validated reply from ${answer.model}` :
+            `Completed with ${answer.status.replaceAll('_', ' ')}`,
+          input: `Question: ${effect.payload.question}\nCorpus snapshot: ${answer.library_id} / ${answer.generation}`,
+          output: answer.answer.slice(0, 1800)});
         await complete(effect, 'rag.answer.completed', {answer_json: JSON.stringify(answer)});
       }
     } catch (error) {
+      if (effect.name === 'rag.answer' && !signal?.aborted)
+        await complete(effect, 'ui.effect.progress', {completed: 1, message: JSON.stringify({schema: 'rag-ui.stage/1',
+          id: 'error', state: 'error', title: 'Request failed', summary: 'The answer service could not complete this request',
+          input: 'The submitted question', output: String(error?.message ?? error).slice(0, 900)})});
       if (!signal?.aborted) await complete(effect, 'ui.effect.failed', {
         code: controller.signal.aborted ? 'service_timeout' : 'service_failed',
         message: effect.name === 'rag.query' ? 'Read-only query service unavailable' :

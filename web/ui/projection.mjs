@@ -38,7 +38,7 @@ function propertiesFor(node) {
     throw new Error('Invalid node properties');
   const p = JSON.parse(node.properties ?? '{}');
   if (!p || Array.isArray(p) || typeof p !== 'object') throw new Error('Invalid node properties');
-  const allowed = ['parent', 'label', 'description', 'disabled', 'expanded', 'controls', 'role', 'level', 'maxLength', 'focus', 'cancel'];
+  const allowed = ['parent', 'label', 'description', 'disabled', 'expanded', 'controls', 'role', 'level', 'maxLength', 'focus', 'cancel', 'tone', 'format'];
   if (Object.keys(p).some(key => !allowed.includes(key))) throw new Error('Unknown node property');
   for (const key of ['parent', 'label', 'description', 'controls', 'role', 'focus', 'cancel'])
     if (p[key] !== undefined && (typeof p[key] !== 'string' || p[key].length > 1024))
@@ -51,7 +51,61 @@ function propertiesFor(node) {
     throw new Error('Invalid heading level');
   if (p.maxLength !== undefined && (!Number.isInteger(p.maxLength) || p.maxLength < 1 || p.maxLength > 1024))
     throw new Error('Invalid text limit');
+  if (p.tone !== undefined && !['neutral', 'busy', 'waiting', 'done', 'answer', 'error'].includes(p.tone))
+    throw new Error('Invalid status tone');
+  if (p.format !== undefined && p.format !== 'markdown') throw new Error('Invalid document format');
   return p;
+}
+
+/* Answer Markdown is presentation only. Every character is inserted as text;
+ * citation buttons come solely from validated document actions. */
+export function renderMarkdownDocument(blocks, container, activate) {
+  const actions = new Map();
+  const source = blocks.map(block => block.runs.map(run => {
+    if (run.action && /^\[[1-8]\]$/.test(run.text)) actions.set(run.text, run.action);
+    return run.text;
+  }).join('')).join('\n');
+  const inline = (parent, value) => {
+    const pattern = /(\*\*[^*\n]+\*\*|\*[^*\n]+\*|`[^`\n]+`|\[[1-8]\])/g;
+    let start = 0;
+    for (const match of value.matchAll(pattern)) {
+      if (match.index > start) parent.append(document.createTextNode(value.slice(start, match.index)));
+      const token = match[0];
+      let part;
+      if (actions.has(token)) {
+        part = document.createElement('button'); part.type = 'button'; part.className = 'ui-reference';
+        part.dataset.reference = actions.get(token);
+        part.addEventListener('click', () => activate(actions.get(token)));
+        part.textContent = token;
+      } else if (token.startsWith('**')) {
+        part = document.createElement('strong'); inline(part, token.slice(2, -2));
+      } else if (token.startsWith('*')) {
+        part = document.createElement('em'); inline(part, token.slice(1, -1));
+      } else if (token.startsWith('`')) {
+        part = document.createElement('code'); part.textContent = token.slice(1, -1);
+      } else part = document.createTextNode(token);
+      parent.append(part); start = match.index + token.length;
+    }
+    if (start < value.length) parent.append(document.createTextNode(value.slice(start)));
+  };
+  let list = null;
+  for (const line of source.split(/\r?\n/)) {
+    if (!line.trim()) { list = null; continue; }
+    const heading = /^(#{1,4})\s+(.+)$/.exec(line);
+    const bullet = /^\s*[-*]\s+(.+)$/.exec(line);
+    const numbered = /^\s*\d+[.)]\s+(.+)$/.exec(line);
+    if (bullet || numbered) {
+      const tag = bullet ? 'ul' : 'ol';
+      if (!list || list.tagName.toLowerCase() !== tag) {
+        list = document.createElement(tag); container.append(list);
+      }
+      const item = document.createElement('li'); inline(item, (bullet || numbered)[1]); list.append(item);
+    } else {
+      list = null;
+      const paragraph = document.createElement(heading ? `h${Math.min(heading[1].length + 2, 6)}` : 'p');
+      inline(paragraph, heading ? heading[2] : line); container.append(paragraph);
+    }
+  }
 }
 
 export class BrowserUI {
@@ -240,7 +294,9 @@ export class BrowserUI {
       } else if (node.kind === 'document') {
         element = document.createElement('div');
         element.className = 'ui-document';
-        for (const block of documentBlocks(node.value)) {
+        const blocks = documentBlocks(node.value);
+        if (props.format === 'markdown') renderMarkdownDocument(blocks, element, action => void this.activate(action));
+        else for (const block of blocks) {
           const line = document.createElement(block.kind === 'heading' ? 'h3' : block.kind === 'list-item' ? 'p' : 'p');
           if (block.kind === 'list-item') line.className = 'ui-list-item';
           for (const run of block.runs) {
@@ -302,6 +358,7 @@ export class BrowserUI {
         }
       }
       element.dataset.nodeId = node.id;
+      if (props.tone) element.dataset.tone = props.tone;
       element.id = `ui-${node.id}`;
       if (props.role) element.setAttribute('role', props.role);
       if (props.label && !['input', 'textarea'].includes(node.kind)) element.setAttribute('aria-label', props.label);

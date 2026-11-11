@@ -55,6 +55,9 @@ async function route(kind) {
   try {
     let view = await next();
     assert.equal(view.type, 'view');
+    assert.equal(label(view, 'status'), undefined, 'Raw search starts closed');
+    send('command', view.revision, {command: 'rag.explore'});
+    view = await next();
     assert.match(label(view, 'status'), /Ready/);
     if (kind === 'local') {
       send('command', view.revision, {command: 'rag.search'});

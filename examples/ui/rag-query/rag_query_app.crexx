@@ -8,25 +8,32 @@ import ui_contract
 
 make_rag_query_session: procedure = .uisession
   arg id = .string, caps = .uicapabilities, corpus = "heart-failure", question = "heart failure treatment pathway", answer_available = 1
+  i = .int
+  suffix = .string
   session = .uisession(id, caps)
   rc = session.add_component("root", .rag_query_component(corpus, question, answer_available))
   rc = session.register_event("rag.search.requested")
   rc = session.register_event("rag.ask.requested")
   rc = session.register_event("rag.explore.requested")
   rc = session.register_event("rag.drawer.requested")
-  rc = session.register_event("rag.dialogue.requested")
-  rc = session.register_event("rag.activity.requested")
+  rc = session.register_event("rag.model.fast.requested")
+  rc = session.register_event("rag.model.thorough.requested")
   rc = session.register_event("rag.source.close.requested")
   rc = session.register_event("rag.context.requested")
   rc = session.register_event("rag.answer.completed", '{"answer_json":{"type":"string","required":true,"maxLength":49152}}', "completion")
   rc = session.register_event("rag.source.completed", '{"source_json":{"type":"string","required":true,"maxLength":49152}}', "completion")
-  rc = session.register_effect("rag.answer", "rag.answer", '{"corpus":{"type":"string","required":true,"maxLength":64},"question":{"type":"string","required":true,"maxLength":1024}}', "rag.answer.completed")
+  rc = session.register_effect("rag.answer", "rag.answer", '{"corpus":{"type":"string","required":true,"maxLength":64},"question":{"type":"string","required":true,"maxLength":1024},"model_profile":{"type":"string","required":true,"enum":["fast","thorough"]}}', "rag.answer.completed")
   rc = session.register_effect("rag.source", "rag.source", '{"corpus":{"type":"string","required":true,"maxLength":64},"citation":{"type":"string","required":true,"maxLength":512}}', "rag.source.completed")
   rc = session.register_command(.uicommand("rag.ask", "Ask", "root", "rag.ask.requested", ""))
   rc = session.register_command(.uicommand("rag.explore", "Explore corpus", "root", "rag.explore.requested", ""))
-  rc = session.register_command(.uicommand("rag.drawer", "Dialogue and activity", "root", "rag.drawer.requested", ""))
-  rc = session.register_command(.uicommand("rag.dialogue", "Dialogue", "root", "rag.dialogue.requested", ""))
-  rc = session.register_command(.uicommand("rag.activity", "Activity", "root", "rag.activity.requested", ""))
+  rc = session.register_command(.uicommand("rag.drawer", "Research stages", "root", "rag.drawer.requested", ""))
+  rc = session.register_command(.uicommand("rag.model.fast", "Fast model", "root", "rag.model.fast.requested", ""))
+  rc = session.register_command(.uicommand("rag.model.thorough", "Thorough model", "root", "rag.model.thorough.requested", ""))
+  do i = 1 to 16
+    suffix = word("one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen", i)
+    rc = session.register_event("rag.stage." || suffix || ".requested")
+    rc = session.register_command(.uicommand("rag.stage." || suffix, "Inspect stage " || i, "root", "rag.stage." || suffix || ".requested", ""))
+  end
   rc = session.register_command(.uicommand("rag.source.close", "Back to answer", "root", "rag.source.close.requested", ""))
   rc = session.register_command(.uicommand("rag.context", "Read captured context", "root", "rag.context.requested", ""))
   do i = 1 to 8
@@ -65,10 +72,11 @@ rag_query_component: class implements .uicomponent
   _answered_question = .string
   _search_open = .int
   _drawer_open = .int
-  _drawer_tab = .string
-  _activity = .string
-  _activity_count = .int
-  _dialogue = .string
+  _model_profile = .string
+  _stages = .string[]
+  _stage_count = .int
+  _expanded_stage = .int
+  _answer_tone = .string
   _source_index = .int
   _context_pending = .int
   _context_request = .string
@@ -100,12 +108,12 @@ rag_query_component: class implements .uicomponent
     _answer_pending = 0
     _answer_request = ""
     _answered_question = ""
-    _search_open = 1
+    _search_open = 0
     _drawer_open = 0
-    _drawer_tab = "activity"
-    _activity = "No question submitted."
-    _activity_count = 0
-    _dialogue = "Questions and completed responses appear here."
+    _model_profile = "thorough"
+    _stage_count = 0
+    _expanded_stage = 0
+    _answer_tone = "neutral"
     _source_index = 0
     _context_pending = 0
     _context_request = ""
@@ -117,6 +125,8 @@ rag_query_component: class implements .uicomponent
 
   update: method = .uieffects
     arg event = .uimessage
+    i = .int
+    selected = .int
     effects = .uieffects()
     name = event.name()
     candidate = ""
@@ -164,16 +174,21 @@ rag_query_component: class implements .uicomponent
       if _drawer_open then _focus = "live-drawer"
       else _focus = "drawer-toggle"
     end
-    else if name = "rag.dialogue.requested" then do
-      _drawer_tab = "dialogue"
-      _focus = "dialogue-content"
+    else if name = "rag.model.fast.requested" then do
+      if _answer_pending = 0 then _model_profile = "fast"
     end
-    else if name = "rag.activity.requested" then do
-      _drawer_tab = "activity"
-      _focus = "activity-content"
+    else if name = "rag.model.thorough.requested" then do
+      if _answer_pending = 0 then _model_profile = "thorough"
+    end
+    else if wordpos(name, "rag.stage.one.requested rag.stage.two.requested rag.stage.three.requested rag.stage.four.requested rag.stage.five.requested rag.stage.six.requested rag.stage.seven.requested rag.stage.eight.requested rag.stage.nine.requested rag.stage.ten.requested rag.stage.eleven.requested rag.stage.twelve.requested rag.stage.thirteen.requested rag.stage.fourteen.requested rag.stage.fifteen.requested rag.stage.sixteen.requested") > 0 then do
+      selected = wordpos(name, "rag.stage.one.requested rag.stage.two.requested rag.stage.three.requested rag.stage.four.requested rag.stage.five.requested rag.stage.six.requested rag.stage.seven.requested rag.stage.eight.requested rag.stage.nine.requested rag.stage.ten.requested rag.stage.eleven.requested rag.stage.twelve.requested rag.stage.thirteen.requested rag.stage.fourteen.requested rag.stage.fifteen.requested rag.stage.sixteen.requested")
+      if selected <= _stage_count then do
+        if _expanded_stage = selected then _expanded_stage = 0
+        else _expanded_stage = selected
+      end
     end
     else if name = "rag.source.close.requested" then do
-      _focus = "rag.source." || word("one two three four five six seven eight", _source_index)
+      _focus = "source-" || _source_index
       _source_index = 0
     end
     else if wordpos(name, "rag.source.one.requested rag.source.two.requested rag.source.three.requested rag.source.four.requested rag.source.five.requested rag.source.six.requested rag.source.seven.requested rag.source.eight.requested") > 0 then do
@@ -194,28 +209,46 @@ rag_query_component: class implements .uicomponent
         body = .uipayload()
         call body.put_text("corpus", _corpus)
         call body.put_text("question", _answer_question)
+        call body.put_text("model_profile", _model_profile)
         call effects.add(.uimessage("rag.answer", body, event.target(), "effect"))
         _answer_pending = 1
         _answer_request = ""
         _answer_request_revision = _answer_input_revision
-        _answer_status = "Waiting for the server to assess the question and retrieve evidence."
-        _activity = "Question submitted to the server."
-        _activity_count = 1
-        _dialogue = "You: " || _answer_question
+        _answer_status = "Checking corpus scope and planning evidence with " || model_label(_model_profile) || "."
+        _answer_tone = "waiting"
+        call arraydrop _stages
+        _stage_count = 0
+        _expanded_stage = 0
+        _drawer_open = 1
         _source_index = 0
       end
     end
     else if name = "ui.effect.progress" then do
       if _answer_pending then do
         _answer_request = event.request_id()
-        progress_message = clip_text(event.body().text("message"), 1024)
-        if progress_message \= "" then do
-          _answer_status = progress_message
-          _dialogue = clip_text(_dialogue || '0A0A'x || "Service: " || progress_message, 32768)
-          if _activity_count < 32 then do
-            _activity = _activity || '0A'x || progress_message
-            _activity_count = _activity_count + 1
+        progress_message = event.body().text("message")
+        if jsonvalid(progress_message) = 1 & jsonget(progress_message,"schema") = "rag-ui.stage/1" then do
+          stage_id = jsonget(progress_message,"id")
+          stage_state = jsonget(progress_message,"state")
+          if stage_id \= "" & wordpos(stage_state,"busy waiting done answer error") > 0 then do
+            selected = 0
+            do i = 1 to _stage_count
+              if jsonget(_stages[i],"id") = stage_id then selected = i
+            end
+            if selected = 0 & _stage_count < 16 then do
+              _stage_count = _stage_count + 1
+              selected = _stage_count
+            end
+            if selected > 0 then _stages[selected] = progress_message
+            _answer_status = clip_text(jsonget(progress_message,"summary"), 1024)
+            _answer_tone = stage_state
           end
+        end
+        else if progress_message \= "" & _stage_count < 16 then do
+          _stage_count = _stage_count + 1
+          _stages[_stage_count] = '{"schema":"rag-ui.stage/1","id":"legacy-' || _stage_count || '","state":"done","title":"Corpus research","summary":' || jsonquote(clip_text(progress_message,200)) || ',"input":' || jsonquote(_answer_question) || ',"output":' || jsonquote(clip_text(progress_message,1024)) || '}'
+          _answer_status = clip_text(progress_message,1024)
+          _answer_tone = "done"
         end
       end
     end
@@ -224,11 +257,12 @@ rag_query_component: class implements .uicomponent
       _answer_request = ""
       if _answer_request_revision \= _answer_input_revision then do
         _answer_status = "The question changed while the server worked. Ask again to answer the current draft."
+        _answer_tone = "error"
         return effects
       end
       answer_candidate = event.body().text("answer_json")
       if jsonvalid(answer_candidate) \= 1 | jsonget(answer_candidate, "schema") \= "crexx-rag.answer/1" then
-        _answer_status = "The answer service returned an invalid response. Try again explicitly."
+        do; _answer_status = "The answer service returned an invalid response. Try again explicitly."; _answer_tone = "error"; end
       else do
         _answer_json = answer_candidate
         _answered_question = _answer_question
@@ -236,8 +270,7 @@ rag_query_component: class implements .uicomponent
         if answer_outcome = "answered" then _answer_status = "Answer complete. Review the supporting sources."
         else if answer_outcome = "scope_refused" then _answer_status = "This question falls outside the corpus scope."
         else _answer_status = "The corpus does not contain enough supporting evidence."
-        _activity = clip_text(_activity || '0A'x || _answer_status, 32768)
-        _dialogue = clip_text(_dialogue || '0A0A'x || "Response: " || jsonget(_answer_json, "answer"), 32768)
+        _answer_tone = "answer"
         _source_index = 0
       end
     end
@@ -343,7 +376,7 @@ rag_query_component: class implements .uicomponent
         _answer_pending = 0
         _answer_request = ""
         _answer_status = "Answer failed: " || event.body().text("message") || " (" || event.body().text("code") || "). Retry explicitly."
-        _activity = clip_text(_activity || '0A'x || _answer_status, 32768)
+        _answer_tone = "error"
       end
       else if _context_pending then do
         _context_pending = 0
@@ -359,7 +392,7 @@ rag_query_component: class implements .uicomponent
         _answer_pending = 0
         _answer_request = ""
         _answer_status = "Question cancelled. The previous completed answer is retained."
-        _activity = clip_text(_activity || '0A'x || "Question cancelled.", 32768)
+        _answer_tone = "neutral"
       end
       else if _context_pending then do
         _context_pending = 0
@@ -384,6 +417,14 @@ rag_query_component: class implements .uicomponent
     ignored = result.set_properties("ask-label", '{"parent":"answer-panel"}')
     call result.add_textarea("ask-question", _answer_question)
     ignored = result.set_properties("ask-question", '{"parent":"answer-panel","label":"Your question","description":"Ask a question about this corpus. Maximum 1024 characters.","maxLength":1024}')
+    if _answer_available then do
+      call result.add_label("model-label", "Answer model · choose before asking")
+      ignored = result.set_properties("model-label", '{"parent":"answer-panel"}')
+      call result.add_button("model-thorough", "Thorough · GPT-6.1 Sol" || selected_label(_model_profile = "thorough"), "rag.model.thorough", "")
+      ignored = result.set_properties("model-thorough", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending) || ',"expanded":' || booljson(_model_profile = "thorough") || '}')
+      call result.add_button("model-fast", "Fast · GPT-6 Luna" || selected_label(_model_profile = "fast"), "rag.model.fast", "")
+      ignored = result.set_properties("model-fast", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending) || ',"expanded":' || booljson(_model_profile = "fast") || '}')
+    end
     call result.add_button("ask", "Ask", "rag.ask", "")
     ignored = result.set_properties("ask", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending | _pending | _context_pending | (_answer_available = 0)) || '}')
     if _answer_pending then do
@@ -391,14 +432,16 @@ rag_query_component: class implements .uicomponent
       ignored = result.set_properties("stop", '{"parent":"answer-panel","cancel":"rag.answer"}')
     end
     call result.add_statusbar("answer-status", _answer_status)
-    ignored = result.set_properties("answer-status", '{"parent":"answer-panel"}')
+    ignored = result.set_properties("answer-status", '{"parent":"answer-panel","tone":' || jsonquote(_answer_tone) || '}')
     if _answer_json \= "" then do
       call result.add_label("answered-question", "Submitted question: " || _answered_question)
       ignored = result.set_properties("answered-question", '{"parent":"answer-panel"}')
       call result.add_document("answer", document_for_answer(jsonget(_answer_json, "answer"), jsoncount(_answer_json, "sources")))
-      ignored = result.set_properties("answer", '{"parent":"answer-panel","label":"Evidence grounded answer"}')
+      ignored = result.set_properties("answer", '{"parent":"answer-panel","label":"Evidence grounded answer","format":"markdown"}')
       call result.add_label("answer-identity", "Library: " || jsonget(_answer_json, "library_id") || " · Snapshot: " || jsonget(_answer_json, "generation") || " · Provider: " || jsonget(_answer_json, "provider") || " · Model: " || jsonget(_answer_json, "model"))
       ignored = result.set_properties("answer-identity", '{"parent":"answer-panel"}')
+      call result.add_label("answer-usage", "Model calls: " || jsonget(_answer_json,"usage.provider_calls") || " · Input tokens: " || jsonget(_answer_json,"usage.input_tokens") || " · Output tokens: " || jsonget(_answer_json,"usage.output_tokens"))
+      ignored = result.set_properties("answer-usage", '{"parent":"answer-panel"}')
       do source_number = 1 to jsoncount(_answer_json, "sources")
         if source_number > 8 then leave
         source_id = "source-" || source_number
@@ -471,21 +514,25 @@ rag_query_component: class implements .uicomponent
       call result.add_label("graph-result", _graph)
       ignored = result.set_properties("graph-result", '{"parent":"graph-group"}')
     end
-    call result.add_button("drawer-toggle", "Dialogue and activity", "rag.drawer", "")
+    call result.add_button("drawer-toggle", "Research stages" || selected_label(_drawer_open), "rag.drawer", "")
     ignored = result.set_properties("drawer-toggle", '{"expanded":' || booljson(_drawer_open) || ',"controls":"live-drawer"}')
     if _drawer_open then do
-      call result.add_group("live-drawer", "Live dialogue and activity")
-      call result.add_button("dialogue-tab", "Dialogue", "rag.dialogue", "")
-      ignored = result.set_properties("dialogue-tab", '{"parent":"live-drawer","expanded":' || booljson(_drawer_tab = "dialogue") || ',"controls":"dialogue-content"}')
-      call result.add_button("activity-tab", "Activity", "rag.activity", "")
-      ignored = result.set_properties("activity-tab", '{"parent":"live-drawer","expanded":' || booljson(_drawer_tab = "activity") || ',"controls":"activity-content"}')
-      if _drawer_tab = "dialogue" then do
-        call result.add_document("dialogue-content", plain_document(_dialogue))
-        ignored = result.set_properties("dialogue-content", '{"parent":"live-drawer","label":"Question and response dialogue"}')
+      call result.add_group("live-drawer", "How this answer was built")
+      call result.add_label("stage-intro", "Each stage shows what was sent and what came back. Open a stage to inspect its public input and output.")
+      ignored = result.set_properties("stage-intro", '{"parent":"live-drawer"}')
+      if _stage_count = 0 then do
+        call result.add_label("stage-empty", "Ask a question to see the research stages.")
+        ignored = result.set_properties("stage-empty", '{"parent":"live-drawer"}')
       end
-      else do
-        call result.add_document("activity-content", plain_document(_activity))
-        ignored = result.set_properties("activity-content", '{"parent":"live-drawer","label":"Completed server activity"}')
+      do i = 1 to _stage_count
+        stage_id = "stage-" || i
+        stage = _stages[i]
+        call result.add_button(stage_id, i || ". " || jsonget(stage,"title") || " · " || jsonget(stage,"summary"), "rag.stage." || word("one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen", i), "")
+        ignored = result.set_properties(stage_id, '{"parent":"live-drawer","expanded":' || booljson(_expanded_stage = i) || ',"controls":"stage-detail","tone":' || jsonquote(jsonget(stage,"state")) || '}')
+        if _expanded_stage = i then do
+          call result.add_document("stage-detail", stage_document(jsonget(stage,"input"),jsonget(stage,"output")))
+          ignored = result.set_properties("stage-detail", '{"parent":"live-drawer","label":"Public input and output for research stage"}')
+        end
       end
     end
     call result.add_button("quit", "Close", "rag.quit", "")
@@ -495,6 +542,20 @@ booljson: procedure = .string
   arg value = .int
   if value then return "true"
   return "false"
+
+selected_label: procedure = .string
+  arg selected = .int
+  if selected then return " · selected"
+  return ""
+
+model_label: procedure = .string
+  arg profile = .string
+  if profile = "fast" then return "GPT-6 Luna"
+  return "GPT-6.1 Sol"
+
+stage_document: procedure = .string
+  arg input = .string, output = .string
+  return '{"blocks":[{"kind":"heading","runs":[{"text":"Input"}]},{"kind":"paragraph","runs":[{"text":' || jsonquote(clip_text(input,4096)) || '}]},{"kind":"heading","runs":[{"text":"Output"}]},{"kind":"paragraph","runs":[{"text":' || jsonquote(clip_text(output,4096)) || '}]}]}'
 
 clip_text: procedure = .string
   arg text = .string, maximum = .int

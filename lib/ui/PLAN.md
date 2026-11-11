@@ -169,8 +169,23 @@ distribution retains its independent source-rights gate in STEP08.
 The STEP09 presentation caps dialogue, activity and answer text without
 space-padding short values, so completed progress messages and the final answer
 remain visible in the separate drawer. After Adrian and Stephen's question
-review, compare a lower-cost model on the same supported cases before deciding
-whether to expose a small server-approved model choice in this UI.
+review, compare a lower-cost model on the same supported cases before choosing
+the pilot's default answer profile.
+
+STEP09 reader usability increment (11 November feedback): (5) expose only the
+server-approved `fast` and `thorough` answer profiles, with the current model
+as the initial selection and actual model/usage shown after a reply; (6) start
+with raw corpus search closed and replace the duplicate Dialogue/Activity tabs
+with one ordered research-stage view. A stage shows its state and a bounded,
+expandable public input/output summary; waiting for a model, completed work,
+validated answer and failure have distinct accessible text and color; (7)
+render common answer Markdown as safe semantic browser content while retaining
+actionable validated citations and literal treatment of untrusted HTML; (8)
+check model-selection refusal and binding, initial state, stage lifecycle,
+Markdown safety and responsive browser behavior, then qualify a protected
+zero-traffic candidate before promotion. The RAG owner enforces model and cost
+bounds; the UI presents its public activity and never exposes hidden reasoning
+or provider credentials. Stephen's answer-quality review remains open.
 
 The protected site and original routes are deployed behind the existing
 two-account IAP policy. Adrian's signed-in answer, source-context, original-PDF

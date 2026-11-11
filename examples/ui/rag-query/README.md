@@ -10,7 +10,8 @@ This web application has one Level G model and two browser assemblies:
   routes. `rag_query_web_server` selects this composition explicitly; it does
   not enable local answer generation.
 
-Both use `rag_query_app.crexx`. The main question accepts up to 1024 characters,
+Both use `rag_query_app.crexx`. Raw corpus search starts closed; **Explore
+corpus** opens it. The main question accepts up to 1024 characters,
 including newlines. The independent corpus search retains its existing
 single-line, 256-character question and graph generations 0–4. Keyword,
 embedding and graph results remain distinct. A raw search does not regenerate
@@ -28,17 +29,26 @@ Answer prose can omit inline citation markers when its validated evidence is
 listed separately. Any inline markers that are present must refer to that same
 source list; unknown markers are refused.
 
-**Dialogue and activity** is a separate expandable region. It presents the
-submitted question, public service messages, completed retrieval/source reads
-and the validated answer. It contains no hidden provider reasoning or private
-prompts. Progress messages are actual completed work, not simulated percentages.
+The protected answer form offers server-approved **Thorough** (`gpt-6.1-sol`)
+and **Fast** (`gpt-6-luna`) profiles, defaulting to Thorough. The selected
+profile is fixed for a submitted request, and the actual model and token usage
+appear with the reply. The server refuses an unavailable fast provider.
+
+**Research stages** opens automatically for a question. Each ordered stage has
+a visible state and an expandable public input/output summary. Grey marks
+work, amber identifies a model wait and its purpose, green identifies the
+validated reply, and red identifies failure. It contains no hidden provider
+reasoning, private prompts or credentials. Progress messages describe actual
+work or an explicit wait, never simulated percentages. Answer Markdown is
+rendered as semantic headings, lists and emphasis without interpreting HTML;
+validated citation buttons remain active.
 The previous completed answer remains available during another request and
 following cancellation or failure. Editing a submitted question prevents its
 late result from replacing the current answer.
 
 ## Service contracts
 
-`rag.answer` requests `{corpus, question}` and completes as
+`rag.answer` requests `{corpus, question, model_profile}` and completes as
 `rag.answer.completed {answer_json}`. The bounded JSON value uses
 `crexx-rag.answer/1`, an answer of at most 12000 characters, at most eight cited
 sources, corpus/snapshot and provider/model identity, and one of `answered`,
@@ -56,7 +66,10 @@ backend origin remain on the server.
 
 Nonterminal progress reuses `ui.effect.progress {completed, message}` with the
 ordinary request/session/target correlation fields. `completed` counts reported
-activities; it is not a percentage or a prediction of total work. Terminal
+activities; it is not a percentage or a prediction of total work. The message
+is a bounded `rag-ui.stage/1` JSON envelope with `id`, `state`, `title`,
+`summary`, `input` and `output`; the Level G owner replaces a stage when its
+state changes. Terminal
 failure/cancellation use the existing generic outcomes. Stop cancels the logical
 operation and aborts the browser HTTP request or hosted service operation; late
 results cannot replace it.
@@ -103,7 +116,7 @@ The registered checks are `ui_rag_query_effect`, `ui_rag_query_hosted_service`,
 `test-answer-browser.mjs` uses a site assembled with the answer declaration and
 mock HTTP responses with the real UI owner. Set `CREXX_UI_ORIGIN`, and the usual
 `CREXX_PLAYWRIGHT`/`CREXX_CHROME` overrides when necessary. It covers multiline
-submit, completed activity, literal text/link safety, citation/context
+submit, model selection, stages, Markdown/HTML safety, citation/context
 navigation, independent raw search, narrow layout and cancellation without
 provider calls. These development checks do not establish hosted access,
 provider quality, public distribution or full UI-plan acceptance.

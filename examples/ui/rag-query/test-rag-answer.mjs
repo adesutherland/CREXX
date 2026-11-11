@@ -36,22 +36,31 @@ const answer = {schema: 'crexx-rag.answer/1', status: 'answered', library_id: 't
 try {
   let view = await next();
   assert.equal(node(view, 'ask-question').kind, 'textarea');
+  assert.equal(node(view, 'search-panel'), undefined, 'Raw search initially closed');
+  assert.match(node(view, 'model-thorough').text, /selected/);
+  send('command', view.revision, {command: 'rag.model.fast'}); view = await next();
+  assert.match(node(view, 'model-fast').text, /selected/);
+  send('command', view.revision, {command: 'rag.model.thorough'}); view = await next();
   send('value', view.revision, {node: 'ask-question', value: question, input_id: 'question-edit'});
   view = await next();
   assert.equal(view.input_id, 'question-edit'); assert.equal(view.accepted, 1);
   send('command', view.revision, {command: 'rag.ask'});
   view = await next();
   const request = (await next()).message;
-  assert.equal(request.name, 'rag.answer'); assert.deepEqual(request.payload, {corpus: 'heart-failure', question});
+  assert.equal(request.name, 'rag.answer'); assert.deepEqual(request.payload, {corpus: 'heart-failure', question, model_profile: 'thorough'});
   const oldRevision = view.revision;
-  send('command', view.revision, {command: 'rag.drawer'}); view = await next();
-  assert.ok(node(view, 'activity-content')); assert.ok(node(view, 'stop'));
-  send('complete', oldRevision, {message: outcome(request, 'ui.effect.progress', {completed: 1, message: 'Read Independent source after retrieval.'})});
+  assert.ok(node(view, 'live-drawer')); assert.ok(node(view, 'stop'));
+  const stage = {schema: 'rag-ui.stage/1', id: 'read-1', state: 'done', title: 'Source read',
+    summary: 'Read Independent source', input: source.citation, output: source.excerpt};
+  send('complete', oldRevision, {message: outcome(request, 'ui.effect.progress', {completed: 1, message: JSON.stringify(stage)})});
   view = await next();
-  assert.match(node(view, 'activity-content').value, /Independent source/);
+  assert.match(node(view, 'stage-1').text, /Independent source/);
+  send('command', view.revision, {command: 'rag.stage.one'}); view = await next();
+  assert.match(node(view, 'stage-detail').value, /Documented treatment evidence/);
   send('complete', oldRevision, {message: outcome(request, 'rag.answer.completed', {answer_json: JSON.stringify(answer)})});
   view = await next();
   assert.match(node(view, 'answer-status').text, /Answer complete/);
+  assert.match(node(view, 'answer-status').properties, /"tone":"answer"/);
   assert.equal(node(view, 'stop'), undefined);
   const answerView = JSON.parse(node(view, 'answer').value);
   assert.equal(answerView.blocks[0].runs.find(run => run.action)?.action, 'rag.source.one');

@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {ragQueryHttp, validateAnswer, validateSource} from './query-http.mjs';
 const question = 'Explain the evidence.\nState its limits.';
-const effect = {name: 'rag.answer', request_id: 'answer-http/1', payload: {corpus: 'heart-failure', question}};
+const effect = {name: 'rag.answer', request_id: 'answer-http/1', payload: {corpus: 'heart-failure', question, model_profile: 'thorough'}};
 const source = {title: 'Source title', excerpt: 'Captured supporting text.',
   citation: 'crexx-rag:test-library:source', source_url: 'https://example.org/source.pdf', span_start: 20, span_end: 45};
 const answer = {schema: 'crexx-rag.answer/1', version: 1, request_id: effect.request_id,
@@ -29,8 +29,11 @@ globalThis.fetch = async (path, options) => {
 };
 await handler(effect, complete);
 assert.deepEqual(calls.map(call => call.path), ['/api/rag/v1/answer/prepare', '/api/rag/v1/source', '/api/rag/v1/answer']);
-assert.equal(completed.filter(item => item.name === 'ui.effect.progress').length, 3);
-assert.match(completed[2].payload.message, /Read captured source: Source title/);
+assert.ok(completed.filter(item => item.name === 'ui.effect.progress').length >= 5);
+assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
+  JSON.parse(item.payload.message).summary === 'Read Source title'));
+assert.equal(calls[0].input.model_profile, 'thorough');
+assert.equal(calls[2].input.model_profile, 'thorough');
 assert.equal(completed.at(-1).name, 'rag.answer.completed');
 assert.equal(JSON.parse(completed.at(-1).payload.answer_json).answer, answer.answer,
   'Validated sources support marker-free answer prose');
@@ -50,13 +53,17 @@ globalThis.fetch = async (path, options) => {
 };
 await handler(effect, complete);
 assert.equal(paidCalls, 1);
+assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
+  JSON.parse(item.payload.message).state === 'error'), 'Failure is a distinct red research stage');
 assert.equal(completed.at(-1).name, 'ui.effect.failed');
 completed.length = 0;
 const controller = new AbortController();
 globalThis.fetch = async (_path, {signal}) => new Promise((resolve, reject) => {
+  if (signal.aborted) { reject(new DOMException('Stopped', 'AbortError')); return; }
   signal.addEventListener('abort', () => reject(new DOMException('Stopped', 'AbortError')), {once: true});
 });
 const running = handler(effect, complete, {signal: controller.signal});
 controller.abort(); await running;
-assert.equal(completed.length, 0, 'Physical abort must not publish a late completion');
+assert.equal(completed.some(item => item.name === 'rag.answer.completed' || item.name === 'ui.effect.failed'), false,
+  'Physical abort must not publish a late completion or failure');
 console.log('PASS: actual prepare/read progress, final citations, explicit retry boundary and physical cancellation');
