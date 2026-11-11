@@ -21,6 +21,7 @@ try {
     if (path.endsWith('/prepare')) result = {...base, schema: 'crexx-rag.answer-preparation/1',
       corpus: input.corpus, question: input.question, status: 'ready',
       activities: [{stage: 'search', message: 'Initial evidence search completed.', route: 'keyword', candidate_count: 1, sources: [source]}],
+      usage: {provider_calls: 1, input_tokens: 700, output_tokens: 140, cost_microunits: 87},
       research: {searches: [], reads: [source.citation]}};
     else if (path.endsWith('/source')) result = {...base, ...source, schema: 'crexx-rag.source-context/1',
       context_text: 'Wider captured context.', context_start: 0, context_end: 80,
@@ -64,6 +65,7 @@ try {
   assert.equal(await page.locator('[data-node-id="answer"] h4').innerText(), 'Findings');
   assert.equal(await page.locator('[data-node-id="answer"] script').count(), 0);
   assert.equal(await page.locator('[data-node-id="answer"] button').count(), 1);
+  assert.match(await page.locator('[data-node-id="answer-usage"]').innerText(), /Full workflow: 4 model calls/);
   assert.equal(await page.locator('[data-node-id="answer"] strong button').count(), 1,
     'Citations inside emphasis remain actionable');
   assert.match(await page.locator('[data-node-id="answer"] li').innerText(), /<script>literal text<\/script>/);

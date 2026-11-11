@@ -19,6 +19,7 @@ export function validateAnswer(value, request) {
       typeof value.answer !== 'string' || value.answer.length > 12000 ||
       value.question !== request.question || !Array.isArray(value.sources) || value.sources.length > 8)
     throw new Error('Invalid cited answer response');
+  validateUsage(value.usage, 4);
   for (const source of value.sources) {
     if (!source || typeof source.title !== 'string' || source.title.length > 256 ||
         typeof source.excerpt !== 'string' || source.excerpt.length > 900 ||
@@ -37,6 +38,15 @@ export function validateAnswer(value, request) {
   if (value.status === 'answered' && !value.sources.length)
     throw new Error('Uncited answer refused');
   if (JSON.stringify(value).length > 49152) throw new Error('Answer exceeds limit');
+  return value;
+}
+
+function validateUsage(value, maximumCalls) {
+  if (!value || !Number.isSafeInteger(value.provider_calls) || value.provider_calls < 0 || value.provider_calls > maximumCalls ||
+      !Number.isSafeInteger(value.input_tokens) || value.input_tokens < 0 || value.input_tokens > 80000 ||
+      !Number.isSafeInteger(value.output_tokens) || value.output_tokens < 0 || value.output_tokens > 6144 ||
+      !Number.isSafeInteger(value.cost_microunits) || value.cost_microunits < 0 || value.cost_microunits > 250000)
+    throw new Error('Invalid answer usage');
   return value;
 }
 
@@ -79,7 +89,15 @@ export function ragQueryHttp() {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({version: 1, ...payload, request_id: requestId}), signal: controller.signal,
       });
-      if (!response.ok) throw new Error(`RAG HTTP ${response.status}`);
+      if (!response.ok) {
+        let detail = '';
+        try {
+          const problem = await response.json();
+          if (typeof problem?.message === 'string' && problem.message.length <= 512)
+            detail = problem.message.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 240);
+        } catch { /* Non-JSON proxy failures retain the status code. */ }
+        throw new Error(`RAG HTTP ${response.status}${detail ? `: ${detail}` : ''}`);
+      }
       const result = await response.json();
       if (result.version !== 1 || result.request_id !== requestId) throw new Error('Invalid RAG response envelope');
       return result;
@@ -144,6 +162,7 @@ export function ragQueryHttp() {
             typeof prepared.library_id !== 'string' || !Number.isSafeInteger(prepared.generation) ||
             !Array.isArray(prepared.activities) || prepared.activities.length > 16)
           throw new Error('Invalid answer preparation');
+        validateUsage(prepared.usage, 1);
         for (const activity of prepared.activities) await publicActivity(activity, 'prepare');
         const research = prepared.research ?? {searches: [], reads: []};
         if (!Array.isArray(research.searches) || research.searches.length > 2 ||
@@ -180,6 +199,13 @@ export function ragQueryHttp() {
         const answer = validateAnswer(final.answer_json ? JSON.parse(final.answer_json) : final, effect.payload);
         if (answer.library_id !== prepared.library_id || answer.generation !== prepared.generation)
           throw new Error('Answer snapshot changed during preparation');
+        answer.workflow_usage = {
+          provider_calls: prepared.usage.provider_calls + answer.usage.provider_calls,
+          input_tokens: prepared.usage.input_tokens + answer.usage.input_tokens,
+          output_tokens: prepared.usage.output_tokens + answer.usage.output_tokens,
+          cost_microunits: prepared.usage.cost_microunits + answer.usage.cost_microunits,
+        };
+        answer.workflow_usage.cost_usd = `$${(answer.workflow_usage.cost_microunits / 1000000).toFixed(6)}`;
         await progress({id: 'model', state: 'done', title: 'Model evidence review',
           summary: `${answer.model} returned a draft for citation checks`,
           input: `Question: ${effect.payload.question}\nCorpus: ${effect.payload.corpus}`,
@@ -194,14 +220,18 @@ export function ragQueryHttp() {
         await complete(effect, 'rag.answer.completed', {answer_json: JSON.stringify(answer)});
       }
     } catch (error) {
+      const quoteMismatch = String(error?.message ?? '').includes('supporting quote is not an exact captured source substring');
       if (effect.name === 'rag.answer' && !signal?.aborted)
         await complete(effect, 'ui.effect.progress', {completed: 1, message: JSON.stringify({schema: 'rag-ui.stage/1',
-          id: 'error', state: 'error', title: 'Request failed', summary: 'The answer service could not complete this request',
+          id: 'error', state: 'error', title: 'Request failed',
+          summary: quoteMismatch ? 'The model quotation failed exact source validation' : 'The answer service could not complete this request',
           input: 'The submitted question', output: String(error?.message ?? error).slice(0, 900)})});
       if (!signal?.aborted) await complete(effect, 'ui.effect.failed', {
         code: controller.signal.aborted ? 'service_timeout' : 'service_failed',
         message: effect.name === 'rag.query' ? 'Read-only query service unavailable' :
-          effect.name === 'rag.source' ? 'Captured source service unavailable' : 'Answer service unavailable. No automatic paid retry was made.',
+          effect.name === 'rag.source' ? 'Captured source service unavailable' :
+            quoteMismatch ? 'The model could not verify an exact source quote. Try Thorough or ask again; no automatic paid retry was made' :
+              'Inspect the red research stage, then retry explicitly. No automatic paid retry was made',
       });
     } finally {
       clearTimeout(timer);

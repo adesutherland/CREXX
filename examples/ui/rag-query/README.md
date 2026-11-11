@@ -30,15 +30,17 @@ listed separately. Any inline markers that are present must refer to that same
 source list; unknown markers are refused.
 
 The protected answer form offers server-approved **Thorough** (`gpt-6.1-sol`)
-and **Fast** (`gpt-6-luna`) profiles, defaulting to Thorough. The selected
-profile is fixed for a submitted request, and the actual model and token usage
-appear with the reply. The server refuses an unavailable fast provider.
+and **Fast** (`gpt-6-luna`, experimental) profiles, defaulting to Thorough. The selected
+profile is fixed for a submitted request. The reply shows the actual model and
+the total provider calls, tokens and estimated gross cost across preparation
+and final answering. The server refuses an unavailable fast provider.
 
 **Research stages** opens automatically for a question. Each ordered stage has
 a visible state and an expandable public input/output summary. Grey marks
 work, amber identifies a model wait and its purpose, green identifies the
 validated reply, and red identifies failure. It contains no hidden provider
-reasoning, private prompts or credentials. Progress messages describe actual
+reasoning, private prompts or credentials. A failed HTTP stage displays the
+reader's bounded explanation when one is available. Progress messages describe actual
 work or an explicit wait, never simulated percentages. Answer Markdown is
 rendered as semantic headings, lists and emphasis without interpreting HTML;
 validated citation buttons remain active.
@@ -55,6 +57,9 @@ sources, corpus/snapshot and provider/model identity, and one of `answered`,
 `insufficient_evidence` or `scope_refused`. Sources retain their title, excerpt,
 canonical citation, safe source URL and UTF-8 span. The RAG server owns retrieval,
 scope policy, generation and final citation validation.
+The same-origin adapter validates and adds `workflow_usage` from the separate
+preparation and final response usage; the underlying server responses retain
+their per-request `usage` fields.
 
 The HTTP executor first POSTs to `/api/rag/v1/answer/prepare`. Only after its
 actual retrieval/scope result arrives does the executor publish those bounded

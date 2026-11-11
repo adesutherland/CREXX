@@ -375,7 +375,7 @@ rag_query_component: class implements .uicomponent
       if _answer_pending & (_answer_request = "" | _answer_request = event.request_id()) then do
         _answer_pending = 0
         _answer_request = ""
-        _answer_status = "Answer failed: " || event.body().text("message") || " (" || event.body().text("code") || "). Retry explicitly."
+        _answer_status = "Answer failed: " || event.body().text("message") || " (" || event.body().text("code") || ")."
         _answer_tone = "error"
       end
       else if _context_pending then do
@@ -422,8 +422,10 @@ rag_query_component: class implements .uicomponent
       ignored = result.set_properties("model-label", '{"parent":"answer-panel"}')
       call result.add_button("model-thorough", "Thorough · GPT-6.1 Sol" || selected_label(_model_profile = "thorough"), "rag.model.thorough", "")
       ignored = result.set_properties("model-thorough", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending) || ',"expanded":' || booljson(_model_profile = "thorough") || '}')
-      call result.add_button("model-fast", "Fast · GPT-6 Luna" || selected_label(_model_profile = "fast"), "rag.model.fast", "")
+      call result.add_button("model-fast", "Fast · GPT-6 Luna (experimental)" || selected_label(_model_profile = "fast"), "rag.model.fast", "")
       ignored = result.set_properties("model-fast", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending) || ',"expanded":' || booljson(_model_profile = "fast") || '}')
+      call result.add_label("model-note", "Fast is cheaper but may fail exact source checks. If it does, try Thorough; no paid retry happens automatically.")
+      ignored = result.set_properties("model-note", '{"parent":"answer-panel"}')
     end
     call result.add_button("ask", "Ask", "rag.ask", "")
     ignored = result.set_properties("ask", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending | _pending | _context_pending | (_answer_available = 0)) || '}')
@@ -440,7 +442,15 @@ rag_query_component: class implements .uicomponent
       ignored = result.set_properties("answer", '{"parent":"answer-panel","label":"Evidence grounded answer","format":"markdown"}')
       call result.add_label("answer-identity", "Library: " || jsonget(_answer_json, "library_id") || " · Snapshot: " || jsonget(_answer_json, "generation") || " · Provider: " || jsonget(_answer_json, "provider") || " · Model: " || jsonget(_answer_json, "model"))
       ignored = result.set_properties("answer-identity", '{"parent":"answer-panel"}')
-      call result.add_label("answer-usage", "Model calls: " || jsonget(_answer_json,"usage.provider_calls") || " · Input tokens: " || jsonget(_answer_json,"usage.input_tokens") || " · Output tokens: " || jsonget(_answer_json,"usage.output_tokens"))
+      usage_path = "usage"
+      usage_label = "Answer request"
+      if jsonget(_answer_json,"workflow_usage.provider_calls") \= "" then do
+        usage_path = "workflow_usage"
+        usage_label = "Full workflow"
+      end
+      usage_text = usage_label || ": " || jsonget(_answer_json,usage_path || ".provider_calls") || " model calls · Input tokens: " || jsonget(_answer_json,usage_path || ".input_tokens") || " · Output tokens: " || jsonget(_answer_json,usage_path || ".output_tokens")
+      if usage_path = "workflow_usage" then usage_text = usage_text || " · Estimated gross provider cost: " || jsonget(_answer_json,"workflow_usage.cost_usd")
+      call result.add_label("answer-usage", usage_text)
       ignored = result.set_properties("answer-usage", '{"parent":"answer-panel"}')
       do source_number = 1 to jsoncount(_answer_json, "sources")
         if source_number > 8 then leave

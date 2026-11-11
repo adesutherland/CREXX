@@ -7,7 +7,8 @@ const source = {title: 'Source title', excerpt: 'Captured supporting text.',
   citation: 'crexx-rag:test-library:source', source_url: 'https://example.org/source.pdf', span_start: 20, span_end: 45};
 const answer = {schema: 'crexx-rag.answer/1', version: 1, request_id: effect.request_id,
   library_id: 'test-library', generation: 7, provider: 'fixture', model: 'fixture', question,
-  status: 'answered', answer: 'A supported finding with its evidence listed separately.', sources: [source]};
+  status: 'answered', answer: 'A supported finding with its evidence listed separately.', sources: [source],
+  usage: {provider_calls: 2, input_tokens: 2100, output_tokens: 400, cost_microunits: 620}};
 const context = {schema: 'crexx-rag.source-context/1', version: 1, library_id: 'test-library', generation: 7,
   ...source, context_text: 'Wider source context with supporting text.', context_start: 0, context_end: 60,
   original_url: '/api/rag/v1/original/approved-asset'};
@@ -15,6 +16,7 @@ const prepared = {schema: 'crexx-rag.answer-preparation/1', version: 1, request_
   corpus: 'heart-failure', question, library_id: 'test-library', generation: 7, status: 'ready',
   activities: [{stage: 'search', message: 'Initial search completed.', route: 'keyword', candidate_count: 1, sources: [source]},
     {stage: 'scope', message: 'Corpus scope assessed.', route: 'scope', candidate_count: 1, sources: []}],
+  usage: {provider_calls: 1, input_tokens: 500, output_tokens: 120, cost_microunits: 110},
   research: {searches: ['treatment evidence'], reads: [source.citation]}};
 const handler = ragQueryHttp();
 const completed = [], calls = [];
@@ -38,10 +40,13 @@ assert.equal(completed.at(-1).name, 'rag.answer.completed');
 assert.equal(JSON.parse(completed.at(-1).payload.answer_json).answer, answer.answer,
   'Validated sources support marker-free answer prose');
 assert.equal(JSON.parse(completed.at(-1).payload.answer_json).sources[0].citation, source.citation);
+assert.deepEqual(JSON.parse(completed.at(-1).payload.answer_json).workflow_usage,
+  {provider_calls: 3, input_tokens: 2600, output_tokens: 520, cost_microunits: 730, cost_usd: '$0.000730'});
 assert.throws(() => validateAnswer({...answer, answer: 'Unknown reference [2].'}, effect.payload));
 assert.throws(() => validateAnswer({...answer, sources: []}, effect.payload));
 assert.throws(() => validateAnswer({...answer, sources: [{...source, source_url: 'file:///private/document'}]}, effect.payload));
 assert.throws(() => validateAnswer({...answer, question: 'Another question'}, effect.payload));
+assert.throws(() => validateAnswer({...answer, usage: {provider_calls: -1}}, effect.payload));
 assert.throws(() => validateSource({...context, original_url: '//evil.example/file'}, source.citation));
 assert.throws(() => validateSource({...context, context_end: 21}, source.citation));
 completed.length = 0;
@@ -49,13 +54,19 @@ let paidCalls = 0;
 globalThis.fetch = async (path, options) => {
   if (path.endsWith('/prepare')) return Response.json(prepared);
   if (path.endsWith('/source')) return Response.json({...context, request_id: JSON.parse(options.body).request_id});
-  paidCalls++; return new Response('', {status: 503});
+  paidCalls++; return Response.json({message: 'supporting quote is not an exact captured source substring'}, {status: 502});
 };
 await handler(effect, complete);
 assert.equal(paidCalls, 1);
 assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
   JSON.parse(item.payload.message).state === 'error'), 'Failure is a distinct red research stage');
+assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
+  JSON.parse(item.payload.message).output.includes('supporting quote is not an exact captured source substring')),
+  'The protected reader explanation appears in the expandable error stage');
+assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
+  JSON.parse(item.payload.message).summary.includes('quotation failed exact source validation')));
 assert.equal(completed.at(-1).name, 'ui.effect.failed');
+assert.match(completed.at(-1).payload.message, /Try Thorough/);
 completed.length = 0;
 const controller = new AbortController();
 globalThis.fetch = async (_path, {signal}) => new Promise((resolve, reject) => {

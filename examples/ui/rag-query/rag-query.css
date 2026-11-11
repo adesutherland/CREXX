@@ -57,6 +57,7 @@ body {
   [data-node-id="explore"], [data-node-id="drawer-toggle"], [data-node-id^="model-"], [data-node-id="quit"]):hover:not(:disabled) { background: #dceee8; }
 #app [data-node-id^="model-"][aria-expanded="true"] { border-color: #136865; background: #dceee8; }
 #app [data-node-id="model-label"] { font-size: .9rem; font-weight: 650; }
+#app [data-node-id="model-note"] { color: #526e74; font-size: .8rem; }
 #app [data-node-id="stop"] { border-color: #b27b5e; color: #8c3c1e; }
 #app [data-node-id="ask-label"], #app [data-node-id="question-label"], #app [data-node-id="hops-label"] { font-size: .9rem; font-weight: 650; }
 #app [role="status"] { padding: .65rem .8rem; border-radius: .4rem; background: #eaf5f2; color: #175851; font-size: .9rem; overflow-wrap: anywhere; }
