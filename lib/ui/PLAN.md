@@ -166,11 +166,9 @@ filesystem or web tools. The protected deployment may include the research
 originals approved for Stephen's validation; any genuinely public static
 distribution retains its independent source-rights gate in STEP08.
 
-The STEP09 presentation caps dialogue, activity and answer text without
-space-padding short values, so completed progress messages and the final answer
-remain visible in the separate drawer. After Adrian and Stephen's question
-review, compare a lower-cost model on the same supported cases before choosing
-the pilot's default answer profile.
+The STEP09 presentation bounds research-stage and answer text without padding
+short values. The lower-cost model is available for controlled comparison;
+Adrian and Stephen's question review will determine the eventual default.
 
 STEP09 reader usability increment (11 November feedback): (5) expose only the
 server-approved `fast` and `thorough` answer profiles, with the current model
@@ -185,11 +183,15 @@ check model-selection refusal and binding, initial state, stage lifecycle,
 Markdown safety and responsive browser behavior, then qualify a protected
 zero-traffic candidate before promotion. The RAG owner enforces model and cost
 bounds; the UI presents its public activity and never exposes hidden reasoning
-or provider credentials. Stephen's answer-quality review remains open.
+or provider credentials. These steps are implemented and deployed in the
+protected pilot. `thorough` remains the default; `fast` is experimental and can
+fail exact source-quote validation without an automatic paid retry. Stephen's
+answer-quality review remains open.
 
 The protected site and original routes are deployed behind the existing
-two-account IAP policy. Adrian's signed-in answer, source-context, original-PDF
-and independent three-route journeys passed. Stephen's own sign-in and question
+two-account IAP policy. Adrian's signed-in answer, source-context, original-PDF,
+selected-model, research-stage and zero-call refusal journeys passed. Stephen's
+own sign-in and question
 review, hosted interruption/resource review and the separate browser-local
 generation criterion remain open.
 
