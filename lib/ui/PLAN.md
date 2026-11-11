@@ -167,8 +167,8 @@ originals approved for Stephen's validation; any genuinely public static
 distribution retains its independent source-rights gate in STEP08.
 
 The STEP09 presentation bounds research-stage and answer text without padding
-short values. The lower-cost model is available for controlled comparison;
-Adrian and Stephen's question review will determine the eventual default.
+short values. The model choices support controlled comparison; Adrian and
+Stephen's question review remains the answer-quality gate.
 
 STEP09 reader usability increment (11 November feedback): (5) expose only the
 server-approved `fast` and `thorough` answer profiles, with the current model
@@ -183,10 +183,10 @@ check model-selection refusal and binding, initial state, stage lifecycle,
 Markdown safety and responsive browser behavior, then qualify a protected
 zero-traffic candidate before promotion. The RAG owner enforces model and cost
 bounds; the UI presents its public activity and never exposes hidden reasoning
-or provider credentials. These steps are implemented and deployed in the
-protected pilot. `thorough` remains the default; `fast` is experimental and can
-fail exact source-quote validation without an automatic paid retry. Stephen's
-answer-quality review remains open.
+or provider credentials. These steps were implemented in the initial two-profile
+pilot. The later three-profile increment below supersedes its selector and
+default. The cheaper Luna route can fail exact source-quote validation without
+an automatic paid retry. Stephen's answer-quality review remains open.
 
 The protected site and original routes are deployed behind the existing
 two-account IAP policy. Adrian's signed-in answer, source-context, original-PDF,
@@ -194,6 +194,15 @@ selected-model, research-stage and zero-call refusal journeys passed. Stephen's
 own sign-in and question
 review, hosted interruption/resource review and the separate browser-local
 generation criterion remain open.
+
+STEP09 model comparison increment (11 November): replace the two-choice pilot
+selector with three server-approved profiles: default `standard` = GPT-6.1
+Terra, `economy` = GPT-6 Luna and `advanced` = GPT-6.1 Sol. All request API
+reasoning effort `medium`. Keep the same answer workflow and show the actual
+model and usage. Check default/explicit selection, absent-provider refusal,
+profile forwarding through prepare/final, and a protected candidate before
+promotion. The price ratios are 0.1:1:2 at equal uncached input/output tokens;
+measured answer quality and actual token use remain open.
 
 ## Architecture details
 

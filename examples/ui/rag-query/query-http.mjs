@@ -127,9 +127,9 @@ export function ragQueryHttp() {
             await complete(effect, 'ui.effect.progress', {completed: ++completed,
               message});
         };
-        if (!['thorough', 'fast'].includes(effect.payload.model_profile))
+        if (!['economy', 'standard', 'advanced'].includes(effect.payload.model_profile))
           throw new Error('Invalid answer model profile');
-        const model = effect.payload.model_profile === 'fast' ? 'GPT-6 Luna' : 'GPT-6.1 Sol';
+        const model = {economy: 'GPT-6 Luna', standard: 'GPT-6.1 Terra', advanced: 'GPT-6.1 Sol'}[effect.payload.model_profile];
         const seen = new Set();
         const publicActivity = async (activity, phase) => {
           const output = activityText(activity);
@@ -230,7 +230,7 @@ export function ragQueryHttp() {
         code: controller.signal.aborted ? 'service_timeout' : 'service_failed',
         message: effect.name === 'rag.query' ? 'Read-only query service unavailable' :
           effect.name === 'rag.source' ? 'Captured source service unavailable' :
-            quoteMismatch ? 'The model could not verify an exact source quote. Try Thorough or ask again; no automatic paid retry was made' :
+            quoteMismatch ? 'The model could not verify an exact source quote. Try another model or ask again; no automatic paid retry was made' :
               'Inspect the red research stage, then retry explicitly. No automatic paid retry was made',
       });
     } finally {

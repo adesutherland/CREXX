@@ -16,19 +16,21 @@ make_rag_query_session: procedure = .uisession
   rc = session.register_event("rag.ask.requested")
   rc = session.register_event("rag.explore.requested")
   rc = session.register_event("rag.drawer.requested")
-  rc = session.register_event("rag.model.fast.requested")
-  rc = session.register_event("rag.model.thorough.requested")
+  rc = session.register_event("rag.model.economy.requested")
+  rc = session.register_event("rag.model.standard.requested")
+  rc = session.register_event("rag.model.advanced.requested")
   rc = session.register_event("rag.source.close.requested")
   rc = session.register_event("rag.context.requested")
   rc = session.register_event("rag.answer.completed", '{"answer_json":{"type":"string","required":true,"maxLength":49152}}', "completion")
   rc = session.register_event("rag.source.completed", '{"source_json":{"type":"string","required":true,"maxLength":49152}}', "completion")
-  rc = session.register_effect("rag.answer", "rag.answer", '{"corpus":{"type":"string","required":true,"maxLength":64},"question":{"type":"string","required":true,"maxLength":1024},"model_profile":{"type":"string","required":true,"enum":["fast","thorough"]}}', "rag.answer.completed")
+  rc = session.register_effect("rag.answer", "rag.answer", '{"corpus":{"type":"string","required":true,"maxLength":64},"question":{"type":"string","required":true,"maxLength":1024},"model_profile":{"type":"string","required":true,"enum":["economy","standard","advanced"]}}', "rag.answer.completed")
   rc = session.register_effect("rag.source", "rag.source", '{"corpus":{"type":"string","required":true,"maxLength":64},"citation":{"type":"string","required":true,"maxLength":512}}', "rag.source.completed")
   rc = session.register_command(.uicommand("rag.ask", "Ask", "root", "rag.ask.requested", ""))
   rc = session.register_command(.uicommand("rag.explore", "Explore corpus", "root", "rag.explore.requested", ""))
   rc = session.register_command(.uicommand("rag.drawer", "Research stages", "root", "rag.drawer.requested", ""))
-  rc = session.register_command(.uicommand("rag.model.fast", "Fast model", "root", "rag.model.fast.requested", ""))
-  rc = session.register_command(.uicommand("rag.model.thorough", "Thorough model", "root", "rag.model.thorough.requested", ""))
+  rc = session.register_command(.uicommand("rag.model.economy", "Economy model", "root", "rag.model.economy.requested", ""))
+  rc = session.register_command(.uicommand("rag.model.standard", "Standard model", "root", "rag.model.standard.requested", ""))
+  rc = session.register_command(.uicommand("rag.model.advanced", "Advanced model", "root", "rag.model.advanced.requested", ""))
   do i = 1 to 16
     suffix = word("one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen", i)
     rc = session.register_event("rag.stage." || suffix || ".requested")
@@ -110,7 +112,7 @@ rag_query_component: class implements .uicomponent
     _answered_question = ""
     _search_open = 0
     _drawer_open = 0
-    _model_profile = "thorough"
+    _model_profile = "standard"
     _stage_count = 0
     _expanded_stage = 0
     _answer_tone = "neutral"
@@ -174,11 +176,14 @@ rag_query_component: class implements .uicomponent
       if _drawer_open then _focus = "live-drawer"
       else _focus = "drawer-toggle"
     end
-    else if name = "rag.model.fast.requested" then do
-      if _answer_pending = 0 then _model_profile = "fast"
+    else if name = "rag.model.economy.requested" then do
+      if _answer_pending = 0 then _model_profile = "economy"
     end
-    else if name = "rag.model.thorough.requested" then do
-      if _answer_pending = 0 then _model_profile = "thorough"
+    else if name = "rag.model.standard.requested" then do
+      if _answer_pending = 0 then _model_profile = "standard"
+    end
+    else if name = "rag.model.advanced.requested" then do
+      if _answer_pending = 0 then _model_profile = "advanced"
     end
     else if wordpos(name, "rag.stage.one.requested rag.stage.two.requested rag.stage.three.requested rag.stage.four.requested rag.stage.five.requested rag.stage.six.requested rag.stage.seven.requested rag.stage.eight.requested rag.stage.nine.requested rag.stage.ten.requested rag.stage.eleven.requested rag.stage.twelve.requested rag.stage.thirteen.requested rag.stage.fourteen.requested rag.stage.fifteen.requested rag.stage.sixteen.requested") > 0 then do
       selected = wordpos(name, "rag.stage.one.requested rag.stage.two.requested rag.stage.three.requested rag.stage.four.requested rag.stage.five.requested rag.stage.six.requested rag.stage.seven.requested rag.stage.eight.requested rag.stage.nine.requested rag.stage.ten.requested rag.stage.eleven.requested rag.stage.twelve.requested rag.stage.thirteen.requested rag.stage.fourteen.requested rag.stage.fifteen.requested rag.stage.sixteen.requested")
@@ -420,11 +425,13 @@ rag_query_component: class implements .uicomponent
     if _answer_available then do
       call result.add_label("model-label", "Answer model · choose before asking")
       ignored = result.set_properties("model-label", '{"parent":"answer-panel"}')
-      call result.add_button("model-thorough", "Thorough · GPT-6.1 Sol" || selected_label(_model_profile = "thorough"), "rag.model.thorough", "")
-      ignored = result.set_properties("model-thorough", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending) || ',"expanded":' || booljson(_model_profile = "thorough") || '}')
-      call result.add_button("model-fast", "Fast · GPT-6 Luna (experimental)" || selected_label(_model_profile = "fast"), "rag.model.fast", "")
-      ignored = result.set_properties("model-fast", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending) || ',"expanded":' || booljson(_model_profile = "fast") || '}')
-      call result.add_label("model-note", "Fast is cheaper but may fail exact source checks. If it does, try Thorough; no paid retry happens automatically.")
+      call result.add_button("model-economy", "Economy · GPT-6 Luna · ~0.1× token cost" || selected_label(_model_profile = "economy"), "rag.model.economy", "")
+      ignored = result.set_properties("model-economy", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending) || ',"expanded":' || booljson(_model_profile = "economy") || '}')
+      call result.add_button("model-standard", "Standard · GPT-6.1 Terra · 1× token cost" || selected_label(_model_profile = "standard"), "rag.model.standard", "")
+      ignored = result.set_properties("model-standard", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending) || ',"expanded":' || booljson(_model_profile = "standard") || '}')
+      call result.add_button("model-advanced", "Advanced · GPT-6.1 Sol · ~2× token cost" || selected_label(_model_profile = "advanced"), "rag.model.advanced", "")
+      ignored = result.set_properties("model-advanced", '{"parent":"answer-panel","disabled":' || booljson(_answer_pending) || ',"expanded":' || booljson(_model_profile = "advanced") || '}')
+      call result.add_label("model-note", "All use medium reasoning. Costs compare equal uncached tokens; actual usage varies. Economy may fail exact source checks. No paid retry happens automatically.")
       ignored = result.set_properties("model-note", '{"parent":"answer-panel"}')
     end
     call result.add_button("ask", "Ask", "rag.ask", "")

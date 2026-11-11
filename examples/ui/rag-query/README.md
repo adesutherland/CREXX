@@ -29,11 +29,14 @@ Answer prose can omit inline citation markers when its validated evidence is
 listed separately. Any inline markers that are present must refer to that same
 source list; unknown markers are refused.
 
-The protected answer form offers server-approved **Thorough** (`gpt-6.1-sol`)
-and **Fast** (`gpt-6-luna`, experimental) profiles, defaulting to Thorough. The selected
+The protected answer form offers server-approved **Economy** (`gpt-6-luna`),
+**Standard** (`gpt-6.1-terra`) and **Advanced** (`gpt-6.1-sol`) profiles,
+defaulting to Standard. All request medium reasoning effort. At equal uncached
+input/output tokens, their published API price ratios are 0.1:1:2. Economy can
+fail strict source-quote validation and remains experimental. The selected
 profile is fixed for a submitted request. The reply shows the actual model and
 the total provider calls, tokens and estimated gross cost across preparation
-and final answering. The server refuses an unavailable fast provider.
+and final answering. The server refuses an unavailable model profile.
 
 **Research stages** opens automatically for a question. Each ordered stage has
 a visible state and an expandable public input/output summary. Grey marks

@@ -37,17 +37,19 @@ try {
   let view = await next();
   assert.equal(node(view, 'ask-question').kind, 'textarea');
   assert.equal(node(view, 'search-panel'), undefined, 'Raw search initially closed');
-  assert.match(node(view, 'model-thorough').text, /selected/);
-  send('command', view.revision, {command: 'rag.model.fast'}); view = await next();
-  assert.match(node(view, 'model-fast').text, /selected/);
-  send('command', view.revision, {command: 'rag.model.thorough'}); view = await next();
+  assert.match(node(view, 'model-standard').text, /selected/);
+  send('command', view.revision, {command: 'rag.model.economy'}); view = await next();
+  assert.match(node(view, 'model-economy').text, /selected/);
+  send('command', view.revision, {command: 'rag.model.advanced'}); view = await next();
+  assert.match(node(view, 'model-advanced').text, /selected/);
+  send('command', view.revision, {command: 'rag.model.standard'}); view = await next();
   send('value', view.revision, {node: 'ask-question', value: question, input_id: 'question-edit'});
   view = await next();
   assert.equal(view.input_id, 'question-edit'); assert.equal(view.accepted, 1);
   send('command', view.revision, {command: 'rag.ask'});
   view = await next();
   const request = (await next()).message;
-  assert.equal(request.name, 'rag.answer'); assert.deepEqual(request.payload, {corpus: 'heart-failure', question, model_profile: 'thorough'});
+  assert.equal(request.name, 'rag.answer'); assert.deepEqual(request.payload, {corpus: 'heart-failure', question, model_profile: 'standard'});
   const oldRevision = view.revision;
   assert.ok(node(view, 'live-drawer')); assert.ok(node(view, 'stop'));
   const stage = {schema: 'rag-ui.stage/1', id: 'read-1', state: 'done', title: 'Source read',

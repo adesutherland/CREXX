@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {ragQueryHttp, validateAnswer, validateSource} from './query-http.mjs';
 const question = 'Explain the evidence.\nState its limits.';
-const effect = {name: 'rag.answer', request_id: 'answer-http/1', payload: {corpus: 'heart-failure', question, model_profile: 'thorough'}};
+const effect = {name: 'rag.answer', request_id: 'answer-http/1', payload: {corpus: 'heart-failure', question, model_profile: 'standard'}};
 const source = {title: 'Source title', excerpt: 'Captured supporting text.',
   citation: 'crexx-rag:test-library:source', source_url: 'https://example.org/source.pdf', span_start: 20, span_end: 45};
 const answer = {schema: 'crexx-rag.answer/1', version: 1, request_id: effect.request_id,
@@ -34,8 +34,8 @@ assert.deepEqual(calls.map(call => call.path), ['/api/rag/v1/answer/prepare', '/
 assert.ok(completed.filter(item => item.name === 'ui.effect.progress').length >= 5);
 assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
   JSON.parse(item.payload.message).summary === 'Read Source title'));
-assert.equal(calls[0].input.model_profile, 'thorough');
-assert.equal(calls[2].input.model_profile, 'thorough');
+assert.equal(calls[0].input.model_profile, 'standard');
+assert.equal(calls[2].input.model_profile, 'standard');
 assert.equal(completed.at(-1).name, 'rag.answer.completed');
 assert.equal(JSON.parse(completed.at(-1).payload.answer_json).answer, answer.answer,
   'Validated sources support marker-free answer prose');
@@ -85,7 +85,7 @@ assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
 assert.ok(completed.some(item => item.name === 'ui.effect.progress' &&
   JSON.parse(item.payload.message).summary.includes('quotation failed exact source validation')));
 assert.equal(completed.at(-1).name, 'ui.effect.failed');
-assert.match(completed.at(-1).payload.message, /Try Thorough/);
+assert.match(completed.at(-1).payload.message, /Try another model/);
 completed.length = 0;
 const controller = new AbortController();
 globalThis.fetch = async (_path, {signal}) => new Promise((resolve, reject) => {

@@ -29,7 +29,7 @@ try {
     else if (path.endsWith('/answer')) {
       finalCount++; await finalGate;
       result = {...base, schema: 'crexx-rag.answer/1', status: 'answered', question: input.question,
-        provider: 'fixture', model: input.model_profile === 'fast' ? 'gpt-6-luna' : 'gpt-6.1-sol',
+        provider: 'fixture', model: {economy: 'gpt-6-luna', standard: 'gpt-6.1-terra', advanced: 'gpt-6.1-sol'}[input.model_profile],
         answer: '## Findings\n**A supported statement [1]**.\n- <script>literal text</script>', sources: [source],
         usage: {provider_calls: 3, input_tokens: 2810, output_tokens: 412, cost_microunits: 487}};
     } else if (path.endsWith('/query')) result = {version: 1, request_id: input.request_id,
@@ -42,15 +42,15 @@ try {
   });
   await page.goto(`${origin}/?app=rag_demo`);
   assert.equal(await page.locator('[data-node-id="search-panel"]').count(), 0);
-  assert.match(await page.locator('[data-node-id="model-thorough"]').innerText(), /selected/);
-  await page.locator('[data-node-id="model-fast"]').click();
-  await page.locator('[data-node-id="model-fast"]').getByText('selected', {exact: false}).waitFor();
+  assert.match(await page.locator('[data-node-id="model-standard"]').innerText(), /selected/);
+  await page.locator('[data-node-id="model-economy"]').click();
+  await page.locator('[data-node-id="model-economy"]').getByText('selected', {exact: false}).waitFor();
   const composer = page.getByRole('textbox', {name: 'Your question', exact: true});
   await composer.waitFor({timeout: 30000});
   await composer.fill(question);
   await page.locator('[data-node-id="ask"]').click();
   await page.locator('[data-node-id="stop"]').waitFor();
-  assert.equal(await page.locator('[data-node-id="model-fast"]').isDisabled(), true);
+  assert.equal(await page.locator('[data-node-id="model-economy"]').isDisabled(), true);
   await page.locator('[data-node-id="stage-3"]').waitFor();
   assert.match(await page.locator('[data-node-id="answer-status"]').getAttribute('data-tone'), /waiting|busy|done/);
   await page.locator('[data-node-id="stage-3"]').click();

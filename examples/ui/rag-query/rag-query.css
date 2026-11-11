@@ -31,9 +31,9 @@ body {
 #app .ui-group > h2 { margin: 0 0 .2rem; font-size: 1.15rem; line-height: 1.35; color: #184b53; }
 #app .ui-group > h3 { margin: 0; font-size: .9rem; color: #205b61; }
 #app .ui-group .ui-group { box-shadow: none; padding: 1rem; border-radius: .5rem; gap: .5rem; }
-#app [data-node-id="answer-panel"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-#app [data-node-id="answer-panel"] > :not([data-node-id="model-thorough"], [data-node-id="model-fast"]) { grid-column: 1 / -1; }
-#app [data-node-id="answer-panel"] > :is([data-node-id="model-thorough"], [data-node-id="model-fast"]) { width: 100%; }
+#app [data-node-id="answer-panel"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#app [data-node-id="answer-panel"] > :not([data-node-id="model-economy"], [data-node-id="model-standard"], [data-node-id="model-advanced"]) { grid-column: 1 / -1; }
+#app [data-node-id="answer-panel"] > :is([data-node-id="model-economy"], [data-node-id="model-standard"], [data-node-id="model-advanced"]) { width: 100%; }
 #app :is(input, textarea) {
   display: block; width: 100%; min-width: 0; padding: .8rem .9rem;
   border: 1px solid #94b0ad; border-radius: .5rem; background: #fcfefd;
@@ -105,6 +105,6 @@ body {
 }
 @media (max-width: 560px) {
   #app [data-node-id="answer-panel"] { grid-template-columns: minmax(0, 1fr); }
-  #app [data-node-id="answer-panel"] > :is([data-node-id="model-thorough"], [data-node-id="model-fast"]) { grid-column: 1; }
+  #app [data-node-id="answer-panel"] > :is([data-node-id="model-economy"], [data-node-id="model-standard"], [data-node-id="model-advanced"]) { grid-column: 1; }
 }
 @media (prefers-reduced-motion: reduce) { #app * { scroll-behavior: auto !important; } }
