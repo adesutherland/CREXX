@@ -31,10 +31,10 @@ commandwork: class implements .taskwork
     errors = .string[]
     address crexx 'run :argv[]' output captured error errors
     do i = 1 to captured[0]
-      say '[' || task_tag || '] ' || captured[i]
+      say task_output_line(captured[i],task_tag)
     end
     do i = 1 to errors[0]
-      say '[' || task_tag || '] ' || errors[i]
+      say task_output_line(errors[i],task_tag)
     end
     if verbose <> 0 then say '[' || task_tag || '] RXBUILD SCHEDULER: finish task=' || task_number || ' id=' || task_id || ' target=' || target_name || ' rc=' || rc
     return .channelvalue.integer_value(rc)
@@ -68,3 +68,8 @@ run_wave: procedure = .int
     end
   end
   return 0
+
+task_output_line: procedure = .string
+  arg line = .string, task_tag = .string
+  if left(line,7) = 'RXBUILD' then return '[' || task_tag || '] ' || line
+  return line
