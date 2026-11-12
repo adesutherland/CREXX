@@ -729,6 +729,8 @@ collect_graph: procedure = .int
   candidate=.string
   attributes_text=.string
   extension_pos=.int
+  pattern_pos=.int
+  pattern=.string
   quote_start=.int
   quote_end=.int
   source_path=.string
@@ -791,6 +793,8 @@ collect_graph: procedure = .int
       directory = substitute_value(unquote(tree.text(tree.child(node,5))),variables)
       recursive = 0
       extension = ''
+      patterns = .string[]
+      excludes = .string[]
       do j = 1 to tree.count(node)
         child = tree.child(node,j)
         if tree.name(child) = 'file.selection.attributes' then do
@@ -802,12 +806,39 @@ collect_graph: procedure = .int
             quote_end = pos('"',attributes_text,quote_start + 1)
             if quote_start > 0 & quote_end > quote_start then extension = substitute_value(unquote(substr(attributes_text,quote_start,quote_end - quote_start + 1)),variables)
           end
+          pattern_pos = 1
+          do while pattern_pos > 0
+            pattern_pos = pos('PATTERN',upper(attributes_text),pattern_pos)
+            if pattern_pos = 0 then leave
+            quote_start = pos('"',attributes_text,pattern_pos)
+            quote_end = pos('"',attributes_text,quote_start + 1)
+            if quote_start > 0 & quote_end > quote_start then do
+              pattern = substitute_value(unquote(substr(attributes_text,quote_start,quote_end - quote_start + 1)),variables)
+              patterns[patterns[0] + 1] = pattern
+              pattern_pos = quote_end + 1
+            end
+            else leave
+          end
+          pattern_pos = 1
+          do while pattern_pos > 0
+            pattern_pos = pos('EXCLUDE',upper(attributes_text),pattern_pos)
+            if pattern_pos = 0 then leave
+            quote_start = pos('"',attributes_text,pattern_pos)
+            quote_end = pos('"',attributes_text,quote_start + 1)
+            if quote_start > 0 & quote_end > quote_start then do
+              pattern = substitute_value(unquote(substr(attributes_text,quote_start,quote_end - quote_start + 1)),variables)
+              excludes[excludes[0] + 1] = pattern
+              pattern_pos = quote_end + 1
+            end
+            else leave
+          end
         end
       end
-      if extension = '' then return graph_error_at(origin,'FILES selection requires EXTENSION')
+      if extension <> '' & patterns[0] <> 0 then return graph_error_at(origin,'FILES selection requires either EXTENSION or PATTERN, not both')
+      if extension = '' & patterns[0] = 0 then return graph_error_at(origin,'FILES selection requires EXTENSION or PATTERN')
       if substitution_error(directory) then return graph_error_at(origin,directory)
       if substitution_error(extension) then return graph_error_at(origin,extension)
-      value = '__RXBUILD_FILESET__' || '0a'x || directory || '0a'x || recursive || '0a'x || extension
+      value = '__RXBUILD_FILESET__' || '0a'x || directory || '0a'x || recursive || '0a'x || extension || '0a'x || join_paths(patterns) || '0a'x || join_paths(excludes)
       call set_variable variables,name,value
     end
     else if kind = 'rule.statement' then do
@@ -952,7 +983,11 @@ collect_graph: procedure = .int
       discovery_dir = source_lines[2]
       recursive = source_lines[3] as .int
       extension = source_lines[4]
-      discovered = discover_group_files(discovery_dir,extension,recursive)
+      patterns = .string[]
+      if source_lines[0] >= 5 then patterns = split_paths(source_lines[5])
+      excludes = .string[]
+      if source_lines[0] >= 6 then excludes = split_paths(source_lines[6])
+      discovered = discover_group_files(discovery_dir,extension,patterns,excludes,recursive)
       if discovered[0] = 0 then return graph_error_at(origin,'no matching files for BUILD_GROUP ' || group_name || ' in ' || project_path(discovery_dir))
       group_rule_index = rule_index(rules,group_rule)
       if group_rule_index = 0 then return graph_error_at(origin,'unknown group rule ' || group_rule)
@@ -1011,16 +1046,58 @@ dependencies_are_independent: procedure = .int
   arg dependencies = .string[], targets = .string[]
   i = .int
   j = .int
-  seen = .string[]
   do i = 1 to dependencies[0]
     do j = i + 1 to dependencies[0]
-      call arraydrop seen
-      if target_reaches(dependencies[i],dependencies[j],targets,seen) <> 0 then return 0
-      call arraydrop seen
-      if target_reaches(dependencies[j],dependencies[i],targets,seen) <> 0 then return 0
+      if dependency_closures_overlap(dependencies[i],dependencies[j],targets) <> 0 then return 0
     end
   end
   return 1
+
+dependency_closures_overlap: procedure = .int
+  arg left_name = .string, right_name = .string, targets = .string[]
+  candidate = .string
+  left_reaches = .int
+  right_reaches = .int
+  i = .int
+  j = .int
+  right_candidate = .string
+  seen = .string[]
+  target_count = targets[0] / 12
+  do i = 1 to target_count
+    candidate = targets[(i - 1) * 12 + 1]
+    call arraydrop seen
+    left_reaches = target_reaches(left_name,candidate,targets,seen)
+    if left_reaches <> 0 then do
+      do j = 1 to target_count
+        right_candidate = targets[(j - 1) * 12 + 1]
+        call arraydrop seen
+        right_reaches = target_reaches(right_name,right_candidate,targets,seen)
+        if right_reaches <> 0 & target_inputs_overlap(candidate,right_candidate,targets) <> 0 then return 1
+      end
+    end
+  end
+  return 0
+
+target_inputs_overlap: procedure = .int
+  arg left_name = .string, right_name = .string, targets = .string[]
+  left_index = .int
+  right_index = .int
+  left_base = .int
+  right_base = .int
+  i = .int
+  left_inputs = .string[]
+  right_inputs = .string[]
+  left_index = target_index(targets,left_name)
+  right_index = target_index(targets,right_name)
+  if left_index = 0 | right_index = 0 then return 0
+  left_base = (left_index - 1) * 12 + 1
+  right_base = (right_index - 1) * 12 + 1
+  left_inputs = split_paths(targets[left_base + 3])
+  right_inputs = split_paths(targets[right_base + 3])
+  do i = 1 to left_inputs[0]
+    if member(right_inputs,left_inputs[i]) <> 0 then return 1
+  end
+  return 0
 
 target_reaches: procedure = .int
   arg name = .string, wanted = .string, targets = .string[], expose seen = .string[]
@@ -1757,11 +1834,11 @@ split_paths: procedure = .string[]
   return values
 
 discover_group_files: procedure = .string[]
-  arg directory = .string, extension = .string, recursive = .int
+  arg directory = .string, extension = .string, patterns = .string[], excludes = .string[], recursive = .int
   results = .string[]
   root = project_path(directory)
   if .rxfs..pathkind(root) <> 2 then return results
-  error_path = collect_group_files(root,'',extension,recursive,results)
+  error_path = collect_group_files(root,'',extension,patterns,excludes,recursive,results)
   if error_path <> '' then do
     call arraydrop results
     return results
@@ -1770,7 +1847,7 @@ discover_group_files: procedure = .string[]
   return results
 
 collect_group_files: procedure = .string
-  arg path = .string, relative = .string, extension = .string, recursive = .int, expose results = .string[]
+  arg path = .string, relative = .string, extension = .string, patterns = .string[], excludes = .string[], recursive = .int, expose results = .string[]
   entries = .string[]
   count = .rxfs..listdir(path,entries)
   if count < 0 then return path
@@ -1784,17 +1861,38 @@ collect_group_files: procedure = .string
       if recursive = 0 then iterate
       nested = entry
       if relative <> '' then nested = relative || '/' || entry
-      error_path = collect_group_files(full_path,nested,extension,recursive,results)
+      error_path = collect_group_files(full_path,nested,extension,patterns,excludes,recursive,results)
       if error_path <> '' then return error_path
       iterate
     end
     if kind <> 1 then iterate
-    if right(upper(entry),length(wanted)) <> wanted then iterate
+    if patterns[0] = 0 & right(upper(entry),length(wanted)) <> wanted then iterate
+    if patterns[0] <> 0 & matches_group_pattern(entry,patterns) = 0 then iterate
+    if excludes[0] <> 0 & matches_group_pattern(entry,excludes) <> 0 then iterate
     item = entry
     if relative <> '' then item = relative || '/' || entry
     results[results[0] + 1] = item
   end
   return ''
+
+matches_group_pattern: procedure = .int
+  arg entry = .string, patterns = .string[]
+  do i = 1 to patterns[0]
+    if glob_match(entry,patterns[i]) <> 0 then return 1
+  end
+  return 0
+
+glob_match: procedure = .int
+  arg text = .string, pattern = .string
+  if pattern = '' then return text = ''
+  if left(pattern,1) = '*' then do
+    if glob_match(text,substr(pattern,2)) <> 0 then return 1
+    if text <> '' then return glob_match(substr(text,2),pattern)
+    return 0
+  end
+  if text = '' then return 0
+  if left(pattern,1) = '?' | upper(left(pattern,1)) = upper(left(text,1)) then return glob_match(substr(text,2),substr(pattern,2))
+  return 0
 
 join_group_path: procedure = .string
   arg directory = .string, relative = .string
