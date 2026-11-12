@@ -8,6 +8,8 @@ import lltree
 import rxfs
 import rxhash
 import rxgraphgrammar
+import concurrency
+import rxbuild_graph_worker
 
 main: procedure = .int
   arg argv = .string[]
@@ -26,6 +28,9 @@ main: procedure = .int
   environment_names = .string[]
   environment_values = .string[]
   unset_environment = .string[]
+  jobs = 4
+  jobs_explicit = 0
+  scheduler_task = 0
   do i = 1 to argv[0]
     if argv[i] = '--verbose' | argv[i] = '-v' | argv[i] = '-verbose' | argv[i] = '-verbose1' | argv[i] = '-verbose2' | argv[i] = '-verbose3' | argv[i] = '-verbose4' then do
       verbose = 1
@@ -81,6 +86,31 @@ main: procedure = .int
       end
       unset_environment[unset_environment[0] + 1] = argv[i]
     end
+    else if argv[i] = '--jobs' then do
+      i = i + 1
+      if i > argv[0] then do
+        say 'RXBUILD: --jobs requires a positive worker count'
+        return 2
+      end
+      jobs = argv[i]
+      if jobs < 1 then do
+        say 'RXBUILD: --jobs requires a positive worker count'
+        return 2
+      end
+      jobs_explicit = 1
+    end
+    else if argv[i] = '--scheduler-task' then do
+      i = i + 1
+      if i > argv[0] then do
+        say 'RXBUILD: --scheduler-task requires a positive task number'
+        return 2
+      end
+      scheduler_task = argv[i]
+      if scheduler_task < 1 then do
+        say 'RXBUILD: --scheduler-task requires a positive task number'
+        return 2
+      end
+    end
     else if argv[i] = '--explain' | argv[i] = '-why' then do
       explain = 1
       explain_explicit = 1
@@ -114,18 +144,24 @@ main: procedure = .int
   graph_explain_defined = 0
   graph_toolchain_dir = ''
   graph_toolchain_defined = 0
+  graph_jobs = 4
+  graph_jobs_defined = 0
+  graph_force = 0
+  graph_force_defined = 0
   loaded = .string[]
   loading = .string[]
-  rc = load_graph(graph,1,'',loaded,loading,rules,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined)
+  rc = load_graph(graph,1,'',loaded,loading,rules,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined,graph_jobs,graph_jobs_defined,graph_force,graph_force_defined)
   if rc <> 0 then return rc
   if verbose_explicit = 0 & graph_verbose_defined <> 0 then verbose = graph_verbose
   if dry_run_explicit = 0 & graph_dry_run_defined <> 0 then dry_run = graph_dry_run
   if explain_explicit = 0 & graph_explain_defined <> 0 then explain = graph_explain
   if toolchain_explicit = 0 & graph_toolchain_defined <> 0 then toolchain_dir = graph_toolchain_dir
-  return execute_graph(rules,targets,defaults,default_builds,requested,verbose,dry_run,dump_graph,explain,query_mode,toolchain_dir,environment_names,environment_values,unset_environment)
+  if jobs_explicit = 0 & graph_jobs_defined <> 0 then jobs = graph_jobs
+  if verbose <> 0 & scheduler_task > 0 then say 'RXBUILD SCHEDULER: child task=' || scheduler_task
+  return execute_graph(rules,targets,defaults,default_builds,requested,verbose,dry_run,dump_graph,explain,query_mode,toolchain_dir,environment_names,environment_values,unset_environment,jobs,graph_force,graph)
 
 load_graph: procedure = .int
-  arg graph = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int
+  arg graph = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int, expose graph_jobs = .int, expose graph_jobs_defined = .int, expose graph_force = .int, expose graph_force_defined = .int
   i = .int
   path = .rxfs..abspath(graph)
   if member(loading,path) then do
@@ -159,7 +195,7 @@ load_graph: procedure = .int
   loading[loading[0] + 1] = path
   variables = .string[]
   if scope = '' & is_root = 0 then scope = path
-  rc = collect_graph(tree,tree.root(),variables,rules,targets,defaults,default_builds,path,is_root,scope,loaded,loading,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined)
+  rc = collect_graph(tree,tree.root(),variables,rules,targets,defaults,default_builds,path,is_root,scope,loaded,loading,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined,graph_jobs,graph_jobs_defined,graph_force,graph_force_defined)
   depth = loading[0] - 1
   previous_loading = .string[]
   do i = 1 to depth
@@ -172,7 +208,7 @@ load_graph: procedure = .int
   return rc
 
 execute_graph: procedure = .int
-  arg rules = .string[], targets = .string[], defaults = .string[], default_builds = .string[], requested = .string, verbose = .int, dry_run = .int, dump_graph = .string, explain = .int, query_mode = .string, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[]
+  arg rules = .string[], targets = .string[], defaults = .string[], default_builds = .string[], requested = .string, verbose = .int, dry_run = .int, dump_graph = .string, explain = .int, query_mode = .string, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[], jobs = .int, force = .int, graph = .string
   requested_target = .string
   resolved_toolchain_dir = .string
   rc = validate_graph(rules,targets,defaults,default_builds)
@@ -222,7 +258,8 @@ execute_graph: procedure = .int
   visiting = .string[]
   completed = .string[]
   rebuilt = .string[]
-  return build_target(requested_target,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment)
+  if verbose <> 0 & jobs > 1 then say 'RXBUILD SCHEDULER: workers=' || jobs
+  return build_target(requested_target,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,1,graph)
 
 list_targets: procedure
   arg targets = .string[]
@@ -675,7 +712,7 @@ validate_dependency_cycle: procedure = .int
   return 0
 
 collect_graph: procedure = .int
-  arg tree = .lltree..view, container = .int, expose variables = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], origin = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int
+  arg tree = .lltree..view, container = .int, expose variables = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], origin = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int, expose graph_jobs = .int, expose graph_jobs_defined = .int, expose graph_force = .int, expose graph_force_defined = .int
   name=.string
   child=.string
   argchild=.string
@@ -708,11 +745,28 @@ collect_graph: procedure = .int
       name = upper(strip(tree.text(tree.child(node,1))))
       value = substitute_value(unquote(tree.text(tree.child(node,3))),variables)
       if substitution_error(value) then return graph_error_at(origin,value)
-      if name = 'VERBOSE' | name = 'DRY_RUN' | name = 'DRYRUN' | name = 'EXPLAIN' | name = 'TOOLCHAIN_DIR' then do
+      if name = 'VERBOSE' | name = 'DRY_RUN' | name = 'DRYRUN' | name = 'EXPLAIN' | name = 'TOOLCHAIN_DIR' | name = 'JOBS' | name = 'FORCE' then do
         if is_root = 0 then iterate
         if name = 'TOOLCHAIN_DIR' then do
           graph_toolchain_dir = value
           graph_toolchain_defined = 1
+          iterate
+        end
+        if name = 'JOBS' then do
+          if value < 1 then return graph_error_at(origin,'JOBS must be a positive worker count')
+          if is_root <> 0 then do
+            graph_jobs = value
+            graph_jobs_defined = 1
+          end
+          iterate
+        end
+        if name = 'FORCE' then do
+          enabled = graph_boolean(value)
+          if enabled < 0 then return graph_error_at(origin,'FORCE must be true or false')
+          if is_root <> 0 then do
+            graph_force = enabled
+            graph_force_defined = 1
+          end
           iterate
         end
         enabled = graph_boolean(value)
@@ -946,15 +1000,94 @@ collect_graph: procedure = .int
       if substitution_error(include_path) then return graph_error_at(origin,include_path)
       include_path = resolve_include_path(origin,include_path)
       if include_alias <> '' & scope_exists(targets,include_alias) then return graph_error_at(origin,'duplicate graph alias ' || include_alias)
-      rc = load_graph(include_path,0,include_alias,loaded,loading,rules,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined)
+      rc = load_graph(include_path,0,include_alias,loaded,loading,rules,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined,graph_jobs,graph_jobs_defined,graph_force,graph_force_defined)
       if rc <> 0 then return rc
     end
     else return graph_error_at(origin,'unknown statement ' || kind)
   end
   return 0
 
+dependencies_are_independent: procedure = .int
+  arg dependencies = .string[], targets = .string[]
+  i = .int
+  j = .int
+  seen = .string[]
+  do i = 1 to dependencies[0]
+    do j = i + 1 to dependencies[0]
+      call arraydrop seen
+      if target_reaches(dependencies[i],dependencies[j],targets,seen) <> 0 then return 0
+      call arraydrop seen
+      if target_reaches(dependencies[j],dependencies[i],targets,seen) <> 0 then return 0
+    end
+  end
+  return 1
+
+target_reaches: procedure = .int
+  arg name = .string, wanted = .string, targets = .string[], expose seen = .string[]
+  if name = wanted then return 1
+  if member(seen,name) <> 0 then return 0
+  seen[seen[0] + 1] = name
+  index = target_index(targets,name)
+  if index = 0 then return 0
+  base = (index - 1) * 12 + 1
+  physical = split_paths(targets[base + 4])
+  do i = 1 to physical[0]
+    if target_reaches(physical[i],wanted,targets,seen) <> 0 then return 1
+  end
+  target_scope = targets[base + 1]
+  separator = lastpos('::',target_scope)
+  if separator > 0 then target_scope = left(target_scope,separator - 1)
+  logical = split_paths(targets[base + 5])
+  do i = 1 to logical[0]
+    logical_target = resolve_logical_target(targets,logical[i],target_scope)
+    if logical_target > 0 then do
+      logical_output = targets[(logical_target - 1) * 12 + 1]
+      if target_reaches(logical_output,wanted,targets,seen) <> 0 then return 1
+    end
+  end
+  return 0
+
+parallel_request: procedure = .channelvalue
+  arg executable = .string, graph = .string, target = .string, task_number = .int, verbose = .int, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[]
+  names = .string[]
+  values = .channelvalue[]
+  argv = .string[]
+  call arrayappend argv, executable
+  call arrayappend argv, graph
+  call arrayappend argv, target
+  call arrayappend argv, '--jobs'
+  call arrayappend argv, '1'
+  call arrayappend argv, '--scheduler-task'
+  call arrayappend argv, task_number
+  if verbose <> 0 then call arrayappend argv, '--verbose'
+  if toolchain_dir <> '' then do
+    call arrayappend argv, '--toolchain-dir'
+    call arrayappend argv, toolchain_dir
+  end
+  do i = 1 to environment_names[0]
+    call arrayappend argv, '--env'
+    call arrayappend argv, environment_names[i] || '=' || environment_values[i]
+  end
+  do i = 1 to unset_environment[0]
+    call arrayappend argv, '--unset-env'
+    call arrayappend argv, unset_environment[i]
+  end
+  names[1] = 'argv'
+  values[1] = parallel_argv_value(argv)
+  names[2] = 'task'
+  values[2] = .channelvalue.integer_value(task_number)
+  return .channelvalue.record_value('crexx.rxbuild.graph.command',1,names,values)
+
+parallel_argv_value: procedure = .channelvalue
+  arg argv = .string[]
+  values = .channelvalue[]
+  do i = 1 to argv[0]
+    values[i] = .channelvalue.string_value(argv[i])
+  end
+  return .channelvalue.array_value(values)
+
 build_target: procedure = .int
-  arg name = .string, rules = .string[], targets = .string[], expose visiting = .string[], expose completed = .string[], expose rebuilt = .string[], verbose = .int, dry_run = .int, explain = .int, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[]
+  arg name = .string, rules = .string[], targets = .string[], expose visiting = .string[], expose completed = .string[], expose rebuilt = .string[], verbose = .int, dry_run = .int, explain = .int, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[], jobs = .int, force = .int, allow_parallel = .int, graph = .string
   rc=.int
   if member(completed,name) then return 0
   if member(visiting,name) then return graph_error('dependency cycle at ' || name)
@@ -987,11 +1120,32 @@ build_target: procedure = .int
   end
   do i = 1 to deps[0]
     dep = deps[i]
-    if target_index(targets,dep) <> 0 then do
-      rc = build_target(dep,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment)
-      if rc <> 0 then return rc
+    if target_index(targets,dep) = 0 then do
+      if .rxfs..isfile(project_path(dep)) = 0 then return graph_error('missing dependency ' || dep || ' for ' || name)
     end
-    else if .rxfs..isfile(project_path(dep)) = 0 then return graph_error('missing dependency ' || dep || ' for ' || name)
+  end
+  parallel_wave = 0
+  if allow_parallel <> 0 & jobs > 1 & deps[0] > 1 & dry_run = 0 then do
+    parallel_wave = dependencies_are_independent(deps,targets)
+  end
+  if parallel_wave <> 0 then do
+    if verbose <> 0 then say 'RXBUILD SCHEDULER: parallel wave target=' || name || ' tasks=' || deps[0]
+    requests = .channelvalue[]
+    executable = tool('rxbuild',toolchain_dir)
+    do i = 1 to deps[0]
+      requests[i] = parallel_request(executable,graph,deps[i],i,verbose,toolchain_dir,environment_names,environment_values,unset_environment)
+    end
+    rc = rxbuild_graph_worker..run_wave(requests,name,jobs)
+    if rc <> 0 then return rc
+  end
+  else do
+    do i = 1 to deps[0]
+      dep = deps[i]
+      if target_index(targets,dep) <> 0 then do
+        rc = build_target(dep,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,0,graph)
+        if rc <> 0 then return rc
+      end
+    end
   end
   if action = '__RXBUILD_GROUP__' then do
     if member(rebuilt,name) = 0 then do
@@ -1100,6 +1254,10 @@ build_target: procedure = .int
         end
       end
     end
+  end
+  if force <> 0 then do
+    stale = 1
+    reason = 'forced by root FORCE'
   end
   if stale = 0 then reason = 'up to date'
   if explain <> 0 then say 'RXBUILD EXPLAIN: target=' || name || ' reason=' || reason

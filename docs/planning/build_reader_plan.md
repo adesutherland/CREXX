@@ -305,6 +305,11 @@ language.
 - GAC-23: **Met locally.** Root graph `EXPLAIN` and `TOOLCHAIN_DIR` assignments
   provide composed-build defaults, while explicit command-line values take
   precedence.
+- GAC-24: **In progress.** Independent dependency waves execute through a
+  bounded worker pool, defaulting to four workers; root `JOBS = N` and
+  `--jobs N` select an explicit positive limit, with the command line taking
+  precedence and `--jobs 1` preserving serial execution. Resource controls,
+  cancellation, and broader contention qualification remain open.
 
 ### Implementation steps
 
@@ -380,6 +385,10 @@ language.
   metadata to human-readable and JSON graph diagnostics, with a focused check
   that environment values are not emitted. Serves the diagnostics portion of
   GAC-20.
+- GSTEP-23: **In progress.** Add a Level B scheduler using the established
+  Level G task-worker adapter, execute independent dependency waves with a
+  default limit of four, serialize overlapping closures, and add focused group
+  scheduling coverage. Serves GAC-24.
 
 ### Future planned graph-build work
 

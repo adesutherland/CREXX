@@ -1,0 +1,70 @@
+/* Level G task adapter used by the Level B graph reader scheduler. */
+options levelg comments_dash
+namespace rxbuild_graph_worker expose command_target run_wave
+import rxfnsb
+import concurrency
+
+commandwork: class implements .taskwork
+  *: factory
+    return
+
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    i = .int
+    if context.cancellation_requested() then return .channelvalue.integer_value(1)
+    if request.schema() <> 'crexx.rxbuild.graph.command' | request.version() <> 1 then return .channelvalue.integer_value(2)
+    task_number = request.field('task').as_integer()
+    encoded = request.field('argv')
+    argv = .string[]
+    verbose = 0
+    do i = 1 to encoded.count()
+      argv[i] = encoded.item(i).as_string()
+      if argv[i] = '--verbose' then verbose = 1
+    end
+    target_name = ''
+    if argv[0] >= 3 then target_name = argv[3]
+    task_id = context.trace_identity()
+    task_tag = task_number
+    if task_number < 10 then task_tag = '0' || task_number
+    if verbose <> 0 then say 'RXBUILD SCHEDULER: launch task=[' || task_tag || '] id=' || task_id || ' target=' || target_name
+    captured = .string[]
+    errors = .string[]
+    address crexx 'run :argv[]' output captured error errors
+    do i = 1 to captured[0]
+      say '[' || task_tag || '] ' || captured[i]
+    end
+    do i = 1 to errors[0]
+      say '[' || task_tag || '] ' || errors[i]
+    end
+    if verbose <> 0 then say '[' || task_tag || '] RXBUILD SCHEDULER: finish task=' || task_number || ' id=' || task_id || ' target=' || target_name || ' rc=' || rc
+    return .channelvalue.integer_value(rc)
+
+command_target: procedure = .tasktarget
+  return task .commandwork()
+
+run_wave: procedure = .int
+  arg requests = .channelvalue[], label = .string, workers = .int
+  i = .int
+  j = .int
+  if requests[0] = 0 then return 0
+  pool = .taskpool.local(workers,workers * 2 + 16)
+  target = command_target()
+  scope = .taskscope.collectall(pool,-1)
+  children = .task[]
+  do i = 1 to requests[0]
+    children[i] = scope.submit(target,requests[i])
+  end
+  completed = scope.join()
+  call scope.close()
+  call pool.close()
+  do i = 1 to completed[0]
+    if completed[i].succeeded() = 0 then do
+      say 'RXBUILD: parallel task failed (' || label || ') ' || completed[i].message()
+      return 1
+    end
+    if completed[i].value().as_integer() <> 0 then do
+      say 'RXBUILD: parallel task failed (' || label || ') rc=' || completed[i].value().as_integer()
+      return completed[i].value().as_integer()
+    end
+  end
+  return 0

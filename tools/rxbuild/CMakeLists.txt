@@ -40,8 +40,9 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxas>
                 -o "${_crexx_rxbuild_root}/rxbuild"
                 "${_crexx_rxbuild_reader_rxas}"
-        DEPENDS rxc rxas library compiler_exit_bin
+        DEPENDS rxc rxas library classlib compiler_exit_bin
                 "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
                 "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
                 ${_crexx_rxbuild_grammar_rxbin}
                 "${_crexx_rxbuild_source}"
@@ -133,8 +134,12 @@ set(_crexx_rxgraph_grammar_rxas "${_crexx_rxgraph_root}/graphgrammar.rxas")
 set(_crexx_rxgraph_grammar_rxbin "${_crexx_rxgraph_root}/graphgrammar.rxbin")
 set(_crexx_rxgraph_reader_rxas "${_crexx_rxgraph_root}/graph_reader.rxas")
 set(_crexx_rxgraph_reader_rxbin "${_crexx_rxgraph_root}/graph_reader.rxbin")
+set(_crexx_rxgraph_worker_rxas "${_crexx_rxgraph_root}/rxbuild_graph_worker.rxas")
+set(_crexx_rxgraph_worker_rxbin "${_crexx_rxgraph_root}/rxbuild_graph_worker.rxbin")
+set(_crexx_rxgraph_import_root "${_crexx_rxgraph_root}/reader-imports")
 set(_crexx_rxgraph_linked_rxbin "${_crexx_rxgraph_root}/graph_reader-linked.rxbin")
 set(_crexx_rxgraph_source "${CMAKE_CURRENT_SOURCE_DIR}/graph/graph_reader.crexx")
+set(_crexx_rxgraph_worker_source "${CMAKE_CURRENT_SOURCE_DIR}/graph/graph_worker.crexx")
 set(_crexx_rxgraph_spec "${CMAKE_CURRENT_SOURCE_DIR}/graph/graph.levell")
 
 add_custom_command(
@@ -156,31 +161,61 @@ add_custom_command(
 add_custom_command(
         OUTPUT ${_crexx_rxgraph_reader_rxbin}
         BYPRODUCTS ${_crexx_rxgraph_reader_rxas}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${_crexx_rxgraph_import_root}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_crexx_rxgraph_grammar_rxbin}"
+                "${_crexx_rxgraph_import_root}/graphgrammar.rxbin"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_crexx_rxgraph_worker_rxbin}"
+                "${_crexx_rxgraph_import_root}/rxbuild_graph_worker.rxbin"
         COMMAND $<TARGET_FILE:rxc>
                 --no-exe-import
-                -i "${CMAKE_BINARY_DIR}/bin;${_crexx_rxgraph_root}"
+                -i "${CMAKE_BINARY_DIR}/bin;${_crexx_rxgraph_import_root}"
                 -o "${_crexx_rxgraph_root}/graph_reader"
                 "${_crexx_rxgraph_source}"
         COMMAND $<TARGET_FILE:rxas>
                 -o "${_crexx_rxgraph_root}/graph_reader"
                 "${_crexx_rxgraph_reader_rxas}"
+        DEPENDS rxc rxas library classlib compiler_exit_bin
+                "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+                ${_crexx_rxgraph_grammar_rxbin}
+                ${_crexx_rxgraph_worker_rxbin}
+                "${_crexx_rxgraph_source}"
+        VERBATIM)
+
+add_custom_command(
+        OUTPUT ${_crexx_rxgraph_worker_rxbin}
+        BYPRODUCTS ${_crexx_rxgraph_worker_rxas}
+        COMMAND $<TARGET_FILE:rxc>
+                --no-exe-import
+                -i "${CMAKE_BINARY_DIR}/bin;${_crexx_rxgraph_root}"
+                -o "${_crexx_rxgraph_root}/rxbuild_graph_worker"
+                "${_crexx_rxgraph_worker_source}"
+        COMMAND $<TARGET_FILE:rxas>
+                -o "${_crexx_rxgraph_root}/rxbuild_graph_worker"
+                "${_crexx_rxgraph_worker_rxas}"
         DEPENDS rxc rxas library compiler_exit_bin
                 "${CMAKE_BINARY_DIR}/bin/library.rxbin"
                 "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
-                ${_crexx_rxgraph_grammar_rxbin}
-                "${_crexx_rxgraph_source}"
+                "${_crexx_rxgraph_worker_source}"
         VERBATIM)
 
 add_custom_command(
         OUTPUT ${_crexx_rxgraph_linked_rxbin}
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_crexx_rxgraph_root}/graph_reader-linked"
                 ${_crexx_rxgraph_reader_rxbin}
+                ${_crexx_rxgraph_worker_rxbin}
                 ${_crexx_rxgraph_grammar_rxbin}
                 "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
                 "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
-        DEPENDS rxlink ${_crexx_rxgraph_reader_rxbin}
+        DEPENDS rxlink classlib ${_crexx_rxgraph_reader_rxbin}
+                ${_crexx_rxgraph_worker_rxbin}
                 ${_crexx_rxgraph_grammar_rxbin}
                 library rxfnsl
+                "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
         VERBATIM)
 
 add_custom_command(

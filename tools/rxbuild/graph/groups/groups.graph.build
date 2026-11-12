@@ -1,5 +1,12 @@
 /* Source-discovered group example. */
+VERBOSE = "true";
+FORCE = "true";
+JOBS = "8";
 SOURCES = FILES IN "tools/rxbuild/graph/groups/sources"
+          RECURSIVE
+          EXTENSION ".crexx";
+
+SOURCESII = FILES IN "tools/rxbuild/graph/groups/others"
           RECURSIVE
           EXTENSION ".crexx";
 
@@ -19,12 +26,19 @@ BUILD_GROUP "programs"
   RULE = compile_program
   SOURCES = SOURCES
   DEPENDS_ON_BUILD = preprocessed
+  DEPENDS_ON_BUILD = others
   OUTPUT_DIR = ".crexx-build/graph-groups"
 END BUILD_GROUP;
 
 BUILD_GROUP "preprocessed"
   RULE = compile_rxpp
   SOURCES = RXPP_SOURCES
+  OUTPUT_DIR = ".crexx-build/graph-groups-rxpp"
+END BUILD_GROUP;
+
+BUILD_GROUP "others"
+  RULE = compile_program
+  SOURCES = SOURCESII
   OUTPUT_DIR = ".crexx-build/graph-groups-rxpp"
 END BUILD_GROUP;
 

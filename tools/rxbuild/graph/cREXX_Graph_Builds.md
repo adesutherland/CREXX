@@ -122,6 +122,11 @@ The current graph reader and runner support the essential dependency-based build
   action-specific execution checks remain deferred);
 - duplicate physical and logical dependency diagnostics before execution;
 - variable and default-target validation;
+- source discovery through `FILES IN ... RECURSIVE EXTENSION ...`;
+- build groups that expand manifests into ordinary compile targets;
+- bounded parallel scheduling of independent dependency waves through
+  `--jobs N` or root `JOBS = N` settings;
+- forced rebuild policy through root `FORCE = "true"`;
 - typed actions for the existing cREXX toolchain.
 
 The supported actions are currently:
@@ -181,9 +186,9 @@ The current implementation already captures Ninja's central model:
 | Output | Physical target name and output path |
 | Dependency | `DEPENDS_ON` or `DEPENDS_ON_BUILD` |
 | Default target | `DEFAULT` or `DEFAULT_BUILD` |
-| Incremental build | Timestamp and dependency checks |
+| Incremental build | Timestamp, dependency and SHA-256 state checks |
 | Target selection | Command-line target argument |
-| Execution | Existing cREXX build actions |
+| Execution | Existing cREXX build actions with bounded parallel waves |
 
 The main difference is that Ninja uses generic command templates, whereas the current implementation uses typed cREXX actions such as `COMPILE GRAMMAR` and `COMPILE READER`.
 
@@ -205,8 +210,7 @@ The current implementation does not yet support all features found in Ninja. In 
 - generic command templates;
 - dynamic dependencies;
 - compiler-generated dependency files;
-- parallel graph execution;
-- resource pools and job limits;
+- resource pools beyond the worker limit;
 - command-line change tracking;
 - a persistent build log file;
 - clean and clean-dead operations;
@@ -229,9 +233,12 @@ The most useful future additions would probably be:
 
 ### Features that can wait
 
-Parallel execution, pools, compiler dependency files and persistent command logs are useful for larger projects, but they are not required to validate the current design.
+Resource pools, compiler dependency files and persistent command logs are useful
+for larger projects, but they are not required to validate the current design.
 
-The graph should first be correct and reliable when executed sequentially. Parallel execution can be added later using the same dependency graph.
+The graph should remain correct and reliable when executed sequentially.
+Parallel execution is already available for independent dependency waves; more
+advanced resource locking and cancellation remain future work.
 
 ## Graph composition
 
@@ -277,7 +284,6 @@ It is not a complete Ninja replacement, and it does not need to become one. Its 
 
 The existing legacy build process should remain unchanged. The graph implementation should continue to evolve as a separate build model until its syntax and behaviour have been evaluated through real examples such as PHP, MiniBASIC and the cREXX build itself.
 
-Future work includes explicit environment policy and graph-declared process
-settings in Phase 9, followed by bounded parallel scheduling, resource locks,
-cancellation, and repeatability diagnostics in Phase 10. Parallel execution is
-intentionally dependent on the completed process contract.
+Future work includes resource locks, cancellation, persistent command logs and
+broader repeatability diagnostics. Bounded parallel scheduling is implemented
+only for independent waves whose transitive dependency closures do not overlap.
