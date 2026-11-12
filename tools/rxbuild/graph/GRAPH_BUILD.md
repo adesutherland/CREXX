@@ -34,13 +34,19 @@ The root graph may provide execution-policy defaults for a composed build:
 VERBOSE = "true";
 DRY_RUN = "true";
 EXPLAIN = "true";
+JOBS = "4";
+FORCE = "false";
 TOOLCHAIN_DIR = "cmake-build-release/bin";
 ```
 
 These settings apply to the root and all included graphs. Definitions with
 these names inside included graphs are ignored. Command-line settings take
 precedence; use `--no-dry-run` or `--execute` to override a root dry-run policy,
-and `--no-explain` to suppress root explanation output.
+`--no-explain` to suppress root explanation output. `JOBS = N` sets the root
+parallel worker limit; included-graph `JOBS` assignments are ignored, and
+`--jobs N` takes precedence over the root setting. `FORCE = "true"` marks
+ordinary build targets stale even when their outputs and state are current;
+it applies only when declared in the root graph and still respects dry-run.
 
 Use `--dry-run` (or `-n`) to validate and traverse the selected dependency
 closure without executing actions or creating outputs:
@@ -84,6 +90,8 @@ resolved outputs with their logical names and source graphs;
 `--show-graph <target>` form renders a semi-graphic prerequisite tree including
 source inputs. These commands validate the complete graph first and use normal
 qualified or unqualified target selection.
+The display contains only the selected target and its reachable dependency
+closure; a valid but unreferenced group is not shown.
 
 The reader also records a SHA-256 sidecar state file next to each successful
 non-`RUN` primary output. The state covers input, dependency, output, action,
@@ -391,9 +399,10 @@ program path.
 
 ## Not supported yet
 
-The graph language does not support generic command templates, multiple outputs,
-dynamic dependencies, parallel graph execution, or arbitrary compiler
-dependency selection. The PHP graph sample builds and runs its four
+The graph language does not support generic command templates, dynamic
+dependencies, or arbitrary compiler dependency selection. Multiple outputs,
+source-discovered build groups, and bounded parallel execution of independent
+dependency waves are supported. The PHP graph sample builds and runs its four
 application RXBINs when the default target is selected. Individual
 `run-php-functions`, `run-php-string`, `run-php-numeric`, and
 `run-php-migration` targets can also be selected.

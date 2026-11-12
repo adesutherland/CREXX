@@ -20,10 +20,17 @@ def run(command: list[str], root: Path) -> tuple[int, str]:
 
 
 def output_lines(output: str) -> list[str]:
+    normalized = []
+    for raw_line in output.splitlines():
+        line = raw_line.strip()
+        if line.startswith("["):
+            prefix_end = line.find("] ")
+            if prefix_end > 1 and line[1:prefix_end].isdigit():
+                line = line[prefix_end + 2:]
+        if "expected=" in line and "result=" in line:
+            normalized.append(line)
     return sorted(
-        line.strip()
-        for line in output.splitlines()
-        if "expected=" in line and "result=" in line
+        normalized
     )
 
 

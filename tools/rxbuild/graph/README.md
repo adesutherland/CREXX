@@ -50,21 +50,26 @@ For comparison, ordinary `.build` plans are routed to `rxbuild-legacy`:
 ```
 
 The example intentionally has two program targets so the dependency edge and
-default-target selection are visible. Generic shell commands and parallel
-execution are outside the current graph language.
+default-target selection are visible. Generic shell commands remain outside
+the graph language; independent graph targets can execute in parallel.
 
 Root graphs may set execution defaults for the complete composed graph:
 
 ```text
 VERBOSE = "true";
 DRY_RUN = "true";
+JOBS = "4";
+FORCE = "false";
 EXPLAIN = "true";
 TOOLCHAIN_DIR = "cmake-build-release/bin";
 ```
 
-Included graphs cannot override these root settings. Use `--no-dry-run` or
-`--execute` when an invocation must execute despite a root dry-run default, or
-`--no-explain` to suppress root explanation output.
+Included graphs cannot override these root settings. `JOBS = N` selects the
+default positive worker limit for the composed build; `--jobs N` overrides it.
+`FORCE = "true"` makes ordinary build targets execute even when they are
+otherwise up to date.
+Use `--no-dry-run` or `--execute` when an invocation must execute despite a
+root dry-run default, or `--no-explain` to suppress root explanation output.
 
 Both block comments and trailing `--` line comments are supported:
 
@@ -211,6 +216,16 @@ dependency closure without executing actions or creating outputs. With
 `--verbose`, stale targets are shown with `state=dry-run` and announced as
 `would build`; run targets are announced as `would run`. Some action-specific
 execution checks are deferred until the action would actually run.
+
+Independent dependency targets may execute concurrently. The default worker
+limit is four; use `--jobs N` to select another positive limit, or `--jobs 1`
+to force serial execution. Dependency order is preserved, and waves with
+shared transitive targets remain serialized to avoid concurrent writes to the
+same output or state files. `--dry-run` remains serial and does not launch
+workers. With `--verbose`, each worker reports a two-digit task tag such as
+`[02]` on its child output. Immediate `launch` lines show concurrency, and
+child output is printed as each worker completes, so tagged lines may
+interleave while remaining attributable to their task.
 
 Use `--explain` (or `-why`) to print why each visited target is rebuilt or
 skipped, such as `output missing`, `input newer`, `dependency rebuilt`, or
