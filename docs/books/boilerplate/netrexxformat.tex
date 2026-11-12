@@ -23,6 +23,14 @@ morestring=[d]'}
   showstringspaces=false,
   %% index=[1][keywords],
   columns=fixed,
+  literate=
+    {/*}{{{\codefont /\char"002A}}}2
+    {*/}{{{\codefont \char"002A/}}}2
+    {*}{{{\codefont\char"002A}}}1,
   frame=none,
   escapeinside={/*@}{*/}
 }
+
+%% note that the above literate= fragment is needed
+%% to avoid IBM Plex Mono use the wrong asterisk
+%% which then will look below the baseline and too bold.
