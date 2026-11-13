@@ -73,7 +73,7 @@ DEFAULT "${{BUILD_DIR}}/final.rxbin";
         rc, output = run(exe, root, plan, "--toolchain-dir", str(toolchain_dir), "--verbose")
         require(rc == 0, "default graph build failed", output)
         require(
-            output.count("built") == 2
+            output.count("RXBUILD: built ") == 2
             and "RXBUILD TOOLCHAIN: root=" in output,
             "default graph did not use the explicit toolchain",
             output,
@@ -199,7 +199,7 @@ DEFAULT_BUILD = final_program;
 ''',
         )
         rc, output = run(exe, root, logical)
-        require(rc == 0 and output.count("built") == 2, "logical graph build failed", output)
+        require(rc == 0 and output.count("RXBUILD: built ") == 2, "logical graph build failed", output)
         rc, output = run(exe, root, logical, "prepare")
         require(rc == 0 and "up to date" in output, "logical target selection failed", output)
 
@@ -239,7 +239,7 @@ DEFAULT_BUILD = parent;
 ''',
         )
         rc, output = run(exe, root, composed)
-        require(rc == 0 and output.count("built") == 2, "composed graph build failed", output)
+        require(rc == 0 and output.count("RXBUILD: built ") == 2, "composed graph build failed", output)
         rc, output = run(exe, root, composed, "child")
         require(rc == 0 and "up to date" in output, "included logical target selection failed", output)
         rc, output = run(exe, root, composed, "--dump-graph")
@@ -374,7 +374,7 @@ DEFAULT_BUILD = all_readers;
 ''',
         )
         rc, output = run(exe, root, namespaced)
-        require(rc == 0 and output.count("built") == 3, "namespaced graph build failed", output)
+        require(rc == 0 and output.count("RXBUILD: built ") == 3, "namespaced graph build failed", output)
         rc, output = run(exe, root, namespaced, "php.reader")
         require(rc == 0 and "up to date" in output, "qualified logical target selection failed", output)
         rc, output = run(exe, root, namespaced, "--dump-graph")
