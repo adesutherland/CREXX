@@ -158,7 +158,8 @@ main: procedure = .int
   if toolchain_explicit = 0 & graph_toolchain_defined <> 0 then toolchain_dir = graph_toolchain_dir
   if jobs_explicit = 0 & graph_jobs_defined <> 0 then jobs = graph_jobs
   if verbose <> 0 & scheduler_task > 0 then say 'RXBUILD SCHEDULER: child task=' || scheduler_task
-  return execute_graph(rules,targets,defaults,default_builds,requested,verbose,dry_run,dump_graph,explain,query_mode,toolchain_dir,environment_names,environment_values,unset_environment,jobs,graph_force,graph)
+  rc = execute_graph(rules,targets,defaults,default_builds,requested,verbose,dry_run,dump_graph,explain,query_mode,toolchain_dir,environment_names,environment_values,unset_environment,jobs,graph_force,graph,scheduler_task)
+  return rc
 
 load_graph: procedure = .int
   arg graph = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int, expose graph_jobs = .int, expose graph_jobs_defined = .int, expose graph_force = .int, expose graph_force_defined = .int
@@ -208,7 +209,10 @@ load_graph: procedure = .int
   return rc
 
 execute_graph: procedure = .int
-  arg rules = .string[], targets = .string[], defaults = .string[], default_builds = .string[], requested = .string, verbose = .int, dry_run = .int, dump_graph = .string, explain = .int, query_mode = .string, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[], jobs = .int, force = .int, graph = .string
+  arg rules = .string[], targets = .string[], defaults = .string[], default_builds = .string[], requested = .string, verbose = .int, dry_run = .int, dump_graph = .string, explain = .int, query_mode = .string, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[], jobs = .int, force = .int, graph = .string, scheduler_task = .int
+  started = time('us')
+  elapsed_us = .int
+  elapsed_seconds = .decimal
   requested_target = .string
   resolved_toolchain_dir = .string
   rc = validate_graph(rules,targets,defaults,default_builds)
@@ -258,8 +262,28 @@ execute_graph: procedure = .int
   visiting = .string[]
   completed = .string[]
   rebuilt = .string[]
-  if verbose <> 0 & jobs > 1 then say 'RXBUILD SCHEDULER: workers=' || jobs
-  return build_target(requested_target,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,1,graph)
+  if verbose <> 0 & jobs > 1 then do
+    say 'RXBUILD SCHEDULER: workers=' || jobs
+    say ''
+  end
+  rc = build_target(requested_target,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,1,graph)
+  elapsed_us = time('us') - started
+  elapsed_seconds = elapsed_us / 1000000.0
+  if rc = 0 & scheduler_task = 0 then call report_summary(completed,rebuilt,dry_run,elapsed_seconds)
+  return rc
+
+report_summary: procedure
+  arg completed = .string[], rebuilt = .string[], dry_run = .int, elapsed_seconds = .decimal
+  elapsed_seconds=format(elapsed_seconds,,3)
+
+  label = 'up-to-date'
+  if dry_run <> 0 then label = 'would build'
+  say ''
+  say 'RXBUILD SUMMARY'
+  say '  targets=' || completed[0]
+  say '  built=' || rebuilt[0]
+  say '  ' || label || '=' || (completed[0] - rebuilt[0])
+  say '  elapsed=' || elapsed_seconds || 's'
 
 list_targets: procedure
   arg targets = .string[]
@@ -722,6 +746,8 @@ collect_graph: procedure = .int
   n=.int
   attr=.string
   attrwrap=.string
+  attr_name=.string
+  attr_text=.string
   value=.string
   kind=.string
   recursive=.int
@@ -798,39 +824,39 @@ collect_graph: procedure = .int
       do j = 1 to tree.count(node)
         child = tree.child(node,j)
         if tree.name(child) = 'file.selection.attributes' then do
-          attributes_text = tree.text(child)
-          if pos('RECURSIVE',upper(attributes_text)) > 0 then recursive = 1
-          extension_pos = pos('EXTENSION',upper(attributes_text))
-          if extension_pos > 0 then do
-            quote_start = pos('"',attributes_text,extension_pos)
-            quote_end = pos('"',attributes_text,quote_start + 1)
-            if quote_start > 0 & quote_end > quote_start then extension = substitute_value(unquote(substr(attributes_text,quote_start,quote_end - quote_start + 1)),variables)
-          end
-          pattern_pos = 1
-          do while pattern_pos > 0
-            pattern_pos = pos('PATTERN',upper(attributes_text),pattern_pos)
-            if pattern_pos = 0 then leave
-            quote_start = pos('"',attributes_text,pattern_pos)
-            quote_end = pos('"',attributes_text,quote_start + 1)
-            if quote_start > 0 & quote_end > quote_start then do
-              pattern = substitute_value(unquote(substr(attributes_text,quote_start,quote_end - quote_start + 1)),variables)
-              patterns[patterns[0] + 1] = pattern
-              pattern_pos = quote_end + 1
+          do k = 1 to tree.count(child)
+            attrwrap = tree.child(child,k)
+            attr = attrwrap
+            attr_name = tree.name(attr)
+            if attr_name <> 'recursive.attribute' & attr_name <> 'extension.attribute' & attr_name <> 'pattern.attribute' & attr_name <> 'exclude.attribute' & attr_name <> 'exclude.pattern.attribute' then do
+              if tree.count(attrwrap) < 1 then iterate
+              attr = tree.child(attrwrap,1)
             end
-            else leave
-          end
-          pattern_pos = 1
-          do while pattern_pos > 0
-            pattern_pos = pos('EXCLUDE',upper(attributes_text),pattern_pos)
-            if pattern_pos = 0 then leave
-            quote_start = pos('"',attributes_text,pattern_pos)
-            quote_end = pos('"',attributes_text,quote_start + 1)
-            if quote_start > 0 & quote_end > quote_start then do
-              pattern = substitute_value(unquote(substr(attributes_text,quote_start,quote_end - quote_start + 1)),variables)
-              excludes[excludes[0] + 1] = pattern
-              pattern_pos = quote_end + 1
+            if tree.name(attr) = 'recursive.attribute' then recursive = 1
+            if tree.name(attr) = 'extension.attribute' then do
+              attr_text = tree.text(attr)
+              quote_start = pos('"',attr_text)
+              quote_end = pos('"',attr_text,quote_start + 1)
+              if quote_start > 0 & quote_end > quote_start then extension = substitute_value(unquote(substr(attr_text,quote_start,quote_end - quote_start + 1)),variables)
             end
-            else leave
+            if tree.name(attr) = 'pattern.attribute' then do
+              attr_text = tree.text(attr)
+              quote_start = pos('"',attr_text)
+              quote_end = pos('"',attr_text,quote_start + 1)
+              if quote_start > 0 & quote_end > quote_start then do
+                pattern = substitute_value(unquote(substr(attr_text,quote_start,quote_end - quote_start + 1)),variables)
+                patterns[patterns[0] + 1] = pattern
+              end
+            end
+            if tree.name(attr) = 'exclude.attribute' | tree.name(attr) = 'exclude.pattern.attribute' then do
+              attr_text = tree.text(attr)
+              quote_start = pos('"',attr_text)
+              quote_end = pos('"',attr_text,quote_start + 1)
+              if quote_start > 0 & quote_end > quote_start then do
+                pattern = substitute_value(unquote(substr(attr_text,quote_start,quote_end - quote_start + 1)),variables)
+                excludes[excludes[0] + 1] = pattern
+              end
+            end
           end
         end
       end
@@ -838,7 +864,7 @@ collect_graph: procedure = .int
       if extension = '' & patterns[0] = 0 then return graph_error_at(origin,'FILES selection requires EXTENSION or PATTERN')
       if substitution_error(directory) then return graph_error_at(origin,directory)
       if substitution_error(extension) then return graph_error_at(origin,extension)
-      value = '__RXBUILD_FILESET__' || '0a'x || directory || '0a'x || recursive || '0a'x || extension || '0a'x || join_paths(patterns) || '0a'x || join_paths(excludes)
+      value = '__RXBUILD_FILESET__' || '0a'x || directory || '0a'x || recursive || '0a'x || extension || '0a'x || selection_join(patterns) || '0a'x || selection_join(excludes)
       call set_variable variables,name,value
     end
     else if kind = 'rule.statement' then do
@@ -984,9 +1010,9 @@ collect_graph: procedure = .int
       recursive = source_lines[3] as .int
       extension = source_lines[4]
       patterns = .string[]
-      if source_lines[0] >= 5 then patterns = split_paths(source_lines[5])
+      if source_lines[0] >= 5 then patterns = selection_split(source_lines[5])
       excludes = .string[]
-      if source_lines[0] >= 6 then excludes = split_paths(source_lines[6])
+      if source_lines[0] >= 6 then excludes = selection_split(source_lines[6])
       discovered = discover_group_files(discovery_dir,extension,patterns,excludes,recursive)
       if discovered[0] = 0 then return graph_error_at(origin,'no matching files for BUILD_GROUP ' || group_name || ' in ' || project_path(discovery_dir))
       group_rule_index = rule_index(rules,group_rule)
@@ -1101,6 +1127,7 @@ target_inputs_overlap: procedure = .int
 
 target_reaches: procedure = .int
   arg name = .string, wanted = .string, targets = .string[], expose seen = .string[]
+  i = .int
   if name = wanted then return 1
   if member(seen,name) <> 0 then return 0
   seen[seen[0] + 1] = name
@@ -1126,6 +1153,7 @@ target_reaches: procedure = .int
 
 parallel_request: procedure = .channelvalue
   arg executable = .string, graph = .string, target = .string, task_number = .int, verbose = .int, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[]
+  i = .int
   names = .string[]
   values = .channelvalue[]
   argv = .string[]
@@ -1166,6 +1194,14 @@ parallel_argv_value: procedure = .channelvalue
 build_target: procedure = .int
   arg name = .string, rules = .string[], targets = .string[], expose visiting = .string[], expose completed = .string[], expose rebuilt = .string[], verbose = .int, dry_run = .int, explain = .int, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[], jobs = .int, force = .int, allow_parallel = .int, graph = .string
   rc=.int
+  dep = .string
+  schedule_deps = .string[]
+  logical_output = .string
+  rxpp_group = .int
+  member_index = .int
+  member_rule = .string
+  member_rule_index = .int
+  member_action = .string
   if member(completed,name) then return 0
   if member(visiting,name) then return graph_error('dependency cycle at ' || name)
   t = target_index(targets,name)
@@ -1201,23 +1237,54 @@ build_target: procedure = .int
       if .rxfs..isfile(project_path(dep)) = 0 then return graph_error('missing dependency ' || dep || ' for ' || name)
     end
   end
+  schedule_deps = deps
+  if action = '__RXBUILD_GROUP__' & logical_deps[0] > 0 then do
+    if verbose <> 0 then do
+      say 'RXBUILD PHASE: prerequisites for ' || name
+    end
+    do i = 1 to logical_deps[0]
+      logical_output = deps[physical_deps[0] + i]
+      rc = build_target(logical_output,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,allow_parallel,graph)
+      if rc <> 0 then return rc
+    end
+    call arraydrop schedule_deps
+    do i = 1 to physical_deps[0]
+      schedule_deps[schedule_deps[0] + 1] = physical_deps[i]
+    end
+  end
+  rxpp_group = 0
+  if action = '__RXBUILD_GROUP__' & schedule_deps[0] > 0 then do
+    member_index = target_index(targets,schedule_deps[1])
+    if member_index > 0 then do
+      member_rule = targets[(member_index - 1) * 12 + 3]
+      member_rule_index = rule_index(rules,member_rule)
+      if member_rule_index > 0 then do
+        member_action = upper(rules[(member_rule_index - 1) * 3 + 2])
+        if member_action = 'COMPILE RXPP' | member_action = 'COMPILE RXPP PROGRAM' then rxpp_group = 1
+      end
+    end
+  end
   parallel_wave = 0
-  if allow_parallel <> 0 & jobs > 1 & deps[0] > 1 & dry_run = 0 then do
-    parallel_wave = dependencies_are_independent(deps,targets)
+  if allow_parallel <> 0 & jobs > 1 & schedule_deps[0] > 1 & dry_run = 0 & rxpp_group = 0 then do
+    parallel_wave = dependencies_are_independent(schedule_deps,targets)
   end
   if parallel_wave <> 0 then do
-    if verbose <> 0 then say 'RXBUILD SCHEDULER: parallel wave target=' || name || ' tasks=' || deps[0]
+    if verbose <> 0 then do
+      say ''
+      say 'RXBUILD PHASE: parallel targets for ' || name
+      say 'RXBUILD SCHEDULER: parallel wave target=' || name || ' tasks=' || schedule_deps[0]
+    end
     requests = .channelvalue[]
     executable = tool('rxbuild',toolchain_dir)
-    do i = 1 to deps[0]
-      requests[i] = parallel_request(executable,graph,deps[i],i,verbose,toolchain_dir,environment_names,environment_values,unset_environment)
+    do i = 1 to schedule_deps[0]
+      requests[i] = parallel_request(executable,graph,schedule_deps[i],i,verbose,toolchain_dir,environment_names,environment_values,unset_environment)
     end
-    rc = rxbuild_graph_worker..run_wave(requests,name,jobs)
+    rc = rxbuild_graph_worker..run_wave(requests,name,jobs,verbose)
     if rc <> 0 then return rc
   end
   else do
-    do i = 1 to deps[0]
-      dep = deps[i]
+    do i = 1 to schedule_deps[0]
+      dep = schedule_deps[i]
       if target_index(targets,dep) <> 0 then do
         rc = build_target(dep,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,0,graph)
         if rc <> 0 then return rc
@@ -1413,7 +1480,8 @@ resolve_target: procedure = .string
 report_target: procedure
   arg name = .string, action = .string, inputs = .string[], deps = .string[], workdir = .string, argument = .string, argument_value = .string, stdin = .string, runtime_args = .string[], state = .string
   i = .int
-  line = 'RXBUILD VERBOSE: action=' || action || ' target=' || name || ' state=' || state
+  say ''
+  line = 'RXBUILD VERBOSE: action=' || action || ' target=' || name || ' state=' || state || ' start='time()
   say line
   do i = 1 to inputs[0]
     say '  input=' || project_path(inputs[i])
@@ -1816,6 +1884,31 @@ join_paths: procedure = .string
     result = result || values[i]
   end
   return result
+
+selection_join: procedure = .string
+  arg values = .string[]
+  result = ''
+  do i = 1 to values[0]
+    if i > 1 then result = result || '0b'x
+    result = result || values[i]
+  end
+  return result
+
+selection_split: procedure = .string[]
+  arg value = .string
+  values = .string[]
+  if value = '' then return values
+  start = 1
+  do while start <= length(value)
+    separator = pos('0b'x,value,start)
+    if separator = 0 then do
+      values[values[0] + 1] = substr(value,start)
+      leave
+    end
+    values[values[0] + 1] = substr(value,start,separator-start)
+    start = separator + 1
+  end
+  return values
 
 split_paths: procedure = .string[]
   arg value = .string

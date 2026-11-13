@@ -1,0 +1,5 @@
+options levelb
+
+main: procedure = .int
+  say 'group source not in pattern scope'
+  return 0

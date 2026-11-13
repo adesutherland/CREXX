@@ -100,6 +100,12 @@ END BUILD_GROUP;
 DEFAULT_BUILD = programs;
 ```
 
+Use repeatable `PATTERN` attributes instead of `EXTENSION` to select a subset
+of filenames, for example `PATTERN "ABC*.crexx"`. Patterns are OR-matched;
+`EXTENSION` and `PATTERN` cannot be combined. Repeatable `EXCLUDE_PATTERN`
+patterns can be added to either form to remove matching filenames; `EXCLUDE`
+remains accepted as a compatibility shorthand.
+
 Recursive members retain their source-relative directories under `OUTPUT_DIR`.
 The group is a virtual aggregate, so selecting `programs` builds its members
 but does not create a file named `programs` or remove outputs for deleted

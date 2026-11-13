@@ -162,6 +162,35 @@ END BUILD_GROUP;
 DEFAULT_BUILD = programs;
 ```
 
+`PATTERN` may be used instead of `EXTENSION` for wildcard selection. Patterns
+are repeatable and are OR-matched against each discovered filename:
+
+```text
+SOURCES = FILES IN "src"
+          RECURSIVE
+          PATTERN "ABC*.crexx"
+          PATTERN "DEF*.crexx";
+```
+
+`*` matches any sequence and `?` matches one character. `EXTENSION` and
+`PATTERN` are alternatives; specifying both is an error.
+
+Use repeatable `EXCLUDE_PATTERN` attributes with either selection form to
+remove matching filenames after inclusion. Each exclusion is OR-matched, so
+a file matching any exclusion is omitted. `EXCLUDE` is accepted as a
+backward-compatible shorthand:
+
+```text
+SOURCES = FILES IN "src"
+          RECURSIVE
+          PATTERN "*.crexx"
+          EXCLUDE_PATTERN "*.generated.crexx"
+          EXCLUDE "test_*.crexx";
+```
+
+Exclusions are applied after inclusion and match the discovered filename,
+including its relative subdirectory path when `RECURSIVE` is used.
+
 The group expands to one `COMPILE PROGRAM` target per matching source and one
 virtual aggregate target. The aggregate has no output file; selecting it
 selects its member closure. The discovered manifest is sorted and included in
@@ -427,6 +456,19 @@ harness: it creates temporary graph files, invokes canonical `rxbuild`, checks
 diagnostics and incremental behavior, and removes its temporary outputs. The
 graph implementation itself remains `graph.levell` plus
 `graph_reader.crexx`.
+
+After a normal build, the root invocation prints a summary such as:
+
+```text
+RXBUILD SUMMARY
+  targets=6
+  built=2
+  up-to-date=4
+```
+
+The summary is emitted only by the root invocation. Parallel child tasks and
+read-only graph queries do not print duplicate summaries. With `DRY_RUN` or
+`--dry-run`, the final count is reported as `would build`.
 
 ## Future planned work
 

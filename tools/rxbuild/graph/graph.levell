@@ -20,6 +20,9 @@ filesword: token
 inword: token
 recursiveword: token
 extensionword: token
+patternword: token
+excludeword: token
+excludepatternword: token
 buildgroupword: token
 sourcesword: token
 outputdirword: token
@@ -59,9 +62,12 @@ parse: parser semantics contextfree input tokens start program
   file.selection.assignment: rule = identifier equals filesword inword string file.selection.attributes terminator
   sources.selection.assignment: rule = sourcesword equals filesword inword string file.selection.attributes terminator
   file.selection.attributes: rule = file.selection.attribute*
-  file.selection.attribute: rule = recursive.attribute | extension.attribute
+  file.selection.attribute: rule = recursive.attribute | extension.attribute | pattern.attribute | exclude.attribute | exclude.pattern.attribute
   recursive.attribute: rule = recursiveword
   extension.attribute: rule = extensionword string
+  pattern.attribute: rule = patternword string
+  exclude.attribute: rule = excludeword string
+  exclude.pattern.attribute: rule = excludepatternword string
   rule.statement: rule = ruleword identifier rule.attributes endword ruleword terminator
   rule.attributes: rule = rule.attribute*
   rule.attribute: rule = action.attribute | description.attribute
@@ -142,6 +148,15 @@ classify: tokenstage start 1
   word.extension:
     transform stage classify state 1
       take identifier text "EXTENSION" emit extensionword next 1
+  word.pattern:
+    transform stage classify state 1
+      take identifier text "PATTERN" emit patternword next 1
+  word.exclude:
+    transform stage classify state 1
+      take identifier text "EXCLUDE" emit excludeword next 1
+  word.exclude.pattern:
+    transform stage classify state 1
+      take identifier text "EXCLUDE_PATTERN" emit excludepatternword next 1
   word.build.group:
     transform stage classify state 1
       take identifier text "BUILD_GROUP" emit buildgroupword next 1

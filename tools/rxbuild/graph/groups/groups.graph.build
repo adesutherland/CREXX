@@ -8,7 +8,9 @@ SOURCES = FILES IN "tools/rxbuild/graph/groups/sources"
 
 SOURCESII = FILES IN "tools/rxbuild/graph/groups/others"
           RECURSIVE
-          EXTENSION ".crexx";
+          PATTERN "*.crexx"
+          EXCLUDE_PATTERN "not_in_scope.*"
+          EXCLUDE_PATTERN "sub_two.crexx";
 
 RXPP_SOURCES = FILES IN "tools/rxbuild/graph/groups/rxpp"
                RECURSIVE

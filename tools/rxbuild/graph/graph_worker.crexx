@@ -17,6 +17,14 @@ commandwork: class implements .taskwork
     encoded = request.field('argv')
     argv = .string[]
     verbose = 0
+    start_time = .string
+    started = .int
+    finished = .int
+    elapsed_us = .int
+    elapsed_seconds = .decimal
+    elapsed_text = .string
+    decimal_position = .int
+    fraction_length = .int
     do i = 1 to encoded.count()
       argv[i] = encoded.item(i).as_string()
       if argv[i] = '--verbose' then verbose = 1
@@ -24,9 +32,12 @@ commandwork: class implements .taskwork
     target_name = ''
     if argv[0] >= 3 then target_name = argv[3]
     task_id = context.trace_identity()
+    task_tag = .string
     task_tag = task_number
     if task_number < 10 then task_tag = '0' || task_number
-    if verbose <> 0 then say 'RXBUILD SCHEDULER: launch task=[' || task_tag || '] id=' || task_id || ' target=' || target_name
+    start_time = time()
+    started = time('us')
+    if verbose <> 0 then say 'RXBUILD SCHEDULER: launch task=[' || task_tag || '] id=' || task_id || ' target=' || target_name || ' start=' || start_time
     captured = .string[]
     errors = .string[]
     address crexx 'run :argv[]' output captured error errors
@@ -36,14 +47,27 @@ commandwork: class implements .taskwork
     do i = 1 to errors[0]
       say task_output_line(errors[i],task_tag)
     end
-    if verbose <> 0 then say '[' || task_tag || '] RXBUILD SCHEDULER: finish task=' || task_number || ' id=' || task_id || ' target=' || target_name || ' rc=' || rc
+    finished = time('us')
+    elapsed_us = finished - started
+    elapsed_seconds = elapsed_us / 1000000.0
+    elapsed_text = elapsed_seconds
+    decimal_position = pos('.',elapsed_text)
+    if decimal_position = 0 then elapsed_text = elapsed_text || '.000'
+    else do
+      fraction_length = length(elapsed_text) - decimal_position
+      if fraction_length = 0 then elapsed_text = elapsed_text || '000'
+      else if fraction_length = 1 then elapsed_text = elapsed_text || '00'
+      else if fraction_length = 2 then elapsed_text = elapsed_text || '0'
+      else if fraction_length > 3 then elapsed_text = left(elapsed_text,decimal_position + 3)
+    end
+    if verbose <> 0 then say '[' || task_tag || '] RXBUILD SCHEDULER: finish task=' || task_number || ' id=' || task_id || ' target=' || target_name || ' elapsed=' || elapsed_text || 's rc=' || rc
     return .channelvalue.integer_value(rc)
 
 command_target: procedure = .tasktarget
   return task .commandwork()
 
 run_wave: procedure = .int
-  arg requests = .channelvalue[], label = .string, workers = .int
+  arg requests = .channelvalue[], label = .string, workers = .int, verbose = .int
   i = .int
   j = .int
   if requests[0] = 0 then return 0
@@ -52,6 +76,7 @@ run_wave: procedure = .int
   scope = .taskscope.collectall(pool,-1)
   children = .task[]
   do i = 1 to requests[0]
+    if verbose <> 0 then say 'RXBUILD SCHEDULER: dispatch task=' || requests[i].field('task').as_integer() || ' target=' || requests[i].field('argv').item(3).as_string()
     children[i] = scope.submit(target,requests[i])
   end
   completed = scope.join()

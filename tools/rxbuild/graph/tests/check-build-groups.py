@@ -41,14 +41,21 @@ def main() -> int:
     rc, output = run(prefix + ["--list-targets"], root)
     if rc != 0:
         return fail("group target listing failed", output)
-    for expected in ("graph-groups\\one.rxbin", "graph-groups\\sub\\two.rxbin", "@group/::programs"):
+    for expected in ("graph-groups\\one.rxbin", "graph-groups\\sub\\two.rxbin",
+                     "graph-groups\\three.rxbin", "graph-groups\\sub\\four.rxbin",
+                     "@group/::programs"):
         if expected not in output:
             return fail("group target listing was incomplete: " + expected, output)
+    rc, output = run(prefix + ["--list-targets", "others"], root)
+    if (rc != 0 or "sub_one.rxbin" not in output
+            or "sub_two.rxbin" in output or "not_in_scope.rxbin" in output):
+        return fail("repeatable EXCLUDE_PATTERN entries were not applied", output)
 
     rc, output = run(prefix + ["--show-graph", "programs"], root)
     if rc != 0:
         return fail("group graph query failed", output)
-    for expected in ("sources\\one.crexx", "sources\\sub\\two.crexx"):
+    for expected in ("sources\\one.crexx", "sources\\sub\\two.crexx",
+                     "sources\\three.crexx", "sources\\sub\\four.crexx"):
         if expected not in output:
             return fail("group graph query was incomplete: " + expected, output)
 
@@ -56,8 +63,8 @@ def main() -> int:
     if rc != 0:
         return fail("group dry-run failed", output)
 
-    rc, output = run(prefix + ["--verbose", "programs"], root)
-    if rc != 0 or "RXBUILD SCHEDULER: workers=2" not in output:
+    rc, output = run(prefix + ["--verbose", "--dry-run", "programs"], root)
+    if rc != 0 or "RXBUILD SCHEDULER: workers=8" not in output:
         return fail("root JOBS setting was not applied", output)
 
     rc, output = run(prefix + ["--verbose", "--jobs", "4", "programs"], root)
