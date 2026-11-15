@@ -162,7 +162,7 @@ Level B values have types. The most common built-in source spellings are:
 | `.object` | object-shaped values |
 | `.void` | no return value |
 
-Write `.boolean` in current Level B source. Some Rexx or C habits may suggest
+Write `.boolean` in current Level B source. Some Rexx or C patterns may suggest
 `.bool`, but `.boolean` is the documented Level B spelling.
 
 A local variable can be inferred from its first assignment, or you can declare
@@ -273,7 +273,7 @@ Expected output:
 <!-- x=11 -->
 <!-- ``` -->
 
-The important habits are:
+The important patterns are:
 
 - `arg name = .type` is by value. Changes in the procedure do not update the
   caller's variable.
@@ -833,48 +833,48 @@ The explicit `rxvm` command matters here because interface factory providers
 are discovered from the modules present in the runtime image. For deployable
 programs, `rxlink` is the usual way to combine those modules into one image.
 
-## Migration Guide For Classic Rexx Habits
+## Migration Guide For Classic Rexx Patterns
 
-Classic Rexx habit:
+Classic Rexx pattern:
 : Rely on untyped variables.
 
-Level B habit:
+Level B pattern:
 : Let obvious literals infer types, or declare variables with `.string`,
   `.int`, `.float`, `.boolean`, `.binary`, arrays, or object contracts.
 
-Classic Rexx habit:
+Classic Rexx pattern:
 : Assume built-in functions are always visible.
 
-Level B habit:
+Level B pattern:
 : `import rxfnsb` in reusable source, unless you are deliberately writing a
   headerless `crexx` driver script.
 
-Classic Rexx habit:
+Classic Rexx pattern:
 : Use stems as flexible bags of values.
 
-Level B habit:
+Level B pattern:
 : Use typed arrays and array helper functions for ordered typed data. Use
   `.stem` for classic compound-variable style keyed strings. Treat `array[0]`
   as a count, not as a writable stem slot.
 
-Classic Rexx habit:
+Classic Rexx pattern:
 : Share state freely through globals.
 
-Level B habit:
+Level B pattern:
 : Prefer arguments and returns. Use `namespace ... expose`, `procedure expose`,
   or `arg expose` only for intentional sharing.
 
-Classic Rexx habit:
+Classic Rexx pattern:
 : Treat text and bytes as the same thing.
 
-Level B habit:
+Level B pattern:
 : Use `.string` for valid UTF-8 text and `.binary` for arbitrary bytes. Convert
   explicitly.
 
-Classic Rexx habit:
+Classic Rexx pattern:
 : Expect dynamic object behavior.
 
-Level B habit:
+Level B pattern:
 : Define an interface, implement it with classes, and use checked casts and
   type tests at boundaries.
 
