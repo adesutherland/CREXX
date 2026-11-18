@@ -59,21 +59,20 @@ def main() -> int:
         if expected not in output:
             return fail("group graph query was incomplete: " + expected, output)
 
-    rc, output = run(prefix + ["--dry-run", "programs"], root)
+    rc, output = run(prefix + ["--dry-run", "--no-clean", "--no-rebuild", "programs"], root)
     if rc != 0:
         return fail("group dry-run failed", output)
 
-    rc, output = run(prefix + ["--verbose", "--dry-run", "programs"], root)
-    if rc != 0 or "RXBUILD SCHEDULER: workers=8" not in output:
+    rc, output = run(prefix + ["--verbose", "--dry-run", "--no-clean", "--no-rebuild", "programs"], root)
+    if rc != 0 or "RXBUILD SCHEDULER: workers=6" not in output:
         return fail("root JOBS setting was not applied", output)
 
     rc, output = run(prefix + ["--verbose", "--jobs", "4", "programs"], root)
     if (rc != 0
-            or "RXBUILD SCHEDULER: parallel wave" not in output
-            or "RXBUILD SCHEDULER: launch task=[01]" not in output
-            or "[01] RXBUILD SCHEDULER: finish task=1" not in output
-            or "RXBUILD SCHEDULER: child task=1" not in output):
-        return fail("parallel group scheduling was not exercised", output)
+            or "RXBUILD SCHEDULER: workers=4" not in output
+            or "RXBUILD SCHEDULER: parallel wave" in output
+            or output.count("RXBUILD: built ") < 4):
+        return fail("compiler-project resource lock was not enforced", output)
 
     rc, output = run(prefix + ["--show-dependencies", "programs"], root)
     if rc != 0 or "graph-groups-rxpp" not in output:

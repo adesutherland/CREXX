@@ -60,6 +60,8 @@ VERBOSE = "true";
 DRY_RUN = "true";
 JOBS = "4";
 FORCE = "false";
+CLEAN = "false";
+REBUILD = "false";
 EXPLAIN = "true";
 TOOLCHAIN_DIR = "cmake-build-release/bin";
 ```
@@ -68,8 +70,18 @@ Included graphs cannot override these root settings. `JOBS = N` selects the
 default positive worker limit for the composed build; `--jobs N` overrides it.
 `FORCE = "true"` makes ordinary build targets execute even when they are
 otherwise up to date.
+`CLEAN = "true"` cleans the selected target closure before execution, matching
+the command-line `--clean` option.
+`REBUILD = "true"` cleans and then rebuilds the selected closure, matching
+`--rebuild`; it is distinct from `FORCE`.
 Use `--no-dry-run` or `--execute` when an invocation must execute despite a
 root dry-run default, or `--no-explain` to suppress root explanation output.
+
+`--clean` removes generated outputs, state files, and interrupted-action
+markers for the selected target closure without deleting inputs. `--rebuild`
+performs that cleanup and then executes the selected closure unconditionally;
+neither option may be combined with `--dry-run`.
+Use `--no-clean` or `--no-rebuild` to override a root graph policy.
 
 Both block comments and trailing `--` line comments are supported:
 
@@ -133,6 +145,11 @@ intermediates and then `.rxbin` outputs using the composite
 The `programs` group declares `DEPENDS_ON_BUILD = preprocessed`, so selecting
 `programs` orders preprocessing first while keeping the generated `.crexx`
 files owned by the RXPP group.
+
+`COMMAND` rules can also be used in a source-discovered group. The command is
+run once per source and may use `${input}` and `${output}` in its arguments;
+this is useful for batch tools and allows independent members to run in a
+parallel wave.
 
 For direct external tools, use the `COMMAND` action. This invokes the
 executable without a shell; repeated `ARGUMENT` entries form the argument
@@ -232,6 +249,13 @@ workers. With `--verbose`, each worker reports a two-digit task tag such as
 `[02]` on its child output. Immediate `launch` lines show concurrency, and
 child output is printed as each worker completes, so tagged lines may
 interleave while remaining attributable to their task.
+
+Parallel waves use fail-fast cooperative cancellation. If one child fails,
+unfinished sibling tasks are cancelled and the original non-zero result is
+propagated. An interrupt while the scheduler is waiting for a wave requests
+the same cancellation path and returns code `130`; targets that were running
+retain their in-progress markers for recovery on the next invocation. This
+does not forcibly terminate an external process tree.
 
 Use `--explain` (or `-why`) to print why each visited target is rebuilt or
 skipped, such as `output missing`, `input newer`, `dependency rebuilt`, or

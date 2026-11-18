@@ -47,6 +47,7 @@ commandwork: class implements .taskwork
     do i = 1 to errors[0]
       say task_output_line(errors[i],task_tag)
     end
+    if rc <> 0 then say '[' || task_tag || '] RXBUILD SCHEDULER: failure task=' || task_number || ' target=' || target_name || ' rc=' || rc
     finished = time('us')
     elapsed_us = finished - started
     elapsed_seconds = elapsed_us / 1000000.0
@@ -73,13 +74,21 @@ run_wave: procedure = .int
   if requests[0] = 0 then return 0
   pool = .taskpool.local(workers,workers * 2 + 16)
   target = command_target()
-  scope = .taskscope.collectall(pool,-1)
+  scope = .taskscope.failfast(pool,-1)
   children = .task[]
+  completed = .completion[]
   do i = 1 to requests[0]
     if verbose <> 0 then say 'RXBUILD SCHEDULER: dispatch task=' || requests[i].field('task').as_integer() || ' target=' || requests[i].field('argv').item(3).as_string()
     children[i] = scope.submit(target,requests[i])
   end
-  completed = scope.join()
+  do
+    completed = scope.join()
+  on signal
+    say 'RXBUILD: cancellation requested; cancelling parallel tasks'
+    call scope.abort(.channelvalue.string_value('rxbuild cancellation requested'))
+    call pool.close()
+    return 130
+  end
   call scope.close()
   call pool.close()
   do i = 1 to completed[0]
@@ -96,5 +105,4 @@ run_wave: procedure = .int
 
 task_output_line: procedure = .string
   arg line = .string, task_tag = .string
-  if left(line,7) = 'RXBUILD' then return '[' || task_tag || '] ' || line
-  return line
+  return '[' || task_tag || '] ' || line

@@ -42,6 +42,7 @@ def main() -> int:
         str(graph),
         "--toolchain-dir",
         str(toolchain),
+        "--rebuild",
         "--verbose",
         "--explain",
     ]

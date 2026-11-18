@@ -17,6 +17,10 @@ main: procedure = .int
   requested = ''
   verbose = 0
   dry_run = 0
+  clean = 0
+  rebuild = 0
+  clean_explicit = 0
+  rebuild_explicit = 0
   verbose_explicit = 0
   dry_run_explicit = 0
   dump_graph = ''
@@ -47,6 +51,22 @@ main: procedure = .int
     else if argv[i] = '--no-dry-run' | argv[i] = '--execute' then do
       dry_run = 0
       dry_run_explicit = 1
+    end
+    else if argv[i] = '--clean' then do
+      clean = 1
+      clean_explicit = 1
+    end
+    else if argv[i] = '--no-clean' then do
+      clean = 0
+      clean_explicit = 1
+    end
+    else if argv[i] = '--rebuild' then do
+      rebuild = 1
+      rebuild_explicit = 1
+    end
+    else if argv[i] = '--no-rebuild' then do
+      rebuild = 0
+      rebuild_explicit = 1
     end
     else if argv[i] = '--dump-graph=json' then dump_graph = 'json'
     else if argv[i] = '--dump-graph' then dump_graph = 'text'
@@ -133,6 +153,7 @@ main: procedure = .int
   end
   variables = .string[]
   rules = .string[]
+  rule_resources = .string[]
   targets = .string[]
   defaults = .string[]
   default_builds = .string[]
@@ -148,21 +169,27 @@ main: procedure = .int
   graph_jobs_defined = 0
   graph_force = 0
   graph_force_defined = 0
+  graph_clean = 0
+  graph_clean_defined = 0
+  graph_rebuild = 0
+  graph_rebuild_defined = 0
   loaded = .string[]
   loading = .string[]
-  rc = load_graph(graph,1,'',loaded,loading,rules,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined,graph_jobs,graph_jobs_defined,graph_force,graph_force_defined)
+  rc = load_graph(graph,1,'',loaded,loading,rules,rule_resources,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined,graph_jobs,graph_jobs_defined,graph_force,graph_force_defined,graph_clean,graph_clean_defined,graph_rebuild,graph_rebuild_defined)
   if rc <> 0 then return rc
   if verbose_explicit = 0 & graph_verbose_defined <> 0 then verbose = graph_verbose
   if dry_run_explicit = 0 & graph_dry_run_defined <> 0 then dry_run = graph_dry_run
   if explain_explicit = 0 & graph_explain_defined <> 0 then explain = graph_explain
   if toolchain_explicit = 0 & graph_toolchain_defined <> 0 then toolchain_dir = graph_toolchain_dir
   if jobs_explicit = 0 & graph_jobs_defined <> 0 then jobs = graph_jobs
+  if clean_explicit = 0 & graph_clean_defined <> 0 then clean = graph_clean
+  if rebuild_explicit = 0 & graph_rebuild_defined <> 0 then rebuild = graph_rebuild
   if verbose <> 0 & scheduler_task > 0 then say 'RXBUILD SCHEDULER: child task=' || scheduler_task
-  rc = execute_graph(rules,targets,defaults,default_builds,requested,verbose,dry_run,dump_graph,explain,query_mode,toolchain_dir,environment_names,environment_values,unset_environment,jobs,graph_force,graph,scheduler_task)
+  rc = execute_graph(rules,rule_resources,targets,defaults,default_builds,requested,verbose,dry_run,clean,rebuild,dump_graph,explain,query_mode,toolchain_dir,environment_names,environment_values,unset_environment,jobs,graph_force,graph,scheduler_task)
   return rc
 
 load_graph: procedure = .int
-  arg graph = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int, expose graph_jobs = .int, expose graph_jobs_defined = .int, expose graph_force = .int, expose graph_force_defined = .int
+  arg graph = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose rules = .string[], expose rule_resources = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int, expose graph_jobs = .int, expose graph_jobs_defined = .int, expose graph_force = .int, expose graph_force_defined = .int, expose graph_clean = .int, expose graph_clean_defined = .int, expose graph_rebuild = .int, expose graph_rebuild_defined = .int
   i = .int
   path = .rxfs..abspath(graph)
   if member(loading,path) then do
@@ -196,7 +223,7 @@ load_graph: procedure = .int
   loading[loading[0] + 1] = path
   variables = .string[]
   if scope = '' & is_root = 0 then scope = path
-  rc = collect_graph(tree,tree.root(),variables,rules,targets,defaults,default_builds,path,is_root,scope,loaded,loading,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined,graph_jobs,graph_jobs_defined,graph_force,graph_force_defined)
+  rc = collect_graph(tree,tree.root(),variables,rules,rule_resources,targets,defaults,default_builds,path,is_root,scope,loaded,loading,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined,graph_jobs,graph_jobs_defined,graph_force,graph_force_defined,graph_clean,graph_clean_defined,graph_rebuild,graph_rebuild_defined)
   depth = loading[0] - 1
   previous_loading = .string[]
   do i = 1 to depth
@@ -209,7 +236,7 @@ load_graph: procedure = .int
   return rc
 
 execute_graph: procedure = .int
-  arg rules = .string[], targets = .string[], defaults = .string[], default_builds = .string[], requested = .string, verbose = .int, dry_run = .int, dump_graph = .string, explain = .int, query_mode = .string, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[], jobs = .int, force = .int, graph = .string, scheduler_task = .int
+  arg rules = .string[], rule_resources = .string[], targets = .string[], defaults = .string[], default_builds = .string[], requested = .string, verbose = .int, dry_run = .int, clean = .int, rebuild = .int, dump_graph = .string, explain = .int, query_mode = .string, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[], jobs = .int, force = .int, graph = .string, scheduler_task = .int
   started = time('us')
   elapsed_us = .int
   elapsed_seconds = .decimal
@@ -217,6 +244,7 @@ execute_graph: procedure = .int
   resolved_toolchain_dir = .string
   rc = validate_graph(rules,targets,defaults,default_builds)
   if rc <> 0 then return rc
+  if (clean <> 0 | rebuild <> 0) & dry_run <> 0 then return graph_error('--clean/--rebuild cannot be combined with --dry-run')
   if toolchain_dir <> '' then do
     resolved_toolchain_dir = project_path(toolchain_dir)
     if .rxfs..isdir(resolved_toolchain_dir) = 0 then return graph_error('toolchain directory does not exist: ' || resolved_toolchain_dir)
@@ -259,6 +287,17 @@ execute_graph: procedure = .int
   requested_target = resolve_target(targets,requested)
   if requested_target = '__RXBUILD_AMBIGUOUS__' then return graph_error('ambiguous BUILD_NAME ' || requested)
   if requested_target = '' then return unknown_target_error(targets,requested)
+  if clean <> 0 | rebuild <> 0 then do
+    cleaning = .string[]
+    removed = .string[]
+    rc = clean_target(requested_target,rules,targets,cleaning,removed,verbose)
+    if rc <> 0 then return rc
+    if rebuild = 0 then do
+      say 'RXBUILD CLEAN: removed=' || removed[0]
+      return 0
+    end
+    force = 1
+  end
   visiting = .string[]
   completed = .string[]
   rebuilt = .string[]
@@ -266,7 +305,12 @@ execute_graph: procedure = .int
     say 'RXBUILD SCHEDULER: workers=' || jobs
     say ''
   end
-  rc = build_target(requested_target,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,1,graph)
+  do
+    rc = build_target(requested_target,rules,rule_resources,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,1,graph)
+  on signal
+    say 'RXBUILD: cancellation requested; stopping the build'
+    return 130
+  end
   elapsed_us = time('us') - started
   elapsed_seconds = elapsed_us / 1000000.0
   if rc = 0 & scheduler_task = 0 then call report_summary(completed,rebuilt,dry_run,elapsed_seconds)
@@ -736,7 +780,7 @@ validate_dependency_cycle: procedure = .int
   return 0
 
 collect_graph: procedure = .int
-  arg tree = .lltree..view, container = .int, expose variables = .string[], expose rules = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], origin = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int, expose graph_jobs = .int, expose graph_jobs_defined = .int, expose graph_force = .int, expose graph_force_defined = .int
+  arg tree = .lltree..view, container = .int, expose variables = .string[], expose rules = .string[], expose rule_resources = .string[], expose targets = .string[], expose defaults = .string[], expose default_builds = .string[], origin = .string, is_root = .int, scope = .string, expose loaded = .string[], expose loading = .string[], expose graph_verbose = .int, expose graph_dry_run = .int, expose graph_verbose_defined = .int, expose graph_dry_run_defined = .int, expose graph_explain = .int, expose graph_explain_defined = .int, expose graph_toolchain_dir = .string, expose graph_toolchain_defined = .int, expose graph_jobs = .int, expose graph_jobs_defined = .int, expose graph_force = .int, expose graph_force_defined = .int, expose graph_clean = .int, expose graph_clean_defined = .int, expose graph_rebuild = .int, expose graph_rebuild_defined = .int
   name=.string
   child=.string
   argchild=.string
@@ -773,7 +817,7 @@ collect_graph: procedure = .int
       name = upper(strip(tree.text(tree.child(node,1))))
       value = substitute_value(unquote(tree.text(tree.child(node,3))),variables)
       if substitution_error(value) then return graph_error_at(origin,value)
-      if name = 'VERBOSE' | name = 'DRY_RUN' | name = 'DRYRUN' | name = 'EXPLAIN' | name = 'TOOLCHAIN_DIR' | name = 'JOBS' | name = 'FORCE' then do
+      if name = 'VERBOSE' | name = 'DRY_RUN' | name = 'DRYRUN' | name = 'EXPLAIN' | name = 'TOOLCHAIN_DIR' | name = 'JOBS' | name = 'FORCE' | name = 'CLEAN' | name = 'REBUILD' then do
         if is_root = 0 then iterate
         if name = 'TOOLCHAIN_DIR' then do
           graph_toolchain_dir = value
@@ -794,6 +838,24 @@ collect_graph: procedure = .int
           if is_root <> 0 then do
             graph_force = enabled
             graph_force_defined = 1
+          end
+          iterate
+        end
+        if name = 'CLEAN' then do
+          enabled = graph_boolean(value)
+          if enabled < 0 then return graph_error_at(origin,'CLEAN must be true or false')
+          if is_root <> 0 then do
+            graph_clean = enabled
+            graph_clean_defined = 1
+          end
+          iterate
+        end
+        if name = 'REBUILD' then do
+          enabled = graph_boolean(value)
+          if enabled < 0 then return graph_error_at(origin,'REBUILD must be true or false')
+          if is_root <> 0 then do
+            graph_rebuild = enabled
+            graph_rebuild_defined = 1
           end
           iterate
         end
@@ -870,6 +932,7 @@ collect_graph: procedure = .int
     else if kind = 'rule.statement' then do
       name = ''
       action = ''
+      resource = ''
       description = ''
       do j = 1 to tree.count(node)
         child = tree.child(node,j)
@@ -880,6 +943,7 @@ collect_graph: procedure = .int
             if tree.count(attrwrap) < 1 then iterate
             attr = tree.child(attrwrap,1)
             if tree.name(attr) = 'action.attribute' then action = unquote(tree.text(tree.child(attr,3)))
+            if tree.name(attr) = 'resource.attribute' then resource = unquote(tree.text(tree.child(attr,3)))
             if tree.name(attr) = 'description.attribute' then description = unquote(tree.text(tree.child(attr,3)))
           end
         end
@@ -887,9 +951,9 @@ collect_graph: procedure = .int
       if name = '' | action = '' then return graph_error_at(origin,'RULE requires a name and ACTION')
       existing_rule = rule_index(rules,name)
       if existing_rule <> 0 then do
-        if upper(rules[(existing_rule - 1) * 3 + 2]) <> upper(action) | rules[(existing_rule - 1) * 3 + 3] <> description then return graph_error_at(origin,'conflicting rule ' || name)
+        if upper(rules[(existing_rule - 1) * 3 + 2]) <> upper(action) | rules[(existing_rule - 1) * 3 + 3] <> description | rule_resources[existing_rule] <> resource then return graph_error_at(origin,'conflicting rule ' || name)
       end
-      else call append_rule rules,name,action,description
+      else call append_rule rules,rule_resources,name,action,description,resource
     end
     else if kind = 'build.statement' then do
       name = ''
@@ -1018,7 +1082,7 @@ collect_graph: procedure = .int
       group_rule_index = rule_index(rules,group_rule)
       if group_rule_index = 0 then return graph_error_at(origin,'unknown group rule ' || group_rule)
       group_action = upper(rules[(group_rule_index - 1) * 3 + 2])
-      if group_action <> 'COMPILE PROGRAM' & group_action <> 'COMPILE RXPP' & group_action <> 'COMPILE RXPP PROGRAM' then return graph_error_at(origin,'BUILD_GROUP currently supports COMPILE PROGRAM, COMPILE RXPP, and COMPILE RXPP PROGRAM')
+      if group_action <> 'COMPILE PROGRAM' & group_action <> 'COMPILE RXPP' & group_action <> 'COMPILE RXPP PROGRAM' & group_action <> 'COMMAND' then return graph_error_at(origin,'BUILD_GROUP currently supports COMPILE PROGRAM, COMPILE RXPP, COMPILE RXPP PROGRAM, and COMMAND')
       group_scope_name = scope || '::' || group_name
       group_token = '@group/' || group_scope_name
       if target_index(targets,group_token) <> 0 | target_name_index(targets,group_scope_name) <> 0 then return graph_error_at(origin,'duplicate BUILD_GROUP ' || group_name)
@@ -1032,7 +1096,7 @@ collect_graph: procedure = .int
         call append_path group_outputs,output_path
         call append_path member_outputs,output_path
       end
-      if rule_index(rules,'__RXBUILD_GROUP__') = 0 then call append_rule rules,'__RXBUILD_GROUP__','__RXBUILD_GROUP__','virtual aggregate'
+      if rule_index(rules,'__RXBUILD_GROUP__') = 0 then call append_rule rules,rule_resources,'__RXBUILD_GROUP__','__RXBUILD_GROUP__','virtual aggregate',''
       do j = 1 to discovered[0]
         source_path = join_group_path(discovery_dir,discovered[j])
         output_path = member_outputs[j]
@@ -1061,7 +1125,7 @@ collect_graph: procedure = .int
       if substitution_error(include_path) then return graph_error_at(origin,include_path)
       include_path = resolve_include_path(origin,include_path)
       if include_alias <> '' & scope_exists(targets,include_alias) then return graph_error_at(origin,'duplicate graph alias ' || include_alias)
-      rc = load_graph(include_path,0,include_alias,loaded,loading,rules,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined,graph_jobs,graph_jobs_defined,graph_force,graph_force_defined)
+      rc = load_graph(include_path,0,include_alias,loaded,loading,rules,rule_resources,targets,defaults,default_builds,graph_verbose,graph_dry_run,graph_verbose_defined,graph_dry_run_defined,graph_explain,graph_explain_defined,graph_toolchain_dir,graph_toolchain_defined,graph_jobs,graph_jobs_defined,graph_force,graph_force_defined,graph_clean,graph_clean_defined,graph_rebuild,graph_rebuild_defined)
       if rc <> 0 then return rc
     end
     else return graph_error_at(origin,'unknown statement ' || kind)
@@ -1069,15 +1133,38 @@ collect_graph: procedure = .int
   return 0
 
 dependencies_are_independent: procedure = .int
-  arg dependencies = .string[], targets = .string[]
+  arg dependencies = .string[], targets = .string[], rules = .string[], rule_resources = .string[]
   i = .int
   j = .int
   do i = 1 to dependencies[0]
     do j = i + 1 to dependencies[0]
+      if rule_resources_conflict(dependencies[i],dependencies[j],targets,rules,rule_resources) <> 0 then return 0
       if dependency_closures_overlap(dependencies[i],dependencies[j],targets) <> 0 then return 0
     end
   end
   return 1
+
+rule_resources_conflict: procedure = .int
+  arg first = .string, second = .string, targets = .string[], rules = .string[], rule_resources = .string[]
+  first_index = target_index(targets,first)
+  second_index = target_index(targets,second)
+  if first_index = 0 | second_index = 0 then return 0
+  first_rule = targets[(first_index - 1) * 12 + 3]
+  second_rule = targets[(second_index - 1) * 12 + 3]
+  if first_rule = '__RXBUILD_GROUP__' | second_rule = '__RXBUILD_GROUP__' then return 0
+  first_resource = rule_resource(first_rule,rules,rule_resources)
+  second_resource = rule_resource(second_rule,rules,rule_resources)
+  if first_resource = '' | second_resource = '' then return 0
+  return first_resource = second_resource
+
+rule_resource: procedure = .string
+  arg rule_name = .string, rules = .string[], rule_resources = .string[]
+  index = rule_index(rules,rule_name)
+  if index = 0 then return ''
+  if rule_resources[index] <> '' then return rule_resources[index]
+  action = upper(rules[(index - 1) * 3 + 2])
+  if action = 'COMPILE PROGRAM' then return 'compiler-project'
+  return ''
 
 dependency_closures_overlap: procedure = .int
   arg left_name = .string, right_name = .string, targets = .string[]
@@ -1191,8 +1278,65 @@ parallel_argv_value: procedure = .channelvalue
   end
   return .channelvalue.array_value(values)
 
+clean_target: procedure = .int
+  arg name = .string, rules = .string[], targets = .string[], expose cleaning = .string[], expose removed = .string[], verbose = .int
+  i = .int
+  if member(cleaning,name) <> 0 then return 0
+  t = target_index(targets,name)
+  if t = 0 then return graph_error('unknown target ' || name)
+  cleaning[cleaning[0] + 1] = name
+  base = (t - 1) * 12 + 1
+  physical = split_paths(targets[base + 4])
+  logical = split_paths(targets[base + 5])
+  do i = 1 to physical[0]
+    if target_index(targets,physical[i]) <> 0 then do
+      if clean_target(physical[i],rules,targets,cleaning,removed,verbose) <> 0 then return 1
+    end
+  end
+  target_scope = targets[base + 1]
+  separator = lastpos('::',target_scope)
+  if separator > 0 then source_graph = left(target_scope,separator - 1)
+  else source_graph = ''
+  do i = 1 to logical[0]
+    dependency = resolve_logical_target(targets,logical[i],source_graph)
+    if dependency = 0 then return graph_error('Unknown build target name: ' || logical[i])
+    if clean_target(targets[(dependency - 1) * 12 + 1],rules,targets,cleaning,removed,verbose) <> 0 then return 1
+  end
+  if targets[base + 2] = '__RXBUILD_GROUP__' then return 0
+  rule_index_value = rule_index(rules,targets[base + 2])
+  if rule_index_value = 0 then return graph_error('unknown rule ' || targets[base + 2] || ' for ' || name)
+  action = upper(rules[(rule_index_value - 1) * 3 + 2])
+  outputs = .string[]
+  if action <> 'RUN' then outputs[1] = name
+  if action = 'CREATE EXE' then outputs[1] = native_executable_path(project_path(name))
+  extras = split_paths(targets[base + 11])
+  do i = 1 to extras[0]
+    outputs[outputs[0] + 1] = extras[i]
+  end
+  deleted = 0
+  do i = 1 to outputs[0]
+    path = project_path(outputs[i])
+    if .rxfs..isfile(path) <> 0 then do
+      if .rxfs..delete(path) <> 0 then return graph_error('cannot remove output ' || outputs[i])
+      deleted = 1
+      if verbose <> 0 then say 'RXBUILD CLEAN: removed ' || outputs[i]
+    end
+  end
+  state_path = target_state_path(name)
+  if .rxfs..isfile(state_path) <> 0 then do
+    if .rxfs..delete(state_path) <> 0 then return graph_error('cannot remove state for ' || name)
+    deleted = 1
+  end
+  marker_path = target_marker_path(name)
+  if .rxfs..isfile(marker_path) <> 0 then do
+    if .rxfs..delete(marker_path) <> 0 then return graph_error('cannot remove marker for ' || name)
+    deleted = 1
+  end
+  if deleted <> 0 then removed[removed[0] + 1] = name
+  return 0
+
 build_target: procedure = .int
-  arg name = .string, rules = .string[], targets = .string[], expose visiting = .string[], expose completed = .string[], expose rebuilt = .string[], verbose = .int, dry_run = .int, explain = .int, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[], jobs = .int, force = .int, allow_parallel = .int, graph = .string
+  arg name = .string, rules = .string[], rule_resources = .string[], targets = .string[], expose visiting = .string[], expose completed = .string[], expose rebuilt = .string[], verbose = .int, dry_run = .int, explain = .int, toolchain_dir = .string, environment_names = .string[], environment_values = .string[], unset_environment = .string[], jobs = .int, force = .int, allow_parallel = .int, graph = .string
   rc=.int
   dep = .string
   schedule_deps = .string[]
@@ -1244,7 +1388,7 @@ build_target: procedure = .int
     end
     do i = 1 to logical_deps[0]
       logical_output = deps[physical_deps[0] + i]
-      rc = build_target(logical_output,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,allow_parallel,graph)
+      rc = build_target(logical_output,rules,rule_resources,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,allow_parallel,graph)
       if rc <> 0 then return rc
     end
     call arraydrop schedule_deps
@@ -1266,7 +1410,7 @@ build_target: procedure = .int
   end
   parallel_wave = 0
   if allow_parallel <> 0 & jobs > 1 & schedule_deps[0] > 1 & dry_run = 0 & rxpp_group = 0 then do
-    parallel_wave = dependencies_are_independent(schedule_deps,targets)
+    parallel_wave = dependencies_are_independent(schedule_deps,targets,rules,rule_resources)
   end
   if parallel_wave <> 0 then do
     if verbose <> 0 then do
@@ -1286,7 +1430,7 @@ build_target: procedure = .int
     do i = 1 to schedule_deps[0]
       dep = schedule_deps[i]
       if target_index(targets,dep) <> 0 then do
-        rc = build_target(dep,rules,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,0,graph)
+        rc = build_target(dep,rules,rule_resources,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,0,graph)
         if rc <> 0 then return rc
       end
     end
@@ -1852,10 +1996,11 @@ copy_binary: procedure = .int
   return 0
 
 append_rule: procedure
-  arg expose rules = .string[], name = .string, action = .string, description = .string
+  arg expose rules = .string[], expose rule_resources = .string[], name = .string, action = .string, description = .string, resource = .string
   rules[rules[0] + 1] = name
   rules[rules[0] + 1] = action
   rules[rules[0] + 1] = description
+  rule_resources[rule_resources[0] + 1] = resource
 
 append_target: procedure
   arg expose targets = .string[], name = .string, build_name = .string, rule = .string, inputs = .string, deps = .string, logical_deps = .string, workdir = .string, argument = .string, argument_value = .string, stdin = .string, runtime_args = .string, outputs = .string
