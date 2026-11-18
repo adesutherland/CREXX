@@ -307,9 +307,12 @@ execute_graph: procedure = .int
   end
   do
     rc = build_target(requested_target,rules,rule_resources,targets,visiting,completed,rebuilt,verbose,dry_run,explain,toolchain_dir,environment_names,environment_values,unset_environment,jobs,force,1,graph)
-  on signal
+  on signal cancel as problem
     say 'RXBUILD: cancellation requested; stopping the build'
     return 130
+  on signal task_failure as problem
+    say 'RXBUILD: task failure: ' || problem.message()
+    return 1
   end
   elapsed_us = time('us') - started
   elapsed_seconds = elapsed_us / 1000000.0

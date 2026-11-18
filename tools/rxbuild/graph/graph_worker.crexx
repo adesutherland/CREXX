@@ -83,7 +83,7 @@ run_wave: procedure = .int
   end
   do
     completed = scope.join()
-  on signal
+  on signal cancel as problem
     say 'RXBUILD: cancellation requested; cancelling parallel tasks'
     call scope.abort(.channelvalue.string_value('rxbuild cancellation requested'))
     call pool.close()
