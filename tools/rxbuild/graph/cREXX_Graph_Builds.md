@@ -237,8 +237,9 @@ Resource pools, compiler dependency files and persistent command logs are useful
 for larger projects, but they are not required to validate the current design.
 
 The graph should remain correct and reliable when executed sequentially.
-Parallel execution is already available for independent dependency waves; more
-advanced resource locking and cancellation remain future work.
+Parallel execution is available for independent dependency waves, with named
+resource locks and cooperative fail-fast cancellation. CPU/memory capacity
+accounting and forced external process-tree termination remain future work.
 
 ## Graph composition
 
@@ -284,6 +285,7 @@ It is not a complete Ninja replacement, and it does not need to become one. Its 
 
 The existing legacy build process should remain unchanged. The graph implementation should continue to evolve as a separate build model until its syntax and behaviour have been evaluated through real examples such as PHP, MiniBASIC and the cREXX build itself.
 
-Future work includes resource locks, cancellation, persistent command logs and
-broader repeatability diagnostics. Bounded parallel scheduling is implemented
-only for independent waves whose transitive dependency closures do not overlap.
+Future work includes CPU/memory capacity accounting, forced process-tree
+termination, persistent command logs and broader repeatability diagnostics.
+Bounded parallel scheduling is implemented only for independent waves whose
+transitive dependency closures do not overlap.

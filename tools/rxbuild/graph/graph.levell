@@ -8,6 +8,7 @@ ruleword: token
 buildword: token
 defaultword: token
 actionword: token
+resourceword: token
 descriptionword: token
 inputword: token
 outputword: token
@@ -70,8 +71,9 @@ parse: parser semantics contextfree input tokens start program
   exclude.pattern.attribute: rule = excludepatternword string
   rule.statement: rule = ruleword identifier rule.attributes endword ruleword terminator
   rule.attributes: rule = rule.attribute*
-  rule.attribute: rule = action.attribute | description.attribute
+  rule.attribute: rule = action.attribute | resource.attribute | description.attribute
   action.attribute: rule = actionword equals string
+  resource.attribute: rule = resourceword equals string
   description.attribute: rule = descriptionword equals string
   build.statement: rule = buildword string build.attributes endword buildword terminator
   build.attributes: rule = build.attribute*
@@ -112,6 +114,9 @@ classify: tokenstage start 1
   word.action:
     transform stage classify state 1
       take identifier text "ACTION" emit actionword next 1
+  word.resource:
+    transform stage classify state 1
+      take identifier text "RESOURCE" emit resourceword next 1
   word.description:
     transform stage classify state 1
       take identifier text "DESCRIPTION" emit descriptionword next 1

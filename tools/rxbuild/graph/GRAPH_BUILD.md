@@ -36,6 +36,8 @@ DRY_RUN = "true";
 EXPLAIN = "true";
 JOBS = "4";
 FORCE = "false";
+CLEAN = "false";
+REBUILD = "false";
 TOOLCHAIN_DIR = "cmake-build-release/bin";
 ```
 
@@ -47,6 +49,12 @@ parallel worker limit; included-graph `JOBS` assignments are ignored, and
 `--jobs N` takes precedence over the root setting. `FORCE = "true"` marks
 ordinary build targets stale even when their outputs and state are current;
 it applies only when declared in the root graph and still respects dry-run.
+
+`CLEAN = "true"` removes the selected target closure's generated outputs,
+state files, and interruption markers before executing it; it is equivalent to
+passing `--clean` at the command line.
+`REBUILD = "true"` performs that cleanup and then rebuilds the selected
+closure; it is equivalent to `--rebuild` and does not alter `FORCE` semantics.
 
 Use `--dry-run` (or `-n`) to validate and traverse the selected dependency
 closure without executing actions or creating outputs:
@@ -61,6 +69,20 @@ inputs, and target selection. Stale actions are reported as `would build`;
 `RUN` actions are reported as `would run`. Up-to-date targets remain `up to
 date`. Some action-specific execution checks are deferred until the action
 would actually run.
+
+Use `--clean` to remove generated outputs, incremental state files, and
+interrupted-action markers for the selected target and its dependency closure.
+Inputs and source files are never removed. Use `--rebuild` to perform the same
+target-scoped cleanup and then execute the build unconditionally. These options
+cannot be combined with `--dry-run`.
+Use `--no-clean` or `--no-rebuild` to override a root graph policy.
+
+```powershell
+.\cmake-build-release\bin\rxbuild.exe --clean `
+  tools\rxbuild\graph\groups\groups.graph.build programs
+.\cmake-build-release\bin\rxbuild.exe --rebuild --verbose `
+  tools\rxbuild\graph\groups\groups.graph.build programs
+```
 
 Use `--dump-graph` to print the complete resolved graph after all includes and
 variable substitutions have been processed. Each target is shown with its
@@ -196,8 +218,10 @@ virtual aggregate target. The aggregate has no output file; selecting it
 selects its member closure. The discovered manifest is sorted and included in
 incremental fingerprints, so source additions and removals invalidate group
 consumers. Existing output files are not deleted when a source disappears.
-Build groups support `COMPILE PROGRAM`, `COMPILE RXPP`, and composite
-`COMPILE RXPP PROGRAM` rules. For RXPP groups, `.rxpp` sources become `.crexx`
+Build groups support `COMPILE PROGRAM`, `COMPILE RXPP`, composite
+`COMPILE RXPP PROGRAM`, and `COMMAND` rules. A `COMMAND` group invokes the
+declared tool once per discovered source, with `${input}` and `${output}`
+available in its arguments. For RXPP groups, `.rxpp` sources become `.crexx`
 outputs while retaining their relative directories. The composite action then
 passes that generated source to the normal program compiler and publishes the
 `.rxbin` as the group target output. The maintained example contains both
@@ -226,14 +250,20 @@ SOURCE = "tools/rxbuild/build_demo.crexx";
 
 Variables can be referenced inside quoted values with `${NAME}`.
 
-A rule has a typed action and optional description:
+A rule has a typed action, optional description, and optional scheduler
+resource:
 
 ```text
 RULE compile_program
   ACTION = "COMPILE PROGRAM"
   DESCRIPTION = "PROGRAM $out"
+  RESOURCE = "compiler-project"
 END RULE;
 ```
+
+Targets using the same non-empty resource are not placed in the same parallel
+wave. `COMPILE PROGRAM` has the default resource `compiler-project` even when
+the attribute is omitted, because the compiler uses shared project state.
 
 A build declaration names one output target and gives it a rule, input, and
 optional target dependencies:
@@ -474,7 +504,7 @@ read-only graph queries do not print duplicate summaries. With `DRY_RUN` or
 
 Remaining Phase 9 work covers a sealed or allow-listed environment policy,
 graph-file toolchain/environment declarations, tool/version validation, and
-Windows/Linux/macOS qualification. Phase 10 is planned for bounded dependency
-scheduling, resource controls, serialized resource groups, cancellation,
-cleanup, and repeatability diagnostics. Phase 9 must establish the complete
-process contract before actions are scheduled concurrently.
+Windows/Linux/macOS qualification. Cooperative cancellation is implemented for
+parallel waves; forced external process-tree termination remains platform
+specific. Resource names provide serialized resource groups; CPU and memory
+capacity accounting remains future work.

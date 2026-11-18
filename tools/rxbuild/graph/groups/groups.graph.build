@@ -1,7 +1,10 @@
 /* Source-discovered group example. */
 VERBOSE = "true";
-FORCE = "true";
-JOBS = "8";
+-- FORCE = "true";
+clean = "true";
+rebuild = "true";
+JOBS = "6";
+CPU = "1";
 SOURCES = FILES IN "tools/rxbuild/graph/groups/sources"
           RECURSIVE
           EXTENSION ".crexx";
@@ -18,6 +21,7 @@ RXPP_SOURCES = FILES IN "tools/rxbuild/graph/groups/rxpp"
 
 RULE compile_program
   ACTION = "COMPILE PROGRAM"
+  RESOURCE = "compiler-project"
 END RULE;
 
 RULE compile_rxpp

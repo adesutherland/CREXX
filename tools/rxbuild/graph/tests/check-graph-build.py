@@ -70,7 +70,7 @@ DEFAULT "${{BUILD_DIR}}/final.rxbin";
 ''',
         )
 
-        rc, output = run(exe, root, plan, "--toolchain-dir", str(toolchain_dir), "--verbose")
+        rc, output = run(exe, root, plan, "--toolchain-dir", str(toolchain_dir), "--verbose", "--jobs", "4")
         require(rc == 0, "default graph build failed", output)
         require(
             output.count("RXBUILD: built ") == 2
@@ -78,6 +78,30 @@ DEFAULT "${{BUILD_DIR}}/final.rxbin";
             "default graph did not use the explicit toolchain",
             output,
         )
+
+        rc, output = run(exe, root, plan, "--clean")
+        require(rc == 0 and "RXBUILD CLEAN: removed=" in output, "clean mode failed", output)
+        rc, output = run(exe, root, plan, "--rebuild")
+        require(rc == 0 and output.count("RXBUILD: built ") == 2, "rebuild mode failed", output)
+
+        rebuild_setting_plan = test_root / "rebuild-setting.graph.build"
+        rebuild_setting_output = output_dir + "/rebuild-setting.rxbin"
+        write_plan(
+            rebuild_setting_plan,
+            f'''REBUILD = "true";
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+BUILD "{rebuild_setting_output}"
+  RULE = compile_program
+  INPUT = "{source}"
+END BUILD;
+DEFAULT "{rebuild_setting_output}";
+''',
+        )
+        rc, output = run(exe, root, rebuild_setting_plan)
+        require(rc == 0 and "RXBUILD: built " + rebuild_setting_output in output,
+                "graph REBUILD setting failed", output)
 
         rc, output = run(exe, root, plan, "--verbose", output_dir + "/final.rxbin")
         require(
