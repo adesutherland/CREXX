@@ -1,0 +1,396 @@
+/*
+ * Define and report on a sales-order dictionary.
+ *
+ * The dictionary retains the first error across the definition sequence.
+ * Previously completed members remain stored if a later definition fails.
+ *
+ * Use an empty database, for example :memory:, when rerunning this sample.
+ */
+
+options levelb
+
+import data_DataDictionaryFacade
+import rxfnsb
+
+main: procedure = .int
+  arg args = .string[]
+
+  filename = "orders.db"
+  if args.0 > 0 then filename = args[1]
+
+  rc = ddOpen(filename)
+  if rc <> 0 then return ddError("Cannot open dictionary")
+
+  /*
+   * Define the original order record.
+   */
+
+  call ddAdd "ORDER_RECORD", "RECORD", "Sales order record"
+    call ddAlias     "ORDER_LAYOUT"
+    call ddAlias     "ORDER", "SHORT"
+    call ddAttribute "owner", "Sales"
+
+    call ddLink "CUSTOMER_NUMBER", "contains", 1, "customer_number"
+    call ddLink "ORDER_DATE",      "contains", 2, "order_date"
+    call ddLink "ORDER_TOTAL",     "contains", 3, "order_total"
+
+  /*
+   * Define the fields.
+   * Each ddAdd completes the previous member.
+   */
+
+  call ddAdd "CUSTOMER_NUMBER", "FIELD", "Customer number"
+    call ddAlias     "CUST_NO", "SHORT"
+    call ddAttribute "length", "12"
+
+  call ddAdd "ORDER_DATE", "FIELD", "Date the order was placed"
+    call ddAttribute "format", "YYYY-MM-DD"
+
+  call ddAdd "ORDER_TOTAL", "FIELD", "Total value of the order"
+    call ddAttribute "currency", "EUR"
+
+  /*
+   * Add a larger sales-system model:
+   *
+   *   SALES_SYSTEM
+   *     10 records
+   *       24 generated fields each
+   *
+   * CUSTOMER_NUMBER is also shared by three of those records.
+   */
+
+  record_names = .string[]
+
+  record_names[1]  = "CUSTOMER"
+  record_names[2]  = "CUSTOMER_ADDRESS"
+  record_names[3]  = "PRODUCT"
+  record_names[4]  = "PRODUCT_PRICE"
+  record_names[5]  = "ORDER_HEADER"
+  record_names[6]  = "ORDER_ITEM"
+  record_names[7]  = "INVOICE_HEADER"
+  record_names[8]  = "INVOICE_ITEM"
+  record_names[9]  = "DELIVERY"
+  record_names[10] = "PAYMENT"
+
+  /*
+   * Define the system and link its records.
+   */
+
+  call ddAdd "SALES_SYSTEM", "SYSTEM", "Sales processing system"
+
+  do record_index = 1 to 10
+    record_name = record_names[record_index] || "_RECORD"
+
+    call ddLink record_name, "contains", record_index, record_name
+  end
+
+  /*
+   * These targets are deliberately left undefined.
+   * They should appear in the dummy report.
+   */
+
+  call ddLink "TAX_RECORD", "contains", 11, "tax_record"
+  call ddLink "CREDIT_RECORD", "contains", 12, "credit_record"
+  /*
+   * Define the records and their fields.
+   */
+  do record_index = 1 to 10
+    record_name = record_names[record_index] || "_RECORD"
+
+    call ddAdd record_name, "RECORD", record_names[record_index] || " record"
+      call ddAttribute "source", "Sales system"
+
+      do field_index = 1 to 24
+        field_name = record_names[record_index] || "_FIELD_" || field_index
+        call ddLink field_name, "contains", field_index, field_name
+      end
+      /*
+       * Reuse the same CUSTOMER_NUMBER member in three records.
+       * Separate IF statements keep the conditions easy to read.
+       */
+      if record_name = "CUSTOMER_RECORD" then
+        call ddLink "CUSTOMER_NUMBER", "contains", 25, "customer_number"
+
+      if record_name = "ORDER_HEADER_RECORD" then
+        call ddLink "CUSTOMER_NUMBER", "contains", 25, "customer_number"
+
+      if record_name = "INVOICE_HEADER_RECORD" then
+        call ddLink "CUSTOMER_NUMBER", "contains", 25, "customer_number"
+    /*
+     * Complete the field dummies created by the record definition.
+     */
+    do field_index = 1 to 24
+      field_name = record_names[record_index] || "_FIELD_" || field_index
+      call ddAdd field_name, "FIELD", "Field " || field_index || " of " || record_name
+        call ddAttribute "position", field_index || ""
+    end
+  end
+  /*
+   * Complete the last member and check the definition sequence.
+   */
+
+  rc = ddEnd()
+  if rc <> 0 then return ddError("Dictionary definition failed")
+  say "Dictionary definition completed."
+
+  say "Report of ORDER_RECORD"
+
+  lines = ddMemberReport("ORDER_RECORD")
+  if ddRc() = 0 then call ddPrint lines
+say "End of Report ORDER_RECORD"
+say " "
+  /*
+   * Replace the definition of ORDER_TOTAL.
+   *
+   * ORDER_RECORD already refers to this member.
+   */
+
+  call ddReplace "ORDER_TOTAL", "FIELD", "Total amount payable"
+    call ddAttribute "currency", "EUR"
+    call ddAttribute "format", "DECIMAL"
+    call ddAttribute "length", "12"
+
+  rc = ddEnd()
+  if rc <> 0 then return ddError("Replacement failed")
+
+    say ""
+    say "Used by: ORDER_TOTAL after replacement"
+
+    used_by_lines = ddWhereUsed("ORDER_TOTAL", 1, "contains")
+    if ddRc() <> 0 then return ddError("Used-by report failed")
+
+    call ddPrint used_by_lines
+  /*
+   * Report the original order record.
+   */
+  say ""
+  say "Bill of materials: ORDER_RECORD"
+
+  bom_lines = ddBom("ORDER_RECORD", 0, "")
+  if ddRc() <> 0 then return ddError("BOM report failed")
+
+  call ddPrint bom_lines
+  /*
+   * Report the larger sales system.
+   */
+  say ""
+  say "Bill of materials: SALES_SYSTEM"
+
+  sales_lines = ddBom("SALES_SYSTEM", 0, "")
+  if ddRc() <> 0 then return ddError("Sales system BOM failed")
+
+  call ddPrint sales_lines
+  /*
+   * Report everywhere CUSTOMER_NUMBER is used.
+   */
+  say ""
+  say "Used by: CUSTOMER_NUMBER"
+
+  used_by_lines = ddWhereUsed("CUSTOMER_NUMBER", 0, "contains")
+  if ddRc() <> 0 then return ddError("Used-by report failed")
+
+  call ddPrint used_by_lines
+  /*
+   * List members of type RECORD.
+   */
+  say ""
+  say "Record members"
+
+  members = ddList("RECORD",,'A')
+  if ddRc() <> 0 then return ddError("Member listing failed")
+
+  say 'List of all RECORD members:'
+  call ddPrint members
+  /*
+   * List the two deliberately unresolved members.
+   */
+
+  say ""
+  say "Unresolved dummy members"
+
+  dummies = ddDummies()
+  if ddRc() <> 0 then return ddError("Dummy listing failed")
+
+  call ddPrint dummies
+  /*
+   * Find the member with SHORT alias CUST_NO.
+   */
+
+  say ""
+  say "Members with SHORT alias CUST_NO"
+
+  matches = ddFindAlias("CUST_NO", "SHORT")
+  if ddRc() <> 0 then return ddError("Alias lookup failed")
+
+  call ddPrint matches
+  /*
+   * List aliases belonging to CUSTOMER_NUMBER.
+   */
+
+  say ""
+  say "Aliases for CUSTOMER_NUMBER"
+
+  aliases = ddListAliases("CUSTOMER_NUMBER")
+  if ddRc() <> 0 then return ddError("Alias listing failed")
+
+  call ddPrint aliases
+  /*
+   * List all aliases and their owners.
+   * This includes the automatically generated UPPER aliases.
+   */
+
+  say ""
+  say "All aliases"
+
+  all_aliases = ddListAllAliases()
+  if ddRc() <> 0 then return ddError("All-alias listing failed")
+
+  call ddprint all_aliases
+  /*
+   * Build a caller-owned selection from exact names, not formatted lines.
+   */
+
+  records = ddMemberNames("RECORD", "ORDER_", "")
+  if ddRc() <> 0 then return ddError("Member-name selection failed")
+  bom_members = ddBomNames("ORDER_RECORD", 0, "contains")
+  if ddRc() <> 0 then return ddError("BOM-name selection failed")
+  selected = ddKeep(records, bom_members)
+  say "Kept members"
+  selected_details = ddListMembers(selected,"RECORD")
+  if ddRc() <> 0 then return ddError("Selection listing failed")
+  call ddprint selected_details
+
+  excluded = .string[]
+  excluded[1] = "ORDER_RECORD"
+  selected = ddDrop(selected, excluded)
+  say ""
+  say "Selected current order members"
+  selected_details = ddListMembers(selected)
+  if ddRc() <> 0 then return ddError("Selection listing failed")
+
+  call ddprint selected_details
+
+  /* Run the same report for every exact name in the KEEP/DROP selection.
+   * ddPerform returns the combined lines and prints them when the final
+   * argument is 1. */
+  say "Performed member reports for the selection"
+  performed_lines = ddPerform(selected, "MEMBER_REPORT", 0, "", 1)
+   say "-- Performed member reports for the selection"
+  if ddRc() <> 0 then return ddError("Batch member report failed")
+  /*
+   * Amend selected attributes and links.
+   *
+   * Existing links remain unless their positions are supplied again.
+   */
+  say ""
+  say "Amend selected ORDER_RECORD details"
+
+  call ddAmend "ORDER_RECORD", "RECORD", "Amended sales order record"
+    call ddAttribute "owner", "Order Management"
+    call ddLink "ORDER_STATUS", "contains", 3, "order_status"
+  rc = ddEnd()
+  if rc <> 0 then return ddError("Amendment failed")
+
+  amend_bom = ddBom("ORDER_RECORD", 1, "contains")
+  if ddRc() <> 0 then return ddError("Amendment BOM failed")
+
+  amend_has_customer = 0
+  amend_has_status = 0
+  amend_has_total = 0
+  do report_index = 1 to amend_bom[0]
+    if pos("CUSTOMER_NUMBER", amend_bom[report_index]) > 0 then amend_has_customer = 1
+    if pos("ORDER_STATUS", amend_bom[report_index]) > 0 then amend_has_status = 1
+    if pos("ORDER_TOTAL", amend_bom[report_index]) > 0 then amend_has_total = 1
+    say amend_bom[report_index]
+  end
+  if amend_has_customer = 0 | amend_has_status = 0 | ,
+     amend_has_total <> 0 then call appError("Amendment test failed: retained or amended link missing")
+  /*
+   * Demonstrate ddRemove.
+   *
+   * A member still used by another member becomes a dummy. Removing its
+   * final caller then removes the dummy and its now-unused forward dummy.
+   */
+  say ""
+  say "Test remove a used member"
+  call ddAdd "REMOVE_SOURCE", "FIELD", "Temporary field"
+    call ddAttribute "temporary", "yes"
+    call ddLink "REMOVE_OLD_DUMMY", "contains", 1, "old_dummy"
+  call ddAdd "REMOVE_CALLER", "RECORD", "Temporary caller"
+    call ddLink "REMOVE_SOURCE", "contains", 1, "source"
+  rc = ddEnd()
+  if rc <> 0 then return ddError("Remove demonstration definition failed")
+say "Remove demonstration:"
+  remList=ddlist(,"REMOVE")
+  call ddprint(remList)
+say "Remove demonstration definitions."
+  rc = ddRemove("REMOVE_SOURCE")
+  if rc <> 0 then return ddError("Removing used member failed")
+    remList=ddlist(,"REMOVE")
+    call ddprint(remList)
+say "Remove demonstration completed."
+  dummies = ddDummies()
+  if ddRc() <> 0 then return ddError("Dummy report after remove failed")
+  say "After removing REMOVE_SOURCE (still referenced):"
+  found = 0
+  do report_index = 1 to dummies[0]
+    if pos("REMOVE_SOURCE", dummies[report_index]) > 0 then do
+        found = 1
+        say dummies[report_index]
+    end
+  end
+  if found = 0 then return appError("Remove test failed: referenced member was not retained as dummy")
+
+  used_by_lines = ddWhereUsed("REMOVE_SOURCE", 1, "contains")
+  if ddRc() <> 0 then return ddError("Where-used after remove failed")
+  do report_index = 1 to used_by_lines[0]
+    if pos("REMOVE_CALLER", used_by_lines[report_index]) > 0 then
+      say used_by_lines[report_index]
+  end
+
+  rc = ddRemove("REMOVE_CALLER")
+  if rc <> 0 then return ddError("Removing final caller failed")
+
+  dummies = ddDummies()
+  if ddRc() <> 0 then return ddError("Final dummy report failed")
+  say "After removing the final caller:"
+  found = 0
+  do report_index = 1 to dummies[0]
+    if pos("REMOVE_SOURCE", dummies[report_index]) > 0 | ,
+       pos("REMOVE_OLD_DUMMY", dummies[report_index]) > 0 then do
+       found = 1
+        say dummies[report_index]
+    end
+  end
+  if found <> 0 then return appError("Remove test failed: orphan dummies remain")
+  /*
+   * Check that unrelated dummies are still present.
+   */
+
+  say ""
+  say "Original dummies after removal"
+
+  dummies = ddDummies()
+  if ddRc() <> 0 then return ddError("Dummy listing failed")
+
+  call ddPrint dummies
+  /*
+   * Close the dictionary.
+   */
+  rc = ddClose()
+  if rc <> 0 then return ddError("Cannot close dictionary")
+
+  say "Order dictionary created."
+return 0
+
+ddError: procedure = .int
+  arg err = .string
+  say err || ": " || ddLastError()
+  call ddClose
+ return 1
+
+appError: procedure = .int
+  arg err = .string
+  say err
+  call ddClose
+return 1

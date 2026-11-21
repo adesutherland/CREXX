@@ -1,0 +1,105 @@
+/* Build and run the procedural SQLite data dictionary facade check. */
+BUILD_DIR = ".crexx-build/data-dictionary-facade";
+MODULE_SOURCE = "examples/native/sqlite/data_dictionary.crexx";
+FACADE_SOURCE = "examples/native/sqlite/data_dictionary_facade.crexx";
+REPORT_SOURCE = "examples/native/sqlite/data_dictionary_report.crexx";
+TEST_SOURCE = "examples/native/sqlite/data_dictionary_facade_test.crexx";
+REPORT_TEST_SOURCE = "examples/native/sqlite/data_dictionary_facade_report_test.crexx";
+TRANSACTION_TEST_SOURCE = "examples/native/sqlite/data_dictionary_facade_transaction_test.crexx";
+CYCLE_TEST_SOURCE = "examples/native/sqlite/data_dictionary_facade_cycle_test.crexx";
+REPLACE_TEST_SOURCE = "examples/native/sqlite/data_dictionary_facade_replace_test.crexx";
+
+VERBOSE = "true";
+FORCE = "true";
+-- clean = "true";
+rebuild = "true";
+-- JOBS = "6";
+-- CPU = "1";
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "COMPILE DATA DICTIONARY FACADE PROGRAM $out"
+END RULE;
+
+RULE run_program
+  ACTION = "RUN"
+  DESCRIPTION = "RUN DATA DICTIONARY FACADE TEST"
+END RULE;
+
+BUILD "${BUILD_DIR}/data_dictionary.rxbin"
+  BUILD_NAME = dictionary_module
+  RULE = compile_program
+  INPUT = "${MODULE_SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_facade.rxbin"
+  BUILD_NAME = dictionary_facade
+  RULE = compile_program
+  INPUT = "${FACADE_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_report
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_report.rxbin"
+  BUILD_NAME = dictionary_report
+  RULE = compile_program
+  INPUT = "${REPORT_SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_facade_test.rxbin"
+  BUILD_NAME = dictionary_facade_test
+  RULE = compile_program
+  INPUT = "${TEST_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_facade
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_facade_report_test.rxbin"
+  BUILD_NAME = dictionary_facade_report_test
+  RULE = compile_program
+  INPUT = "${REPORT_TEST_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_facade
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_facade_transaction_test.rxbin"
+  BUILD_NAME = dictionary_facade_transaction_test
+  RULE = compile_program
+  INPUT = "${TRANSACTION_TEST_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_facade
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_facade_cycle_test.rxbin"
+  BUILD_NAME = dictionary_facade_cycle_test
+  RULE = compile_program
+  INPUT = "${CYCLE_TEST_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_facade
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_facade_replace_test.rxbin"
+  BUILD_NAME = dictionary_facade_replace_test
+  RULE = compile_program
+  INPUT = "${REPLACE_TEST_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_facade
+END BUILD;
+
+BUILD "run-data-dictionary-facade"
+  BUILD_NAME = run_dictionary_facade
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/data_dictionary_facade_test.rxbin"
+  DEPENDS_ON_BUILD = dictionary_facade_test
+  WORK_DIR = "${BUILD_DIR}"
+END BUILD;
+
+BUILD "run-data-dictionary-facade-report-test"
+  BUILD_NAME = run_dictionary_facade_report_test
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/data_dictionary_facade_report_test.rxbin"
+  DEPENDS_ON_BUILD = dictionary_facade_report_test
+  WORK_DIR = "${BUILD_DIR}"
+END BUILD;
+
+DEFAULT_BUILD = run_dictionary_facade;

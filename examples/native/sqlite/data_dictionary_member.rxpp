@@ -1,0 +1,234 @@
+/* RXPP dictionary-member declaration prototype. */
+options levelb
+
+import data_DataDictionary
+import rxfnsb
+
+dictionary = .DataDictionary()
+rc = dictionary.open(":memory:")
+if rc <> 0 then exit rc
+
+##LOADMACRO ../examples/native/sqlite/rxpp
+##DALIAS MEMBER HANDLER DICTIONARY_MEMBER
+
+MEMBER m_product_record, dictionary, add_member
+  TYPE RECORD
+  DESCRIPTION "Product record"
+  CONTAINS PRODUCT_NUMBER
+  CONTAINS PRODUCT_CATEGORY
+  ALIAS "PROD-NUMBER"
+END MEMBER
+
+say "PRODUCT_RECORD id=" || m_product_record
+links = .string[]
+rc = dictionary.getSuccessorLinks(m_product_record, links)
+do i = 1 to links[0]
+  say links[i]
+end
+
+say ""
+  say "Trading data dictionary: " || filename
+  say "Uses and Used-by count direct link occurrences"
+  say left("Member", 30) || left("Type", 14) || right("Uses", 6) || right("Used-by", 9)
+  say copies("-", 59)
+  rows = .string[]
+  report_rc = dictionary.listMembersWithCounts("", rows)
+  errors = errors + check(report_rc = 0, "list members")
+  if report_rc = 0 then do
+    do i = 1 to rows[0]
+      say format_member_row(rows[i])
+    end
+  end
+
+  say ""
+  say "RECORD members"
+  record_rows = .string[]
+  report_rc = dictionary.listMembersWithCounts("RECORD", record_rows)
+  errors = errors + check(report_rc = 0, "list RECORD members")
+  if report_rc = 0 then do
+    do i = 1 to record_rows[0]
+      say format_member_row(record_rows[i])
+    end
+  end
+
+  say ""
+  say "Alias query: ACCOUNT_NUMBER"
+  alias_rows = .string[]
+  report_rc = dictionary.findByAlias("ACCOUNT_NUMBER", alias_rows)
+  errors = errors + check(report_rc = 0, "find ACCOUNT_NUMBER")
+  if report_rc = 0 then do
+    do i = 1 to alias_rows[0]
+      say "  " || alias_rows[i]
+    end
+  end
+
+  say ""
+  say "Direct BOM: SALES_ORDER_RECORD"
+  successors = .string[]
+  report_rc = dictionary.getSuccessors(m_sales_order_record, successors)
+  errors = errors + check(report_rc = 0, "SALES_ORDER_RECORD successors")
+  if report_rc = 0 then do
+    do i = 1 to successors[0]
+      say "  " || successors[i]
+    end
+  end
+
+  say ""
+  say "Where used: DATE"
+  callers = .string[]
+  report_rc = dictionary.getCallers(m_date, callers)
+  errors = errors + check(report_rc = 0, "DATE callers")
+  if report_rc = 0 then do
+    do i = 1 to callers[0]
+      say "  " || callers[i]
+    end
+  end
+
+  say ""
+  say "Ordered occurrences: CUSTOMER_RECORD"
+  customer_links = .string[]
+  report_rc = dictionary.getSuccessorLinks(m_customer_record, customer_links)
+  errors = errors + check(report_rc = 0, "CUSTOMER_RECORD links")
+  if report_rc = 0 then do
+    do i = 1 to customer_links[0]
+      say "  " || customer_links[i]
+    end
+  end
+
+  say ""
+  say "Ordered occurrences: ADDRESS_GROUP"
+  address_links = .string[]
+  report_rc = dictionary.getSuccessorLinks(m_address_group, address_links)
+  errors = errors + check(report_rc = 0, "ADDRESS_GROUP links")
+  if report_rc = 0 then do
+    do i = 1 to address_links[0]
+      say "  " || address_links[i]
+    end
+  end
+
+  say ""
+  say "Nested BOM: CUSTOMER_RECORD"
+  bom_rows = .string[]
+  report_rc = dictionary.walkBOM(m_customer_record, bom_rows, 4, "contains")
+  errors = errors + check(report_rc = 0, "nested CUSTOMER_RECORD BOM")
+  if report_rc = 0 then errors = errors + show_nested_report(bom_rows, 8)
+
+  say ""
+  say "Nested where-used: CITY"
+  say "  Link metadata is shown from the original caller-to-successor link."
+  where_rows = .string[]
+  report_rc = dictionary.walkWhereUsed(m_city, where_rows, 3, "contains")
+  errors = errors + check(report_rc = 0, "nested CITY where-used")
+  if report_rc = 0 then errors = errors + show_nested_report(where_rows, 8)
+
+  errors = errors + check(dictionary.close() = 0, "close")
+  if errors <> 0 then do
+    say "FAIL: trading dictionary errors=" || errors
+    return 1
+  end
+  say "PASS: trading dictionary members=127 aliases=6 link_instances=253"
+  return 0
+
+/* listMembersWithCounts returns member|type|uses|used-by rows. */
+format_member_row: procedure = .string
+  arg row = .string
+  name = field(row, 1)
+  member_type = field(row, 2)
+  uses = field(row, 3)
+  used_by = field(row, 4)
+  return left(name, 30) || left(member_type, 14) || right(uses, 6) || right(used_by, 9)
+
+field: procedure = .string
+  arg row = .string, number = .int
+  rest = row
+  do i = 1 to number - 1
+    separator = pos("|", rest)
+    if separator = 0 then return ""
+    rest = substr(rest, separator + 1)
+  end
+  separator = pos("|", rest)
+  if separator = 0 then return rest
+  return left(rest, separator - 1)
+
+/* Render raw walker rows without changing their machine-readable contract. */
+show_nested_report: procedure = .int
+  arg rows = .string[], indent_cap = 8
+  if rows[0] = 0 then do
+    say "  (empty)"
+    return 0
+  end
+
+  level_width = 3
+  position_width = 3
+  member_width = 32
+  link_width = 12
+  occurrence_width = 24
+  status_width = 6
+  indentation_capped = 0
+
+  /* First pass: calculate widths from complete values, never truncate. */
+  do i = 1 to rows[0]
+    level_text = field(rows[i], 1)
+    member_name = field(rows[i], 2)
+    link_type = field(rows[i], 3)
+    position_text = field(rows[i], 4)
+    occurrence = field(rows[i], 5)
+    status = field(rows[i], 6)
+    level = level_text
+    display_level = level
+    if indent_cap > 0 & display_level > indent_cap then do
+      display_level = indent_cap
+      indentation_capped = 1
+    end
+    displayed_member = copies("  ", display_level) || member_name
+    if length(level_text) > level_width then level_width = length(level_text)
+    if length(position_text) > position_width then position_width = length(position_text)
+    if length(displayed_member) > member_width then member_width = length(displayed_member)
+    if length(link_type) > link_width then link_width = length(link_type)
+    if length(occurrence) > occurrence_width then occurrence_width = length(occurrence)
+    if length(status) > status_width then status_width = length(status)
+  end
+
+  say "  " || pad_left("Lvl", level_width) || "  " || pad_left("Pos", position_width) || "  " || ,
+    pad_right("Member", member_width) || "  " || pad_right("Link type", link_width) || "  " || ,
+    pad_right("Occurrence", occurrence_width) || "  " || pad_right("Status", status_width)
+  separator_width = level_width + position_width + member_width + link_width + occurrence_width + status_width + 10
+  say "  " || copies("-", separator_width)
+  if indentation_capped = 1 then say "  (indentation capped at level " || indent_cap || "; Lvl remains authoritative)"
+
+  /* Second pass: preserve walker order, including repeated occurrences. */
+  do i = 1 to rows[0]
+    level_text = field(rows[i], 1)
+    member_name = field(rows[i], 2)
+    link_type = field(rows[i], 3)
+    position_text = field(rows[i], 4)
+    occurrence = field(rows[i], 5)
+    status = field(rows[i], 6)
+    level = level_text
+    display_level = level
+    if indent_cap > 0 & display_level > indent_cap then display_level = indent_cap
+    if level = 0 then do
+      position_text = ""
+      link_type = ""
+      occurrence = ""
+      status = ""
+    end
+    displayed_member = copies("  ", display_level) || member_name
+    say "  " || pad_left(level_text, level_width) || "  " || pad_left(position_text, position_width) || "  " || ,
+      pad_right(displayed_member, member_width) || "  " || pad_right(link_type, link_width) || "  " || ,
+      pad_right(occurrence, occurrence_width) || "  " || pad_right(status, status_width)
+  end
+  return 0
+
+pad_right: procedure = .string
+  arg value = .string, width = .int
+  if length(value) >= width then return value
+  return value || copies(" ", width - length(value))
+
+pad_left: procedure = .string
+  arg value = .string, width = .int
+  if length(value) >= width then return value
+  return copies(" ", width - length(value)) || value
+
+
+rc = dictionary.close()

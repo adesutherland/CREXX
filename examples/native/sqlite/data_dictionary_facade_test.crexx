@@ -1,0 +1,69 @@
+/* Focused procedural data-dictionary facade check. */
+options levelb
+
+import data_DataDictionaryFacade
+import data_DataDictionary
+import rxfnsb
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: dictionary facade " || label
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+  arg args = .string[]
+  filename = "data_dictionary_facade_test.db"
+  if args.0 > 0 then filename = args[1]
+  errors = 0
+  rc = ddOpen(filename)
+  errors = errors + check(rc = 0, "open")
+  if errors <> 0 then return 1
+
+  errors = errors + check(ddAdd("ORDER_RECORD", "RECORD", "Order record") = 0, "add root")
+  errors = errors + check(ddAlias("ORDER_LAYOUT") = 0, "untyped alias")
+  errors = errors + check(ddAlias("ORDER", "Short") = 0, "typed alias")
+  errors = errors + check(ddAttribute("owner", "Sales") = 0, "attribute")
+  errors = errors + check(ddLink("CUSTOMER_NUMBER", "contains", 1, "customer_number") = 0, "link")
+  errors = errors + check(ddAdd("CUSTOMER_NUMBER", "FIELD", "Customer number") = 0, "implicit end")
+  errors = errors + check(ddAttribute("length", "12") = 0, "child attribute")
+  errors = errors + check(ddEnd() = 0, "end child")
+  errors = errors + check(ddClose() = 0, "close")
+
+  if filename <> ":memory:" then do
+    dictionary = .DataDictionary()
+    errors = errors + check(dictionary.open(filename) = 0, "reopen storage")
+    root_id = 0
+    child_id = 0
+    errors = errors + check(dictionary.getMemberId("ORDER_RECORD", root_id) = 0, "root persisted")
+    errors = errors + check(dictionary.getMemberId("CUSTOMER_NUMBER", child_id) = 0, "dummy completed")
+    errors = errors + check(dictionary.close() = 0, "storage close")
+  end
+
+  errors = errors + check(ddOpen(filename) = 0, "reopen facade")
+  errors = errors + check(ddAdd("BROKEN", "FIELD", "broken") = 0, "add broken")
+  errors = errors + check(ddLink("BROKEN_TARGET") = 0, "create pending dummy")
+  errors = errors + check(ddAlias("BAD", "UPPER") <> 0, "buffer protected alias")
+  errors = errors + check(ddEnd() <> 0, "failed definition")
+  errors = errors + check(ddRc() <> 0, "failed definition status")
+  errors = errors + check(pos("BROKEN", ddLastError()) > 0, "failed definition diagnostic")
+  errors = errors + check(ddAttribute("outside", "no") <> 0, "inactive mutation rejected")
+  errors = errors + check(ddClose() = 0, "close after failed definition")
+
+  if filename <> ":memory:" then do
+    dictionary = .DataDictionary()
+    errors = errors + check(dictionary.open(filename) = 0, "reopen after failure")
+    missing_id = 0
+    errors = errors + check(dictionary.getMemberId("BROKEN", missing_id) = 1, "failed member rolled back")
+    errors = errors + check(dictionary.getMemberId("BROKEN_TARGET", missing_id) = 1, "failed dummy rolled back")
+    errors = errors + check(dictionary.close() = 0, "final storage close")
+  end
+
+  if errors <> 0 then do
+    say "FAIL: dictionary facade errors=" || errors
+    return 1
+  end
+  say "PASS: procedural dictionary facade"
+  return 0

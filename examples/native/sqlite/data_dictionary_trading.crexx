@@ -1,0 +1,758 @@
+/* Trading and warehouse data dictionary sample.
+   Use a fresh database: the default :memory: database is empty on each run.
+   Optional argument: a path to a new, empty SQLite database.
+   This is illustrative dictionary data, not a physical record layout. */
+options levelb
+
+import data_DataDictionary
+import data_DataDictionaryReport
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: " || label
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+  arg args = .string[]
+  filename = ":memory:"
+  if args.0 > 0 then filename = args[1]
+  dictionary = .DataDictionary()
+  report = .DataDictionaryReport()
+  errors = 0
+  errors = errors + check(dictionary.open(filename) = 0, "open")
+  if errors <> 0 then return 1
+
+  /* Each output variable receives the new member ID. */
+  m_customer_record = 0
+  m_supplier_record = 0
+  m_product_record = 0
+  m_warehouse_record = 0
+  m_inventory_record = 0
+  m_purchase_order_record = 0
+  m_purchase_line_record = 0
+  m_sales_order_record = 0
+  m_sales_line_record = 0
+  m_invoice_record = 0
+  m_invoice_line_record = 0
+  m_payment_record = 0
+  m_shipment_record = 0
+  m_shipment_line_record = 0
+  m_return_record = 0
+  m_return_line_record = 0
+  m_employee_record = 0
+  m_department_record = 0
+  m_stock_movement_record = 0
+  m_price_agreement_record = 0
+  m_address_group = 0
+  m_contact_group = 0
+  m_audit_group = 0
+  m_money_group = 0
+  m_agreement_number = 0
+  m_agreement_status = 0
+  m_amount = 0
+  m_approval_code = 0
+  m_bank_reference = 0
+  m_billed_quantity = 0
+  m_bin_location = 0
+  m_budget_amount = 0
+  m_buyer_number = 0
+  m_capacity = 0
+  m_carrier = 0
+  m_city = 0
+  m_contact_email = 0
+  m_contact_name = 0
+  m_contact_phone = 0
+  m_cost_center = 0
+  m_country = 0
+  m_created_by = 0
+  m_credit_limit = 0
+  m_currency_code = 0
+  m_customer_category = 0
+  m_customer_name = 0
+  m_customer_number = 0
+  m_customer_status = 0
+  m_date = 0
+  m_department_name = 0
+  m_department_number = 0
+  m_department_status = 0
+  m_destination_location = 0
+  m_discount_rate = 0
+  m_employee_name = 0
+  m_employee_number = 0
+  m_employment_status = 0
+  m_inventory_status = 0
+  m_invoice_number = 0
+  m_invoice_status = 0
+  m_job_title = 0
+  m_line_amount = 0
+  m_line_number = 0
+  m_line_status = 0
+  m_manager = 0
+  m_manager_number = 0
+  m_minimum_quantity = 0
+  m_movement_number = 0
+  m_movement_quantity = 0
+  m_movement_type = 0
+  m_ordered_quantity = 0
+  m_order_status = 0
+  m_package_number = 0
+  m_payment_amount = 0
+  m_payment_method = 0
+  m_payment_number = 0
+  m_payment_status = 0
+  m_payment_terms = 0
+  m_postcode = 0
+  m_product_category = 0
+  m_product_name = 0
+  m_product_number = 0
+  m_product_status = 0
+  m_purchase_order_number = 0
+  m_purchase_region = 0
+  m_purchase_status = 0
+  m_quantity_on_hand = 0
+  m_quantity_reserved = 0
+  m_rating = 0
+  m_reference_number = 0
+  m_refund_amount = 0
+  m_reorder_level = 0
+  m_reorder_quantity = 0
+  m_returned_quantity = 0
+  m_return_number = 0
+  m_return_reason = 0
+  m_return_status = 0
+  m_salesperson_number = 0
+  m_sales_order_number = 0
+  m_sales_region = 0
+  m_shipment_number = 0
+  m_shipment_status = 0
+  m_shipped_quantity = 0
+  m_shipping_cost = 0
+  m_source_location = 0
+  m_standard_cost = 0
+  m_street = 0
+  m_subtotal = 0
+  m_supplier_category = 0
+  m_supplier_name = 0
+  m_supplier_number = 0
+  m_supplier_status = 0
+  m_tax_amount = 0
+  m_tax_number = 0
+  m_tax_rate = 0
+  m_tax_registration = 0
+  m_time = 0
+  m_total_amount = 0
+  m_tracking_number = 0
+  m_unit_of_measure = 0
+  m_unit_price = 0
+  m_updated_by = 0
+  m_warehouse_name = 0
+  m_warehouse_number = 0
+  m_warehouse_status = 0
+  m_warehouse_type = 0
+  m_weight = 0
+
+  /* Add all members before creating aliases or references. */
+  errors = errors + check(dictionary.addMember("CUSTOMER_RECORD", "RECORD", "Customer record", m_customer_record) = 0, "member CUSTOMER_RECORD")
+  errors = errors + check(dictionary.addMember("SUPPLIER_RECORD", "RECORD", "Supplier record", m_supplier_record) = 0, "member SUPPLIER_RECORD")
+  errors = errors + check(dictionary.addMember("PRODUCT_RECORD", "RECORD", "Product record", m_product_record) = 0, "member PRODUCT_RECORD")
+  errors = errors + check(dictionary.addMember("WAREHOUSE_RECORD", "RECORD", "Warehouse record", m_warehouse_record) = 0, "member WAREHOUSE_RECORD")
+  errors = errors + check(dictionary.addMember("INVENTORY_RECORD", "RECORD", "Inventory record", m_inventory_record) = 0, "member INVENTORY_RECORD")
+  errors = errors + check(dictionary.addMember("PURCHASE_ORDER_RECORD", "RECORD", "Purchase Order record", m_purchase_order_record) = 0, "member PURCHASE_ORDER_RECORD")
+  errors = errors + check(dictionary.addMember("PURCHASE_LINE_RECORD", "RECORD", "Purchase Line record", m_purchase_line_record) = 0, "member PURCHASE_LINE_RECORD")
+  errors = errors + check(dictionary.addMember("SALES_ORDER_RECORD", "RECORD", "Sales Order record", m_sales_order_record) = 0, "member SALES_ORDER_RECORD")
+  errors = errors + check(dictionary.addMember("SALES_LINE_RECORD", "RECORD", "Sales Line record", m_sales_line_record) = 0, "member SALES_LINE_RECORD")
+  errors = errors + check(dictionary.addMember("INVOICE_RECORD", "RECORD", "Invoice record", m_invoice_record) = 0, "member INVOICE_RECORD")
+  errors = errors + check(dictionary.addMember("INVOICE_LINE_RECORD", "RECORD", "Invoice Line record", m_invoice_line_record) = 0, "member INVOICE_LINE_RECORD")
+  errors = errors + check(dictionary.addMember("PAYMENT_RECORD", "RECORD", "Payment record", m_payment_record) = 0, "member PAYMENT_RECORD")
+  errors = errors + check(dictionary.addMember("SHIPMENT_RECORD", "RECORD", "Shipment record", m_shipment_record) = 0, "member SHIPMENT_RECORD")
+  errors = errors + check(dictionary.addMember("SHIPMENT_LINE_RECORD", "RECORD", "Shipment Line record", m_shipment_line_record) = 0, "member SHIPMENT_LINE_RECORD")
+  errors = errors + check(dictionary.addMember("RETURN_RECORD", "RECORD", "Return record", m_return_record) = 0, "member RETURN_RECORD")
+  errors = errors + check(dictionary.addMember("RETURN_LINE_RECORD", "RECORD", "Return Line record", m_return_line_record) = 0, "member RETURN_LINE_RECORD")
+  errors = errors + check(dictionary.addMember("EMPLOYEE_RECORD", "RECORD", "Employee record", m_employee_record) = 0, "member EMPLOYEE_RECORD")
+  errors = errors + check(dictionary.addMember("DEPARTMENT_RECORD", "RECORD", "Department record", m_department_record) = 0, "member DEPARTMENT_RECORD")
+  errors = errors + check(dictionary.addMember("STOCK_MOVEMENT_RECORD", "RECORD", "Stock Movement record", m_stock_movement_record) = 0, "member STOCK_MOVEMENT_RECORD")
+  errors = errors + check(dictionary.addMember("PRICE_AGREEMENT_RECORD", "RECORD", "Price Agreement record", m_price_agreement_record) = 0, "member PRICE_AGREEMENT_RECORD")
+  errors = errors + check(dictionary.addMember("ADDRESS_GROUP", "GROUP", "Address reusable group", m_address_group) = 0, "member ADDRESS_GROUP")
+  errors = errors + check(dictionary.addMember("CONTACT_GROUP", "GROUP", "Contact reusable group", m_contact_group) = 0, "member CONTACT_GROUP")
+  errors = errors + check(dictionary.addMember("AUDIT_GROUP", "GROUP", "Audit reusable group", m_audit_group) = 0, "member AUDIT_GROUP")
+  errors = errors + check(dictionary.addMember("MONEY_GROUP", "GROUP", "Money reusable group", m_money_group) = 0, "member MONEY_GROUP")
+  errors = errors + check(dictionary.addMember("AGREEMENT_NUMBER", "FIELD", "Agreement Number field", m_agreement_number) = 0, "member AGREEMENT_NUMBER")
+  errors = errors + check(dictionary.addMember("AGREEMENT_STATUS", "FIELD", "Agreement Status field", m_agreement_status) = 0, "member AGREEMENT_STATUS")
+  errors = errors + check(dictionary.addMember("AMOUNT", "FIELD", "Amount field", m_amount) = 0, "member AMOUNT")
+  errors = errors + check(dictionary.addMember("APPROVAL_CODE", "FIELD", "Approval Code field", m_approval_code) = 0, "member APPROVAL_CODE")
+  errors = errors + check(dictionary.addMember("BANK_REFERENCE", "FIELD", "Bank Reference field", m_bank_reference) = 0, "member BANK_REFERENCE")
+  errors = errors + check(dictionary.addMember("BILLED_QUANTITY", "FIELD", "Billed Quantity field", m_billed_quantity) = 0, "member BILLED_QUANTITY")
+  errors = errors + check(dictionary.addMember("BIN_LOCATION", "FIELD", "Bin Location field", m_bin_location) = 0, "member BIN_LOCATION")
+  errors = errors + check(dictionary.addMember("BUDGET_AMOUNT", "FIELD", "Budget Amount field", m_budget_amount) = 0, "member BUDGET_AMOUNT")
+  errors = errors + check(dictionary.addMember("BUYER_NUMBER", "FIELD", "Buyer Number field", m_buyer_number) = 0, "member BUYER_NUMBER")
+  errors = errors + check(dictionary.addMember("CAPACITY", "FIELD", "Capacity field", m_capacity) = 0, "member CAPACITY")
+  errors = errors + check(dictionary.addMember("CARRIER", "FIELD", "Carrier field", m_carrier) = 0, "member CARRIER")
+  errors = errors + check(dictionary.addMember("CITY", "FIELD", "City field", m_city) = 0, "member CITY")
+  errors = errors + check(dictionary.addMember("CONTACT_EMAIL", "FIELD", "Contact Email field", m_contact_email) = 0, "member CONTACT_EMAIL")
+  errors = errors + check(dictionary.addMember("CONTACT_NAME", "FIELD", "Contact Name field", m_contact_name) = 0, "member CONTACT_NAME")
+  errors = errors + check(dictionary.addMember("CONTACT_PHONE", "FIELD", "Contact Phone field", m_contact_phone) = 0, "member CONTACT_PHONE")
+  errors = errors + check(dictionary.addMember("COST_CENTER", "FIELD", "Cost Center field", m_cost_center) = 0, "member COST_CENTER")
+  errors = errors + check(dictionary.addMember("COUNTRY", "FIELD", "Country field", m_country) = 0, "member COUNTRY")
+  errors = errors + check(dictionary.addMember("CREATED_BY", "FIELD", "Created By field", m_created_by) = 0, "member CREATED_BY")
+  errors = errors + check(dictionary.addMember("CREDIT_LIMIT", "FIELD", "Credit Limit field", m_credit_limit) = 0, "member CREDIT_LIMIT")
+  errors = errors + check(dictionary.addMember("CURRENCY_CODE", "FIELD", "Currency Code field", m_currency_code) = 0, "member CURRENCY_CODE")
+  errors = errors + check(dictionary.addMember("CUSTOMER_CATEGORY", "FIELD", "Customer Category field", m_customer_category) = 0, "member CUSTOMER_CATEGORY")
+  errors = errors + check(dictionary.addMember("CUSTOMER_NAME", "FIELD", "Customer Name field", m_customer_name) = 0, "member CUSTOMER_NAME")
+  errors = errors + check(dictionary.addMember("CUSTOMER_NUMBER", "FIELD", "Customer Number field", m_customer_number) = 0, "member CUSTOMER_NUMBER")
+  errors = errors + check(dictionary.addMember("CUSTOMER_STATUS", "FIELD", "Customer Status field", m_customer_status) = 0, "member CUSTOMER_STATUS")
+  errors = errors + check(dictionary.addMember("DATE", "FIELD", "Date field", m_date) = 0, "member DATE")
+  errors = errors + check(dictionary.addMember("DEPARTMENT_NAME", "FIELD", "Department Name field", m_department_name) = 0, "member DEPARTMENT_NAME")
+  errors = errors + check(dictionary.addMember("DEPARTMENT_NUMBER", "FIELD", "Department Number field", m_department_number) = 0, "member DEPARTMENT_NUMBER")
+  errors = errors + check(dictionary.addMember("DEPARTMENT_STATUS", "FIELD", "Department Status field", m_department_status) = 0, "member DEPARTMENT_STATUS")
+  errors = errors + check(dictionary.addMember("DESTINATION_LOCATION", "FIELD", "Destination Location field", m_destination_location) = 0, "member DESTINATION_LOCATION")
+  errors = errors + check(dictionary.addMember("DISCOUNT_RATE", "FIELD", "Discount Rate field", m_discount_rate) = 0, "member DISCOUNT_RATE")
+  errors = errors + check(dictionary.addMember("EMPLOYEE_NAME", "FIELD", "Employee Name field", m_employee_name) = 0, "member EMPLOYEE_NAME")
+  errors = errors + check(dictionary.addMember("EMPLOYEE_NUMBER", "FIELD", "Employee Number field", m_employee_number) = 0, "member EMPLOYEE_NUMBER")
+  errors = errors + check(dictionary.addMember("EMPLOYMENT_STATUS", "FIELD", "Employment Status field", m_employment_status) = 0, "member EMPLOYMENT_STATUS")
+  errors = errors + check(dictionary.addMember("INVENTORY_STATUS", "FIELD", "Inventory Status field", m_inventory_status) = 0, "member INVENTORY_STATUS")
+  errors = errors + check(dictionary.addMember("INVOICE_NUMBER", "FIELD", "Invoice Number field", m_invoice_number) = 0, "member INVOICE_NUMBER")
+  errors = errors + check(dictionary.addMember("INVOICE_STATUS", "FIELD", "Invoice Status field", m_invoice_status) = 0, "member INVOICE_STATUS")
+  errors = errors + check(dictionary.addMember("JOB_TITLE", "FIELD", "Job Title field", m_job_title) = 0, "member JOB_TITLE")
+  errors = errors + check(dictionary.addMember("LINE_AMOUNT", "FIELD", "Line Amount field", m_line_amount) = 0, "member LINE_AMOUNT")
+  errors = errors + check(dictionary.addMember("LINE_NUMBER", "FIELD", "Line Number field", m_line_number) = 0, "member LINE_NUMBER")
+  errors = errors + check(dictionary.addMember("LINE_STATUS", "FIELD", "Line Status field", m_line_status) = 0, "member LINE_STATUS")
+  errors = errors + check(dictionary.addMember("MANAGER", "FIELD", "Manager field", m_manager) = 0, "member MANAGER")
+  errors = errors + check(dictionary.addMember("MANAGER_NUMBER", "FIELD", "Manager Number field", m_manager_number) = 0, "member MANAGER_NUMBER")
+  errors = errors + check(dictionary.addMember("MINIMUM_QUANTITY", "FIELD", "Minimum Quantity field", m_minimum_quantity) = 0, "member MINIMUM_QUANTITY")
+  errors = errors + check(dictionary.addMember("MOVEMENT_NUMBER", "FIELD", "Movement Number field", m_movement_number) = 0, "member MOVEMENT_NUMBER")
+  errors = errors + check(dictionary.addMember("MOVEMENT_QUANTITY", "FIELD", "Movement Quantity field", m_movement_quantity) = 0, "member MOVEMENT_QUANTITY")
+  errors = errors + check(dictionary.addMember("MOVEMENT_TYPE", "FIELD", "Movement Type field", m_movement_type) = 0, "member MOVEMENT_TYPE")
+  errors = errors + check(dictionary.addMember("ORDERED_QUANTITY", "FIELD", "Ordered Quantity field", m_ordered_quantity) = 0, "member ORDERED_QUANTITY")
+  errors = errors + check(dictionary.addMember("ORDER_STATUS", "FIELD", "Order Status field", m_order_status) = 0, "member ORDER_STATUS")
+  errors = errors + check(dictionary.addMember("PACKAGE_NUMBER", "FIELD", "Package Number field", m_package_number) = 0, "member PACKAGE_NUMBER")
+  errors = errors + check(dictionary.addMember("PAYMENT_AMOUNT", "FIELD", "Payment Amount field", m_payment_amount) = 0, "member PAYMENT_AMOUNT")
+  errors = errors + check(dictionary.addMember("PAYMENT_METHOD", "FIELD", "Payment Method field", m_payment_method) = 0, "member PAYMENT_METHOD")
+  errors = errors + check(dictionary.addMember("PAYMENT_NUMBER", "FIELD", "Payment Number field", m_payment_number) = 0, "member PAYMENT_NUMBER")
+  errors = errors + check(dictionary.addMember("PAYMENT_STATUS", "FIELD", "Payment Status field", m_payment_status) = 0, "member PAYMENT_STATUS")
+  errors = errors + check(dictionary.addMember("PAYMENT_TERMS", "FIELD", "Payment Terms field", m_payment_terms) = 0, "member PAYMENT_TERMS")
+  errors = errors + check(dictionary.addMember("POSTCODE", "FIELD", "Postcode field", m_postcode) = 0, "member POSTCODE")
+  errors = errors + check(dictionary.addMember("PRODUCT_CATEGORY", "FIELD", "Product Category field", m_product_category) = 0, "member PRODUCT_CATEGORY")
+  errors = errors + check(dictionary.addMember("PRODUCT_NAME", "FIELD", "Product Name field", m_product_name) = 0, "member PRODUCT_NAME")
+  errors = errors + check(dictionary.addMember("PRODUCT_NUMBER", "FIELD", "Product Number field", m_product_number) = 0, "member PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addMember("PRODUCT_STATUS", "FIELD", "Product Status field", m_product_status) = 0, "member PRODUCT_STATUS")
+  errors = errors + check(dictionary.addMember("PURCHASE_ORDER_NUMBER", "FIELD", "Purchase Order Number field", m_purchase_order_number) = 0, "member PURCHASE_ORDER_NUMBER")
+  errors = errors + check(dictionary.addMember("PURCHASE_REGION", "FIELD", "Purchase Region field", m_purchase_region) = 0, "member PURCHASE_REGION")
+  errors = errors + check(dictionary.addMember("PURCHASE_STATUS", "FIELD", "Purchase Status field", m_purchase_status) = 0, "member PURCHASE_STATUS")
+  errors = errors + check(dictionary.addMember("QUANTITY_ON_HAND", "FIELD", "Quantity On Hand field", m_quantity_on_hand) = 0, "member QUANTITY_ON_HAND")
+  errors = errors + check(dictionary.addMember("QUANTITY_RESERVED", "FIELD", "Quantity Reserved field", m_quantity_reserved) = 0, "member QUANTITY_RESERVED")
+  errors = errors + check(dictionary.addMember("RATING", "FIELD", "Rating field", m_rating) = 0, "member RATING")
+  errors = errors + check(dictionary.addMember("REFERENCE_NUMBER", "FIELD", "Reference Number field", m_reference_number) = 0, "member REFERENCE_NUMBER")
+  errors = errors + check(dictionary.addMember("REFUND_AMOUNT", "FIELD", "Refund Amount field", m_refund_amount) = 0, "member REFUND_AMOUNT")
+  errors = errors + check(dictionary.addMember("REORDER_LEVEL", "FIELD", "Reorder Level field", m_reorder_level) = 0, "member REORDER_LEVEL")
+  errors = errors + check(dictionary.addMember("REORDER_QUANTITY", "FIELD", "Reorder Quantity field", m_reorder_quantity) = 0, "member REORDER_QUANTITY")
+  errors = errors + check(dictionary.addMember("RETURNED_QUANTITY", "FIELD", "Returned Quantity field", m_returned_quantity) = 0, "member RETURNED_QUANTITY")
+  errors = errors + check(dictionary.addMember("RETURN_NUMBER", "FIELD", "Return Number field", m_return_number) = 0, "member RETURN_NUMBER")
+  errors = errors + check(dictionary.addMember("RETURN_REASON", "FIELD", "Return Reason field", m_return_reason) = 0, "member RETURN_REASON")
+  errors = errors + check(dictionary.addMember("RETURN_STATUS", "FIELD", "Return Status field", m_return_status) = 0, "member RETURN_STATUS")
+  errors = errors + check(dictionary.addMember("SALESPERSON_NUMBER", "FIELD", "Salesperson Number field", m_salesperson_number) = 0, "member SALESPERSON_NUMBER")
+  errors = errors + check(dictionary.addMember("SALES_ORDER_NUMBER", "FIELD", "Sales Order Number field", m_sales_order_number) = 0, "member SALES_ORDER_NUMBER")
+  errors = errors + check(dictionary.addMember("SALES_REGION", "FIELD", "Sales Region field", m_sales_region) = 0, "member SALES_REGION")
+  errors = errors + check(dictionary.addMember("SHIPMENT_NUMBER", "FIELD", "Shipment Number field", m_shipment_number) = 0, "member SHIPMENT_NUMBER")
+  errors = errors + check(dictionary.addMember("SHIPMENT_STATUS", "FIELD", "Shipment Status field", m_shipment_status) = 0, "member SHIPMENT_STATUS")
+  errors = errors + check(dictionary.addMember("SHIPPED_QUANTITY", "FIELD", "Shipped Quantity field", m_shipped_quantity) = 0, "member SHIPPED_QUANTITY")
+  errors = errors + check(dictionary.addMember("SHIPPING_COST", "FIELD", "Shipping Cost field", m_shipping_cost) = 0, "member SHIPPING_COST")
+  errors = errors + check(dictionary.addMember("SOURCE_LOCATION", "FIELD", "Source Location field", m_source_location) = 0, "member SOURCE_LOCATION")
+  errors = errors + check(dictionary.addMember("STANDARD_COST", "FIELD", "Standard Cost field", m_standard_cost) = 0, "member STANDARD_COST")
+  errors = errors + check(dictionary.addMember("STREET", "FIELD", "Street field", m_street) = 0, "member STREET")
+  errors = errors + check(dictionary.addMember("SUBTOTAL", "FIELD", "Subtotal field", m_subtotal) = 0, "member SUBTOTAL")
+  errors = errors + check(dictionary.addMember("SUPPLIER_CATEGORY", "FIELD", "Supplier Category field", m_supplier_category) = 0, "member SUPPLIER_CATEGORY")
+  errors = errors + check(dictionary.addMember("SUPPLIER_NAME", "FIELD", "Supplier Name field", m_supplier_name) = 0, "member SUPPLIER_NAME")
+  errors = errors + check(dictionary.addMember("SUPPLIER_NUMBER", "FIELD", "Supplier Number field", m_supplier_number) = 0, "member SUPPLIER_NUMBER")
+  errors = errors + check(dictionary.addMember("SUPPLIER_STATUS", "FIELD", "Supplier Status field", m_supplier_status) = 0, "member SUPPLIER_STATUS")
+  errors = errors + check(dictionary.addMember("TAX_AMOUNT", "FIELD", "Tax Amount field", m_tax_amount) = 0, "member TAX_AMOUNT")
+  errors = errors + check(dictionary.addMember("TAX_NUMBER", "FIELD", "Tax Number field", m_tax_number) = 0, "member TAX_NUMBER")
+  errors = errors + check(dictionary.addMember("TAX_RATE", "FIELD", "Tax Rate field", m_tax_rate) = 0, "member TAX_RATE")
+  errors = errors + check(dictionary.addMember("TAX_REGISTRATION", "FIELD", "Tax Registration field", m_tax_registration) = 0, "member TAX_REGISTRATION")
+  errors = errors + check(dictionary.addMember("TIME", "FIELD", "Time field", m_time) = 0, "member TIME")
+  errors = errors + check(dictionary.addMember("TOTAL_AMOUNT", "FIELD", "Total Amount field", m_total_amount) = 0, "member TOTAL_AMOUNT")
+  errors = errors + check(dictionary.addMember("TRACKING_NUMBER", "FIELD", "Tracking Number field", m_tracking_number) = 0, "member TRACKING_NUMBER")
+  errors = errors + check(dictionary.addMember("UNIT_OF_MEASURE", "FIELD", "Unit Of Measure field", m_unit_of_measure) = 0, "member UNIT_OF_MEASURE")
+  errors = errors + check(dictionary.addMember("UNIT_PRICE", "FIELD", "Unit Price field", m_unit_price) = 0, "member UNIT_PRICE")
+  errors = errors + check(dictionary.addMember("UPDATED_BY", "FIELD", "Updated By field", m_updated_by) = 0, "member UPDATED_BY")
+  errors = errors + check(dictionary.addMember("WAREHOUSE_NAME", "FIELD", "Warehouse Name field", m_warehouse_name) = 0, "member WAREHOUSE_NAME")
+  errors = errors + check(dictionary.addMember("WAREHOUSE_NUMBER", "FIELD", "Warehouse Number field", m_warehouse_number) = 0, "member WAREHOUSE_NUMBER")
+  errors = errors + check(dictionary.addMember("WAREHOUSE_STATUS", "FIELD", "Warehouse Status field", m_warehouse_status) = 0, "member WAREHOUSE_STATUS")
+  errors = errors + check(dictionary.addMember("WAREHOUSE_TYPE", "FIELD", "Warehouse Type field", m_warehouse_type) = 0, "member WAREHOUSE_TYPE")
+  errors = errors + check(dictionary.addMember("WEIGHT", "FIELD", "Weight field", m_weight) = 0, "member WEIGHT")
+
+  /* Do not use invalid IDs if any member creation failed. */
+  if errors <> 0 then do
+    say "FAIL: member creation errors=" || errors
+    close_rc = dictionary.close()
+    return 1
+  end
+
+  /* ACCOUNT_NUMBER deliberately identifies two members. */
+  errors = errors + check(dictionary.addAlias(m_date, "CALENDAR_DATE") = 0, "alias DATE CALENDAR_DATE")
+  errors = errors + check(dictionary.addAlias(m_date, "DAY") = 0, "alias DATE DAY")
+  errors = errors + check(dictionary.addAlias(m_customer_number, "ACCOUNT_NUMBER") = 0, "alias CUSTOMER_NUMBER ACCOUNT_NUMBER")
+  errors = errors + check(dictionary.addAlias(m_supplier_number, "ACCOUNT_NUMBER") = 0, "alias SUPPLIER_NUMBER ACCOUNT_NUMBER")
+  errors = errors + check(dictionary.addAlias(m_product_number, "ITEM_NUMBER") = 0, "alias PRODUCT_NUMBER ITEM_NUMBER")
+  errors = errors + check(dictionary.addAlias(m_product_name, "ITEM_NAME") = 0, "alias PRODUCT_NAME ITEM_NAME")
+
+  /* Ordered occurrences; repeated successors are intentional. */
+
+  /* ADDRESS_GROUP */
+  errors = errors + check(dictionary.addReference(m_address_group, m_street, "contains", 1, "") = 0, "ADDRESS_GROUP position 1 STREET")
+  errors = errors + check(dictionary.addReference(m_address_group, m_city, "contains", 2, "") = 0, "ADDRESS_GROUP position 2 CITY")
+  errors = errors + check(dictionary.addReference(m_address_group, m_postcode, "contains", 3, "") = 0, "ADDRESS_GROUP position 3 POSTCODE")
+  errors = errors + check(dictionary.addReference(m_address_group, m_country, "contains", 4, "") = 0, "ADDRESS_GROUP position 4 COUNTRY")
+
+  /* CONTACT_GROUP */
+  errors = errors + check(dictionary.addReference(m_contact_group, m_contact_name, "contains", 1, "") = 0, "CONTACT_GROUP position 1 CONTACT_NAME")
+  errors = errors + check(dictionary.addReference(m_contact_group, m_contact_phone, "contains", 2, "") = 0, "CONTACT_GROUP position 2 CONTACT_PHONE")
+  errors = errors + check(dictionary.addReference(m_contact_group, m_contact_email, "contains", 3, "") = 0, "CONTACT_GROUP position 3 CONTACT_EMAIL")
+
+  /* AUDIT_GROUP */
+  errors = errors + check(dictionary.addReference(m_audit_group, m_created_by, "contains", 1, "") = 0, "AUDIT_GROUP position 1 CREATED_BY")
+  errors = errors + check(dictionary.addReference(m_audit_group, m_updated_by, "contains", 2, "") = 0, "AUDIT_GROUP position 2 UPDATED_BY")
+
+  /* MONEY_GROUP */
+  errors = errors + check(dictionary.addReference(m_money_group, m_currency_code, "contains", 1, "") = 0, "MONEY_GROUP position 1 CURRENCY_CODE")
+  errors = errors + check(dictionary.addReference(m_money_group, m_amount, "contains", 2, "") = 0, "MONEY_GROUP position 2 AMOUNT")
+
+  /* CUSTOMER_RECORD */
+  errors = errors + check(dictionary.addReference(m_customer_record, m_customer_number, "contains", 1, "") = 0, "CUSTOMER_RECORD position 1 CUSTOMER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_customer_name, "contains", 2, "") = 0, "CUSTOMER_RECORD position 2 CUSTOMER_NAME")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_customer_status, "contains", 3, "") = 0, "CUSTOMER_RECORD position 3 CUSTOMER_STATUS")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_customer_category, "contains", 4, "") = 0, "CUSTOMER_RECORD position 4 CUSTOMER_CATEGORY")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_tax_number, "contains", 5, "") = 0, "CUSTOMER_RECORD position 5 TAX_NUMBER")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_credit_limit, "contains", 6, "") = 0, "CUSTOMER_RECORD position 6 CREDIT_LIMIT")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_payment_terms, "contains", 7, "") = 0, "CUSTOMER_RECORD position 7 PAYMENT_TERMS")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_sales_region, "contains", 8, "") = 0, "CUSTOMER_RECORD position 8 SALES_REGION")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_date, "contains", 9, "effective_date") = 0, "CUSTOMER_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_date, "contains", 10, "review_date") = 0, "CUSTOMER_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_address_group, "contains", 11, "primary_address") = 0, "CUSTOMER_RECORD position 11 ADDRESS_GROUP")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_address_group, "contains", 12, "secondary_address") = 0, "CUSTOMER_RECORD position 12 ADDRESS_GROUP")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_contact_group, "contains", 13, "contact") = 0, "CUSTOMER_RECORD position 13 CONTACT_GROUP")
+  errors = errors + check(dictionary.addReference(m_customer_record, m_audit_group, "contains", 14, "audit") = 0, "CUSTOMER_RECORD position 14 AUDIT_GROUP")
+
+  /* SUPPLIER_RECORD */
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_supplier_number, "contains", 1, "") = 0, "SUPPLIER_RECORD position 1 SUPPLIER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_supplier_name, "contains", 2, "") = 0, "SUPPLIER_RECORD position 2 SUPPLIER_NAME")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_supplier_status, "contains", 3, "") = 0, "SUPPLIER_RECORD position 3 SUPPLIER_STATUS")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_supplier_category, "contains", 4, "") = 0, "SUPPLIER_RECORD position 4 SUPPLIER_CATEGORY")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_tax_registration, "contains", 5, "") = 0, "SUPPLIER_RECORD position 5 TAX_REGISTRATION")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_payment_terms, "contains", 6, "") = 0, "SUPPLIER_RECORD position 6 PAYMENT_TERMS")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_purchase_region, "contains", 7, "") = 0, "SUPPLIER_RECORD position 7 PURCHASE_REGION")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_rating, "contains", 8, "") = 0, "SUPPLIER_RECORD position 8 RATING")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_date, "contains", 9, "effective_date") = 0, "SUPPLIER_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_date, "contains", 10, "review_date") = 0, "SUPPLIER_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_address_group, "contains", 11, "primary_address") = 0, "SUPPLIER_RECORD position 11 ADDRESS_GROUP")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_address_group, "contains", 12, "secondary_address") = 0, "SUPPLIER_RECORD position 12 ADDRESS_GROUP")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_contact_group, "contains", 13, "contact") = 0, "SUPPLIER_RECORD position 13 CONTACT_GROUP")
+  errors = errors + check(dictionary.addReference(m_supplier_record, m_audit_group, "contains", 14, "audit") = 0, "SUPPLIER_RECORD position 14 AUDIT_GROUP")
+
+  /* PRODUCT_RECORD */
+  errors = errors + check(dictionary.addReference(m_product_record, m_product_number, "contains", 1, "") = 0, "PRODUCT_RECORD position 1 PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_product_record, m_product_name, "contains", 2, "") = 0, "PRODUCT_RECORD position 2 PRODUCT_NAME")
+  errors = errors + check(dictionary.addReference(m_product_record, m_product_category, "contains", 3, "") = 0, "PRODUCT_RECORD position 3 PRODUCT_CATEGORY")
+  errors = errors + check(dictionary.addReference(m_product_record, m_product_status, "contains", 4, "") = 0, "PRODUCT_RECORD position 4 PRODUCT_STATUS")
+  errors = errors + check(dictionary.addReference(m_product_record, m_unit_of_measure, "contains", 5, "") = 0, "PRODUCT_RECORD position 5 UNIT_OF_MEASURE")
+  errors = errors + check(dictionary.addReference(m_product_record, m_unit_price, "contains", 6, "") = 0, "PRODUCT_RECORD position 6 UNIT_PRICE")
+  errors = errors + check(dictionary.addReference(m_product_record, m_standard_cost, "contains", 7, "") = 0, "PRODUCT_RECORD position 7 STANDARD_COST")
+  errors = errors + check(dictionary.addReference(m_product_record, m_weight, "contains", 8, "") = 0, "PRODUCT_RECORD position 8 WEIGHT")
+  errors = errors + check(dictionary.addReference(m_product_record, m_date, "contains", 9, "effective_date") = 0, "PRODUCT_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_product_record, m_date, "contains", 10, "review_date") = 0, "PRODUCT_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_product_record, m_audit_group, "contains", 11, "audit") = 0, "PRODUCT_RECORD position 11 AUDIT_GROUP")
+
+  /* WAREHOUSE_RECORD */
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_warehouse_number, "contains", 1, "") = 0, "WAREHOUSE_RECORD position 1 WAREHOUSE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_warehouse_name, "contains", 2, "") = 0, "WAREHOUSE_RECORD position 2 WAREHOUSE_NAME")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_warehouse_status, "contains", 3, "") = 0, "WAREHOUSE_RECORD position 3 WAREHOUSE_STATUS")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_warehouse_type, "contains", 4, "") = 0, "WAREHOUSE_RECORD position 4 WAREHOUSE_TYPE")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_capacity, "contains", 5, "") = 0, "WAREHOUSE_RECORD position 5 CAPACITY")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_manager, "contains", 6, "") = 0, "WAREHOUSE_RECORD position 6 MANAGER")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_contact_phone, "contains", 7, "") = 0, "WAREHOUSE_RECORD position 7 CONTACT_PHONE")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_contact_email, "contains", 8, "") = 0, "WAREHOUSE_RECORD position 8 CONTACT_EMAIL")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_date, "contains", 9, "effective_date") = 0, "WAREHOUSE_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_date, "contains", 10, "review_date") = 0, "WAREHOUSE_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_address_group, "contains", 11, "primary_address") = 0, "WAREHOUSE_RECORD position 11 ADDRESS_GROUP")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_address_group, "contains", 12, "secondary_address") = 0, "WAREHOUSE_RECORD position 12 ADDRESS_GROUP")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_contact_group, "contains", 13, "contact") = 0, "WAREHOUSE_RECORD position 13 CONTACT_GROUP")
+  errors = errors + check(dictionary.addReference(m_warehouse_record, m_audit_group, "contains", 14, "audit") = 0, "WAREHOUSE_RECORD position 14 AUDIT_GROUP")
+
+  /* INVENTORY_RECORD */
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_product_number, "contains", 1, "") = 0, "INVENTORY_RECORD position 1 PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_warehouse_number, "contains", 2, "") = 0, "INVENTORY_RECORD position 2 WAREHOUSE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_quantity_on_hand, "contains", 3, "") = 0, "INVENTORY_RECORD position 3 QUANTITY_ON_HAND")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_quantity_reserved, "contains", 4, "") = 0, "INVENTORY_RECORD position 4 QUANTITY_RESERVED")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_reorder_level, "contains", 5, "") = 0, "INVENTORY_RECORD position 5 REORDER_LEVEL")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_reorder_quantity, "contains", 6, "") = 0, "INVENTORY_RECORD position 6 REORDER_QUANTITY")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_bin_location, "contains", 7, "") = 0, "INVENTORY_RECORD position 7 BIN_LOCATION")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_inventory_status, "contains", 8, "") = 0, "INVENTORY_RECORD position 8 INVENTORY_STATUS")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_date, "contains", 9, "effective_date") = 0, "INVENTORY_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_date, "contains", 10, "review_date") = 0, "INVENTORY_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_inventory_record, m_audit_group, "contains", 11, "audit") = 0, "INVENTORY_RECORD position 11 AUDIT_GROUP")
+
+  /* PURCHASE_ORDER_RECORD */
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_purchase_order_number, "contains", 1, "") = 0, "PURCHASE_ORDER_RECORD position 1 PURCHASE_ORDER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_supplier_number, "contains", 2, "") = 0, "PURCHASE_ORDER_RECORD position 2 SUPPLIER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_buyer_number, "contains", 3, "") = 0, "PURCHASE_ORDER_RECORD position 3 BUYER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_purchase_status, "contains", 4, "") = 0, "PURCHASE_ORDER_RECORD position 4 PURCHASE_STATUS")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_currency_code, "contains", 5, "") = 0, "PURCHASE_ORDER_RECORD position 5 CURRENCY_CODE")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_subtotal, "contains", 6, "") = 0, "PURCHASE_ORDER_RECORD position 6 SUBTOTAL")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_tax_amount, "contains", 7, "") = 0, "PURCHASE_ORDER_RECORD position 7 TAX_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_total_amount, "contains", 8, "") = 0, "PURCHASE_ORDER_RECORD position 8 TOTAL_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_date, "contains", 9, "effective_date") = 0, "PURCHASE_ORDER_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_date, "contains", 10, "review_date") = 0, "PURCHASE_ORDER_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_money_group, "contains", 11, "settlement_amount") = 0, "PURCHASE_ORDER_RECORD position 11 MONEY_GROUP")
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_audit_group, "contains", 12, "audit") = 0, "PURCHASE_ORDER_RECORD position 12 AUDIT_GROUP")
+
+  /* PURCHASE_LINE_RECORD */
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_purchase_order_number, "contains", 1, "") = 0, "PURCHASE_LINE_RECORD position 1 PURCHASE_ORDER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_line_number, "contains", 2, "") = 0, "PURCHASE_LINE_RECORD position 2 LINE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_product_number, "contains", 3, "") = 0, "PURCHASE_LINE_RECORD position 3 PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_ordered_quantity, "contains", 4, "") = 0, "PURCHASE_LINE_RECORD position 4 ORDERED_QUANTITY")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_unit_price, "contains", 5, "") = 0, "PURCHASE_LINE_RECORD position 5 UNIT_PRICE")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_tax_rate, "contains", 6, "") = 0, "PURCHASE_LINE_RECORD position 6 TAX_RATE")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_line_amount, "contains", 7, "") = 0, "PURCHASE_LINE_RECORD position 7 LINE_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_line_status, "contains", 8, "") = 0, "PURCHASE_LINE_RECORD position 8 LINE_STATUS")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_date, "contains", 9, "effective_date") = 0, "PURCHASE_LINE_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_date, "contains", 10, "review_date") = 0, "PURCHASE_LINE_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_purchase_line_record, m_audit_group, "contains", 11, "audit") = 0, "PURCHASE_LINE_RECORD position 11 AUDIT_GROUP")
+
+  /* SALES_ORDER_RECORD */
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_sales_order_number, "contains", 1, "") = 0, "SALES_ORDER_RECORD position 1 SALES_ORDER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_customer_number, "contains", 2, "") = 0, "SALES_ORDER_RECORD position 2 CUSTOMER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_salesperson_number, "contains", 3, "") = 0, "SALES_ORDER_RECORD position 3 SALESPERSON_NUMBER")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_order_status, "contains", 4, "") = 0, "SALES_ORDER_RECORD position 4 ORDER_STATUS")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_currency_code, "contains", 5, "") = 0, "SALES_ORDER_RECORD position 5 CURRENCY_CODE")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_subtotal, "contains", 6, "") = 0, "SALES_ORDER_RECORD position 6 SUBTOTAL")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_tax_amount, "contains", 7, "") = 0, "SALES_ORDER_RECORD position 7 TAX_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_total_amount, "contains", 8, "") = 0, "SALES_ORDER_RECORD position 8 TOTAL_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_date, "contains", 9, "effective_date") = 0, "SALES_ORDER_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_date, "contains", 10, "review_date") = 0, "SALES_ORDER_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_money_group, "contains", 11, "settlement_amount") = 0, "SALES_ORDER_RECORD position 11 MONEY_GROUP")
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_audit_group, "contains", 12, "audit") = 0, "SALES_ORDER_RECORD position 12 AUDIT_GROUP")
+
+  /* SALES_LINE_RECORD */
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_sales_order_number, "contains", 1, "") = 0, "SALES_LINE_RECORD position 1 SALES_ORDER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_line_number, "contains", 2, "") = 0, "SALES_LINE_RECORD position 2 LINE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_product_number, "contains", 3, "") = 0, "SALES_LINE_RECORD position 3 PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_ordered_quantity, "contains", 4, "") = 0, "SALES_LINE_RECORD position 4 ORDERED_QUANTITY")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_unit_price, "contains", 5, "") = 0, "SALES_LINE_RECORD position 5 UNIT_PRICE")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_discount_rate, "contains", 6, "") = 0, "SALES_LINE_RECORD position 6 DISCOUNT_RATE")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_line_amount, "contains", 7, "") = 0, "SALES_LINE_RECORD position 7 LINE_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_line_status, "contains", 8, "") = 0, "SALES_LINE_RECORD position 8 LINE_STATUS")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_date, "contains", 9, "effective_date") = 0, "SALES_LINE_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_date, "contains", 10, "review_date") = 0, "SALES_LINE_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_sales_line_record, m_audit_group, "contains", 11, "audit") = 0, "SALES_LINE_RECORD position 11 AUDIT_GROUP")
+
+  /* INVOICE_RECORD */
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_invoice_number, "contains", 1, "") = 0, "INVOICE_RECORD position 1 INVOICE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_customer_number, "contains", 2, "") = 0, "INVOICE_RECORD position 2 CUSTOMER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_sales_order_number, "contains", 3, "") = 0, "INVOICE_RECORD position 3 SALES_ORDER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_invoice_status, "contains", 4, "") = 0, "INVOICE_RECORD position 4 INVOICE_STATUS")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_currency_code, "contains", 5, "") = 0, "INVOICE_RECORD position 5 CURRENCY_CODE")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_subtotal, "contains", 6, "") = 0, "INVOICE_RECORD position 6 SUBTOTAL")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_tax_amount, "contains", 7, "") = 0, "INVOICE_RECORD position 7 TAX_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_total_amount, "contains", 8, "") = 0, "INVOICE_RECORD position 8 TOTAL_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_date, "contains", 9, "effective_date") = 0, "INVOICE_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_date, "contains", 10, "review_date") = 0, "INVOICE_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_money_group, "contains", 11, "settlement_amount") = 0, "INVOICE_RECORD position 11 MONEY_GROUP")
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_audit_group, "contains", 12, "audit") = 0, "INVOICE_RECORD position 12 AUDIT_GROUP")
+
+  /* INVOICE_LINE_RECORD */
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_invoice_number, "contains", 1, "") = 0, "INVOICE_LINE_RECORD position 1 INVOICE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_line_number, "contains", 2, "") = 0, "INVOICE_LINE_RECORD position 2 LINE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_product_number, "contains", 3, "") = 0, "INVOICE_LINE_RECORD position 3 PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_billed_quantity, "contains", 4, "") = 0, "INVOICE_LINE_RECORD position 4 BILLED_QUANTITY")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_unit_price, "contains", 5, "") = 0, "INVOICE_LINE_RECORD position 5 UNIT_PRICE")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_tax_rate, "contains", 6, "") = 0, "INVOICE_LINE_RECORD position 6 TAX_RATE")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_line_amount, "contains", 7, "") = 0, "INVOICE_LINE_RECORD position 7 LINE_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_line_status, "contains", 8, "") = 0, "INVOICE_LINE_RECORD position 8 LINE_STATUS")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_date, "contains", 9, "effective_date") = 0, "INVOICE_LINE_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_date, "contains", 10, "review_date") = 0, "INVOICE_LINE_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_invoice_line_record, m_audit_group, "contains", 11, "audit") = 0, "INVOICE_LINE_RECORD position 11 AUDIT_GROUP")
+
+  /* PAYMENT_RECORD */
+  errors = errors + check(dictionary.addReference(m_payment_record, m_payment_number, "contains", 1, "") = 0, "PAYMENT_RECORD position 1 PAYMENT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_invoice_number, "contains", 2, "") = 0, "PAYMENT_RECORD position 2 INVOICE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_customer_number, "contains", 3, "") = 0, "PAYMENT_RECORD position 3 CUSTOMER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_payment_status, "contains", 4, "") = 0, "PAYMENT_RECORD position 4 PAYMENT_STATUS")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_payment_method, "contains", 5, "") = 0, "PAYMENT_RECORD position 5 PAYMENT_METHOD")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_currency_code, "contains", 6, "") = 0, "PAYMENT_RECORD position 6 CURRENCY_CODE")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_payment_amount, "contains", 7, "") = 0, "PAYMENT_RECORD position 7 PAYMENT_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_bank_reference, "contains", 8, "") = 0, "PAYMENT_RECORD position 8 BANK_REFERENCE")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_date, "contains", 9, "effective_date") = 0, "PAYMENT_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_date, "contains", 10, "review_date") = 0, "PAYMENT_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_money_group, "contains", 11, "settlement_amount") = 0, "PAYMENT_RECORD position 11 MONEY_GROUP")
+  errors = errors + check(dictionary.addReference(m_payment_record, m_audit_group, "contains", 12, "audit") = 0, "PAYMENT_RECORD position 12 AUDIT_GROUP")
+
+  /* SHIPMENT_RECORD */
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_shipment_number, "contains", 1, "") = 0, "SHIPMENT_RECORD position 1 SHIPMENT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_sales_order_number, "contains", 2, "") = 0, "SHIPMENT_RECORD position 2 SALES_ORDER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_warehouse_number, "contains", 3, "") = 0, "SHIPMENT_RECORD position 3 WAREHOUSE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_shipment_status, "contains", 4, "") = 0, "SHIPMENT_RECORD position 4 SHIPMENT_STATUS")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_carrier, "contains", 5, "") = 0, "SHIPMENT_RECORD position 5 CARRIER")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_tracking_number, "contains", 6, "") = 0, "SHIPMENT_RECORD position 6 TRACKING_NUMBER")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_shipping_cost, "contains", 7, "") = 0, "SHIPMENT_RECORD position 7 SHIPPING_COST")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_weight, "contains", 8, "") = 0, "SHIPMENT_RECORD position 8 WEIGHT")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_date, "contains", 9, "effective_date") = 0, "SHIPMENT_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_date, "contains", 10, "review_date") = 0, "SHIPMENT_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_audit_group, "contains", 11, "audit") = 0, "SHIPMENT_RECORD position 11 AUDIT_GROUP")
+
+  /* SHIPMENT_LINE_RECORD */
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_shipment_number, "contains", 1, "") = 0, "SHIPMENT_LINE_RECORD position 1 SHIPMENT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_line_number, "contains", 2, "") = 0, "SHIPMENT_LINE_RECORD position 2 LINE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_product_number, "contains", 3, "") = 0, "SHIPMENT_LINE_RECORD position 3 PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_shipped_quantity, "contains", 4, "") = 0, "SHIPMENT_LINE_RECORD position 4 SHIPPED_QUANTITY")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_unit_of_measure, "contains", 5, "") = 0, "SHIPMENT_LINE_RECORD position 5 UNIT_OF_MEASURE")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_package_number, "contains", 6, "") = 0, "SHIPMENT_LINE_RECORD position 6 PACKAGE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_line_status, "contains", 7, "") = 0, "SHIPMENT_LINE_RECORD position 7 LINE_STATUS")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_bin_location, "contains", 8, "") = 0, "SHIPMENT_LINE_RECORD position 8 BIN_LOCATION")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_date, "contains", 9, "effective_date") = 0, "SHIPMENT_LINE_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_date, "contains", 10, "review_date") = 0, "SHIPMENT_LINE_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_shipment_line_record, m_audit_group, "contains", 11, "audit") = 0, "SHIPMENT_LINE_RECORD position 11 AUDIT_GROUP")
+
+  /* RETURN_RECORD */
+  errors = errors + check(dictionary.addReference(m_return_record, m_return_number, "contains", 1, "") = 0, "RETURN_RECORD position 1 RETURN_NUMBER")
+  errors = errors + check(dictionary.addReference(m_return_record, m_sales_order_number, "contains", 2, "") = 0, "RETURN_RECORD position 2 SALES_ORDER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_return_record, m_customer_number, "contains", 3, "") = 0, "RETURN_RECORD position 3 CUSTOMER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_return_record, m_return_status, "contains", 4, "") = 0, "RETURN_RECORD position 4 RETURN_STATUS")
+  errors = errors + check(dictionary.addReference(m_return_record, m_return_reason, "contains", 5, "") = 0, "RETURN_RECORD position 5 RETURN_REASON")
+  errors = errors + check(dictionary.addReference(m_return_record, m_refund_amount, "contains", 6, "") = 0, "RETURN_RECORD position 6 REFUND_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_return_record, m_currency_code, "contains", 7, "") = 0, "RETURN_RECORD position 7 CURRENCY_CODE")
+  errors = errors + check(dictionary.addReference(m_return_record, m_approval_code, "contains", 8, "") = 0, "RETURN_RECORD position 8 APPROVAL_CODE")
+  errors = errors + check(dictionary.addReference(m_return_record, m_date, "contains", 9, "effective_date") = 0, "RETURN_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_return_record, m_date, "contains", 10, "review_date") = 0, "RETURN_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_return_record, m_audit_group, "contains", 11, "audit") = 0, "RETURN_RECORD position 11 AUDIT_GROUP")
+
+  /* RETURN_LINE_RECORD */
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_return_number, "contains", 1, "") = 0, "RETURN_LINE_RECORD position 1 RETURN_NUMBER")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_line_number, "contains", 2, "") = 0, "RETURN_LINE_RECORD position 2 LINE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_product_number, "contains", 3, "") = 0, "RETURN_LINE_RECORD position 3 PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_returned_quantity, "contains", 4, "") = 0, "RETURN_LINE_RECORD position 4 RETURNED_QUANTITY")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_return_reason, "contains", 5, "") = 0, "RETURN_LINE_RECORD position 5 RETURN_REASON")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_line_amount, "contains", 6, "") = 0, "RETURN_LINE_RECORD position 6 LINE_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_line_status, "contains", 7, "") = 0, "RETURN_LINE_RECORD position 7 LINE_STATUS")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_bin_location, "contains", 8, "") = 0, "RETURN_LINE_RECORD position 8 BIN_LOCATION")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_date, "contains", 9, "effective_date") = 0, "RETURN_LINE_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_date, "contains", 10, "review_date") = 0, "RETURN_LINE_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_return_line_record, m_audit_group, "contains", 11, "audit") = 0, "RETURN_LINE_RECORD position 11 AUDIT_GROUP")
+
+  /* EMPLOYEE_RECORD */
+  errors = errors + check(dictionary.addReference(m_employee_record, m_employee_number, "contains", 1, "") = 0, "EMPLOYEE_RECORD position 1 EMPLOYEE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_employee_name, "contains", 2, "") = 0, "EMPLOYEE_RECORD position 2 EMPLOYEE_NAME")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_department_number, "contains", 3, "") = 0, "EMPLOYEE_RECORD position 3 DEPARTMENT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_job_title, "contains", 4, "") = 0, "EMPLOYEE_RECORD position 4 JOB_TITLE")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_employment_status, "contains", 5, "") = 0, "EMPLOYEE_RECORD position 5 EMPLOYMENT_STATUS")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_manager_number, "contains", 6, "") = 0, "EMPLOYEE_RECORD position 6 MANAGER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_contact_phone, "contains", 7, "") = 0, "EMPLOYEE_RECORD position 7 CONTACT_PHONE")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_contact_email, "contains", 8, "") = 0, "EMPLOYEE_RECORD position 8 CONTACT_EMAIL")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_date, "contains", 9, "effective_date") = 0, "EMPLOYEE_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_date, "contains", 10, "review_date") = 0, "EMPLOYEE_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_address_group, "contains", 11, "primary_address") = 0, "EMPLOYEE_RECORD position 11 ADDRESS_GROUP")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_address_group, "contains", 12, "secondary_address") = 0, "EMPLOYEE_RECORD position 12 ADDRESS_GROUP")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_contact_group, "contains", 13, "contact") = 0, "EMPLOYEE_RECORD position 13 CONTACT_GROUP")
+  errors = errors + check(dictionary.addReference(m_employee_record, m_audit_group, "contains", 14, "audit") = 0, "EMPLOYEE_RECORD position 14 AUDIT_GROUP")
+
+  /* DEPARTMENT_RECORD */
+  errors = errors + check(dictionary.addReference(m_department_record, m_department_number, "contains", 1, "") = 0, "DEPARTMENT_RECORD position 1 DEPARTMENT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_department_record, m_department_name, "contains", 2, "") = 0, "DEPARTMENT_RECORD position 2 DEPARTMENT_NAME")
+  errors = errors + check(dictionary.addReference(m_department_record, m_department_status, "contains", 3, "") = 0, "DEPARTMENT_RECORD position 3 DEPARTMENT_STATUS")
+  errors = errors + check(dictionary.addReference(m_department_record, m_manager_number, "contains", 4, "") = 0, "DEPARTMENT_RECORD position 4 MANAGER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_department_record, m_cost_center, "contains", 5, "") = 0, "DEPARTMENT_RECORD position 5 COST_CENTER")
+  errors = errors + check(dictionary.addReference(m_department_record, m_budget_amount, "contains", 6, "") = 0, "DEPARTMENT_RECORD position 6 BUDGET_AMOUNT")
+  errors = errors + check(dictionary.addReference(m_department_record, m_contact_phone, "contains", 7, "") = 0, "DEPARTMENT_RECORD position 7 CONTACT_PHONE")
+  errors = errors + check(dictionary.addReference(m_department_record, m_contact_email, "contains", 8, "") = 0, "DEPARTMENT_RECORD position 8 CONTACT_EMAIL")
+  errors = errors + check(dictionary.addReference(m_department_record, m_date, "contains", 9, "effective_date") = 0, "DEPARTMENT_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_department_record, m_date, "contains", 10, "review_date") = 0, "DEPARTMENT_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_department_record, m_audit_group, "contains", 11, "audit") = 0, "DEPARTMENT_RECORD position 11 AUDIT_GROUP")
+
+  /* STOCK_MOVEMENT_RECORD */
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_movement_number, "contains", 1, "") = 0, "STOCK_MOVEMENT_RECORD position 1 MOVEMENT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_product_number, "contains", 2, "") = 0, "STOCK_MOVEMENT_RECORD position 2 PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_warehouse_number, "contains", 3, "") = 0, "STOCK_MOVEMENT_RECORD position 3 WAREHOUSE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_movement_type, "contains", 4, "") = 0, "STOCK_MOVEMENT_RECORD position 4 MOVEMENT_TYPE")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_movement_quantity, "contains", 5, "") = 0, "STOCK_MOVEMENT_RECORD position 5 MOVEMENT_QUANTITY")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_source_location, "contains", 6, "") = 0, "STOCK_MOVEMENT_RECORD position 6 SOURCE_LOCATION")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_destination_location, "contains", 7, "") = 0, "STOCK_MOVEMENT_RECORD position 7 DESTINATION_LOCATION")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_reference_number, "contains", 8, "") = 0, "STOCK_MOVEMENT_RECORD position 8 REFERENCE_NUMBER")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_date, "contains", 9, "effective_date") = 0, "STOCK_MOVEMENT_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_date, "contains", 10, "review_date") = 0, "STOCK_MOVEMENT_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_stock_movement_record, m_audit_group, "contains", 11, "audit") = 0, "STOCK_MOVEMENT_RECORD position 11 AUDIT_GROUP")
+
+  /* PRICE_AGREEMENT_RECORD */
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_agreement_number, "contains", 1, "") = 0, "PRICE_AGREEMENT_RECORD position 1 AGREEMENT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_customer_number, "contains", 2, "") = 0, "PRICE_AGREEMENT_RECORD position 2 CUSTOMER_NUMBER")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_product_number, "contains", 3, "") = 0, "PRICE_AGREEMENT_RECORD position 3 PRODUCT_NUMBER")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_agreement_status, "contains", 4, "") = 0, "PRICE_AGREEMENT_RECORD position 4 AGREEMENT_STATUS")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_currency_code, "contains", 5, "") = 0, "PRICE_AGREEMENT_RECORD position 5 CURRENCY_CODE")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_unit_price, "contains", 6, "") = 0, "PRICE_AGREEMENT_RECORD position 6 UNIT_PRICE")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_minimum_quantity, "contains", 7, "") = 0, "PRICE_AGREEMENT_RECORD position 7 MINIMUM_QUANTITY")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_discount_rate, "contains", 8, "") = 0, "PRICE_AGREEMENT_RECORD position 8 DISCOUNT_RATE")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_date, "contains", 9, "effective_date") = 0, "PRICE_AGREEMENT_RECORD position 9 DATE")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_date, "contains", 10, "review_date") = 0, "PRICE_AGREEMENT_RECORD position 10 DATE")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_money_group, "contains", 11, "settlement_amount") = 0, "PRICE_AGREEMENT_RECORD position 11 MONEY_GROUP")
+  errors = errors + check(dictionary.addReference(m_price_agreement_record, m_audit_group, "contains", 12, "audit") = 0, "PRICE_AGREEMENT_RECORD position 12 AUDIT_GROUP")
+
+  /* PURCHASE_ORDER_RECORD */
+  errors = errors + check(dictionary.addReference(m_purchase_order_record, m_purchase_line_record, "contains", 13, "line") = 0, "PURCHASE_ORDER_RECORD position 13 PURCHASE_LINE_RECORD")
+
+  /* SALES_ORDER_RECORD */
+  errors = errors + check(dictionary.addReference(m_sales_order_record, m_sales_line_record, "contains", 13, "line") = 0, "SALES_ORDER_RECORD position 13 SALES_LINE_RECORD")
+
+  /* INVOICE_RECORD */
+  errors = errors + check(dictionary.addReference(m_invoice_record, m_invoice_line_record, "contains", 13, "line") = 0, "INVOICE_RECORD position 13 INVOICE_LINE_RECORD")
+
+  /* SHIPMENT_RECORD */
+  errors = errors + check(dictionary.addReference(m_shipment_record, m_shipment_line_record, "contains", 12, "line") = 0, "SHIPMENT_RECORD position 12 SHIPMENT_LINE_RECORD")
+
+  /* RETURN_RECORD */
+  errors = errors + check(dictionary.addReference(m_return_record, m_return_line_record, "contains", 12, "line") = 0, "RETURN_RECORD position 12 RETURN_LINE_RECORD")
+
+  if errors <> 0 then do
+    say "FAIL: data creation errors=" || errors
+    close_rc = dictionary.close()
+    return 1
+  end
+
+  say ""
+  say "Trading data dictionary: " || filename
+  say "Uses and Used-by count direct link occurrences"
+  rows = .string[]
+  report_rc = dictionary.executeCommand("MEMBERS", "", rows)
+  errors = errors + check(report_rc = 0, "list members")
+  if report_rc = 0 then do
+    formatted = .string[]
+    format_rc = report.formatMembers(rows, formatted)
+    errors = errors + check(format_rc = 0, "format members")
+    if format_rc = 0 then do
+      do i = 1 to formatted[0]
+        say formatted[i]
+      end
+    end
+  end
+
+  say ""
+  say "RECORD members"
+  record_rows = .string[]
+  report_rc = dictionary.executeCommand("MEMBERS", "RECORD", record_rows)
+  errors = errors + check(report_rc = 0, "list RECORD members")
+  if report_rc = 0 then do
+    formatted = .string[]
+    format_rc = report.formatMembers(record_rows, formatted)
+    errors = errors + check(format_rc = 0, "format RECORD members")
+    if format_rc = 0 then do
+      do i = 1 to formatted[0]
+        say formatted[i]
+      end
+    end
+  end
+
+  say ""
+  say "Alias query: ACCOUNT_NUMBER"
+  alias_rows = .string[]
+  report_rc = dictionary.executeCommand("ALIAS", "ACCOUNT_NUMBER", alias_rows)
+  errors = errors + check(report_rc = 0, "find ACCOUNT_NUMBER")
+  if report_rc = 0 then do
+    do i = 1 to alias_rows[0]
+      say "  " || alias_rows[i]
+    end
+  end
+
+  say ""
+  say "Direct BOM: SALES_ORDER_RECORD"
+  successors = .string[]
+  report_rc = dictionary.executeCommand("SUCCESSORS", "SALES_ORDER_RECORD", successors)
+  errors = errors + check(report_rc = 0, "SALES_ORDER_RECORD successors")
+  if report_rc = 0 then do
+    do i = 1 to successors[0]
+      say "  " || successors[i]
+    end
+  end
+
+  say ""
+  say "Where used: DATE"
+  callers = .string[]
+  report_rc = dictionary.executeCommand("CALLERS", "DATE", callers)
+  errors = errors + check(report_rc = 0, "DATE callers")
+  if report_rc = 0 then do
+    do i = 1 to callers[0]
+      say "  " || callers[i]
+    end
+  end
+
+  say ""
+  say "Ordered occurrences: CUSTOMER_RECORD"
+  customer_links = .string[]
+  report_rc = dictionary.executeCommand("LINKS", "CUSTOMER_RECORD", customer_links)
+  errors = errors + check(report_rc = 0, "CUSTOMER_RECORD links")
+  if report_rc = 0 then do
+    formatted = .string[]
+    format_rc = report.formatOccurrences(customer_links, formatted)
+    errors = errors + check(format_rc = 0, "format CUSTOMER_RECORD links")
+    if format_rc = 0 then do
+      do i = 1 to formatted[0]
+        say formatted[i]
+      end
+    end
+  end
+
+  say ""
+  say "Ordered occurrences: ADDRESS_GROUP"
+  address_links = .string[]
+  report_rc = dictionary.executeCommand("LINKS", "ADDRESS_GROUP", address_links)
+  errors = errors + check(report_rc = 0, "ADDRESS_GROUP links")
+  if report_rc = 0 then do
+    formatted = .string[]
+    format_rc = report.formatOccurrences(address_links, formatted)
+    errors = errors + check(format_rc = 0, "format ADDRESS_GROUP links")
+    if format_rc = 0 then do
+      do i = 1 to formatted[0]
+        say formatted[i]
+      end
+    end
+  end
+
+  say ""
+  say "Nested BOM: CUSTOMER_RECORD"
+  bom_rows = .string[]
+  report_rc = dictionary.executeCommand("BOM", "CUSTOMER_RECORD", bom_rows, 4, "contains")
+  errors = errors + check(report_rc = 0, "nested CUSTOMER_RECORD BOM")
+  if report_rc = 0 then do
+    formatted = .string[]
+    format_rc = report.formatNested(bom_rows, formatted, 8)
+    errors = errors + check(format_rc = 0, "format CUSTOMER_RECORD BOM")
+    if format_rc = 0 then do
+      do i = 1 to formatted[0]
+        say formatted[i]
+      end
+    end
+  end
+
+  say ""
+  say "Nested where-used: CITY"
+  say "  Link metadata is shown from the original caller-to-successor link."
+  where_rows = .string[]
+  report_rc = dictionary.executeCommand("WHERE_USED", "CITY", where_rows, 3, "contains")
+  errors = errors + check(report_rc = 0, "nested CITY where-used")
+  if report_rc = 0 then do
+    formatted = .string[]
+    format_rc = report.formatNested(where_rows, formatted, 8)
+    errors = errors + check(format_rc = 0, "format CITY where-used")
+    if format_rc = 0 then do
+      do i = 1 to formatted[0]
+        say formatted[i]
+      end
+    end
+  end
+
+  errors = errors + check(dictionary.close() = 0, "close")
+  if errors <> 0 then do
+    say "FAIL: trading dictionary errors=" || errors
+    return 1
+  end
+  say "PASS: trading dictionary members=127 aliases=6 link_instances=253"
+  return 0
+

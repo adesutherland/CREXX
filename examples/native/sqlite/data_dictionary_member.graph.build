@@ -1,0 +1,41 @@
+/* Preprocess and run the RXPP MEMBER dictionary declaration prototype. */
+BUILD_DIR = ".crexx-build/data-dictionary";
+MODULE = ".crexx-build/data-dictionary/data_dictionary.rxbin";
+SOURCE = "examples/native/sqlite/data_dictionary_member.rxpp";
+
+RULE compile_rxpp
+  ACTION = "COMPILE RXPP"
+END RULE;
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+
+RULE run_program
+  ACTION = "RUN"
+END RULE;
+
+BUILD "${BUILD_DIR}/data_dictionary_member_demo.crexx"
+  BUILD_NAME = dictionary_member_source
+  RULE = compile_rxpp
+  INPUT = "${SOURCE}"
+  DEPENDS_ON = "examples/native/sqlite/rxpp/dictionary_member.rxpm"
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_member_demo.rxbin"
+  BUILD_NAME = dictionary_member_program
+  RULE = compile_program
+  INPUT = "${BUILD_DIR}/data_dictionary_member_demo.crexx"
+  DEPENDS_ON = "${MODULE}"
+  DEPENDS_ON_BUILD = dictionary_member_source
+END BUILD;
+
+BUILD "run-data-dictionary-member"
+  BUILD_NAME = run_dictionary_member
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/data_dictionary_member_demo.rxbin"
+  DEPENDS_ON_BUILD = dictionary_member_program
+  WORK_DIR = "${BUILD_DIR}"
+END BUILD;
+
+DEFAULT_BUILD = run_dictionary_member;

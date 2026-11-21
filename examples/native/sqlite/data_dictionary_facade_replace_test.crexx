@@ -1,0 +1,109 @@
+/* Focused replacement and reference-cleanup check. */
+options levelb
+
+import data_DataDictionaryFacade
+import rxfnsb
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: dictionary facade replace " || label
+    return 1
+  end
+  return 0
+
+containsLine: procedure = .int
+  arg lines = .string[], needle = .string
+  do i = 1 to lines[0]
+    if pos(needle, lines[i]) > 0 then return 1
+  end
+  return 0
+
+main: procedure = .int
+  errors = 0
+  errors = errors + check(ddOpen(":memory:") = 0, "open")
+  errors = errors + check(ddAdd("REPLACE_MEMBER", "RECORD", "Original") = 0, "original add")
+  call ddLink "OLD_DUMMY", "contains", 1, "old"
+  errors = errors + check(ddEnd() = 0, "original end")
+  errors = errors + check(ddAdd("CALLER", "RECORD", "Caller") = 0, "caller add")
+  call ddLink "REPLACE_MEMBER", "contains", 1, "member"
+  errors = errors + check(ddEnd() = 0, "caller end")
+
+  errors = errors + check(ddReplace("REPLACE_MEMBER", "RECORD", "Replacement") = 0, "replace start")
+  call ddAlias "REPLACED", "SHORT"
+  call ddAttribute "version", "2"
+  call ddLink "NEW_DUMMY", "contains", 1, "new"
+  errors = errors + check(ddEnd() = 0, "replace end")
+  errors = errors + check(ddRc() = 0, "replace status")
+
+  members = ddMembers("")
+  errors = errors + check(containsLine(members, "OLD_DUMMY") = 0, "old dummy removed")
+  errors = errors + check(containsLine(members, "NEW_DUMMY") = 1, "new dummy created")
+  dummies = ddDummies()
+  errors = errors + check(containsLine(dummies, "OLD_DUMMY") = 0, "old dummy absent")
+  errors = errors + check(containsLine(dummies, "NEW_DUMMY") = 1, "new dummy present")
+  bom = ddBom("REPLACE_MEMBER", 1, "contains")
+  errors = errors + check(ddRc() = 0, "replacement BOM status")
+  errors = errors + check(containsLine(bom, "NEW_DUMMY") = 1, "replacement forward link")
+  errors = errors + check(containsLine(bom, "OLD_DUMMY") = 0, "old forward link removed")
+  used = ddWhereUsed("REPLACE_MEMBER", 1, "contains")
+  errors = errors + check(ddRc() = 0, "replacement where-used status")
+  errors = errors + check(containsLine(used, "CALLER") = 1, "incoming usage retained")
+  aliases = ddListAliases("REPLACE_MEMBER")
+  errors = errors + check(ddRc() = 0, "replacement aliases status")
+  errors = errors + check(containsLine(aliases, "REPLACED") = 1, "replacement aliases retained")
+
+  errors = errors + check(ddAdd("REMOVE_SOURCE", "RECORD", "To remove") = 0, "remove source add")
+  call ddAttribute "obsolete", "yes"
+  call ddLink "REMOVE_DUMMY", "contains", 1, "old"
+  errors = errors + check(ddEnd() = 0, "remove source end")
+  errors = errors + check(ddAdd("REMOVE_CALLER", "RECORD", "Caller") = 0, "remove caller add")
+  call ddLink "REMOVE_SOURCE", "contains", 1, "source"
+  errors = errors + check(ddEnd() = 0, "remove caller end")
+  errors = errors + check(ddRemove("REMOVE_SOURCE") = 0, "remove used member")
+  dummies = ddDummies()
+  errors = errors + check(containsLine(dummies, "REMOVE_SOURCE") = 1, "used member retained as dummy")
+  used = ddWhereUsed("REMOVE_SOURCE", 1, "contains")
+  errors = errors + check(ddRc() = 0, "removed member where-used status")
+  errors = errors + check(containsLine(used, "REMOVE_CALLER") = 1, "removed member incoming link retained")
+  errors = errors + check(ddRemove("REMOVE_CALLER") = 0, "remove caller")
+  members = ddMembers("")
+  errors = errors + check(containsLine(members, "REMOVE_SOURCE") = 0, "unused dummy removed")
+  errors = errors + check(containsLine(members, "REMOVE_DUMMY") = 0, "orphan forward dummy removed")
+
+  errors = errors + check(ddAdd("AMEND_RECORD", "RECORD", "Original amend") = 0, "amend original add")
+  call ddAttribute "keep", "yes"
+  call ddLink "AMEND_A", "contains", 1, "a"
+  call ddLink "AMEND_B", "contains", 2, "b"
+  errors = errors + check(ddEnd() = 0, "amend original end")
+  errors = errors + check(ddAmend("AMEND_RECORD", "RECORD", "Amended") = 0, "amend start")
+  call ddAttribute "changed", "yes"
+  call ddLink "AMEND_C", "contains", 2, "c"
+  errors = errors + check(ddEnd() = 0, "amend end")
+  bom = ddBom("AMEND_RECORD", 1, "contains")
+  errors = errors + check(ddRc() = 0, "amend BOM status")
+  errors = errors + check(containsLine(bom, "AMEND_A") = 1, "amend retained unspecified link")
+  errors = errors + check(containsLine(bom, "AMEND_C") = 1, "amend replaced selected link")
+  errors = errors + check(containsLine(bom, "AMEND_B") = 0, "amend removed replaced link")
+
+  errors = errors + check(ddAdd("ROLLBACK_MEMBER", "RECORD", "Rollback original") = 0, "rollback original add")
+  call ddLink "ROLLBACK_OLD", "contains", 1, "old"
+  errors = errors + check(ddEnd() = 0, "rollback original end")
+  errors = errors + check(ddReplace("ROLLBACK_MEMBER", "RECORD", "Rollback replacement") = 0, "rollback replace start")
+  call ddLink "NEW_A", "contains", 1, "a"
+  call ddLink "NEW_B", "contains", 1, "duplicate position"
+  errors = errors + check(ddEnd() <> 0, "rollback replace failure")
+  errors = errors + check(ddRc() <> 0, "rollback replace status")
+  bom = ddBom("ROLLBACK_MEMBER", 1, "contains")
+  errors = errors + check(ddRc() = 0, "rollback BOM status")
+  errors = errors + check(containsLine(bom, "ROLLBACK_OLD") = 1, "rollback restored old link")
+  errors = errors + check(containsLine(bom, "NEW_A") = 0, "rollback removed first new link")
+  errors = errors + check(containsLine(bom, "NEW_B") = 0, "rollback removed second new link")
+  errors = errors + check(ddClose() = 0, "close")
+
+  if errors <> 0 then do
+    say "FAIL: dictionary facade replace errors=" || errors
+    return 1
+  end
+  say "PASS: procedural facade replacement"
+  return 0

@@ -1,0 +1,914 @@
+/*
+ * SOURCE                 : sqlite_address_demo.crexx
+ */
+
+.globals=0
+
+main() .locals=63 .expose=sqlite_address_demo.main
+   .meta "sqlite_address_demo.main"="b" ".int" main() ""
+   .srcstep 128 128 17 "sqlite_address_demo.crexx" 4 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .meta "sqlite_address_demo.main.dbpath"="b" ".string" r4
+   .srcstep 1 1 17 "sqlite_address_demo.crexx" 6 3 19 "  dbpath = .string"
+   .meta "sqlite_address_demo.main.env_instance"="b" ".addressenvironment" r28
+   .srcstep 2 2 17 "sqlite_address_demo.crexx" 10 3 37 "  env_instance = .addressenvironment"
+   null r28
+   .meta "sqlite_address_demo.main.name"="b" ".string" r10
+   .srcstep 3 3 17 "sqlite_address_demo.crexx" 7 3 17 "  name = .string"
+   .meta "sqlite_address_demo.main.rc"="b" ".int" r29
+   .srcstep 4 4 6 "sqlite_address_demo.crexx" 15 3 34 "  address sqlite \"OPEN ${dbpath}\""
+   .meta "sqlite_address_demo.main.role"="b" ".string" r16
+   .srcstep 5 5 17 "sqlite_address_demo.crexx" 8 3 17 "  role = .string"
+   .meta "sqlite_address_demo.main.rows"="b" ".string[*]" r20
+   .srcstep 6 6 17 "sqlite_address_demo.crexx" 5 3 17 "  rows = .string[]"
+   null r20
+   .meta "sqlite_address_demo.main.total"="b" ".string" r25
+   .srcstep 7 7 17 "sqlite_address_demo.crexx" 9 3 18 "  total = .string"
+   setobjuninit r28,"addressenvironment"
+   .srcstep 8 8 17 "sqlite_address_demo.crexx" 12 3 36 "  say \"cREXX rxsqlite ADDRESS demo\""
+   say "cREXX rxsqlite ADDRESS demo"
+   .srcstep 9 9 17 "sqlite_address_demo.crexx" 14 3 22 "  dbpath = \":memory:\""
+   load r4,":memory:"
+   .traceevent "L" 4 "R" "S" "r" 4 9 9 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 9 9 0 "dbpath" ""
+   .meta "sqlite_address_demo.main.__rxaddr_binding_1"="b" ".addressbinding" r30
+   .srcstep 10 10 33 "exit_fragment" 4 1 35 "__rxaddr_binding_1=.addressbinding"
+   null r30
+   .meta "sqlite_address_demo.main.__rxaddr_request"="b" ".addressrequest" r31
+   .srcstep 11 11 33 "exit_fragment" 2 1 33 "__rxaddr_request=.addressrequest"
+   null r31
+   .meta "sqlite_address_demo.main.__rxaddr_response"="b" ".addressresponse" r32
+   .srcstep 12 12 33 "exit_fragment" 7 1 35 "__rxaddr_response=.addressresponse"
+   null r32
+   setobjuninit r31,"addressrequest"
+   .srcstep 13 13 33 "exit_fragment" 3 1 95 "__rxaddr_request=_address_new_request('sqlite',\"OPEN ${dbpath}\",_noredir(),_noredir(),_noredir())"
+   load r34,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 34 13 13 0 "" ""
+   load r35,"OPEN ${dbpath}"
+   .traceevent "L" 4 "R" "S" "r" 35 13 13 0 "" ""
+   load r27,0
+   call r36,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 36 13 13 0 "_noredir" ""
+   load r27,0
+   call r37,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 37 13 13 0 "_noredir" ""
+   load r27,0
+   call r38,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 38 13 13 0 "_noredir" ""
+   load r33,5
+   settp r34,768
+   settp r35,768
+   settp r36,256
+   settp r37,256
+   settpcall r31,_rxsysb._address_new_request(),r33,r38,256
+   .traceevent "F" 4 "R" "O" "r" 31 13 13 0 "_address_new_request" ""
+   .traceevent "A" 6 "R" "O" "r" 31 13 13 0 "__rxaddr_request" ""
+   setobjuninit r30,"addressbinding"
+   .srcstep 14 14 33 "exit_fragment" 5 1 69 "__rxaddr_binding_1=.addressbinding('var','dbpath','dbpath',dbpath,'')"
+   load r1,"var"
+   .traceevent "L" 4 "R" "S" "r" 1 14 14 0 "" ""
+   load r2,"dbpath"
+   .traceevent "L" 4 "R" "S" "r" 2 14 14 0 "" ""
+   load r3,"dbpath"
+   .traceevent "L" 4 "R" "S" "r" 3 14 14 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 4 14 14 0 "dbpath" ""
+   load r5,""
+   .traceevent "L" 4 "R" "S" "r" 5 14 14 0 "" ""
+   load r0,5
+   settp r1,768
+   settp r2,768
+   settp r3,768
+   settp r4,256
+   settpcall r30,§_rxsysb.addressbinding.§factory(),r0,r5,768
+   .traceevent "F" 4 "R" "O" "r" 30 14 14 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 30 14 14 0 "__rxaddr_binding_1" ""
+   .srcstep 22 22 17 "sqlite_address_demo.crexx" 15 3 34 "  address sqlite \"OPEN ${dbpath}\""
+   .meta "sqlite_address_demo.main.i"="b" ".int" r40
+   .srcstep 15 15 25 "_address.crexx" 581 5 13 "    i = .int"
+   null r40
+   .srcstep 16 16 33 "sqlite_address_demo.crexx" 6 6 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 31 16 16 0 "__rxaddr_request" ""
+   .traceevent "A" 6 "R" "O" "r" 31 16 16 0 "§this" ""
+   .srcstep 17 17 6 "_address@library.rxbin" 6 22 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 31 0 0 0 "§this" ""
+   assertinitialized r31
+   .srcstep 18 18 25 "_address.crexx" 582 5 27 "    i = _binding_count + 1"
+   linkattr1 r38,r31,1
+   .traceevent "V" 6 "R" "I" "r" 38 18 18 0 "_binding_count" ""
+   iadd r37,r38,1
+   unlink r38
+   .traceevent "O" 4 "R" "I" "r" 37 18 18 0 "" ""
+   icopy r40,r37
+   .traceevent "A" 6 "R" "I" "r" 40 18 18 0 "i" ""
+   .srcstep 19 19 25 "_address.crexx" 583 5 23 "    _binding_count = i"
+   .traceevent "V" 6 "R" "I" "r" 40 19 19 0 "i" ""
+   isetattr1 r31,1,r40
+   .srcstep 20 20 25 "_address.crexx" 584 5 27 "    _bindings[i] = binding"
+   linkattr1 r38,r31,2
+   .traceevent "V" 6 "R" "I" "r" 40 20 20 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 40 20 20 0 "_bindings" ""
+   minlinkattr1 r37,r38,r40,0
+   .traceevent "V" 6 "R" "O" "r" 30 20 20 0 "__rxaddr_binding_1" ""
+   copy r37,r30
+   .traceevent "A" 6 "R" "O" "r" 37 20 20 0 "_bindings" ""
+   unlinkn r37,r38
+   .srcstep 21 21 6 "exit_fragment" 6 6 59 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 31 0 0 0 "§this" ""
+   setobjuninit r32,"addressresponse"
+   .srcstep 23 23 33 "exit_fragment" 8 1 62 "__rxaddr_response=_address_dispatch_request(__rxaddr_request)"
+   .traceevent "V" 6 "R" "O" "r" 31 23 23 0 "__rxaddr_request" ""
+   load r37,1
+   settpswapcall r32,_rxsysb._address_dispatch_request(),r37,r31,256,r38
+   swap r31,r38
+   .traceevent "F" 4 "R" "O" "r" 32 23 23 0 "_address_dispatch_request" ""
+   .traceevent "A" 6 "R" "O" "r" 32 23 23 0 "__rxaddr_response" ""
+   .srcstep 24 24 33 "exit_fragment" 9 1 68 "call _address_apply_response_var(__rxaddr_response,'dbpath',dbpath)"
+   .traceevent "V" 6 "R" "O" "r" 32 24 24 0 "__rxaddr_response" ""
+   load r3,"dbpath"
+   .traceevent "L" 4 "R" "S" "r" 3 24 24 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 4 24 24 0 "dbpath" ""
+   load r1,3
+   settp r32,256
+   swap r2,r32
+   settp r3,768
+   call r38,_rxsysb._address_apply_response_var(),r1
+   swap r32,r2
+   .traceevent "F" 4 "R" "V" "r" 38 24 24 0 "_address_apply_response_var" ""
+   .srcstep 28 28 17 "sqlite_address_demo.crexx" 15 3 34 "  address sqlite \"OPEN ${dbpath}\""
+   .srcstep 25 25 33 "sqlite_address_demo.crexx" 10 4 21 "rc=__rxaddr_response.get_rc()"
+   .traceevent "V" 6 "R" "O" "r" 32 25 25 0 "__rxaddr_response" ""
+   .traceevent "A" 6 "R" "O" "r" 32 25 25 0 "§this" ""
+   .srcstep 26 26 6 "_address@library.rxbin" 10 21 21 "rc=__rxaddr_response.get_rc()"
+   .traceevent "V" 6 "R" "O" "r" 32 0 0 0 "§this" ""
+   assertinitialized r32
+   .srcstep 27 27 33 "sqlite_address_demo.crexx" 10 21 21 "rc=__rxaddr_response.get_rc()"
+   linkattr1 r38,r32,4
+   .traceevent "V" 6 "R" "I" "r" 38 27 27 0 "_rc" ""
+   .traceevent "A" 6 "R" "I" "r" 38 27 27 0 "rc" ""
+   unlink r38
+   .srcstep 29 29 33 "exit_fragment" 2 1 126 "rc=_address('sqlite',\"EXEC CREATE TABLE people (id INTEGER PRIMARY KEY, name TEXT, role TEXT)\",_noredir(),_noredir(),_noredir())"
+   load r34,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 34 29 29 0 "" ""
+   load r35,"EXEC CREATE TABLE people (id INTEGER PRIMARY KEY, name TEXT, role TEXT)"
+   .traceevent "L" 4 "R" "S" "r" 35 29 29 0 "" ""
+   load r27,0
+   call r36,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 36 29 29 0 "_noredir" ""
+   load r27,0
+   call r37,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 37 29 29 0 "_noredir" ""
+   load r27,0
+   call r38,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 38 29 29 0 "_noredir" ""
+   load r33,5
+   settp r34,768
+   settp r35,768
+   settp r36,256
+   settp r37,256
+   settpcall r29,_rxsysb._address(),r33,r38,256
+   .traceevent "F" 4 "R" "I" "r" 29 29 29 0 "_address" ""
+   .traceevent "A" 6 "R" "I" "r" 29 29 29 0 "rc" ""
+   .srcstep 30 30 17 "sqlite_address_demo.crexx" 19 3 15 "  name = \"Ada\""
+   load r10,"Ada"
+   .traceevent "L" 4 "R" "S" "r" 10 30 30 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 10 30 30 0 "name" ""
+   .srcstep 31 31 17 "sqlite_address_demo.crexx" 20 3 20 "  role = \"compiler\""
+   load r16,"compiler"
+   .traceevent "L" 4 "R" "S" "r" 16 31 31 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 16 31 31 0 "role" ""
+   .meta "sqlite_address_demo.main.__rxaddr_binding_1"="b" ".addressbinding" r41
+   .srcstep 32 32 33 "exit_fragment" 4 1 35 "__rxaddr_binding_1=.addressbinding"
+   null r41
+   .meta "sqlite_address_demo.main.__rxaddr_binding_2"="b" ".addressbinding" r42
+   .srcstep 33 33 33 "exit_fragment" 7 1 35 "__rxaddr_binding_2=.addressbinding"
+   null r42
+   .meta "sqlite_address_demo.main.__rxaddr_request"="b" ".addressrequest" r43
+   .srcstep 34 34 33 "exit_fragment" 2 1 33 "__rxaddr_request=.addressrequest"
+   null r43
+   .meta "sqlite_address_demo.main.__rxaddr_response"="b" ".addressresponse" r44
+   .srcstep 35 35 33 "exit_fragment" 10 1 35 "__rxaddr_response=.addressresponse"
+   null r44
+   setobjuninit r43,"addressrequest"
+   .srcstep 36 36 33 "exit_fragment" 3 1 137 "__rxaddr_request=_address_new_request('sqlite',\"EXEC INSERT INTO people(name, role) VALUES(:name, :role)\",_noredir(),_noredir(),_noredir())"
+   load r34,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 34 36 36 0 "" ""
+   load r35,"EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
+   .traceevent "L" 4 "R" "S" "r" 35 36 36 0 "" ""
+   load r27,0
+   call r36,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 36 36 36 0 "_noredir" ""
+   load r27,0
+   call r37,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 37 36 36 0 "_noredir" ""
+   load r27,0
+   call r38,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 38 36 36 0 "_noredir" ""
+   load r33,5
+   settp r34,768
+   settp r35,768
+   settp r36,256
+   settp r37,256
+   settpcall r43,_rxsysb._address_new_request(),r33,r38,256
+   .traceevent "F" 4 "R" "O" "r" 43 36 36 0 "_address_new_request" ""
+   .traceevent "A" 6 "R" "O" "r" 43 36 36 0 "__rxaddr_request" ""
+   setobjuninit r41,"addressbinding"
+   .srcstep 37 37 33 "exit_fragment" 5 1 63 "__rxaddr_binding_1=.addressbinding('var','name','name',name,'')"
+   load r7,"var"
+   .traceevent "L" 4 "R" "S" "r" 7 37 37 0 "" ""
+   load r8,"name"
+   .traceevent "L" 4 "R" "S" "r" 8 37 37 0 "" ""
+   load r9,"name"
+   .traceevent "L" 4 "R" "S" "r" 9 37 37 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 10 37 37 0 "name" ""
+   load r11,""
+   .traceevent "L" 4 "R" "S" "r" 11 37 37 0 "" ""
+   load r6,5
+   settp r7,768
+   settp r8,768
+   settp r9,768
+   settp r10,256
+   settpcall r41,§_rxsysb.addressbinding.§factory(),r6,r11,768
+   .traceevent "F" 4 "R" "O" "r" 41 37 37 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 41 37 37 0 "__rxaddr_binding_1" ""
+   .srcstep 45 45 17 "sqlite_address_demo.crexx" 21 3 76 "  address sqlite \"EXEC INSERT INTO people(name, role) VALUES(:name, :role)\""
+   .meta "sqlite_address_demo.main.i"="b" ".int" r46
+   .srcstep 38 38 25 "_address.crexx" 581 5 13 "    i = .int"
+   null r46
+   .srcstep 39 39 33 "sqlite_address_demo.crexx" 6 6 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 43 39 39 0 "__rxaddr_request" ""
+   .traceevent "A" 6 "R" "O" "r" 43 39 39 0 "§this" ""
+   .srcstep 40 40 6 "_address@library.rxbin" 6 22 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 43 0 0 0 "§this" ""
+   assertinitialized r43
+   .srcstep 41 41 25 "_address.crexx" 582 5 27 "    i = _binding_count + 1"
+   linkattr1 r38,r43,1
+   .traceevent "V" 6 "R" "I" "r" 38 41 41 0 "_binding_count" ""
+   iadd r37,r38,1
+   unlink r38
+   .traceevent "O" 4 "R" "I" "r" 37 41 41 0 "" ""
+   icopy r46,r37
+   .traceevent "A" 6 "R" "I" "r" 46 41 41 0 "i" ""
+   .srcstep 42 42 25 "_address.crexx" 583 5 23 "    _binding_count = i"
+   .traceevent "V" 6 "R" "I" "r" 46 42 42 0 "i" ""
+   isetattr1 r43,1,r46
+   .srcstep 43 43 25 "_address.crexx" 584 5 27 "    _bindings[i] = binding"
+   linkattr1 r38,r43,2
+   .traceevent "V" 6 "R" "I" "r" 46 43 43 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 46 43 43 0 "_bindings" ""
+   minlinkattr1 r37,r38,r46,0
+   .traceevent "V" 6 "R" "O" "r" 41 43 43 0 "__rxaddr_binding_1" ""
+   copy r37,r41
+   .traceevent "A" 6 "R" "O" "r" 37 43 43 0 "_bindings" ""
+   unlinkn r37,r38
+   .srcstep 44 44 6 "exit_fragment" 6 6 59 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 43 0 0 0 "§this" ""
+   setobjuninit r42,"addressbinding"
+   .srcstep 46 46 33 "exit_fragment" 8 1 63 "__rxaddr_binding_2=.addressbinding('var','role','role',role,'')"
+   load r13,"var"
+   .traceevent "L" 4 "R" "S" "r" 13 46 46 0 "" ""
+   load r14,"role"
+   .traceevent "L" 4 "R" "S" "r" 14 46 46 0 "" ""
+   load r15,"role"
+   .traceevent "L" 4 "R" "S" "r" 15 46 46 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 16 46 46 0 "role" ""
+   load r17,""
+   .traceevent "L" 4 "R" "S" "r" 17 46 46 0 "" ""
+   load r12,5
+   settp r13,768
+   settp r14,768
+   settp r15,768
+   settp r16,256
+   settpcall r42,§_rxsysb.addressbinding.§factory(),r12,r17,768
+   .traceevent "F" 4 "R" "O" "r" 42 46 46 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 42 46 46 0 "__rxaddr_binding_2" ""
+   .srcstep 54 54 17 "sqlite_address_demo.crexx" 21 3 76 "  address sqlite \"EXEC INSERT INTO people(name, role) VALUES(:name, :role)\""
+   .meta "sqlite_address_demo.main.i"="b" ".int" r48
+   .srcstep 47 47 25 "_address.crexx" 581 5 13 "    i = .int"
+   null r48
+   .srcstep 48 48 33 "sqlite_address_demo.crexx" 9 6 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_2)"
+   .traceevent "V" 6 "R" "O" "r" 43 48 48 0 "__rxaddr_request" ""
+   .traceevent "A" 6 "R" "O" "r" 43 48 48 0 "§this" ""
+   .srcstep 49 49 6 "_address@library.rxbin" 9 22 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_2)"
+   .traceevent "V" 6 "R" "O" "r" 43 0 0 0 "§this" ""
+   assertinitialized r43
+   .srcstep 50 50 25 "_address.crexx" 582 5 27 "    i = _binding_count + 1"
+   linkattr1 r38,r43,1
+   .traceevent "V" 6 "R" "I" "r" 38 50 50 0 "_binding_count" ""
+   iadd r37,r38,1
+   unlink r38
+   .traceevent "O" 4 "R" "I" "r" 37 50 50 0 "" ""
+   icopy r48,r37
+   .traceevent "A" 6 "R" "I" "r" 48 50 50 0 "i" ""
+   .srcstep 51 51 25 "_address.crexx" 583 5 23 "    _binding_count = i"
+   .traceevent "V" 6 "R" "I" "r" 48 51 51 0 "i" ""
+   isetattr1 r43,1,r48
+   .srcstep 52 52 25 "_address.crexx" 584 5 27 "    _bindings[i] = binding"
+   linkattr1 r38,r43,2
+   .traceevent "V" 6 "R" "I" "r" 48 52 52 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 48 52 52 0 "_bindings" ""
+   minlinkattr1 r37,r38,r48,0
+   .traceevent "V" 6 "R" "O" "r" 42 52 52 0 "__rxaddr_binding_2" ""
+   copy r37,r42
+   .traceevent "A" 6 "R" "O" "r" 37 52 52 0 "_bindings" ""
+   unlinkn r37,r38
+   .srcstep 53 53 6 "exit_fragment" 9 6 59 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_2)"
+   .traceevent "V" 6 "R" "O" "r" 43 0 0 0 "§this" ""
+   setobjuninit r44,"addressresponse"
+   .srcstep 55 55 33 "exit_fragment" 11 1 62 "__rxaddr_response=_address_dispatch_request(__rxaddr_request)"
+   .traceevent "V" 6 "R" "O" "r" 43 55 55 0 "__rxaddr_request" ""
+   load r37,1
+   settpswapcall r44,_rxsysb._address_dispatch_request(),r37,r43,256,r38
+   swap r43,r38
+   .traceevent "F" 4 "R" "O" "r" 44 55 55 0 "_address_dispatch_request" ""
+   .traceevent "A" 6 "R" "O" "r" 44 55 55 0 "__rxaddr_response" ""
+   .srcstep 56 56 33 "exit_fragment" 12 1 64 "call _address_apply_response_var(__rxaddr_response,'name',name)"
+   .traceevent "V" 6 "R" "O" "r" 44 56 56 0 "__rxaddr_response" ""
+   load r9,"name"
+   .traceevent "L" 4 "R" "S" "r" 9 56 56 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 10 56 56 0 "name" ""
+   load r7,3
+   settp r44,256
+   swap r8,r44
+   settp r9,768
+   call r38,_rxsysb._address_apply_response_var(),r7
+   swap r44,r8
+   .traceevent "F" 4 "R" "V" "r" 38 56 56 0 "_address_apply_response_var" ""
+   .srcstep 57 57 33 "exit_fragment" 13 1 64 "call _address_apply_response_var(__rxaddr_response,'role',role)"
+   .traceevent "V" 6 "R" "O" "r" 44 57 57 0 "__rxaddr_response" ""
+   load r15,"role"
+   .traceevent "L" 4 "R" "S" "r" 15 57 57 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 16 57 57 0 "role" ""
+   load r13,3
+   settp r44,256
+   swap r14,r44
+   settp r15,768
+   call r38,_rxsysb._address_apply_response_var(),r13
+   swap r44,r14
+   .traceevent "F" 4 "R" "V" "r" 38 57 57 0 "_address_apply_response_var" ""
+   .srcstep 61 61 17 "sqlite_address_demo.crexx" 21 3 76 "  address sqlite \"EXEC INSERT INTO people(name, role) VALUES(:name, :role)\""
+   .srcstep 58 58 33 "sqlite_address_demo.crexx" 14 4 21 "rc=__rxaddr_response.get_rc()"
+   .traceevent "V" 6 "R" "O" "r" 44 58 58 0 "__rxaddr_response" ""
+   .traceevent "A" 6 "R" "O" "r" 44 58 58 0 "§this" ""
+   .srcstep 59 59 6 "_address@library.rxbin" 14 21 21 "rc=__rxaddr_response.get_rc()"
+   .traceevent "V" 6 "R" "O" "r" 44 0 0 0 "§this" ""
+   assertinitialized r44
+   .srcstep 60 60 33 "sqlite_address_demo.crexx" 14 21 21 "rc=__rxaddr_response.get_rc()"
+   linkattr1 r38,r44,4
+   .traceevent "V" 6 "R" "I" "r" 38 60 60 0 "_rc" ""
+   .traceevent "A" 6 "R" "I" "r" 38 60 60 0 "rc" ""
+   unlink r38
+   .srcstep 62 62 17 "sqlite_address_demo.crexx" 23 3 17 "  name = \"Grace\""
+   load r10,"Grace"
+   .traceevent "L" 4 "R" "S" "r" 10 62 62 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 10 62 62 0 "name" ""
+   .srcstep 63 63 17 "sqlite_address_demo.crexx" 24 3 19 "  role = \"runtime\""
+   load r16,"runtime"
+   .traceevent "L" 4 "R" "S" "r" 16 63 63 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 16 63 63 0 "role" ""
+   .meta "sqlite_address_demo.main.__rxaddr_binding_1"="b" ".addressbinding" r49
+   .srcstep 64 64 33 "exit_fragment" 4 1 35 "__rxaddr_binding_1=.addressbinding"
+   null r49
+   .meta "sqlite_address_demo.main.__rxaddr_binding_2"="b" ".addressbinding" r50
+   .srcstep 65 65 33 "exit_fragment" 7 1 35 "__rxaddr_binding_2=.addressbinding"
+   null r50
+   .meta "sqlite_address_demo.main.__rxaddr_request"="b" ".addressrequest" r51
+   .srcstep 66 66 33 "exit_fragment" 2 1 33 "__rxaddr_request=.addressrequest"
+   null r51
+   .meta "sqlite_address_demo.main.__rxaddr_response"="b" ".addressresponse" r52
+   .srcstep 67 67 33 "exit_fragment" 10 1 35 "__rxaddr_response=.addressresponse"
+   null r52
+   setobjuninit r51,"addressrequest"
+   .srcstep 68 68 33 "exit_fragment" 3 1 137 "__rxaddr_request=_address_new_request('sqlite',\"EXEC INSERT INTO people(name, role) VALUES(:name, :role)\",_noredir(),_noredir(),_noredir())"
+   load r34,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 34 68 68 0 "" ""
+   load r35,"EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
+   .traceevent "L" 4 "R" "S" "r" 35 68 68 0 "" ""
+   load r27,0
+   call r36,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 36 68 68 0 "_noredir" ""
+   load r27,0
+   call r37,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 37 68 68 0 "_noredir" ""
+   load r27,0
+   call r38,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 38 68 68 0 "_noredir" ""
+   load r33,5
+   settp r34,768
+   settp r35,768
+   settp r36,256
+   settp r37,256
+   settpcall r51,_rxsysb._address_new_request(),r33,r38,256
+   .traceevent "F" 4 "R" "O" "r" 51 68 68 0 "_address_new_request" ""
+   .traceevent "A" 6 "R" "O" "r" 51 68 68 0 "__rxaddr_request" ""
+   setobjuninit r49,"addressbinding"
+   .srcstep 69 69 33 "exit_fragment" 5 1 63 "__rxaddr_binding_1=.addressbinding('var','name','name',name,'')"
+   load r7,"var"
+   .traceevent "L" 4 "R" "S" "r" 7 69 69 0 "" ""
+   load r8,"name"
+   .traceevent "L" 4 "R" "S" "r" 8 69 69 0 "" ""
+   load r9,"name"
+   .traceevent "L" 4 "R" "S" "r" 9 69 69 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 10 69 69 0 "name" ""
+   load r11,""
+   .traceevent "L" 4 "R" "S" "r" 11 69 69 0 "" ""
+   load r6,5
+   settp r7,768
+   settp r8,768
+   settp r9,768
+   settp r10,256
+   settpcall r49,§_rxsysb.addressbinding.§factory(),r6,r11,768
+   .traceevent "F" 4 "R" "O" "r" 49 69 69 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 49 69 69 0 "__rxaddr_binding_1" ""
+   .srcstep 77 77 17 "sqlite_address_demo.crexx" 25 3 76 "  address sqlite \"EXEC INSERT INTO people(name, role) VALUES(:name, :role)\""
+   .meta "sqlite_address_demo.main.i"="b" ".int" r54
+   .srcstep 70 70 25 "_address.crexx" 581 5 13 "    i = .int"
+   null r54
+   .srcstep 71 71 33 "sqlite_address_demo.crexx" 6 6 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 51 71 71 0 "__rxaddr_request" ""
+   .traceevent "A" 6 "R" "O" "r" 51 71 71 0 "§this" ""
+   .srcstep 72 72 6 "_address@library.rxbin" 6 22 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 51 0 0 0 "§this" ""
+   assertinitialized r51
+   .srcstep 73 73 25 "_address.crexx" 582 5 27 "    i = _binding_count + 1"
+   linkattr1 r38,r51,1
+   .traceevent "V" 6 "R" "I" "r" 38 73 73 0 "_binding_count" ""
+   iadd r37,r38,1
+   unlink r38
+   .traceevent "O" 4 "R" "I" "r" 37 73 73 0 "" ""
+   icopy r54,r37
+   .traceevent "A" 6 "R" "I" "r" 54 73 73 0 "i" ""
+   .srcstep 74 74 25 "_address.crexx" 583 5 23 "    _binding_count = i"
+   .traceevent "V" 6 "R" "I" "r" 54 74 74 0 "i" ""
+   isetattr1 r51,1,r54
+   .srcstep 75 75 25 "_address.crexx" 584 5 27 "    _bindings[i] = binding"
+   linkattr1 r38,r51,2
+   .traceevent "V" 6 "R" "I" "r" 54 75 75 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 54 75 75 0 "_bindings" ""
+   minlinkattr1 r37,r38,r54,0
+   .traceevent "V" 6 "R" "O" "r" 49 75 75 0 "__rxaddr_binding_1" ""
+   copy r37,r49
+   .traceevent "A" 6 "R" "O" "r" 37 75 75 0 "_bindings" ""
+   unlinkn r37,r38
+   .srcstep 76 76 6 "exit_fragment" 6 6 59 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 51 0 0 0 "§this" ""
+   setobjuninit r50,"addressbinding"
+   .srcstep 78 78 33 "exit_fragment" 8 1 63 "__rxaddr_binding_2=.addressbinding('var','role','role',role,'')"
+   load r13,"var"
+   .traceevent "L" 4 "R" "S" "r" 13 78 78 0 "" ""
+   load r14,"role"
+   .traceevent "L" 4 "R" "S" "r" 14 78 78 0 "" ""
+   load r15,"role"
+   .traceevent "L" 4 "R" "S" "r" 15 78 78 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 16 78 78 0 "role" ""
+   load r17,""
+   .traceevent "L" 4 "R" "S" "r" 17 78 78 0 "" ""
+   load r12,5
+   settp r13,768
+   settp r14,768
+   settp r15,768
+   settp r16,256
+   settpcall r50,§_rxsysb.addressbinding.§factory(),r12,r17,768
+   .traceevent "F" 4 "R" "O" "r" 50 78 78 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 50 78 78 0 "__rxaddr_binding_2" ""
+   .srcstep 86 86 17 "sqlite_address_demo.crexx" 25 3 76 "  address sqlite \"EXEC INSERT INTO people(name, role) VALUES(:name, :role)\""
+   .meta "sqlite_address_demo.main.i"="b" ".int" r56
+   .srcstep 79 79 25 "_address.crexx" 581 5 13 "    i = .int"
+   null r56
+   .srcstep 80 80 33 "sqlite_address_demo.crexx" 9 6 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_2)"
+   .traceevent "V" 6 "R" "O" "r" 51 80 80 0 "__rxaddr_request" ""
+   .traceevent "A" 6 "R" "O" "r" 51 80 80 0 "§this" ""
+   .srcstep 81 81 6 "_address@library.rxbin" 9 22 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_2)"
+   .traceevent "V" 6 "R" "O" "r" 51 0 0 0 "§this" ""
+   assertinitialized r51
+   .srcstep 82 82 25 "_address.crexx" 582 5 27 "    i = _binding_count + 1"
+   linkattr1 r38,r51,1
+   .traceevent "V" 6 "R" "I" "r" 38 82 82 0 "_binding_count" ""
+   iadd r37,r38,1
+   unlink r38
+   .traceevent "O" 4 "R" "I" "r" 37 82 82 0 "" ""
+   icopy r56,r37
+   .traceevent "A" 6 "R" "I" "r" 56 82 82 0 "i" ""
+   .srcstep 83 83 25 "_address.crexx" 583 5 23 "    _binding_count = i"
+   .traceevent "V" 6 "R" "I" "r" 56 83 83 0 "i" ""
+   isetattr1 r51,1,r56
+   .srcstep 84 84 25 "_address.crexx" 584 5 27 "    _bindings[i] = binding"
+   linkattr1 r38,r51,2
+   .traceevent "V" 6 "R" "I" "r" 56 84 84 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 56 84 84 0 "_bindings" ""
+   minlinkattr1 r37,r38,r56,0
+   .traceevent "V" 6 "R" "O" "r" 50 84 84 0 "__rxaddr_binding_2" ""
+   copy r37,r50
+   .traceevent "A" 6 "R" "O" "r" 37 84 84 0 "_bindings" ""
+   unlinkn r37,r38
+   .srcstep 85 85 6 "exit_fragment" 9 6 59 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_2)"
+   .traceevent "V" 6 "R" "O" "r" 51 0 0 0 "§this" ""
+   setobjuninit r52,"addressresponse"
+   .srcstep 87 87 33 "exit_fragment" 11 1 62 "__rxaddr_response=_address_dispatch_request(__rxaddr_request)"
+   .traceevent "V" 6 "R" "O" "r" 51 87 87 0 "__rxaddr_request" ""
+   load r37,1
+   settpswapcall r52,_rxsysb._address_dispatch_request(),r37,r51,256,r38
+   swap r51,r38
+   .traceevent "F" 4 "R" "O" "r" 52 87 87 0 "_address_dispatch_request" ""
+   .traceevent "A" 6 "R" "O" "r" 52 87 87 0 "__rxaddr_response" ""
+   .srcstep 88 88 33 "exit_fragment" 12 1 64 "call _address_apply_response_var(__rxaddr_response,'name',name)"
+   .traceevent "V" 6 "R" "O" "r" 52 88 88 0 "__rxaddr_response" ""
+   load r9,"name"
+   .traceevent "L" 4 "R" "S" "r" 9 88 88 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 10 88 88 0 "name" ""
+   load r7,3
+   settp r52,256
+   swap r8,r52
+   settp r9,768
+   call r38,_rxsysb._address_apply_response_var(),r7
+   swap r52,r8
+   .traceevent "F" 4 "R" "V" "r" 38 88 88 0 "_address_apply_response_var" ""
+   .srcstep 89 89 33 "exit_fragment" 13 1 64 "call _address_apply_response_var(__rxaddr_response,'role',role)"
+   .traceevent "V" 6 "R" "O" "r" 52 89 89 0 "__rxaddr_response" ""
+   load r15,"role"
+   .traceevent "L" 4 "R" "S" "r" 15 89 89 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 16 89 89 0 "role" ""
+   load r13,3
+   settp r52,256
+   swap r14,r52
+   settp r15,768
+   call r38,_rxsysb._address_apply_response_var(),r13
+   swap r52,r14
+   .traceevent "F" 4 "R" "V" "r" 38 89 89 0 "_address_apply_response_var" ""
+   .srcstep 93 93 17 "sqlite_address_demo.crexx" 25 3 76 "  address sqlite \"EXEC INSERT INTO people(name, role) VALUES(:name, :role)\""
+   .srcstep 90 90 33 "sqlite_address_demo.crexx" 14 4 21 "rc=__rxaddr_response.get_rc()"
+   .traceevent "V" 6 "R" "O" "r" 52 90 90 0 "__rxaddr_response" ""
+   .traceevent "A" 6 "R" "O" "r" 52 90 90 0 "§this" ""
+   .srcstep 91 91 6 "_address@library.rxbin" 14 21 21 "rc=__rxaddr_response.get_rc()"
+   .traceevent "V" 6 "R" "O" "r" 52 0 0 0 "§this" ""
+   assertinitialized r52
+   .srcstep 92 92 33 "sqlite_address_demo.crexx" 14 21 21 "rc=__rxaddr_response.get_rc()"
+   linkattr1 r38,r52,4
+   .traceevent "V" 6 "R" "I" "r" 38 92 92 0 "_rc" ""
+   .traceevent "A" 6 "R" "I" "r" 38 92 92 0 "rc" ""
+   unlink r38
+   .srcstep 94 94 33 "exit_fragment" 2 1 124 "rc=_address('sqlite',\"QUERY SELECT id, name, role FROM people ORDER BY id\",_noredir(),_redir2array(reference rows),_noredir())"
+   load r34,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 34 94 94 0 "" ""
+   load r35,"QUERY SELECT id, name, role FROM people ORDER BY id"
+   .traceevent "L" 4 "R" "S" "r" 35 94 94 0 "" ""
+   load r27,0
+   call r36,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 36 94 94 0 "_noredir" ""
+   .traceevent "V" 6 "R" "S" "r" 20 94 94 0 "rows" ""
+   mkref r27,r20
+   load r26,1
+   settpcall r37,_rxsysb._redir2array(),r26,r27,768
+   .traceevent "F" 4 "R" "O" "r" 37 94 94 0 "_redir2array" ""
+   load r27,0
+   call r38,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 38 94 94 0 "_noredir" ""
+   load r33,5
+   settp r34,768
+   settp r35,768
+   settp r36,256
+   settp r37,256
+   settpcall r29,_rxsysb._address(),r33,r38,256
+   .traceevent "F" 4 "R" "I" "r" 29 94 94 0 "_address" ""
+   .traceevent "A" 6 "R" "I" "r" 29 94 94 0 "rc" ""
+   .srcstep 95 95 17 "sqlite_address_demo.crexx" 28 3 40 "  call show_lines(\"QUERY people\", rows)"
+   load r19,"QUERY people"
+   .traceevent "L" 4 "R" "S" "r" 19 95 95 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 20 95 95 0 "rows" ""
+   settp r19,768
+   settp r20,256
+   call2 r38,show_lines(),r19,r20
+   .traceevent "F" 4 "R" "V" "r" 38 95 95 0 "show_lines" ""
+   .srcstep 96 96 17 "sqlite_address_demo.crexx" 30 3 13 "  total = \"\""
+   .meta "sqlite_address_demo.main.output"="b" ".string" "output"
+   load r25,""
+   .traceevent "L" 4 "R" "S" "r" 25 96 96 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 25 96 96 0 "total" ""
+   .meta "sqlite_address_demo.main.__rxaddr_binding_1"="b" ".addressbinding" r57
+   .srcstep 97 97 33 "exit_fragment" 4 1 35 "__rxaddr_binding_1=.addressbinding"
+   null r57
+   .meta "sqlite_address_demo.main.__rxaddr_request"="b" ".addressrequest" r58
+   .srcstep 98 98 33 "exit_fragment" 2 1 33 "__rxaddr_request=.addressrequest"
+   null r58
+   .meta "sqlite_address_demo.main.__rxaddr_response"="b" ".addressresponse" r59
+   .srcstep 99 99 33 "exit_fragment" 7 1 35 "__rxaddr_response=.addressresponse"
+   null r59
+   setobjuninit r58,"addressrequest"
+   .srcstep 100 100 33 "exit_fragment" 3 1 128 "__rxaddr_request=_address_new_request('sqlite',\"VALUE SELECT count(*) FROM people INTO ${total}\",_noredir(),_noredir(),_noredir())"
+   load r34,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 34 100 100 0 "" ""
+   load r35,"VALUE SELECT count(*) FROM people INTO ${total}"
+   .traceevent "L" 4 "R" "S" "r" 35 100 100 0 "" ""
+   load r27,0
+   call r36,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 36 100 100 0 "_noredir" ""
+   load r27,0
+   call r37,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 37 100 100 0 "_noredir" ""
+   load r27,0
+   call r38,_rxsysb._noredir(),r27
+   .traceevent "F" 4 "R" "O" "r" 38 100 100 0 "_noredir" ""
+   load r33,5
+   settp r34,768
+   settp r35,768
+   settp r36,256
+   settp r37,256
+   settpcall r58,_rxsysb._address_new_request(),r33,r38,256
+   .traceevent "F" 4 "R" "O" "r" 58 100 100 0 "_address_new_request" ""
+   .traceevent "A" 6 "R" "O" "r" 58 100 100 0 "__rxaddr_request" ""
+   setobjuninit r57,"addressbinding"
+   .srcstep 101 101 33 "exit_fragment" 5 1 66 "__rxaddr_binding_1=.addressbinding('var','total','total',total,'')"
+   load r22,"var"
+   .traceevent "L" 4 "R" "S" "r" 22 101 101 0 "" ""
+   load r23,"total"
+   .traceevent "L" 4 "R" "S" "r" 23 101 101 0 "" ""
+   load r24,"total"
+   .traceevent "L" 4 "R" "S" "r" 24 101 101 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 25 101 101 0 "total" ""
+   load r26,""
+   .traceevent "L" 4 "R" "S" "r" 26 101 101 0 "" ""
+   load r21,5
+   settp r22,768
+   settp r23,768
+   settp r24,768
+   settp r25,256
+   settpcall r57,§_rxsysb.addressbinding.§factory(),r21,r26,768
+   .traceevent "F" 4 "R" "O" "r" 57 101 101 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 57 101 101 0 "__rxaddr_binding_1" ""
+   .srcstep 109 109 17 "sqlite_address_demo.crexx" 31 3 67 "  address sqlite \"VALUE SELECT count(*) FROM people INTO ${total}\""
+   .meta "sqlite_address_demo.main.i"="b" ".int" r61
+   .srcstep 102 102 25 "_address.crexx" 581 5 13 "    i = .int"
+   null r61
+   .srcstep 103 103 33 "sqlite_address_demo.crexx" 6 6 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 58 103 103 0 "__rxaddr_request" ""
+   .traceevent "A" 6 "R" "O" "r" 58 103 103 0 "§this" ""
+   .srcstep 104 104 6 "_address@library.rxbin" 6 22 22 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 58 0 0 0 "§this" ""
+   assertinitialized r58
+   .srcstep 105 105 25 "_address.crexx" 582 5 27 "    i = _binding_count + 1"
+   linkattr1 r38,r58,1
+   .traceevent "V" 6 "R" "I" "r" 38 105 105 0 "_binding_count" ""
+   iadd r37,r38,1
+   unlink r38
+   .traceevent "O" 4 "R" "I" "r" 37 105 105 0 "" ""
+   icopy r61,r37
+   .traceevent "A" 6 "R" "I" "r" 61 105 105 0 "i" ""
+   .srcstep 106 106 25 "_address.crexx" 583 5 23 "    _binding_count = i"
+   .traceevent "V" 6 "R" "I" "r" 61 106 106 0 "i" ""
+   isetattr1 r58,1,r61
+   .srcstep 107 107 25 "_address.crexx" 584 5 27 "    _bindings[i] = binding"
+   linkattr1 r38,r58,2
+   .traceevent "V" 6 "R" "I" "r" 61 107 107 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 61 107 107 0 "_bindings" ""
+   minlinkattr1 r37,r38,r61,0
+   .traceevent "V" 6 "R" "O" "r" 57 107 107 0 "__rxaddr_binding_1" ""
+   copy r37,r57
+   .traceevent "A" 6 "R" "O" "r" 37 107 107 0 "_bindings" ""
+   unlinkn r37,r38
+   .srcstep 108 108 6 "exit_fragment" 6 6 59 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 58 0 0 0 "§this" ""
+   setobjuninit r59,"addressresponse"
+   .srcstep 110 110 33 "exit_fragment" 8 1 62 "__rxaddr_response=_address_dispatch_request(__rxaddr_request)"
+   .traceevent "V" 6 "R" "O" "r" 58 110 110 0 "__rxaddr_request" ""
+   load r37,1
+   settpswapcall r59,_rxsysb._address_dispatch_request(),r37,r58,256,r38
+   swap r58,r38
+   .traceevent "F" 4 "R" "O" "r" 59 110 110 0 "_address_dispatch_request" ""
+   .traceevent "A" 6 "R" "O" "r" 59 110 110 0 "__rxaddr_response" ""
+   .srcstep 111 111 33 "exit_fragment" 9 1 66 "call _address_apply_response_var(__rxaddr_response,'total',total)"
+   .traceevent "V" 6 "R" "O" "r" 59 111 111 0 "__rxaddr_response" ""
+   load r24,"total"
+   .traceevent "L" 4 "R" "S" "r" 24 111 111 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 25 111 111 0 "total" ""
+   load r22,3
+   settp r59,256
+   swap r23,r59
+   settp r24,768
+   call r38,_rxsysb._address_apply_response_var(),r22
+   swap r59,r23
+   .traceevent "F" 4 "R" "V" "r" 38 111 111 0 "_address_apply_response_var" ""
+   .srcstep 115 115 17 "sqlite_address_demo.crexx" 31 3 67 "  address sqlite \"VALUE SELECT count(*) FROM people INTO ${total}\""
+   .srcstep 112 112 33 "sqlite_address_demo.crexx" 10 4 21 "rc=__rxaddr_response.get_rc()"
+   .traceevent "V" 6 "R" "O" "r" 59 112 112 0 "__rxaddr_response" ""
+   .traceevent "A" 6 "R" "O" "r" 59 112 112 0 "§this" ""
+   .srcstep 113 113 6 "_address@library.rxbin" 10 21 21 "rc=__rxaddr_response.get_rc()"
+   .traceevent "V" 6 "R" "O" "r" 59 0 0 0 "§this" ""
+   assertinitialized r59
+   .srcstep 114 114 33 "sqlite_address_demo.crexx" 10 21 21 "rc=__rxaddr_response.get_rc()"
+   linkattr1 r38,r59,4
+   .traceevent "V" 6 "R" "I" "r" 38 114 114 0 "_rc" ""
+   .traceevent "A" 6 "R" "I" "r" 38 114 114 0 "rc" ""
+   unlink r38
+   .srcstep 118 118 17 "sqlite_address_demo.crexx" 32 3 43 "  call show_value(\"COUNT via INTO\", total)"
+   .srcstep 116 116 33 "sqlite_address_demo.crexx" 59 24 29 "  arg label = .string, value = .string"
+   .traceevent "V" 6 "R" "S" "r" 25 116 116 0 "total" ""
+   scopy r62,r25
+   .traceevent "A" 6 "R" "S" "r" 62 116 116 0 "value" ""
+   .srcstep 117 117 17 "sqlite_address_demo.crexx" 60 3 31 "  say label || \" => \" || value"
+   .traceevent "V" 6 "R" "S" "r" 62 117 117 0 "value" ""
+   concat r38,"COUNT via INTO => ",r62
+   .traceevent "O" 4 "R" "S" "r" 38 117 117 0 "" ""
+   say r38
+   .srcstep 119 119 17 "sqlite_address_demo.crexx" 34 3 56 "  say \"DRIVER() => \" || addresscall(\"sqlite\", \"driver\")"
+   load r37,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 37 119 119 0 "" ""
+   load r38,"driver"
+   .traceevent "L" 4 "R" "S" "r" 38 119 119 0 "" ""
+   load r36,2
+   settp r37,768
+   settpcall r35,_rxsysb.addresscall(),r36,r38,768
+   .traceevent "F" 4 "R" "S" "r" 35 119 119 0 "addresscall" ""
+   concat r38,"DRIVER() => ",r35
+   .traceevent "O" 4 "R" "S" "r" 38 119 119 0 "" ""
+   say r38
+   .srcstep 120 120 17 "sqlite_address_demo.crexx" 35 3 58 "  say \"VERSION() => \" || addresscall(\"sqlite\", \"version\")"
+   load r37,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 37 120 120 0 "" ""
+   load r38,"version"
+   .traceevent "L" 4 "R" "S" "r" 38 120 120 0 "" ""
+   load r36,2
+   settp r37,768
+   settpcall r35,_rxsysb.addresscall(),r36,r38,768
+   .traceevent "F" 4 "R" "S" "r" 35 120 120 0 "addresscall" ""
+   concat r38,"VERSION() => ",r35
+   .traceevent "O" 4 "R" "S" "r" 38 120 120 0 "" ""
+   say r38
+   .srcstep 121 121 17 "sqlite_address_demo.crexx" 36 3 92 "  say \"SCALAR(count) => \" || addresscall(\"sqlite\", \"scalar\", \"SELECT count(*) FROM people\")"
+   load r36,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 36 121 121 0 "" ""
+   load r37,"scalar"
+   .traceevent "L" 4 "R" "S" "r" 37 121 121 0 "" ""
+   load r38,"SELECT count(*) FROM people"
+   .traceevent "L" 4 "R" "S" "r" 38 121 121 0 "" ""
+   load r35,3
+   settp r36,768
+   settp r37,768
+   settpcall r34,_rxsysb.addresscall(),r35,r38,768
+   .traceevent "F" 4 "R" "S" "r" 34 121 121 0 "addresscall" ""
+   concat r38,"SCALAR(count) => ",r34
+   .traceevent "O" 4 "R" "S" "r" 38 121 121 0 "" ""
+   say r38
+   .srcstep 122 122 17 "sqlite_address_demo.crexx" 37 3 58 "  say \"CHANGES() => \" || addresscall(\"sqlite\", \"changes\")"
+   load r37,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 37 122 122 0 "" ""
+   load r38,"changes"
+   .traceevent "L" 4 "R" "S" "r" 38 122 122 0 "" ""
+   load r36,2
+   settp r37,768
+   settpcall r35,_rxsysb.addresscall(),r36,r38,768
+   .traceevent "F" 4 "R" "S" "r" 35 122 122 0 "addresscall" ""
+   concat r38,"CHANGES() => ",r35
+   .traceevent "O" 4 "R" "S" "r" 38 122 122 0 "" ""
+   say r38
+   .srcstep 124 124 17 "sqlite_address_demo.crexx" 39 3 38 "  env_instance = addressenv(\"sqlite\")"
+   .srcstep 123 123 33 "sqlite_address_demo.crexx" 39 38 38 "  env_instance = addressenv(\"sqlite\")"
+   load r38,"sqlite"
+   .traceevent "L" 4 "R" "S" "r" 38 123 123 0 "" ""
+   load r37,1
+   settpcall r28,_rxsysb._address_environment(),r37,r38,256
+   .traceevent "F" 4 "R" "O" "r" 28 123 123 0 "_address_environment" ""
+   .traceevent "A" 6 "R" "O" "r" 28 123 123 0 "env_instance" ""
+   .srcstep 125 125 17 "sqlite_address_demo.crexx" 40 3 9 "  say \"\""
+   say ""
+   .srcstep 126 126 17 "sqlite_address_demo.crexx" 41 3 110 "  say \"ADDRESS instance => name=\" || env_instance.environment_name() || \" id=\" || env_instance.environment_id()"
+   .traceevent "V" 6 "R" "O" "r" 28 126 126 0 "env_instance" ""
+   load r27,1
+   settp r28,256
+   srcmethodsel r38,r28,"rxsig1|environment_name|.string|"
+   dcall r38,r38,r27
+   .traceevent "F" 4 "R" "S" "r" 38 126 126 0 "environment_name" ""
+   concat r38,"ADDRESS instance => name=",r38
+   .traceevent "O" 4 "R" "S" "r" 38 126 126 0 "" ""
+   concat r38,r38," id="
+   .traceevent "O" 4 "R" "S" "r" 38 126 126 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 28 126 126 0 "env_instance" ""
+   load r27,1
+   settp r28,256
+   srcmethodsel r37,r28,"rxsig1|environment_id|.string|"
+   dcall r37,r37,r27
+   .traceevent "F" 4 "R" "S" "r" 37 126 126 0 "environment_id" ""
+   concat r38,r38,r37
+   .traceevent "O" 4 "R" "S" "r" 38 126 126 0 "" ""
+   say r38
+   .srcstep 127 127 17 "sqlite_address_demo.crexx" 43 3 11 "  return 0"
+   ret 0
+   .meta "sqlite_address_demo.main.dbpath"
+   .meta "sqlite_address_demo.main.env_instance"
+   .meta "sqlite_address_demo.main.name"
+   .meta "sqlite_address_demo.main.output"
+   .meta "sqlite_address_demo.main.rc"
+   .meta "sqlite_address_demo.main.role"
+   .meta "sqlite_address_demo.main.rows"
+   .meta "sqlite_address_demo.main.total"
+
+show_lines() .locals=7
+   .meta "sqlite_address_demo.show_lines"="b" ".void" show_lines() "label=.string,lines=.string[*]"
+   .srcstep 144 144 17 "sqlite_address_demo.crexx" 45 1 30 "show_lines: procedure = .void"
+   numsci 18,1,1
+   .srcstep 129 129 17 "sqlite_address_demo.crexx" 46 7 22 "  arg label = .string, lines = .string[]"
+   .meta "sqlite_address_demo.show_lines.label"="b" ".string" a1
+   .srcstep 130 130 17 "sqlite_address_demo.crexx" 46 24 39 "  arg label = .string, lines = .string[]"
+   .meta "sqlite_address_demo.show_lines.lines"="b" ".string[*]" a2
+   .srcstep 131 131 17 "sqlite_address_demo.crexx" 47 3 9 "  say \"\""
+   say ""
+   .srcstep 132 132 17 "sqlite_address_demo.crexx" 48 3 21 "  say \"== \" || label"
+   .traceevent "V" 6 "R" "S" "a" 1 132 132 0 "label" ""
+   concat r2,"== ",a1
+   .traceevent "O" 4 "R" "S" "r" 2 132 132 0 "" ""
+   say r2
+   .srcstep 135 135 17 "sqlite_address_demo.crexx" 49 3 17 "  if lines.0 < 1 then do"
+   getattrs r3,a2,0
+   .traceevent "V" 6 "R" "I" "r" 3 135 135 0 "lines" ""
+   ilt r3,r3,1
+   .traceevent "O" 4 "R" "B" "r" 3 135 135 0 "" ""
+   brf l152iffalse,r3
+   .srcstep 136 136 17 "sqlite_address_demo.crexx" 49 18 22 "  if lines.0 < 1 then do"
+   .srcstep 133 133 17 "sqlite_address_demo.crexx" 50 5 22 "    say \"(no output)\""
+   say "(no output)"
+   .srcstep 134 134 17 "sqlite_address_demo.crexx" 51 5 11 "    return"
+   ret
+l152iffalse:
+   .srcstep 141 141 17 "sqlite_address_demo.crexx" 53 3 5 "  do i = 1 to lines.0"
+   .srcstep 137 137 17 "sqlite_address_demo.crexx" 53 6 11 "  do i = 1 to lines.0"
+   .meta "sqlite_address_demo.show_lines.i"="b" ".int" r3
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 137 137 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 137 137 0 "i" ""
+   .srcstep 138 138 17 "sqlite_address_demo.crexx" 53 12 22 "  do i = 1 to lines.0"
+   getattrs r4,a2,0
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "lines" ""
+l153dostart:
+   .srcstep 138 138 17 "sqlite_address_demo.crexx" 53 12 22 "  do i = 1 to lines.0"
+   igt r5,r3,r4
+   brt l153doend,r5
+   .srcstep 140 140 17 "sqlite_address_demo.crexx" 54 5 16 "    say lines[i]"
+   .traceevent "V" 6 "R" "I" "r" 3 140 140 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 3 140 140 0 "lines" ""
+   minlinkattr1 r6,a2,r3,0
+   .traceevent "V" 6 "R" "S" "r" 6 140 140 0 "lines" ""
+   say r6
+   unlink r6
+l153doinc:
+   .srcstep 139 139 17 "sqlite_address_demo.crexx" 53 6 7 "  do i = 1 to lines.0"
+   inc r3
+   .srcstep 142 142 17 "sqlite_address_demo.crexx" 54 16 17 "    say lines[i]"
+   br l153dostart
+l153doend:
+   .meta "sqlite_address_demo.show_lines.i"
+   .srcstep 143 143 17 "sqlite_address_demo.crexx" 56 3 9 "  return"
+   ret
+   .meta "sqlite_address_demo.show_lines.label"
+   .meta "sqlite_address_demo.show_lines.lines"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._noredir() .expose=_rxsysb._noredir
+   .meta "_rxsysb._noredir"="b" "._rxsysb..addressredirect" _rxsysb._noredir() ""
+   .meta "_rxsysb._noredir"=".autoload" "library"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address_new_request() .expose=_rxsysb._address_new_request
+   .meta "_rxsysb._address_new_request"="b" "._rxsysb..addressrequest" _rxsysb._address_new_request() "?env=.string,?command=.string,in=.addressredirect,out=.addressredirect,err=.addressredirect"
+   .meta "_rxsysb._address_new_request"=".autoload" "library"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address_dispatch_request() .expose=_rxsysb._address_dispatch_request
+   .meta "_rxsysb._address_dispatch_request"="b" "._rxsysb..addressresponse" _rxsysb._address_dispatch_request() "request=.addressrequest"
+   .meta "_rxsysb._address_dispatch_request"=".autoload" "library"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address_apply_response_var() .expose=_rxsysb._address_apply_response_var
+   .meta "_rxsysb._address_apply_response_var"="b" ".void" _rxsysb._address_apply_response_var() "response=.addressresponse,internal_name=.string,expose target=.string"
+   .meta "_rxsysb._address_apply_response_var"=".autoload" "library"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address() .expose=_rxsysb._address
+   .meta "_rxsysb._address"="b" ".int" _rxsysb._address() "?env=.string,?command=.string,in=.addressredirect,out=.addressredirect,err=.addressredirect,expose ...=.string"
+   .meta "_rxsysb._address"=".autoload" "library"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb.addresscall() .expose=_rxsysb.addresscall
+   .meta "_rxsysb.addresscall"="b" ".string" _rxsysb.addresscall() "?env_name=.string,?function_name=.string,...=.string"
+   .meta "_rxsysb.addresscall"=".autoload" "library"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address_environment() .expose=_rxsysb._address_environment
+   .meta "_rxsysb._address_environment"="b" "._rxsysb..addressenvironment" _rxsysb._address_environment() "?env_name=.string"
+   .meta "_rxsysb._address_environment"=".autoload" "library"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+§_rxsysb.addressbinding.§factory() .expose=_rxsysb.addressbinding.§factory
+   .meta "_rxsysb.addressbinding.§factory"="b" "._rxsysb..addressbinding" §_rxsysb.addressbinding.§factory() "?kind=.string,?internal_name=.string,?external_alias=.string,?value=.string,?flags=.string"
+   .meta "_rxsysb.addressbinding.§factory"=".autoload" "library"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._redir2array() .expose=_rxsysb._redir2array
+   .meta "_rxsysb._redir2array"="b" "._rxsysb..addressredirect" _rxsysb._redir2array() "target=reference .string[*]"
+   .meta "_rxsysb._redir2array"=".autoload" "library"

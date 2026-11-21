@@ -1,0 +1,173 @@
+/*
+ * Moderate DataDictionary consumer sample.
+ *
+ * The sample deliberately knows nothing about SQLite or the schema. It adds a
+ * product/component graph, assigns aliases, and prints direct usage counts.
+ */
+options levelb
+
+import data_DataDictionary
+import rxfnsb
+
+main: procedure = .int
+  arg args = .string[]
+  database_path = "data_dictionary_sample.db"
+  if args.0 > 0 then database_path = args[1]
+
+  dictionary = .DataDictionary()
+  rc = dictionary.open(database_path)
+  if rc <> 0 then do
+    say "FAIL: cannot open dictionary rc=" || rc
+    return 1
+  end
+
+  /* Products. */
+  sedan = 0
+  truck = 0
+  forklift = 0
+  errors = 0
+  errors = errors + add_member(dictionary, "SEDAN", "PRODUCT", "road vehicle", sedan)
+  errors = errors + add_member(dictionary, "TRUCK", "PRODUCT", "heavy vehicle", truck)
+  errors = errors + add_member(dictionary, "FORKLIFT", "PRODUCT", "warehouse vehicle", forklift)
+
+  /* Shared assemblies and components. */
+  engine = 0
+  gearbox = 0
+  brake_system = 0
+  steering = 0
+  hydraulic_pump = 0
+  battery = 0
+  wheel = 0
+  front_light = 0
+  piston = 0
+  brake_pad = 0
+  errors = errors + add_member(dictionary, "ENGINE", "ASSEMBLY", "power unit", engine)
+  errors = errors + add_member(dictionary, "GEARBOX", "ASSEMBLY", "transmission", gearbox)
+  errors = errors + add_member(dictionary, "BRAKE_SYSTEM", "ASSEMBLY", "service brakes", brake_system)
+  errors = errors + add_member(dictionary, "STEERING", "ASSEMBLY", "steering system", steering)
+  errors = errors + add_member(dictionary, "HYDRAULIC_PUMP", "COMPONENT", "hydraulic pump", hydraulic_pump)
+  errors = errors + add_member(dictionary, "BATTERY", "COMPONENT", "starter battery", battery)
+  errors = errors + add_member(dictionary, "WHEEL", "COMPONENT", "road wheel", wheel)
+  errors = errors + add_member(dictionary, "FRONT_LIGHT", "COMPONENT", "front lamp", front_light)
+  errors = errors + add_member(dictionary, "PISTON", "COMPONENT", "engine piston", piston)
+  errors = errors + add_member(dictionary, "BRAKE_PAD", "COMPONENT", "friction pad", brake_pad)
+
+  if errors <> 0 then do
+    say "FAIL: member creation errors=" || errors
+    call dictionary.close()
+    return 2
+  end
+
+  /* Aliases are intentionally not globally unique. */
+  errors = errors + dictionary.addAlias(engine, "POWER_UNIT")
+  errors = errors + dictionary.addAlias(hydraulic_pump, "PUMP")
+  errors = errors + dictionary.addAlias(brake_system, "BRAKES")
+
+  /* Product and assembly relationships. */
+  errors = errors + dictionary.addReference(sedan, engine)
+  errors = errors + dictionary.addReference(sedan, gearbox)
+  errors = errors + dictionary.addReference(sedan, brake_system)
+  errors = errors + dictionary.addReference(sedan, steering)
+  errors = errors + dictionary.addReference(truck, engine)
+  errors = errors + dictionary.addReference(truck, gearbox)
+  errors = errors + dictionary.addReference(truck, hydraulic_pump)
+  errors = errors + dictionary.addReference(truck, wheel)
+  errors = errors + dictionary.addReference(forklift, hydraulic_pump)
+  errors = errors + dictionary.addReference(forklift, battery)
+  errors = errors + dictionary.addReference(forklift, wheel)
+  errors = errors + dictionary.addReference(sedan, front_light, "contains", 5, "front-lamp")
+  errors = errors + dictionary.addReference(sedan, front_light, "contains", 6, "front-lamp")
+
+  /* Component relationships. */
+  errors = errors + dictionary.addReference(engine, piston)
+  errors = errors + dictionary.addReference(engine, battery)
+  errors = errors + dictionary.addReference(brake_system, brake_pad)
+  errors = errors + dictionary.addReference(steering, wheel, "mounted_on")
+
+  if errors <> 0 then do
+    say "FAIL: graph creation errors=" || errors
+    call dictionary.close()
+    return 3
+  end
+
+  say "Data dictionary sample: " || database_path
+  say left("Member", 30) || left("Type", 14) || right("Uses", 6) || right("Used-by", 9)
+  say copies("-", 59)
+  rows = .string[]
+  if dictionary.listMembersWithCounts("", rows) <> 0 then do
+    say "FAIL: cannot list members"
+    call dictionary.close()
+    return 4
+  end
+  do i = 1 to rows[0]
+    say format_member_row(rows[i])
+  end
+
+  say ""
+  say "COMPONENT members"
+  component_rows = .string[]
+  call dictionary.listMembersWithCounts("COMPONENT", component_rows)
+  do i = 1 to component_rows[0]
+    say format_member_row(component_rows[i])
+  end
+
+  say ""
+  say "Alias query: POWER_UNIT"
+  alias_rows = .string[]
+  call dictionary.findByAlias("POWER_UNIT", alias_rows)
+  do i = 1 to alias_rows[0]
+    say "  " || alias_rows[i]
+  end
+
+  say ""
+  say "Direct BOM query: TRUCK"
+  truck_parts = .string[]
+  call dictionary.getSuccessors(truck, truck_parts)
+  do i = 1 to truck_parts[0]
+    say "  " || truck_parts[i]
+  end
+
+  say ""
+  say "Where-used query: WHEEL"
+  wheel_callers = .string[]
+  call dictionary.getCallers(wheel, wheel_callers)
+  do i = 1 to wheel_callers[0]
+    say "  " || wheel_callers[i]
+  end
+
+  say ""
+  say "Position query: SEDAN direct links"
+  sedan_links = .string[]
+  call dictionary.getSuccessorLinks(sedan, sedan_links)
+  do i = 1 to sedan_links[0]
+    say "  " || sedan_links[i]
+  end
+
+  call dictionary.close()
+  say "PASS: moderate data dictionary sample members=" || rows[0] || " link_instances=17"
+  return 0
+
+add_member: procedure = .int
+  arg dictionary = .DataDictionary, name = .string, member_type = .string, ,
+      description = .string, expose member_id = .int
+  return dictionary.addMember(name, member_type, description, member_id)
+
+format_member_row: procedure = .string
+  arg row = .string
+  name = field(row, 1)
+  member_type = field(row, 2)
+  uses = field(row, 3)
+  used_by = field(row, 4)
+  return left(name, 30) || left(member_type, 14) || right(uses, 6) || right(used_by, 9)
+
+field: procedure = .string
+  arg row = .string, number = .int
+  rest = row
+  do i = 1 to number - 1
+    separator = pos("|", rest)
+    if separator = 0 then return ""
+    rest = substr(rest, separator + 1)
+  end
+  separator = pos("|", rest)
+  if separator = 0 then return rest
+  return left(rest, separator - 1)

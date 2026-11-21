@@ -1,0 +1,69 @@
+/*
+ * Realistic user-facing procedural facade sample.
+ *
+ * Every operation is checked. ddEnd is the commit boundary; after an error,
+ * the sample stops using the current definition and reports ddLastError().
+ */
+options levelb
+
+import data_DataDictionaryFacade
+
+main: procedure = .int
+  arg args = .string[]
+  filename = "data_dictionary_facade_sample.db"
+  if args.0 > 0 then filename = args[1]
+
+  if checked(ddOpen(filename), "ddOpen") <> 0 then return 1
+
+  if checked(ddAdd("ORDER_RECORD", "RECORD", "Sales order record"), "ddAdd ORDER_RECORD") <> 0 then return finish(1)
+  if checked(ddAlias("ORDER_LAYOUT"), "ddAlias ORDER_LAYOUT") <> 0 then return finish(1)
+  if checked(ddAlias("ORDER", "SHORT"), "ddAlias ORDER SHORT") <> 0 then return finish(1)
+  if checked(ddAttribute("owner", "Sales"), "ddAttribute owner") <> 0 then return finish(1)
+  if checked(ddLink("CUSTOMER_NUMBER", "contains", 1, "customer_number"), "ddLink CUSTOMER_NUMBER") <> 0 then return finish(1)
+  if checked(ddLink("ORDER_DATE", "contains", 2, "order_date"), "ddLink ORDER_DATE") <> 0 then return finish(1)
+
+  /* Starting the next member explicitly completes ORDER_RECORD first. */
+  if checked(ddAdd("CUSTOMER_NUMBER", "FIELD", "Customer number"), "ddAdd CUSTOMER_NUMBER") <> 0 then return finish(1)
+  if checked(ddAttribute("length", "12"), "ddAttribute length") <> 0 then return finish(1)
+  if checked(ddEnd(), "ddEnd CUSTOMER_NUMBER") <> 0 then return finish(1)
+
+  if checked(ddAdd("ORDER_DATE", "FIELD", "Order date"), "ddAdd ORDER_DATE") <> 0 then return finish(1)
+  if checked(ddAttribute("format", "YYYY-MM-DD"), "ddAttribute format") <> 0 then return finish(1)
+  if checked(ddEnd(), "ddEnd ORDER_DATE") <> 0 then return finish(1)
+
+  say "Filtered members: type=FIELD prefix=ORDER any=DATE"
+  members = ddList("FIELD", "ORDER", "DATE")
+  if checked(ddRc(), "ddList") <> 0 then return finish(1)
+  do member_index = 1 to members[0]
+    say members[member_index]
+  end
+
+  selection = ddMemberNames("FIELD", "ORDER_", "")
+  if checked(ddRc(), "ddMemberNames") <> 0 then return finish(1)
+  selected_details = ddListMembers(selection)
+  if checked(ddRc(), "ddListMembers") <> 0 then return finish(1)
+  say "Selected current fields"
+  if checked(ddPrint(selected_details), "ddPrint") <> 0 then return finish(1)
+
+  say "Complete current member report: CUSTOMER_NUMBER"
+  member_report = ddMemberReport("CUSTOMER_NUMBER")
+  if checked(ddRc(), "ddMemberReport") <> 0 then return finish(1)
+  if checked(ddPrint(member_report), "ddPrint member report") <> 0 then return finish(1)
+  performed_reports = ddPerform(selection, "MEMBER_REPORT", 0, "", 1)
+  if checked(ddRc(), "ddPerform MEMBER_REPORT") <> 0 then return finish(1)
+
+  if checked(ddClose(), "ddClose") <> 0 then return 1
+  say "PASS: procedural facade sample persisted " || filename
+  return 0
+
+checked: procedure = .int
+  arg rc = .int, operation = .string
+  if rc = 0 then return 0
+  say "FAIL: " || operation || " rc=" || rc || " error=" || ddLastError()
+  return rc
+
+finish: procedure = .int
+  arg fallback_rc = .int
+  close_rc = ddClose()
+  if close_rc <> 0 then say "FAIL: ddClose rc=" || close_rc || " error=" || ddLastError()
+  return fallback_rc

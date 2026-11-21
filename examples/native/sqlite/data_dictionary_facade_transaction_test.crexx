@@ -1,0 +1,90 @@
+/* Focused explicit-block and implicit-add lifecycle check. */
+options levelb
+
+import data_DataDictionaryFacade
+import rxfnsb
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: dictionary facade transaction " || label
+    return 1
+  end
+  return 0
+
+containsLine: procedure = .int
+  arg lines = .string[], needle = .string
+  do i = 1 to lines[0]
+    if pos(needle, lines[i]) > 0 then return 1
+  end
+  return 0
+
+main: procedure = .int
+  errors = 0
+
+  errors = errors + check(ddOpen(":memory:") = 0, "block open")
+  errors = errors + check(ddBegin() = 0, "block begin")
+  errors = errors + check(ddAdd("BLOCK_ROOT", "RECORD", "Block root") = 0, "block root")
+  call ddLink "BLOCK_CHILD", "contains", 1, "child"
+  errors = errors + check(ddAdd("BLOCK_CHILD", "FIELD", "Block child") = 0, "block child")
+  errors = errors + check(ddEnd() = 0, "block commit")
+  bom = ddBom("BLOCK_ROOT", 1, "contains")
+  errors = errors + check(ddRc() = 0, "block report status")
+  errors = errors + check(bom[0] = 8, "block report")
+  errors = errors + check(ddClose() = 0, "block close")
+
+  errors = errors + check(ddOpen(":memory:") = 0, "rollback open")
+  errors = errors + check(ddAdd("OUTSIDE", "RECORD", "Committed outside") = 0, "outside add")
+  call ddLink "EXISTING_DUMMY", "contains", 1, "existing"
+  errors = errors + check(ddEnd() = 0, "outside commit")
+  errors = errors + check(ddBegin() = 0, "rollback block begin")
+  errors = errors + check(ddAdd("BLOCK_BAD", "RECORD", "Bad block") = 0, "bad block add")
+  call ddLink "EXISTING_DUMMY", "contains", 1, "existing"
+  call ddLink "BLOCK_DUMMY", "contains", 2, "dummy"
+  errors = errors + check(ddAdd("BLOCK_DUMMY", "FIELD", "Bad dummy") = 0, "bad dummy add")
+  errors = errors + check(ddAlias("BROKEN", "UPPER") <> 0, "bad operation")
+  errors = errors + check(ddEnd() <> 0, "rollback block failure")
+  errors = errors + check(ddRc() <> 0, "rollback block status")
+  members = ddMembers("")
+  errors = errors + check(containsLine(members, "OUTSIDE") = 1, "outside retained")
+  errors = errors + check(containsLine(members, "BLOCK_BAD") = 0, "bad root absent")
+  errors = errors + check(containsLine(members, "BLOCK_DUMMY") = 0, "bad dummy absent")
+  errors = errors + check(ddEnd() <> 0, "rollback error retained")
+  dummies = ddDummies()
+  errors = errors + check(containsLine(dummies, "EXISTING_DUMMY") = 1, "existing dummy retained")
+  preserved = ddBom("OUTSIDE", 1, "contains")
+  errors = errors + check(ddRc() = 0, "preserved report status")
+  errors = errors + check(containsLine(preserved, "EXISTING_DUMMY") = 1, "existing incoming link retained")
+  errors = errors + check(ddClose() = 0, "rollback close")
+
+  errors = errors + check(ddOpen(":memory:") = 0, "nested open")
+  errors = errors + check(ddBegin() = 0, "nested outer begin")
+  errors = errors + check(ddBegin() <> 0, "nested begin rejected")
+  errors = errors + check(ddRc() <> 0, "nested status")
+  errors = errors + check(ddClose() = 0, "nested close")
+
+  errors = errors + check(ddOpen(":memory:") = 0, "empty open")
+  errors = errors + check(ddBegin() = 0, "empty begin")
+  errors = errors + check(ddEnd() = 0, "empty commit")
+  errors = errors + check(ddClose() = 0, "empty close")
+
+  errors = errors + check(ddOpen(":memory:") = 0, "implicit-to-block open")
+  errors = errors + check(ddAdd("IMPLICIT_COMMITTED", "FIELD", "Committed before block") = 0, "implicit add")
+  errors = errors + check(ddBegin() = 0, "implicit-to-block begin")
+  errors = errors + check(ddAdd("BLOCK_AFTER_IMPLICIT", "FIELD", "Block member") = 0, "member after implicit")
+  errors = errors + check(ddEnd() = 0, "implicit-to-block end")
+  errors = errors + check(ddClose() = 0, "implicit-to-block close")
+
+  errors = errors + check(ddOpen(":memory:") = 0, "failed implicit open")
+  errors = errors + check(ddAdd("IMPLICIT_BAD", "FIELD", "Bad implicit") = 0, "failed implicit add")
+  errors = errors + check(ddAlias("BROKEN", "UPPER") <> 0, "failed implicit operation")
+  errors = errors + check(ddBegin() <> 0, "failed implicit begin")
+  errors = errors + check(ddEnd() <> 0, "failed implicit retained")
+  errors = errors + check(ddClose() = 0, "failed implicit close")
+
+  if errors <> 0 then do
+    say "FAIL: dictionary facade transaction errors=" || errors
+    return 1
+  end
+  say "PASS: procedural facade transactions"
+  return 0
