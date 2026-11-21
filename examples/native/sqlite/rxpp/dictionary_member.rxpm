@@ -1,0 +1,70 @@
+##MACRO DICTIONARY_MEMBER phase,namespace,block_id,dictionary_var,operation
+  phase = upper(unquote(phase))
+  if phase \= 'BLOCK' then return
+
+  member_var = unquote(namespace)
+  dictionary_var = unquote(dictionary_var)
+  operation = unquote(operation)
+  if operation = '' then operation = 'defineMember'
+  if upper(operation) = 'ADD_MEMBER' then operation = 'defineMember'
+  member_name = ''
+  if left(member_var, 2) = 'm_' then member_name = translate(substr(member_var, 3))
+  else member_name = translate(member_var)
+  member_type = 'MEMBER'
+  description = ''
+  alias_count = 0
+  link_count = 0
+
+  do i = 1 to handler_lines.0
+    line = strip(changestr('__RXPP_QUOTE__', handler_lines.i, '"'))
+    op = upper(word(line, 1))
+    if op = 'TYPE' then member_type = word(line, 2)
+    if op = 'DESCRIPTION' then description = unquote(subword(line, 2))
+    if op = 'ALIAS' then do
+      alias_count = alias_count + 1
+      aliases.alias_count = unquote(subword(line, 2))
+    end
+    if op = 'CONTAINS' then do
+      target = unquote(word(line, 2))
+      syntax = ''
+      if words(line) > 2 then syntax = unquote(word(line, 3))
+      link_count = link_count + 1
+      links.link_count = target || '|contains|' || link_count || '|' || syntax
+    end
+    if op = 'LINK' then do
+      link_type = upper(word(line, 2))
+      target = unquote(word(line, 3))
+      syntax = ''
+      if words(line) > 3 then syntax = unquote(word(line, 4))
+      link_count = link_count + 1
+      links.link_count = target || '|' || link_type || '|' || link_count || '|' || syntax
+    end
+  end
+
+  /* generated below */
+  alias_array = '__dictionary_aliases_' || member_var
+  link_array = '__dictionary_links_' || member_var
+  generated = member_var || ' = .int'
+  .gen &generated
+  generated = alias_array || ' = .string[]'
+  .gen &generated
+  generated = link_array || ' = .string[]'
+  .gen &generated
+  generated = '__dictionary_dummy_count_' || member_var || ' = .int'
+  .gen &generated
+
+  do i = 1 to alias_count
+    value = changestr('"', aliases.i, '""')
+    generated = alias_array || '[' || i || '] = "' || value || '"'
+    .gen &generated
+  end
+  do i = 1 to link_count
+    value = changestr('"', links.i, '""')
+    generated = link_array || '[' || i || '] = "' || value || '"'
+    .gen &generated
+  end
+
+  generated = 'rc = ' || dictionary_var || '.' || operation || '("' || member_name || '", "' || member_type || '", "' || changestr('"', description, '""') || '", ' || alias_array || ', ' || link_array || ', ' || member_var || ', __dictionary_dummy_count_' || member_var || ')'
+  .gen &generated
+  .gen if rc <> 0 then exit rc
+##MEND

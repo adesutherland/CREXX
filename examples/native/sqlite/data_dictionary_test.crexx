@@ -1,0 +1,179 @@
+/* Focused storage-layer check for the initial SQLite data dictionary. */
+options levelb
+
+import data_DataDictionary
+import rxfnsb
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: data dictionary " || label
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+  arg args = .string[]
+  filename = "data_dictionary_test.db"
+  if args.0 > 0 then filename = args[1]
+  dictionary = .DataDictionary()
+  errors = 0
+  dummy_flag = .int
+  dummy_count = .int
+  completed_id = .int
+  completed_dummy_count = .int
+  city_id = .int
+  conflict_id = .int
+  duplicate_id = .int
+  conflict_dummy_count = .int
+  broken_id = .int
+  broken_dummy_count = .int
+  missing_id = .int
+  attribute_value = .string
+  errors = errors + check(dictionary.open(filename) = 0, "open")
+  if errors <> 0 then return 1
+
+  car = 0
+  engine = 0
+  piston = 0
+  errors = errors + check(dictionary.addMember("CAR", "PRODUCT", "vehicle", car) = 0, "CAR")
+  errors = errors + check(dictionary.addMember("ENGINE", "COMPONENT", "engine", engine) = 0, "ENGINE")
+  errors = errors + check(dictionary.addMember("PISTON", "COMPONENT", "piston", piston) = 0, "PISTON")
+  errors = errors + check(dictionary.addAlias(engine, "POWERPLANT") = 0, "alias")
+
+  /* Member names are exact; generated UPPER aliases are deliberately shared. */
+  customer_lower = 0
+  customer_upper = 0
+  cafe_member = 0
+  errors = errors + check(dictionary.addMember("customerName", "TEST", "lower", customer_lower) = 0, "lower-case member")
+  errors = errors + check(dictionary.addMember("CustomerName", "TEST", "upper variant", customer_upper) = 0, "case-distinct member")
+  errors = errors + check(customer_lower <> customer_upper, "case-distinct identities")
+  errors = errors + check(dictionary.addMember("customerName", "TEST", "duplicate", duplicate_id) = -3, "exact duplicate rejected")
+  upper_matches = .string[]
+  errors = errors + check(dictionary.findByAliasTyped("CUSTOMERNAME", upper_matches, "upper") = 0 & upper_matches[0] = 2, "generated UPPER lookup")
+  insensitive_matches = .string[]
+  errors = errors + check(dictionary.findByNameInsensitive("customername", insensitive_matches) = 0 & insensitive_matches[0] = 2, "case-insensitive member search")
+  errors = errors + check(dictionary.setAlias(customer_lower, "Short", "CUST_NAME") = 0, "typed alias")
+  errors = errors + check(dictionary.setAlias(customer_lower, "SHORT", "CUSTOMER") = 0, "typed alias replacement")
+  listed_aliases = .string[]
+  errors = errors + check(dictionary.listAliases(customer_lower, listed_aliases) = 0 & listed_aliases[0] = 2, "list aliases")
+  errors = errors + check(listed_aliases[1] = "SHORT|CUSTOMER" & listed_aliases[2] = "UPPER|CUSTOMERNAME", "list typed aliases")
+  old_short = .string[]
+  new_short = .string[]
+  errors = errors + check(dictionary.findByAliasTyped("CUST_NAME", old_short, "short") = 0 & old_short[0] = 0, "old typed alias replaced")
+  errors = errors + check(dictionary.findByAliasTyped("CUSTOMER", new_short, "SHORT") = 0 & new_short[0] = 1, "new typed alias present")
+  errors = errors + check(dictionary.addAlias(customer_lower, "KUNDENNAME") = 0, "untyped alias one")
+  errors = errors + check(dictionary.addAlias(customer_lower, "KUNDENNAME") = 0, "untyped alias idempotent")
+  errors = errors + check(dictionary.addAlias(customer_lower, "CUSTOMER") = 0, "untyped alias same value")
+  errors = errors + check(dictionary.addAlias(customer_upper, "CUSTOMER") = 0, "shared alias value")
+  shared_alias = .string[]
+  errors = errors + check(dictionary.findByAlias("CUSTOMER", shared_alias) = 0 & shared_alias[0] = 2, "shared alias lookup deduplicated")
+  errors = errors + check(dictionary.setAlias(customer_lower, "upper", "WRONG") = -5, "UPPER protected on set")
+  errors = errors + check(dictionary.removeAlias(customer_lower, "CUSTOMERNAME", "Upper") = -5, "UPPER protected on remove")
+  errors = errors + check(dictionary.addMember("café", "TEST", "ascii case", cafe_member) = 0, "non-ASCII member")
+  cafe_alias = .string[]
+  errors = errors + check(dictionary.findByAliasTyped("CAFé", cafe_alias, "UPPER") = 0 & cafe_alias[0] = 1, "ASCII-only uppercasing")
+  case_alias = .string[]
+  errors = errors + check(dictionary.addAlias(customer_lower, "CaseAlias") = 0, "case-sensitive alias")
+  all_aliases = .string[]
+  errors = errors + check(dictionary.listAliases(customer_lower, all_aliases) = 0 & all_aliases[0] = 5, "list typed and untyped aliases")
+  every_alias = .string[]
+  errors = errors + check(dictionary.listAllAliases(every_alias) = 0 & every_alias[0] > 5, "list all aliases")
+  ownership_found = 0
+  do ownership_index = 1 to every_alias[0]
+    if pos("|customerName|SHORT|CUSTOMER", every_alias[ownership_index]) > 0 then ownership_found = 1
+  end
+  errors = errors + check(ownership_found = 1, "list all alias ownership")
+  errors = errors + check(dictionary.findByAlias("casealias", case_alias) = 0 & case_alias[0] = 0, "alias value case sensitivity")
+  errors = errors + check(dictionary.addReference(car, engine) = 0, "CAR uses ENGINE")
+  errors = errors + check(dictionary.addReference(car, engine, "contains", 2, "engine-slot-2") = 0, "CAR second position")
+  errors = errors + check(dictionary.addReference(car, engine, "installed_in") = 0, "second link type")
+  errors = errors + check(dictionary.addReference(engine, piston) = 0, "ENGINE uses PISTON")
+
+  errors = errors + check(dictionary.setAttribute(car, "business_owner", "Finance") = 0, "set business owner")
+  errors = errors + check(dictionary.setAttribute(car, "source_system", "ERP") = 0, "set source system")
+  errors = errors + check(dictionary.setAttribute(car, "optional_note", "") = 0, "set empty attribute")
+  errors = errors + check(dictionary.getAttribute(car, "optional_note", attribute_value) = 0 & attribute_value = "", "get empty attribute")
+  errors = errors + check(dictionary.getAttribute(car, "business_owner", attribute_value) = 0 & attribute_value = "Finance", "get attribute")
+  errors = errors + check(dictionary.setAttribute(car, "business_owner", "Operations") = 0, "replace attribute")
+  attributes = .string[]
+  errors = errors + check(dictionary.listAttributes(car, attributes) = 0, "list attributes")
+  errors = errors + check(attributes[0] = 3, "attribute count")
+  errors = errors + check(attributes[1] = "business_owner|Operations", "ordered attributes")
+  errors = errors + check(dictionary.removeAttribute(car, "source_system") = 0, "remove attribute")
+  errors = errors + check(dictionary.removeAttribute(car, "optional_note") = 0, "remove empty attribute")
+  errors = errors + check(dictionary.getAttribute(car, "source_system", attribute_value) = 1, "removed attribute")
+
+  products = .string[]
+  components = .string[]
+  errors = errors + check(dictionary.listMembersWithCounts("PRODUCT", products) = 0, "product type query")
+  errors = errors + check(dictionary.listMembersWithCounts("COMPONENT", components) = 0, "component type query")
+  errors = errors + check(products[0] = 1, "product type list")
+  errors = errors + check(components[0] = 2, "component type list")
+  errors = errors + check(pos("CAR|PRODUCT|3|0", products[1]) > 0, "CAR direct counts")
+  errors = errors + check(pos("ENGINE|COMPONENT|1|3", components[1]) > 0, "ENGINE direct counts")
+  links = .string[]
+  errors = errors + check(dictionary.getSuccessorLinks(car, links) = 0, "CAR link query")
+  errors = errors + check(pos("ENGINE|contains|1|", links[1]) > 0, "CAR first position")
+  errors = errors + check(pos("ENGINE|contains|2|engine-slot-2", links[2]) > 0, "CAR second position")
+  command_links = .string[]
+  errors = errors + check(dictionary.executeCommand("LINKS", "CAR", command_links) = 0, "LINKS command")
+  errors = errors + check(command_links[2] = "ENGINE|contains|2|engine-slot-2", "LINKS command ordering")
+  command_bom = .string[]
+  errors = errors + check(dictionary.executeCommand("BOM", "CAR", command_bom, 3, "contains") = 0, "BOM command")
+  errors = errors + check(command_bom[1] = "0|CAR|ROOT|0||", "BOM command root")
+
+  combined_aliases = .string[]
+  combined_aliases[1] = "ORDER_LAYOUT"
+  combined_aliases[2] = "ORDER_DATA"
+  combined_links = .string[]
+  combined_links[1] = "CUSTOMER_NUMBER|contains|1|customer_number"
+  combined_links[2] = "DATE|contains|2|effective_date"
+  combined_links[3] = "DATE|contains|3|review_date"
+  combined_links[4] = "ADDRESS_GROUP|contains|4|primary_address"
+  combined_links[5] = "ADDRESS_GROUP|contains|5|secondary_address"
+  order_record = 0
+  dummy_count = 0
+  errors = errors + check(dictionary.defineMember("ORDER_RECORD", "RECORD", "Order record", combined_aliases, combined_links, order_record, dummy_count) = 0, "combined definition")
+  errors = errors + check(dummy_count = 3, "combined dummy count")
+  errors = errors + check(dictionary.isDummy(order_record, dummy_flag) = 0 & dummy_flag = 0, "defined source status")
+  order_links = .string[]
+  errors = errors + check(dictionary.getSuccessorLinks(order_record, order_links) = 0, "combined ordered links")
+  errors = errors + check(order_links[2] = "DATE|contains|2|effective_date", "combined first DATE occurrence")
+  errors = errors + check(order_links[3] = "DATE|contains|3|review_date", "combined second DATE occurrence")
+
+  address_group = 0
+  errors = errors + check(dictionary.getMemberId("ADDRESS_GROUP", address_group) = 0, "dummy identity")
+  address_links = .string[]
+  address_links[1] = "CITY|contains|1|city"
+  completed_aliases = .string[]
+  errors = errors + check(dictionary.defineMember("ADDRESS_GROUP", "GROUP", "Address group", completed_aliases, address_links, completed_id, completed_dummy_count) = 0, "dummy completion")
+  errors = errors + check(completed_id = address_group, "dummy identity retained")
+  errors = errors + check(dictionary.isDummy(address_group, dummy_flag) = 0 & dummy_flag = 0, "completed status")
+  errors = errors + check(dictionary.getMemberId("CITY", city_id) = 0, "nested dummy identity")
+  dummies = .string[]
+  errors = errors + check(dictionary.listDummies(dummies) = 0, "dummy listing")
+  errors = errors + check(dummies[0] = 3, "remaining dummy count")
+
+  conflict_aliases = .string[]
+  conflict_links = .string[]
+  errors = errors + check(dictionary.defineMember("ORDER_RECORD", "RECORD", "replacement", conflict_aliases, conflict_links, conflict_id, conflict_dummy_count) = -3, "defined source conflict")
+  missing_id = 0
+  errors = errors + check(dictionary.getMemberId("ROLLBACK_TARGET", missing_id) = 1, "rollback missing target")
+  broken_aliases = .string[]
+  broken_aliases[1] = "DUPLICATE"
+  broken_aliases[2] = "DUPLICATE"
+  broken_links = .string[]
+  errors = errors + check(dictionary.defineMember("BROKEN_RECORD", "RECORD", "rollback", broken_aliases, broken_links, broken_id, broken_dummy_count) <> 0, "combined rollback failure")
+  errors = errors + check(dictionary.getMemberId("BROKEN_RECORD", missing_id) = 1, "rollback removes source")
+
+  errors = errors + check(dictionary.close() = 0, "close")
+  errors = errors + check(dictionary.open(filename) = 0, "reopen")
+  errors = errors + check(dictionary.getAttribute(car, "business_owner", attribute_value) = 0 & attribute_value = "Operations", "persisted attribute")
+  errors = errors + check(dictionary.close() = 0, "final close")
+  if errors <> 0 then do
+    say "FAIL: data dictionary errors=" || errors
+    return 1
+  end
+  say "PASS: data dictionary schema, members, aliases, references and counts"
+  return 0

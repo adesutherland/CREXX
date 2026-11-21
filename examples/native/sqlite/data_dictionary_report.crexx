@@ -1,0 +1,353 @@
+/* Shared, state-free formatting for data-dictionary command results. */
+options levelb comments_dash
+
+import rxfnsb
+
+namespace data_DataDictionaryReport expose DataDictionaryReport
+
+DataDictionaryReport: class
+
+  *: factory
+    return
+
+  /** Format MEMBERS rows as lines; no console or dictionary access. */
+  formatMembers: method = .int
+    arg rows = .string[], expose lines = .string[]
+    call arraydrop lines
+    i = 0
+    if rows[0] = 0 then do
+      lines[1] = "(empty)"
+      return 0
+    end
+    member_width = 30
+    type_width = 14
+    uses_width = 6
+    used_width = 9
+    do i = 1 to rows[0]
+      if fieldCount(rows[i]) <> 4 then return -2
+      name = field(rows[i], 1)
+      member_type = field(rows[i], 2)
+      uses = field(rows[i], 3)
+      used_by = field(rows[i], 4)
+      if length(name) > member_width then member_width = length(name)
+      if length(member_type) > type_width then type_width = length(member_type)
+      if length(uses) > uses_width then uses_width = length(uses)
+      if length(used_by) > used_width then used_width = length(used_by)
+    end
+    lines[1] = pad_right("Member", member_width) || pad_right("Type", type_width) || ,
+      pad_left("Uses", uses_width) || pad_left("Used-by", used_width)
+    lines[2] = copies("-", member_width + type_width + uses_width + used_width)
+    do i = 1 to rows[0]
+      lines[lines[0] + 1] = pad_right(field(rows[i], 1), member_width) || ,
+        pad_right(field(rows[i], 2), type_width) || pad_left(field(rows[i], 3), uses_width) || ,
+        pad_left(field(rows[i], 4), used_width)
+    end
+    return 0
+
+  /** Format one current member detail row without exposing storage encoding. */
+  formatMemberDetails: method = .int
+    arg row = .string, expose lines = .string[]
+    call arraydrop lines
+    if fieldCount(row) <> 5 then return -2
+    labels = .string[]
+    values = .string[]
+    labels[1] = "Member"
+    labels[2] = "Type"
+    labels[3] = "Description"
+    labels[4] = "Uses"
+    labels[5] = "Used-by"
+    do i = 1 to 5
+      values[i] = field(row, i)
+    end
+    label_width = 14
+    do i = 1 to 5
+      lines[i] = pad_right(labels[i], label_width) || values[i]
+    end
+    return 0
+
+  /** Format one member's attribute rows without exposing pipe encoding. */
+  formatAttributes: method = .int
+    arg rows = .string[], expose lines = .string[]
+    call arraydrop lines
+    if rows[0] = 0 then do
+      lines[1] = "(empty)"
+      return 0
+    end
+    name_width = 14
+    do i = 1 to rows[0]
+      if fieldCount(rows[i]) <> 2 then return -2
+      if length(field(rows[i], 1)) > name_width then name_width = length(field(rows[i], 1))
+    end
+    lines[1] = pad_right("Attribute", name_width) || "Value"
+    lines[2] = copies("-", name_width + 5)
+    do i = 1 to rows[0]
+      lines[lines[0] + 1] = pad_right(field(rows[i], 1), name_width) || field(rows[i], 2)
+    end
+    return 0
+
+  /** Format one member's details, attributes, and direct links as one report. */
+  formatMemberReport: method = .int
+    arg details = .string, attributes = .string[], outgoing = .string[], incoming = .string[], ,
+        expose lines = .string[]
+    call arraydrop lines
+    if fieldCount(details) <> 5 then return -2
+    member_name = field(details, 1)
+    lines[1] = "REPORT OF " || member_name
+    lines[2] = copies("=", length(lines[1]))
+    detail_lines = .string[]
+    rc = formatMemberDetails(details, detail_lines)
+    if rc <> 0 then return rc
+    do i = 1 to detail_lines[0]
+      lines[lines[0] + 1] = detail_lines[i]
+    end
+    lines[lines[0] + 1] = ""
+    lines[lines[0] + 1] = "Attributes"
+    attribute_lines = .string[]
+    rc = formatAttributes(attributes, attribute_lines)
+    if rc <> 0 then return rc
+    do i = 1 to attribute_lines[0]
+      lines[lines[0] + 1] = attribute_lines[i]
+    end
+    lines[lines[0] + 1] = ""
+    lines[lines[0] + 1] = "Outgoing links"
+    outgoing_lines = .string[]
+    rc = formatOccurrences(outgoing, outgoing_lines)
+    if rc <> 0 then return rc
+    do i = 1 to outgoing_lines[0]
+      lines[lines[0] + 1] = outgoing_lines[i]
+    end
+    lines[lines[0] + 1] = ""
+    lines[lines[0] + 1] = "Incoming links"
+    incoming_lines = .string[]
+    rc = formatOccurrences(incoming, incoming_lines)
+    if rc <> 0 then return rc
+    do i = 1 to incoming_lines[0]
+      lines[lines[0] + 1] = incoming_lines[i]
+    end
+    lines[lines[0] + 1] = copies("=", length(lines[1]))
+    lines[lines[0] + 1] = "END OF " || member_name
+    return 0
+
+  /** Format DUMMIES rows without exposing the storage member ID. */
+  formatDummies: method = .int
+    arg rows = .string[], expose lines = .string[]
+    call arraydrop lines
+    if rows[0] = 0 then do
+      lines[1] = "(empty)"
+      return 0
+    end
+    name_width = 30
+    type_width = 14
+    description_width = 30
+    do i = 1 to rows[0]
+      if fieldCount(rows[i]) <> 4 then return -2
+      if length(field(rows[i], 2)) > name_width then name_width = length(field(rows[i], 2))
+      if length(field(rows[i], 3)) > type_width then type_width = length(field(rows[i], 3))
+      if length(field(rows[i], 4)) > description_width then description_width = length(field(rows[i], 4))
+    end
+    lines[1] = pad_right("Member", name_width) || pad_right("Type", type_width) || "Description"
+    lines[2] = copies("-", name_width + type_width + description_width)
+    do i = 1 to rows[0]
+      lines[lines[0] + 1] = pad_right(field(rows[i], 2), name_width) || ,
+        pad_right(field(rows[i], 3), type_width) || field(rows[i], 4)
+    end
+    return 0
+
+  /** Format ALIAS matches without exposing the storage member ID. */
+  formatAliasMatches: method = .int
+    arg rows = .string[], expose lines = .string[]
+    call arraydrop lines
+    if rows[0] = 0 then do
+      lines[1] = "(empty)"
+      return 0
+    end
+    name_width = 30
+    type_width = 14
+    do i = 1 to rows[0]
+      if fieldCount(rows[i]) <> 3 then return -2
+      if length(field(rows[i], 2)) > name_width then name_width = length(field(rows[i], 2))
+      if length(field(rows[i], 3)) > type_width then type_width = length(field(rows[i], 3))
+    end
+    lines[1] = pad_right("Member", name_width) || "Type"
+    lines[2] = copies("-", name_width + type_width)
+    do i = 1 to rows[0]
+      lines[lines[0] + 1] = pad_right(field(rows[i], 2), name_width) || field(rows[i], 3)
+    end
+    return 0
+
+  /** Format one member's alias rows without encoded separators or IDs. */
+  formatAliases: method = .int
+    arg rows = .string[], expose lines = .string[]
+    call arraydrop lines
+    if rows[0] = 0 then do
+      lines[1] = "(empty)"
+      return 0
+    end
+    type_width = 14
+    do i = 1 to rows[0]
+      if fieldCount(rows[i]) <> 2 then return -2
+      if field(rows[i], 1) = "" then alias_type = "(untyped)"
+      else alias_type = field(rows[i], 1)
+      if length(alias_type) > type_width then type_width = length(alias_type)
+    end
+    lines[1] = pad_right("Alias type", type_width) || "Alias"
+    lines[2] = copies("-", type_width + 5)
+    do i = 1 to rows[0]
+      alias_type = field(rows[i], 1)
+      if alias_type = "" then alias_type = "(untyped)"
+      lines[lines[0] + 1] = pad_right(alias_type, type_width) || field(rows[i], 2)
+    end
+    return 0
+
+  /** Format all aliases without exposing storage member IDs or pipe rows. */
+  formatAllAliases: method = .int
+    arg rows = .string[], expose lines = .string[]
+    call arraydrop lines
+    if rows[0] = 0 then do
+      lines[1] = "(empty)"
+      return 0
+    end
+    name_width = 30
+    type_width = 14
+    do i = 1 to rows[0]
+      if fieldCount(rows[i]) <> 4 then return -2
+      if length(field(rows[i], 2)) > name_width then name_width = length(field(rows[i], 2))
+      if length(field(rows[i], 3)) > type_width then type_width = length(field(rows[i], 3))
+    end
+    lines[1] = pad_right("Member", name_width) || pad_right("Alias type", type_width) || "Alias"
+    lines[2] = copies("-", name_width + type_width + 5)
+    do i = 1 to rows[0]
+      alias_type = field(rows[i], 3)
+      if alias_type = "" then alias_type = "(untyped)"
+      lines[lines[0] + 1] = pad_right(field(rows[i], 2), name_width) || ,
+        pad_right(alias_type, type_width) || field(rows[i], 4)
+    end
+    return 0
+
+  /** Format ordered LINKS rows without changing their order. */
+  formatOccurrences: method = .int
+    arg rows = .string[], expose lines = .string[]
+    call arraydrop lines
+    i = 0
+    if rows[0] = 0 then do
+      lines[1] = "(empty)"
+      return 0
+    end
+    member_width = 6
+    link_width = 9
+    occurrence_width = 11
+    position_width = 3
+    do i = 1 to rows[0]
+      if fieldCount(rows[i]) <> 4 then return -2
+      position = field(rows[i], 3)
+      if length(field(rows[i], 1)) > member_width then member_width = length(field(rows[i], 1))
+      if length(field(rows[i], 2)) > link_width then link_width = length(field(rows[i], 2))
+      if length(position) > position_width then position_width = length(position)
+      if length(field(rows[i], 4)) > occurrence_width then occurrence_width = length(field(rows[i], 4))
+    end
+    lines[1] = pad_left("Pos", position_width) || "  " || pad_right("Member", member_width) || "  " || ,
+      pad_right("Link type", link_width) || "  " || pad_right("Occurrence", occurrence_width)
+    lines[2] = copies("-", position_width + member_width + link_width + occurrence_width + 6)
+    do i = 1 to rows[0]
+      lines[lines[0] + 1] = pad_left(field(rows[i], 3), position_width) || "  " || ,
+        pad_right(field(rows[i], 1), member_width) || "  " || ,
+        pad_right(field(rows[i], 2), link_width) || "  " || ,
+        pad_right(field(rows[i], 4), occurrence_width)
+    end
+    return 0
+
+  /** Format BOM or WHERE_USED walker rows with two-space indentation. */
+  formatNested: method = .int
+    arg rows = .string[], expose lines = .string[], indent_cap = 8
+    call arraydrop lines
+    i = 0
+    level_text = ""
+    level = 0
+    shown_level = 0
+    if rows[0] = 0 then do
+      lines[1] = "(empty)"
+      return 0
+    end
+    level_width = 3
+    position_width = 3
+    member_width = 32
+    link_width = 12
+    occurrence_width = 24
+    status_width = 6
+    capped = 0
+    do i = 1 to rows[0]
+      if fieldCount(rows[i]) <> 6 then return -2
+      level_text = field(rows[i], 1)
+      level = level_text
+      shown_level = level
+      if indent_cap > 0 & shown_level > indent_cap then do
+        shown_level = indent_cap
+        capped = 1
+      end
+      displayed_member = copies("  ", shown_level) || field(rows[i], 2)
+      if length(level_text) > level_width then level_width = length(level_text)
+      if length(field(rows[i], 4)) > position_width then position_width = length(field(rows[i], 4))
+      if length(displayed_member) > member_width then member_width = length(displayed_member)
+      if length(field(rows[i], 3)) > link_width then link_width = length(field(rows[i], 3))
+      if length(field(rows[i], 5)) > occurrence_width then occurrence_width = length(field(rows[i], 5))
+      if length(field(rows[i], 6)) > status_width then status_width = length(field(rows[i], 6))
+    end
+    lines[1] = pad_left("Lvl", level_width) || "  " || pad_left("Pos", position_width) || "  " || ,
+      pad_right("Member", member_width) || "  " || pad_right("Link type", link_width) || "  " || ,
+      pad_right("Occurrence", occurrence_width) || "  " || pad_right("Status", status_width)
+    lines[2] = copies("-", level_width + position_width + member_width + link_width + occurrence_width + status_width + 10)
+    if capped = 1 then lines[lines[0] + 1] = "(indentation capped at level " || indent_cap || "; Lvl remains authoritative)"
+    do i = 1 to rows[0]
+      level_text = field(rows[i], 1)
+      level = level_text
+      shown_level = level
+      if indent_cap > 0 & shown_level > indent_cap then shown_level = indent_cap
+      position = field(rows[i], 4)
+      link_type = field(rows[i], 3)
+      occurrence = field(rows[i], 5)
+      status = field(rows[i], 6)
+      if level = 0 then do
+        position = ""
+        link_type = ""
+        occurrence = ""
+        status = ""
+      end
+      lines[lines[0] + 1] = pad_left(level_text, level_width) || "  " || pad_left(position, position_width) || "  " || ,
+        pad_right(copies("  ", shown_level) || field(rows[i], 2), member_width) || "  " || ,
+        pad_right(link_type, link_width) || "  " || pad_right(occurrence, occurrence_width) || "  " || ,
+        pad_right(status, status_width)
+    end
+    return 0
+
+  field: method = .string
+    arg row = .string, number = .int
+    rest = row
+    separator = 0
+    do i = 1 to number - 1
+      separator = pos("|", rest)
+      if separator = 0 then return ""
+      rest = substr(rest, separator + 1)
+    end
+    separator = pos("|", rest)
+    if separator = 0 then return rest
+    return left(rest, separator - 1)
+
+  fieldCount: method = .int
+    arg row = .string
+    count = 1
+    rest = row
+    do while pos("|", rest) > 0
+      count = count + 1
+      rest = substr(rest, pos("|", rest) + 1)
+    end
+    return count
+
+  pad_right: method = .string
+    arg value = .string, width = .int
+    if length(value) >= width then return value
+    return value || copies(" ", width - length(value))
+
+  pad_left: method = .string
+    arg value = .string, width = .int
+    if length(value) >= width then return value
+    return copies(" ", width - length(value)) || value

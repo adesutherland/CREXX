@@ -1,0 +1,55 @@
+/* Build and run the batch-friendly procedural data-dictionary sample. */
+BUILD_DIR = ".crexx-build/data-dictionary-facade-batch";
+MODULE_SOURCE = "examples/native/sqlite/data_dictionary.crexx";
+FACADE_SOURCE = "examples/native/sqlite/data_dictionary_facade.crexx";
+REPORT_SOURCE = "examples/native/sqlite/data_dictionary_report.crexx";
+SAMPLE_SOURCE = "examples/native/sqlite/data_dictionary_facade_batch_sample.crexx";
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "COMPILE DATA DICTIONARY BATCH SAMPLE $out"
+END RULE;
+
+RULE run_program
+  ACTION = "RUN"
+  DESCRIPTION = "RUN DATA DICTIONARY BATCH SAMPLE"
+END RULE;
+
+BUILD "${BUILD_DIR}/data_dictionary.rxbin"
+  BUILD_NAME = dictionary_module
+  RULE = compile_program
+  INPUT = "${MODULE_SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_facade.rxbin"
+  BUILD_NAME = dictionary_facade
+  RULE = compile_program
+  INPUT = "${FACADE_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_report
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_report.rxbin"
+  BUILD_NAME = dictionary_report
+  RULE = compile_program
+  INPUT = "${REPORT_SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_facade_batch_sample.rxbin"
+  BUILD_NAME = dictionary_facade_batch_sample
+  RULE = compile_program
+  INPUT = "${SAMPLE_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_facade
+END BUILD;
+
+BUILD "run-data-dictionary-facade-batch"
+  BUILD_NAME = run_dictionary_facade_batch
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/data_dictionary_facade_batch_sample.rxbin"
+  DEPENDS_ON_BUILD = dictionary_facade_batch_sample
+  WORK_DIR = "${BUILD_DIR}"
+  ARGUMENT = "-a" ":memory:"
+END BUILD;
+
+DEFAULT_BUILD = run_dictionary_facade_batch;

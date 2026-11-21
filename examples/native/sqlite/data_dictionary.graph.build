@@ -1,0 +1,73 @@
+/* Build and run the SQLite data dictionary prototype and its consumers. */
+BUILD_DIR = ".crexx-build/data-dictionary";
+MODULE_SOURCE = "examples/native/sqlite/data_dictionary.crexx";
+REPORT_SOURCE = "examples/native/sqlite/data_dictionary_report.crexx";
+TEST_SOURCE = "examples/native/sqlite/data_dictionary_test.crexx";
+REPORT_TEST_SOURCE = "examples/native/sqlite/data_dictionary_report_test.crexx";
+SAMPLE_SOURCE = "examples/native/sqlite/data_dictionary_trading.crexx";
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "DATA DICTIONARY PROGRAM $out"
+END RULE;
+
+RULE run_program
+  ACTION = "RUN"
+  DESCRIPTION = "RUN DATA DICTIONARY SAMPLE"
+END RULE;
+
+BUILD "${BUILD_DIR}/data_dictionary.rxbin"
+  BUILD_NAME = dictionary_module
+  RULE = compile_program
+  INPUT = "${MODULE_SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_test.rxbin"
+  BUILD_NAME = dictionary_test
+  RULE = compile_program
+  INPUT = "${TEST_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_report.rxbin"
+  BUILD_NAME = dictionary_report
+  RULE = compile_program
+  INPUT = "${REPORT_SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_report_test.rxbin"
+  BUILD_NAME = dictionary_report_test
+  RULE = compile_program
+  INPUT = "${REPORT_TEST_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_report
+END BUILD;
+
+BUILD "${BUILD_DIR}/data_dictionary_sample.rxbin"
+  BUILD_NAME = dictionary_sample
+  RULE = compile_program
+  INPUT = "${SAMPLE_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_report
+END BUILD;
+
+BUILD "run-data-dictionary-report-test"
+  BUILD_NAME = run_dictionary_report_test
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/data_dictionary_report_test.rxbin"
+  DEPENDS_ON_BUILD = dictionary_report_test
+  WORK_DIR = "${BUILD_DIR}"
+END BUILD;
+
+BUILD "run-data-dictionary-sample"
+  BUILD_NAME = run_dictionary_sample
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/data_dictionary_sample.rxbin"
+  DEPENDS_ON_BUILD = dictionary_sample
+  DEPENDS_ON_BUILD = dictionary_test
+  DEPENDS_ON_BUILD = run_dictionary_report_test
+  WORK_DIR = "${BUILD_DIR}"
+  /* The graph demo is repeatable; the standalone sample can use a file path. */
+  ARGUMENT = "-a" ":memory:"
+END BUILD;
+
+DEFAULT_BUILD = run_dictionary_sample;

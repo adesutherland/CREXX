@@ -1,0 +1,34 @@
+/* Separate regression for genuine graph cycles. */
+options levelb
+
+import data_DataDictionaryFacade
+import rxfnsb
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: dictionary facade cycle " || label
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+  errors = 0
+  errors = errors + check(ddOpen(":memory:") = 0, "open")
+  errors = errors + check(ddAdd("CYCLE_A", "RECORD", "Cycle A") = 0, "add A")
+  call ddLink "CYCLE_B", "contains", 1, "b"
+  errors = errors + check(ddAdd("CYCLE_B", "RECORD", "Cycle B") = 0, "implicit end A")
+  call ddLink "CYCLE_A", "contains", 1, "a"
+  errors = errors + check(ddEnd() = 0, "end B")
+
+  lines = ddBom("CYCLE_A", 0, "contains")
+  errors = errors + check(ddRc() = 0, "report status")
+  errors = errors + check(lines[0] = 9, "report line count")
+  errors = errors + check(pos("CYCLE", lines[7]) > 0, "cycle marker")
+  errors = errors + check(ddClose() = 0, "close")
+  if errors <> 0 then do
+    say "FAIL: dictionary facade cycle errors=" || errors
+    return 1
+  end
+  say "PASS: procedural facade cycle reporting"
+  return 0

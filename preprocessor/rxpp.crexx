@@ -2391,10 +2391,19 @@ CMD_data_alias: procedure
   array = word(line,2)
   if array = '' then array=alias
   callback = word(line,3)
+  handler_operation = word(line,4)
+  if handler <> '' then do
+     handler_header = changestr(',', line, ' ')
+     array = word(handler_header, 2)
+     callback = word(handler_header, 3)
+     handler_operation = word(handler_header, 4)
+  end
   /*
    * Only an array name and an optional callback are allowed.
    */
-  if word(line,4) <> '' then do
+  /* Scripted handlers own their block opener syntax. Ordinary data aliases
+   * retain the historical array/callback arity check. */
+  if handler = '' & word(line,4) <> '' then do
      say 'RXPP error: too many parameters on' alias 'block'
      return
   end
@@ -2462,7 +2471,7 @@ CMD_data_alias: procedure
    */
   if handler <> '' then do
          handler_block_count[handler_block_id] = handler_line_count
-         source.i = '##'handler' BLOCK 'array' __RXPP_HANDLER_'handler_block_id'__'
+         source.i = '##'handler' BLOCK 'array' __RXPP_HANDLER_'handler_block_id'__ 'callback' 'handler_operation
      stype.i = ' '
   end
   else if callback = '' then stype.i = 'D'

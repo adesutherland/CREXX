@@ -1,0 +1,1012 @@
+/*
+ * Procedural facade for incremental dictionary member definitions.
+ *
+ * Definitions are buffered until ddEnd and committed by the storage layer's
+ * atomic details operation. Applications do not need objects, member IDs or
+ * encoded storage rows.
+ */
+options levelb
+
+namespace data_DataDictionaryFacade expose ddOpen ddClose ddBegin ddAdd ddReplace ddAmend ddRemove ddAlias ddAttribute ddLink ddEnd ddList ddMembers ddListMembers ddMemberNames ddBomNames ddWhereUsedNames ddKeep ddDrop ddPrint ddPerform ddDummies ddFindAlias ddListAliases ddListAllAliases ddMemberDetails ddAttributes ddMemberReport ddBom ddWhereUsed ddRc ddLastError
+
+import data_DataDictionary
+import data_DataDictionaryReport
+import rxfnsb
+
+dictionary = .DataDictionary
+report = .DataDictionaryReport
+open_ = 0
+active_ = 0
+current_name = ""
+current_type = ""
+current_description = ""
+replace_ = 0
+pending_aliases = .string[]
+pending_attribute_names = .string[]
+pending_attribute_values = .string[]
+pending_links = .string[]
+last_error = ""
+last_rc = 0
+failed_ = 0
+first_error = ""
+session_failed = 0
+session_error = ""
+session_rc = 0
+block_active = 0
+block_failed = 0
+block_error = ""
+block_rc = 0
+
+ddOpen: procedure = .int expose dictionary report open_ active_ current_name current_type current_description replace_ pending_aliases pending_attribute_names pending_attribute_values pending_links last_error last_rc failed_ first_error session_failed session_error session_rc block_active block_failed block_error block_rc
+  arg filename = .string
+  if open_ <> 0 then return ddFail("dictionary is already open")
+  dictionary = .DataDictionary()
+  report = .DataDictionaryReport()
+  rc = dictionary.open(filename)
+  if rc <> 0 then return ddFail("open failed rc=" || rc)
+  open_ = 1
+  active_ = 0
+  failed_ = 0
+  first_error = ""
+  session_failed = 0
+  session_error = ""
+  session_rc = 0
+  block_active = 0
+  block_failed = 0
+  block_error = ""
+  block_rc = 0
+  replace_ = 0
+  call ddSuccess
+  return 0
+
+ddClose: procedure = .int expose dictionary open_ active_ last_error last_rc failed_ first_error session_failed session_error session_rc block_active block_failed block_error block_rc
+  if open_ = 0 then return ddFail("dictionary is not open")
+  if session_failed <> 0 then do
+    rc = dictionary.close()
+    open_ = 0
+    session_failed = 0
+    session_error = ""
+    session_rc = 0
+    block_active = 0
+    block_failed = 0
+    block_error = ""
+    block_rc = 0
+    if rc <> 0 then return ddFail("close failed rc=" || rc)
+    call ddSuccess
+    return 0
+  end
+  if block_active <> 0 then do
+    if dictionary.rollbackTransaction() <> 0 then do
+      last_error = "explicit block rollback failed"
+      last_rc = -6
+    end
+    else if block_failed <> 0 then last_error = block_error
+    else last_error = "incomplete explicit block rolled back"
+    block_active = 0
+    block_failed = 0
+    block_error = ""
+    block_rc = 0
+    active_ = 0
+    failed_ = 0
+    first_error = ""
+    rc = dictionary.close()
+    open_ = 0
+    if rc <> 0 then return ddFail("close failed rc=" || rc)
+    if last_rc = 0 then last_rc = -1
+    return -1
+  end
+  if active_ <> 0 then do
+    if failed_ <> 0 then last_error = first_error
+    else last_error = "incomplete definition rolled back"
+    active_ = 0
+    failed_ = 0
+    first_error = ""
+    rc = dictionary.close()
+    open_ = 0
+    if rc <> 0 then return ddFail("close failed rc=" || rc)
+    last_rc = -1
+    return -1
+  end
+  rc = dictionary.close()
+  open_ = 0
+  if rc <> 0 then return ddFail("close failed rc=" || rc)
+  call ddSuccess
+  return 0
+
+ddBegin: procedure = .int expose dictionary open_ active_ last_error last_rc session_failed session_error session_rc block_active block_failed block_error block_rc
+  if open_ = 0 then return ddFail("dictionary is not open")
+  if session_failed <> 0 then return ddSequenceFailure()
+  if block_active <> 0 then return ddBlockFail("ddBegin: nested explicit block")
+  if active_ <> 0 then do
+    rc = ddCompleteActive()
+    if rc <> 0 then return rc
+  end
+  rc = dictionary.beginTransaction()
+  if rc <> 0 then return ddFail("ddBegin: transaction begin failed rc=" || rc)
+  block_active = 1
+  block_failed = 0
+  block_error = ""
+  block_rc = 0
+  call ddSuccess
+  return 0
+
+ddAdd: procedure = .int expose open_ active_ current_name current_type current_description replace_ pending_aliases pending_attribute_names pending_attribute_values pending_links last_error last_rc failed_ first_error session_failed session_error session_rc block_active block_failed block_error block_rc
+  arg name = .string, member_type = .string, description = .string
+  if open_ = 0 then return ddFail("dictionary is not open")
+  if session_failed <> 0 then return ddSequenceFailure()
+  if name = "" | member_type = "" | facadeInvalidText(name) | facadeInvalidText(member_type) | facadeInvalidText(description) then do
+    last_error = "ddAdd: invalid member definition"
+    last_rc = -1
+    session_failed = 1
+    session_error = last_error
+    session_rc = -1
+    return -1
+  end
+  if active_ <> 0 then do
+    rc = ddCompleteActive()
+    if rc <> 0 then do
+      return rc
+    end
+  end
+  current_name = name
+  current_type = member_type
+  current_description = description
+  replace_ = 0
+  call arraydrop pending_aliases
+  call arraydrop pending_attribute_names
+  call arraydrop pending_attribute_values
+  call arraydrop pending_links
+  active_ = 1
+  failed_ = 0
+  first_error = ""
+  call ddSuccess
+  return 0
+
+ddReplace: procedure = .int expose open_ active_ current_name current_type current_description replace_ pending_aliases pending_attribute_names pending_attribute_values pending_links last_error last_rc failed_ first_error session_failed session_error session_rc block_active block_failed block_error block_rc
+  arg name = .string, member_type = .string, description = .string
+  if open_ = 0 then return ddFail("dictionary is not open")
+  if session_failed <> 0 then return ddSequenceFailure()
+  if name = "" | member_type = "" | facadeInvalidText(name) | facadeInvalidText(member_type) | facadeInvalidText(description) then do
+    last_error = "ddReplace: invalid member definition"
+    last_rc = -1
+    session_failed = 1
+    session_error = last_error
+    session_rc = -1
+    return -1
+  end
+  if active_ <> 0 then do
+    rc = ddCompleteActive()
+    if rc <> 0 then return rc
+  end
+  current_name = name
+  current_type = member_type
+  current_description = description
+  replace_ = 1
+  call arraydrop pending_aliases
+  call arraydrop pending_attribute_names
+  call arraydrop pending_attribute_values
+  call arraydrop pending_links
+  active_ = 1
+  failed_ = 0
+  first_error = ""
+  call ddSuccess
+  return 0
+
+ddRemove: procedure = .int expose dictionary open_ active_ block_active session_failed session_error session_rc last_error last_rc
+  arg name = .string
+  rc = .int
+  manage_transaction = .int
+  error_text = .string
+  if open_ = 0 then return ddFail("ddRemove: dictionary is not open")
+  if session_failed <> 0 then return ddSequenceFailure()
+  if name = "" | facadeInvalidText(name) then return ddFail("ddRemove: invalid member name")
+  if active_ <> 0 then do
+    rc = ddCompleteActive()
+    if rc <> 0 then return rc
+  end
+  manage_transaction = 1
+  if block_active <> 0 then manage_transaction = 0
+  rc = dictionary.removeMember(name, manage_transaction)
+  if rc = 1 then do
+    error_text = name || ": member not found"
+    if block_active <> 0 then return ddBlockRollback(error_text, 1)
+    return ddFail(error_text)
+  end
+  if rc <> 0 then do
+    error_text = name || ": ddRemove rc=" || rc
+    if block_active <> 0 then return ddBlockRollback(error_text, rc)
+    session_failed = 1
+    session_error = error_text
+    session_rc = rc
+    last_error = error_text
+    last_rc = rc
+    return rc
+  end
+  call ddSuccess
+  return 0
+
+ddAmend: procedure = .int expose open_ active_ current_name current_type current_description replace_ pending_aliases pending_attribute_names pending_attribute_values pending_links last_error last_rc failed_ first_error session_failed session_error session_rc block_active block_failed block_error block_rc
+  arg name = .string, member_type = .string, description = .string
+  if open_ = 0 then return ddFail("dictionary is not open")
+  if session_failed <> 0 then return ddSequenceFailure()
+  if name = "" | member_type = "" | facadeInvalidText(name) | facadeInvalidText(member_type) | facadeInvalidText(description) then do
+    last_error = "ddAmend: invalid member definition"
+    last_rc = -1
+    session_failed = 1
+    session_error = last_error
+    session_rc = -1
+    return -1
+  end
+  if active_ <> 0 then do
+    rc = ddCompleteActive()
+    if rc <> 0 then return rc
+  end
+  current_name = name
+  current_type = member_type
+  current_description = description
+  replace_ = 2
+  call arraydrop pending_aliases
+  call arraydrop pending_attribute_names
+  call arraydrop pending_attribute_values
+  call arraydrop pending_links
+  active_ = 1
+  failed_ = 0
+  first_error = ""
+  call ddSuccess
+  return 0
+
+ddAlias: procedure = .int expose open_ active_ replace_ pending_aliases last_error last_rc failed_ first_error session_failed session_error
+  arg value = .string, alias_type = ""
+  if open_ = 0 | active_ = 0 then return ddFail("alias requires an active definition")
+  if session_failed <> 0 then return ddSequenceFailure()
+  if failed_ <> 0 then return ddDefinitionFailure()
+  if replace_ = 2 then return ddFail("ddAmend: aliases are unchanged")
+  if value = "" | facadeInvalidText(value) | facadeInvalidText(alias_type) then return ddFail("invalid alias")
+  if translate(alias_type, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz") = "UPPER" then do
+    return ddFail("ddAlias: UPPER is reserved")
+  end
+  if alias_type = "" then pending_aliases[pending_aliases[0] + 1] = "__UN_TYPED__|" || value
+  else pending_aliases[pending_aliases[0] + 1] = alias_type || "|" || value
+  call ddSuccess
+  return 0
+
+ddAttribute: procedure = .int expose open_ active_ pending_attribute_names pending_attribute_values last_error last_rc failed_ first_error session_failed session_error
+  arg attribute_name = .string, attribute_value = .string
+  if open_ = 0 | active_ = 0 then return ddFail("attribute requires an active definition")
+  if session_failed <> 0 then return ddSequenceFailure()
+  if failed_ <> 0 then return ddDefinitionFailure()
+  if attribute_name = "" | facadeInvalidText(attribute_name) then return ddFail("invalid attribute name")
+  pending_attribute_names[pending_attribute_names[0] + 1] = attribute_name
+  pending_attribute_values[pending_attribute_values[0] + 1] = attribute_value
+  call ddSuccess
+  return 0
+
+ddLink: procedure = .int expose open_ active_ pending_links last_error last_rc failed_ first_error session_failed session_error
+  arg target = .string, link_type = "contains", position = 0, slot = ""
+  if open_ = 0 | active_ = 0 then return ddFail("link requires an active definition")
+  if session_failed <> 0 then return ddSequenceFailure()
+  if failed_ <> 0 then return ddDefinitionFailure()
+  if target = "" | link_type = "" | facadeInvalidText(target) | facadeInvalidText(link_type) | facadeInvalidText(slot) then return ddFail("invalid link")
+  pending_links[pending_links[0] + 1] = target || "|" || link_type || "|" || position || "|" || slot
+  call ddSuccess
+  return 0
+
+ddEnd: procedure = .int expose dictionary open_ active_ last_error last_rc block_active block_failed block_error block_rc session_failed session_error session_rc
+  if session_failed <> 0 then do
+    last_error = session_error
+    last_rc = session_rc
+    return session_rc
+  end
+  if open_ = 0 then return ddFail("no active definition")
+  if block_active = 0 & active_ = 0 then return ddFail("no active definition")
+  if active_ <> 0 then do
+    rc = ddCompleteActive()
+    if rc <> 0 then return rc
+  end
+  if block_active <> 0 then do
+    rc = dictionary.commitTransaction()
+    if rc <> 0 then do
+      if dictionary.rollbackTransaction() <> 0 then last_error = "explicit block commit failed; rollback failed"
+      else last_error = "explicit block commit failed rc=" || rc
+      block_active = 0
+      block_failed = 0
+      block_error = ""
+      block_rc = 0
+      session_failed = 1
+      session_error = last_error
+      session_rc = rc
+      last_rc = rc
+      return rc
+    end
+    block_active = 0
+    block_failed = 0
+    block_error = ""
+    block_rc = 0
+  end
+  call ddSuccess
+  return 0
+
+ddCompleteActive: procedure = .int expose dictionary active_ current_name current_type current_description replace_ pending_aliases pending_attribute_names pending_attribute_values pending_links last_error last_rc failed_ first_error session_failed session_error session_rc block_active block_failed block_error block_rc
+  if active_ = 0 then return 0
+  if failed_ <> 0 then do
+    error_text = first_error
+    if block_active <> 0 then return ddBlockRollback(error_text, -1)
+    active_ = 0
+    failed_ = 0
+    first_error = ""
+    session_failed = 1
+    session_error = error_text
+    session_rc = -1
+    last_error = error_text
+    last_rc = -1
+    return -1
+  end
+  member_id = .int
+  dummy_count = .int
+  failure_operation = .string
+  if replace_ = 2 then do
+    manage_transaction = 1
+    if block_active <> 0 then manage_transaction = 0
+    rc = dictionary.amendMemberWithDetails(current_name, current_type, current_description, pending_attribute_names, pending_attribute_values, pending_links, member_id, failure_operation, manage_transaction)
+    active_ = 0
+    if rc <> 0 then do
+      if failure_operation = "" then failure_operation = "ddAmend"
+      last_error = current_name || ": " || failure_operation || " rc=" || rc
+      replace_ = 0
+      if block_active <> 0 then return ddBlockRollback(last_error, rc)
+      session_failed = 1
+      session_error = last_error
+      session_rc = rc
+      last_rc = rc
+      return rc
+    end
+    replace_ = 0
+    failed_ = 0
+    first_error = ""
+    call ddSuccess
+    return 0
+  end
+  replace_transaction = 0
+  if replace_ <> 0 then do
+    if block_active = 0 then do
+      rc = dictionary.beginTransaction()
+      if rc <> 0 then do
+        active_ = 0
+        replace_ = 0
+        last_error = current_name || ": ddReplace begin rc=" || rc
+        session_failed = 1
+        session_error = last_error
+        session_rc = rc
+        last_rc = rc
+        return rc
+      end
+      replace_transaction = 1
+    end
+    rc = dictionary.removeMemberForReplace(current_name, 0)
+    if rc < 0 then do
+      active_ = 0
+      replace_ = 0
+      last_error = current_name || ": ddReplace remove rc=" || rc
+      if replace_transaction <> 0 then call dictionary.rollbackTransaction()
+      if block_active <> 0 then return ddBlockRollback(last_error, rc)
+      session_failed = 1
+      session_error = last_error
+      session_rc = rc
+      last_rc = rc
+      return rc
+    end
+  end
+  manage_transaction = 1
+  if block_active <> 0 | replace_transaction <> 0 then manage_transaction = 0
+  rc = dictionary.defineMemberWithDetails(current_name, current_type, current_description, pending_aliases, pending_attribute_names, pending_attribute_values, pending_links, member_id, dummy_count, failure_operation, manage_transaction)
+  active_ = 0
+  if rc <> 0 then do
+    if failure_operation = "" then failure_operation = "ddEnd"
+    last_error = current_name || ": " || failure_operation || " rc=" || rc
+    failed_ = 0
+    first_error = ""
+    replace_ = 0
+    if replace_transaction <> 0 then call dictionary.rollbackTransaction()
+    if block_active <> 0 then return ddBlockRollback(last_error, rc)
+    session_failed = 1
+    session_error = last_error
+    session_rc = rc
+    last_rc = rc
+    return rc
+  end
+  if replace_transaction <> 0 then do
+    rc = dictionary.commitTransaction()
+    if rc <> 0 then do
+      replace_ = 0
+      call dictionary.rollbackTransaction()
+      last_error = current_name || ": ddReplace commit rc=" || rc
+      session_failed = 1
+      session_error = last_error
+      session_rc = rc
+      last_rc = rc
+      return rc
+    end
+  end
+  replace_ = 0
+  failed_ = 0
+  first_error = ""
+  call ddSuccess
+  return 0
+
+ddBlockRollback: procedure = .int expose dictionary active_ block_active block_failed block_error block_rc session_failed session_error session_rc last_error last_rc
+  arg error_text = .string, error_rc = .int
+  cleanup_rc = dictionary.rollbackTransaction()
+  active_ = 0
+  block_active = 0
+  block_failed = 1
+  block_error = error_text
+  block_rc = error_rc
+  session_failed = 1
+  session_error = error_text
+  session_rc = error_rc
+  last_error = error_text
+  last_rc = error_rc
+  if cleanup_rc <> 0 then do
+    last_error = error_text || "; explicit block rollback failed"
+    session_error = last_error
+    session_rc = -6
+    last_rc = -6
+    return -6
+  end
+  return error_rc
+
+ddBlockFail: procedure = .int expose block_active
+  arg message = .string
+  return ddBlockRollback(message, -1)
+
+ddLastError: procedure = .string expose last_error
+  return last_error
+
+ddFrameReport: procedure = .string[]
+  arg title = .string, body = .string[]
+  framed = .string[]
+  framed[1] = "REPORT OF " || title
+  framed[2] = copies("=", length(framed[1]))
+  do i = 1 to body[0]
+    framed[framed[0] + 1] = body[i]
+  end
+  framed[framed[0] + 1] = copies("=", length(framed[1]))
+  framed[framed[0] + 1] = "END OF " || title
+  return framed
+
+ddRc: procedure = .int expose last_rc
+  return last_rc
+
+ddList: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  arg member_type = "", prefix = "", any_string = ""
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddList: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddList: complete the active definition first")
+    return lines
+  end
+  rows = .string[]
+  rc = dictionary.listMembersWithFilters(member_type, prefix, any_string, rows)
+  if rc <> 0 then do
+    call ddReportFail("ddList query rc=" || rc)
+    return lines
+  end
+  rc = report.formatMembers(rows, lines)
+  if rc <> 0 then do
+    call ddReportFail("ddList format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport("MEMBERS", lines)
+  call ddSuccess
+  return lines
+
+ddMembers: procedure = .string[] expose last_error last_rc
+  arg member_type = ""
+  return ddList(member_type, "", "")
+
+ddListMembers: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  arg selected = .string[], member_type = "", prefix = "", any_string = ""
+  /* member_type is case-insensitive; name filters are case-sensitive. */
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddListMembers: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddListMembers: complete the active definition first")
+    return lines
+  end
+  rows = .string[]
+  do i = 1 to selected[0]
+    row = ""
+    rc = dictionary.getMemberListRow(selected[i], row)
+    if rc = 0 then do
+      name = ddSelectionField(row, 1)
+      row_type = ddSelectionField(row, 2)
+      if (member_type = "" | ddTypeMatches(row_type, member_type)) & ,
+         (prefix = "" | left(name, length(prefix)) = prefix) & ,
+         (any_string = "" | pos(any_string, name) > 0) then
+        rows[rows[0] + 1] = row
+    end
+    else if rc <> 1 then do
+      call ddReportFail("ddListMembers query rc=" || rc)
+      return lines
+    end
+  end
+  rc = report.formatMembers(rows, lines)
+  if rc <> 0 then do
+    call ddReportFail("ddListMembers format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport("MEMBERS", lines)
+  call ddSuccess
+  return lines
+
+ddMemberNames: procedure = .string[] expose dictionary open_ active_ last_error last_rc
+  arg member_type = "", prefix = "", any_string = ""
+  names = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddMemberNames: dictionary is not open")
+    return names
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddMemberNames: complete the active definition first")
+    return names
+  end
+  rows = .string[]
+  rc = dictionary.listMembersWithFilters(member_type, prefix, any_string, rows)
+  if rc <> 0 then do
+    call ddReportFail("ddMemberNames query rc=" || rc)
+    return names
+  end
+  do i = 1 to rows[0]
+    name = ddSelectionField(rows[i], 1)
+    if ddSelectionContains(names, name) = 0 then names[names[0] + 1] = name
+  end
+  call ddSuccess
+  return names
+
+ddBomNames: procedure = .string[] expose dictionary open_ active_ last_error last_rc
+  arg member_name = .string, max_depth = 0, link_type = ""
+  names = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddBomNames: dictionary is not open")
+    return names
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddBomNames: complete the active definition first")
+    return names
+  end
+  rows = .string[]
+  rc = dictionary.executeCommand("BOM", member_name, rows, max_depth, link_type)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddBomNames query rc=" || rc)
+    return names
+  end
+  do i = 1 to rows[0]
+    name = ddSelectionField(rows[i], 2)
+    if ddSelectionContains(names, name) = 0 then names[names[0] + 1] = name
+  end
+  call ddSuccess
+  return names
+
+ddWhereUsedNames: procedure = .string[] expose dictionary open_ active_ last_error last_rc
+  arg member_name = .string, max_depth = 0, link_type = ""
+  names = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddWhereUsedNames: dictionary is not open")
+    return names
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddWhereUsedNames: complete the active definition first")
+    return names
+  end
+  rows = .string[]
+  rc = dictionary.executeCommand("WHERE_USED", member_name, rows, max_depth, link_type)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddWhereUsedNames query rc=" || rc)
+    return names
+  end
+  do i = 1 to rows[0]
+    name = ddSelectionField(rows[i], 2)
+    if ddSelectionContains(names, name) = 0 then names[names[0] + 1] = name
+  end
+  call ddSuccess
+  return names
+
+ddSelectionContains: procedure = .int
+  arg names = .string[], wanted = .string
+  do i = 1 to names[0]
+    if names[i] = wanted then return 1
+  end
+  return 0
+
+ddSelectionField: procedure = .string
+  arg row = .string, number = .int
+  rest = row
+  do i = 1 to number - 1
+    separator = pos("|", rest)
+    if separator = 0 then return ""
+    rest = substr(rest, separator + 1)
+  end
+  separator = pos("|", rest)
+  if separator = 0 then return rest
+  return left(rest, separator - 1)
+
+ddTypeMatches: procedure = .int
+  arg actual = .string, requested = .string
+  return translate(actual, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz") = ,
+    translate(requested, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
+
+ddKeep: procedure = .string[] expose last_error last_rc
+  arg first = .string[], second = .string[]
+  result = .string[]
+  do i = 1 to first[0]
+    if ddSelectionContains(result, first[i]) = 0 then result[result[0] + 1] = first[i]
+  end
+  do i = 1 to second[0]
+    if ddSelectionContains(result, second[i]) = 0 then result[result[0] + 1] = second[i]
+  end
+  call ddSuccess
+  return result
+
+ddDrop: procedure = .string[] expose last_error last_rc
+  arg first = .string[], excluded = .string[]
+  result = .string[]
+  do i = 1 to first[0]
+    if ddSelectionContains(excluded, first[i]) = 0 then ,
+      if ddSelectionContains(result, first[i]) = 0 then result[result[0] + 1] = first[i]
+  end
+  call ddSuccess
+  return result
+
+ddPrint: procedure = .int expose last_error last_rc
+  arg lines = .string[]
+  do i = 1 to lines[0]
+    say lines[i]
+  end
+  call ddSuccess
+  return 0
+
+/** Run one supported report for each selected exact member name. */
+ddPerform: procedure = .string[] expose open_ active_ last_error last_rc
+  arg selected = .string[], command = .string, max_depth = 0, link_type = "", print_lines = 0
+  lines = .string[]
+  operation = translate(strip(command), "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+  if operation <> "member_report" & operation <> "member_details" & operation <> "attributes" & ,
+     operation <> "bom" & operation <> "where_used" & operation <> "list_aliases" then do
+    call ddReportFail("ddPerform: unsupported report " || command)
+    return lines
+  end
+  do i = 1 to selected[0]
+    member_name = selected[i]
+    if operation = "member_report" then result = ddMemberReport(member_name)
+    else if operation = "member_details" then result = ddMemberDetails(member_name)
+    else if operation = "attributes" then result = ddAttributes(member_name)
+    else if operation = "bom" then result = ddBom(member_name, max_depth, link_type)
+    else if operation = "where_used" then result = ddWhereUsed(member_name, max_depth, link_type)
+    else result = ddListAliases(member_name)
+    rc = ddRc()
+    if rc <> 0 then do
+      detail = ddLastError()
+      call ddReportFail(member_name || ": ddPerform " || command || " failed: " || detail)
+      empty = .string[]
+      return empty
+    end
+    do j = 1 to result[0]
+      lines[lines[0] + 1] = result[j]
+    end
+    if i < selected[0] then lines[lines[0] + 1] = ""
+  end
+  call ddSuccess
+  if print_lines <> 0 then call ddPrint lines
+  return lines
+
+ddDummies: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddDummies: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddDummies: complete the active definition first")
+    return lines
+  end
+  rows = .string[]
+  rc = dictionary.executeCommand("DUMMIES", "", rows)
+  if rc <> 0 then do
+    call ddReportFail("ddDummies query rc=" || rc)
+    return lines
+  end
+  rc = report.formatDummies(rows, lines)
+  if rc <> 0 then do
+    call ddReportFail("ddDummies format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport("DUMMIES", lines)
+  call ddSuccess
+  return lines
+
+ddFindAlias: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  arg alias = .string, alias_type = ""
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddFindAlias: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddFindAlias: complete the active definition first")
+    return lines
+  end
+  rows = .string[]
+  rc = dictionary.executeCommand("ALIAS", alias, rows, 0, "", alias_type)
+  if rc <> 0 then do
+    call ddReportFail(alias || ": ddFindAlias query rc=" || rc)
+    return lines
+  end
+  rc = report.formatAliasMatches(rows, lines)
+  if rc <> 0 then do
+    call ddReportFail(alias || ": ddFindAlias format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport("ALIAS " || alias, lines)
+  call ddSuccess
+  return lines
+
+ddListAliases: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  arg member_name = .string
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddListAliases: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddListAliases: complete the active definition first")
+    return lines
+  end
+  member_id = .int
+  rc = dictionary.getMemberId(member_name, member_id)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddListAliases query rc=" || rc)
+    return lines
+  end
+  rows = .string[]
+  rc = dictionary.listAliases(member_id, rows)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddListAliases query rc=" || rc)
+    return lines
+  end
+  rc = report.formatAliases(rows, lines)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddListAliases format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport(member_name || " ALIASES", lines)
+  call ddSuccess
+  return lines
+
+ddListAllAliases: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddListAllAliases: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddListAllAliases: complete the active definition first")
+    return lines
+  end
+  rows = .string[]
+  rc = dictionary.listAllAliases(rows)
+  if rc <> 0 then do
+    call ddReportFail("ddListAllAliases query rc=" || rc)
+    return lines
+  end
+  rc = report.formatAllAliases(rows, lines)
+  if rc <> 0 then do
+    call ddReportFail("ddListAllAliases format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport("ALL ALIASES", lines)
+  call ddSuccess
+  return lines
+
+ddMemberDetails: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  arg member_name = .string
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddMemberDetails: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddMemberDetails: complete the active definition first")
+    return lines
+  end
+  row = ""
+  rc = dictionary.getMemberDetails(member_name, row)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddMemberDetails query rc=" || rc)
+    return lines
+  end
+  rc = report.formatMemberDetails(row, lines)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddMemberDetails format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport(member_name, lines)
+  call ddSuccess
+  return lines
+
+ddAttributes: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  arg member_name = .string
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddAttributes: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddAttributes: complete the active definition first")
+    return lines
+  end
+  member_id = .int
+  rc = dictionary.getMemberId(member_name, member_id)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddAttributes query rc=" || rc)
+    return lines
+  end
+  rows = .string[]
+  rc = dictionary.listAttributes(member_id, rows)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddAttributes query rc=" || rc)
+    return lines
+  end
+  rc = report.formatAttributes(rows, lines)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddAttributes format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport(member_name, lines)
+  call ddSuccess
+  return lines
+
+ddMemberReport: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  arg member_name = .string
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddMemberReport: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddMemberReport: complete the active definition first")
+    return lines
+  end
+  details = ""
+  rc = dictionary.getMemberDetails(member_name, details)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddMemberReport query rc=" || rc)
+    return lines
+  end
+  member_id = .int
+  rc = dictionary.getMemberId(member_name, member_id)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddMemberReport query rc=" || rc)
+    return lines
+  end
+  attributes = .string[]
+  outgoing = .string[]
+  incoming = .string[]
+  rc = dictionary.listAttributes(member_id, attributes)
+  if rc = 0 then rc = dictionary.getSuccessorLinks(member_id, outgoing)
+  if rc = 0 then rc = dictionary.getCallerLinks(member_id, incoming)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddMemberReport query rc=" || rc)
+    return lines
+  end
+  rc = report.formatMemberReport(details, attributes, outgoing, incoming, lines)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddMemberReport format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  call ddSuccess
+  return lines
+
+ddBom: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  arg member_name = .string, max_depth = 0, link_type = ""
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddBom: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddBom: complete the active definition first")
+    return lines
+  end
+  rows = .string[]
+  rc = dictionary.executeCommand("BOM", member_name, rows, max_depth, link_type)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddBom query rc=" || rc)
+    return lines
+  end
+  rc = report.formatNested(rows, lines, 8)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddBom format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport(member_name, lines)
+  call ddSuccess
+  return lines
+
+ddWhereUsed: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
+  arg member_name = .string, max_depth = 0, link_type = ""
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddWhereUsed: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddWhereUsed: complete the active definition first")
+    return lines
+  end
+  rows = .string[]
+  rc = dictionary.executeCommand("WHERE_USED", member_name, rows, max_depth, link_type)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddWhereUsed query rc=" || rc)
+    return lines
+  end
+  rc = report.formatNested(rows, lines, 8)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddWhereUsed format rc=" || rc)
+    empty = .string[]
+    return empty
+  end
+  lines = ddFrameReport(member_name, lines)
+  call ddSuccess
+  return lines
+
+ddReportFail: procedure = .int expose last_error last_rc
+  arg message = .string
+  last_error = message
+  last_rc = -1
+  return -1
+
+ddFail: procedure = .int expose last_error last_rc active_ failed_ first_error current_name
+  arg message = .string
+  if active_ <> 0 then last_error = current_name || ": " || message
+  else last_error = message
+  last_rc = -1
+  if active_ <> 0 & failed_ = 0 then do
+    failed_ = 1
+    first_error = last_error
+  end
+  return -1
+
+ddSuccess: procedure = .int expose last_error last_rc
+  last_error = ""
+  last_rc = 0
+  return 0
+
+ddSequenceFailure: procedure = .int expose last_error last_rc session_error session_rc
+  last_error = session_error
+  last_rc = session_rc
+  return session_rc
+
+ddDefinitionFailure: procedure = .int expose last_error last_rc first_error
+  last_error = first_error
+  last_rc = -1
+  return -1
+
+facadeInvalidText: procedure = .int
+  arg value = .string
+  return pos("|", value) <> 0

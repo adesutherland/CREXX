@@ -1,0 +1,55 @@
+/* Independent consumer check for the state-free dictionary report formatter. */
+options levelb
+
+import data_DataDictionaryReport
+import rxfnsb
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: dictionary report " || label
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+  report = .DataDictionaryReport()
+  errors = 0
+  i = 0
+
+  members = .string[]
+  members[1] = "SHORT|FIELD|0|1"
+  members[2] = "A_VERY_LONG_MEMBER_NAME|RECORD|12|3"
+  lines = .string[]
+  errors = errors + check(report.formatMembers(members, lines) = 0, "members")
+  errors = errors + check(lines[0] = 4, "members line count")
+  errors = errors + check(pos("A_VERY_LONG_MEMBER_NAME", lines[4]) > 0, "members width")
+
+  occurrences = .string[]
+  occurrences[1] = "DATE|contains|9|effective_date"
+  occurrences[2] = "DATE|contains|10|review_date"
+  lines = .string[]
+  errors = errors + check(report.formatOccurrences(occurrences, lines) = 0, "occurrences")
+  errors = errors + check(pos("effective_date", lines[3]) > 0, "first occurrence")
+  errors = errors + check(pos("review_date", lines[4]) > 0, "second occurrence")
+
+  nested = .string[]
+  nested[1] = "0|CUSTOMER_RECORD|ROOT|0||"
+  nested[2] = "1|DATE|contains|9|effective_date|"
+  nested[3] = "12|VERY_DEEP_MEMBER|contains|10|deep|"
+  lines = .string[]
+  errors = errors + check(report.formatNested(nested, lines, 2) = 0, "nested")
+  errors = errors + check(pos("indentation capped", lines[3]) > 0, "nested cap")
+  errors = errors + check(pos("CUSTOMER_RECORD", lines[4]) > 0, "nested root")
+
+  malformed = .string[]
+  malformed[1] = "not|a|member-row"
+  lines = .string[]
+  errors = errors + check(report.formatMembers(malformed, lines) = -2, "malformed row")
+
+  if errors <> 0 then do
+    say "FAIL: dictionary report errors=" || errors
+    return 1
+  end
+  say "PASS: dictionary report formatting"
+  return 0

@@ -1,0 +1,1779 @@
+/*
+ * Initial SQLite-backed data dictionary storage API.
+ *
+ * SQL and schema details intentionally remain inside this class. Callers use
+ * members, aliases, attributes, references and typed member-list results
+ * instead.
+ */
+options levelb comments_dash
+
+import rxsqlite
+import rxfnsb
+
+namespace data_DataDictionary expose DataDictionary
+
+DataDictionary: class
+
+  database_ = .binary
+  open_ = .int
+
+  *: factory
+    open_ = 0
+    return
+
+  /** Open or create a dictionary and initialise schema version 7. */
+  open: method = .int
+    arg filename = .string
+    if open_ <> 0 then return -1
+    if sqliteopenmode(filename, "create", database_) <> 0 then return -6
+    if sqliteexec(database_, "PRAGMA foreign_keys=ON") <> 0 then do
+      call sqliteclose database_
+      return -6
+    end
+
+    foreign_keys = 0
+    if readInt("PRAGMA foreign_keys", foreign_keys) <> 0 | foreign_keys <> 1 then do
+      call sqliteclose database_
+      return -6
+    end
+
+    version = 0
+    if readInt("PRAGMA user_version", version) <> 0 then do
+      call sqliteclose database_
+      return -6
+    end
+    if version <> 0 & version <> 1 & version <> 2 & version <> 3 & version <> 4 & version <> 5 & version <> 6 & version <> 7 then do
+      call sqliteclose database_
+      return -7
+    end
+
+    schema = "CREATE TABLE IF NOT EXISTS member (" || ,
+      "member_id INTEGER PRIMARY KEY, " || ,
+      "member_name TEXT NOT NULL COLLATE BINARY UNIQUE, " || ,
+      "member_type TEXT NOT NULL, " || ,
+      "description TEXT, " || ,
+      "is_dummy INTEGER NOT NULL DEFAULT 0 CHECK(is_dummy IN (0,1))); " || ,
+      "CREATE TABLE IF NOT EXISTS member_attribute (" || ,
+      "member_id INTEGER NOT NULL REFERENCES member(member_id) ON DELETE CASCADE, " || ,
+      "attribute_name TEXT NOT NULL, " || ,
+      "attribute_value TEXT NOT NULL, " || ,
+      "PRIMARY KEY(member_id, attribute_name)); " || ,
+      "CREATE INDEX IF NOT EXISTS idx_attribute_name " || ,
+      "ON member_attribute(attribute_name); " || ,
+      "CREATE TABLE IF NOT EXISTS member_alias (" || ,
+      "member_id INTEGER NOT NULL REFERENCES member(member_id) ON DELETE CASCADE, " || ,
+      "alias TEXT NOT NULL COLLATE BINARY, " || ,
+      "alias_type TEXT COLLATE BINARY, PRIMARY KEY(member_id, alias, alias_type)); " || ,
+      "CREATE TABLE IF NOT EXISTS member_reference (" || ,
+      "caller_id INTEGER NOT NULL REFERENCES member(member_id) ON DELETE RESTRICT, " || ,
+      "successor_id INTEGER NOT NULL REFERENCES member(member_id) ON DELETE RESTRICT, " || ,
+      "link_type TEXT NOT NULL DEFAULT 'contains', " || ,
+      "position INTEGER NOT NULL CHECK(position > 0), " || ,
+      "link_syntax TEXT NOT NULL DEFAULT '', " || ,
+      "PRIMARY KEY(caller_id, position))"
+    if sqliteexec(database_, schema) <> 0 then do
+      call sqliteclose database_
+      return -6
+    end
+
+    if version = 1 | version = 2 | version = 3 then do
+      if sqliteexec(database_, "BEGIN") <> 0 then do
+        call sqliteclose database_
+        return -6
+      end
+      if sqliteexec(database_, "ALTER TABLE member ADD COLUMN is_dummy INTEGER NOT NULL DEFAULT 0 CHECK(is_dummy IN (0,1))") <> 0 | ,
+         sqliteexec(database_, "CREATE TABLE member_reference_new (caller_id INTEGER NOT NULL REFERENCES member(member_id) ON DELETE RESTRICT, successor_id INTEGER NOT NULL REFERENCES member(member_id) ON DELETE RESTRICT, link_type TEXT NOT NULL DEFAULT 'contains', position INTEGER NOT NULL CHECK(position > 0), link_syntax TEXT NOT NULL DEFAULT '', PRIMARY KEY(caller_id, position))") <> 0 | ,
+         sqliteexec(database_, "INSERT INTO member_reference_new(caller_id, successor_id, link_type, position, link_syntax) SELECT r1.caller_id, r1.successor_id, 'contains', (SELECT count(*) FROM member_reference r2 WHERE r2.caller_id=r1.caller_id AND r2.rowid<=r1.rowid), '' FROM member_reference r1") <> 0 | ,
+         sqliteexec(database_, "DROP TABLE member_reference") <> 0 | ,
+         sqliteexec(database_, "ALTER TABLE member_reference_new RENAME TO member_reference") <> 0 | ,
+         sqliteexec(database_, "CREATE INDEX idx_reference_successor ON member_reference(successor_id)") <> 0 | sqliteexec(database_, "COMMIT") <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        call sqliteclose database_
+        return -6
+      end
+    end
+    if version = 4 then do
+      if sqliteexec(database_, "BEGIN") <> 0 then do
+        call sqliteclose database_
+        return -6
+      end
+      if sqliteexec(database_, "ALTER TABLE member ADD COLUMN is_dummy INTEGER NOT NULL DEFAULT 0 CHECK(is_dummy IN (0,1))") <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        call sqliteclose database_
+        return -6
+      end
+      if sqliteexec(database_, "COMMIT") <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        call sqliteclose database_
+        return -6
+      end
+    end
+    if version = 0 then do
+      if sqliteexec(database_, "PRAGMA user_version=7") <> 0 then do
+        call sqliteclose database_
+        return -6
+      end
+    end
+    if version = 1 | version = 2 | version = 3 | version = 4 | version = 5 | version = 6 then do
+      if sqliteexec(database_, "BEGIN") <> 0 then do
+        call sqliteclose database_
+        return -6
+      end
+      if sqliteexec(database_, "CREATE TABLE member_alias_new (member_id INTEGER NOT NULL REFERENCES member(member_id) ON DELETE CASCADE, alias TEXT NOT NULL COLLATE BINARY, alias_type TEXT COLLATE BINARY, PRIMARY KEY(member_id, alias, alias_type))") <> 0 | ,
+         sqliteexec(database_, "INSERT INTO member_alias_new(member_id, alias, alias_type) SELECT member_id, alias, NULL FROM member_alias") <> 0 | ,
+         sqliteexec(database_, "DROP TABLE member_alias") <> 0 | ,
+         sqliteexec(database_, "ALTER TABLE member_alias_new RENAME TO member_alias") <> 0 | ,
+         sqliteexec(database_, "CREATE UNIQUE INDEX idx_alias_typed ON member_alias(member_id, alias_type) WHERE alias_type IS NOT NULL") <> 0 | ,
+         sqliteexec(database_, "CREATE UNIQUE INDEX idx_alias_untyped ON member_alias(member_id, alias) WHERE alias_type IS NULL") <> 0 | ,
+         sqliteexec(database_, "PRAGMA user_version=7") <> 0 | sqliteexec(database_, "COMMIT") <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        call sqliteclose database_
+        return -6
+      end
+    end
+    if sqliteexec(database_, "CREATE UNIQUE INDEX IF NOT EXISTS idx_alias_typed ON member_alias(member_id, alias_type) WHERE alias_type IS NOT NULL; CREATE UNIQUE INDEX IF NOT EXISTS idx_alias_untyped ON member_alias(member_id, alias) WHERE alias_type IS NULL; CREATE INDEX IF NOT EXISTS idx_reference_successor ON member_reference(successor_id); CREATE UNIQUE INDEX IF NOT EXISTS idx_reference_identity ON member_reference(caller_id, successor_id, link_type, position)") <> 0 then do
+      call sqliteclose database_
+      return -6
+    end
+    if backfillUpperAliases() <> 0 then do
+      call sqliteclose database_
+      return -8
+    end
+    if sqliteexec(database_, "UPDATE member SET member_type=upper(member_type) WHERE is_dummy=0") <> 0 then do
+      call sqliteclose database_
+      return -6
+    end
+    open_ = 1
+    return 0
+
+  /** Close the dictionary connection. */
+  close: method = .int
+    if open_ = 0 then return 0
+    rc = sqliteclose(database_)
+    open_ = 0
+    return rc
+
+  /** Add a member and expose its stable identifier. */
+  addMember: method = .int
+    arg name = .string, member_type = .string, description = .string, expose member_id = .int
+    if open_ = 0 | name = "" | member_type = "" then return -1
+    member_type = asciiUpper(member_type)
+    existing_id = 0
+    existing_dummy = 0
+    if findMemberState(name, existing_id, existing_dummy) = 0 then return -3
+    if sqliteexec(database_, "BEGIN") <> 0 then return -6
+    statement = .binary
+    if sqliteprepare(database_, "INSERT INTO member(member_name, member_type, description) VALUES(?1, ?2, ?3)", statement) <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if sqlitebindtext(statement, 1, name) <> 0 | ,
+       sqlitebindtext(statement, 2, member_type) <> 0 | ,
+       sqlitebindtext(statement, 3, description) <> 0 then do
+      call sqlitefinalize statement
+      call sqliteexec database_, "ROLLBACK"
+      return -1
+    end
+    if sqlitestep(statement) <> 101 then do
+      call sqlitefinalize statement
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if sqlitefinalize(statement) <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    member_id = 0
+    if readInt("SELECT last_insert_rowid()", member_id) <> 0 | ensureUpperAlias(member_id, name) <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if sqliteexec(database_, "COMMIT") <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    return 0
+
+  /** Begin an explicit transaction on the dictionary connection. */
+  beginTransaction: method = .int
+    if open_ = 0 then return -1
+    if sqliteexec(database_, "BEGIN") <> 0 then return -6
+    return 0
+
+  /** Commit an explicit transaction on the dictionary connection. */
+  commitTransaction: method = .int
+    if open_ = 0 then return -1
+    if sqliteexec(database_, "COMMIT") <> 0 then return -6
+    return 0
+
+  /** Roll back an explicit transaction on the dictionary connection. */
+  rollbackTransaction: method = .int
+    if open_ = 0 then return -1
+    if sqliteexec(database_, "ROLLBACK") <> 0 then return -6
+    return 0
+
+  beginDefinitionTransaction: method = .int
+    arg manage_transaction = .int
+    if manage_transaction <> 0 then return beginTransaction()
+    if sqliteexec(database_, "SAVEPOINT dd_member") <> 0 then return -6
+    return 0
+
+  commitDefinitionTransaction: method = .int
+    arg manage_transaction = .int
+    if manage_transaction <> 0 then return commitTransaction()
+    if sqliteexec(database_, "RELEASE SAVEPOINT dd_member") <> 0 then return -6
+    return 0
+
+  rollbackDefinitionTransaction: method = .int
+    arg manage_transaction = .int
+    if manage_transaction <> 0 then return rollbackTransaction()
+    if sqliteexec(database_, "ROLLBACK TO SAVEPOINT dd_member") <> 0 then return -6
+    if sqliteexec(database_, "RELEASE SAVEPOINT dd_member") <> 0 then return -6
+    return 0
+
+  /** Remove a member, retaining it as a dummy while external callers use it. */
+  removeMember: method = .int
+    arg name = .string, manage_transaction = 1
+    if open_ = 0 | name = "" then return -1
+    if beginDefinitionTransaction(manage_transaction) <> 0 then return -6
+    member_id = 0
+    dummy_flag = 0
+    rc = findMemberState(name, member_id, dummy_flag)
+    if rc = 1 then do
+      call commitDefinitionTransaction(manage_transaction)
+      return 1
+    end
+    if rc <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    links = .string[]
+    incoming_count = .int
+    if getSuccessorLinks(member_id, links) <> 0 | ,
+       readInt("SELECT count(*) FROM member_reference WHERE successor_id=" || member_id || " AND caller_id<>" || member_id, incoming_count) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    if sqliteexec(database_, "DELETE FROM member_reference WHERE caller_id=" || member_id) <> 0 | ,
+       sqliteexec(database_, "DELETE FROM member_alias WHERE member_id=" || member_id) <> 0 | ,
+       sqliteexec(database_, "DELETE FROM member_attribute WHERE member_id=" || member_id) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    if incoming_count = 0 then do
+      if sqliteexec(database_, "DELETE FROM member WHERE member_id=" || member_id) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+    end
+    else if sqliteexec(database_, "UPDATE member SET member_type='', description='', is_dummy=1 WHERE member_id=" || member_id) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    do link_index = 1 to links[0]
+      target_name = field(links[link_index], 1)
+      target_id = 0
+      target_dummy = 0
+      rc = findMemberState(target_name, target_id, target_dummy)
+      if rc = 0 & target_id <> member_id & target_dummy <> 0 then do
+        usage = 0
+        if readInt("SELECT count(*) FROM member_reference WHERE successor_id=" || target_id, usage) <> 0 then do
+          call rollbackDefinitionTransaction(manage_transaction)
+          return -6
+        end
+        if usage = 0 then if sqliteexec(database_, "DELETE FROM member WHERE member_id=" || target_id) <> 0 then do
+          call rollbackDefinitionTransaction(manage_transaction)
+          return -6
+        end
+      end
+    end
+    if commitDefinitionTransaction(manage_transaction) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    return 0
+
+  /** Prepare one member for atomic replacement while preserving its identity. */
+  removeMemberForReplace: method = .int
+    arg name = .string, manage_transaction = 1
+    if open_ = 0 | name = "" then return -1
+    if beginDefinitionTransaction(manage_transaction) <> 0 then return -6
+    member_id = 0
+    dummy_flag = 0
+    rc = findMemberState(name, member_id, dummy_flag)
+    if rc = 1 then do
+      if commitDefinitionTransaction(manage_transaction) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+      return 1
+    end
+    if rc <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    links = .string[]
+    if getSuccessorLinks(member_id, links) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    /* Keep incoming references: replacement changes this member in place. */
+    if sqliteexec(database_, "DELETE FROM member_reference WHERE caller_id=" || member_id) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    if sqliteexec(database_, "DELETE FROM member_alias WHERE member_id=" || member_id) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    if sqliteexec(database_, "DELETE FROM member_attribute WHERE member_id=" || member_id) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    /* The normal definition path completes an existing dummy in place. */
+    if sqliteexec(database_, "UPDATE member SET member_type='', description='', is_dummy=1 WHERE member_id=" || member_id) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    do link_index = 1 to links[0]
+      target_name = field(links[link_index], 1)
+      target_id = 0
+      target_dummy = 0
+      rc = findMemberState(target_name, target_id, target_dummy)
+      if rc = 0 & target_id <> member_id & target_dummy <> 0 then do
+        usage = 0
+        if readInt("SELECT count(*) FROM member_reference WHERE successor_id=" || target_id, usage) <> 0 then do
+          call rollbackDefinitionTransaction(manage_transaction)
+          return -6
+        end
+        if usage = 0 then if sqliteexec(database_, "DELETE FROM member WHERE member_id=" || target_id) <> 0 then do
+          call rollbackDefinitionTransaction(manage_transaction)
+          return -6
+        end
+      end
+    end
+    if commitDefinitionTransaction(manage_transaction) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    return 0
+
+  /**
+   * Define one member, aliases and ordered link rows atomically.
+   *
+   * Link rows use target_name|link_type|position|link_syntax. A missing
+   * target becomes one reusable dummy member. An existing dummy is completed
+   * in place; an existing defined source returns -3 without modification.
+   */
+  defineMember: method = .int
+    arg name = .string, member_type = .string, description = .string, ,
+        aliases = .string[], links = .string[], expose member_id = .int, ,
+        expose dummy_count = .int
+    member_id = 0
+    dummy_count = 0
+    if open_ = 0 | name = "" | member_type = "" then return -1
+    member_type = asciiUpper(member_type)
+    if invalidDefinitionText(name) | invalidDefinitionText(member_type) | invalidDefinitionText(description) then return -1
+    statement = .binary
+    if sqliteexec(database_, "BEGIN") <> 0 then return -6
+
+    existing_id = 0
+    existing_dummy = 0
+    rc = findMemberState(name, existing_id, existing_dummy)
+    if rc = 0 then do
+      if existing_dummy = 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -3
+      end
+      member_id = existing_id
+      if sqliteprepare(database_, "UPDATE member SET member_type=?1, description=?2, is_dummy=0 WHERE member_id=?3", statement) <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -6
+      end
+      if sqlitebindtext(statement, 1, member_type) <> 0 | sqlitebindtext(statement, 2, description) <> 0 | sqlitebindint(statement, 3, member_id) <> 0 then do
+        call sqlitefinalize statement
+        call sqliteexec database_, "ROLLBACK"
+        return -1
+      end
+      step_rc = sqlitestep(statement)
+      call sqlitefinalize statement
+      if step_rc <> 101 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -6
+      end
+    end
+    else if rc = 1 then do
+      if insertMemberInternal(name, member_type, description, 0, member_id) <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -6
+      end
+    end
+    else do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+
+    if ensureUpperAlias(member_id, name) <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -8
+    end
+
+    do alias_index = 1 to aliases[0]
+      if aliases[alias_index] = "" | invalidDefinitionText(aliases[alias_index]) | insertAliasInternal(member_id, aliases[alias_index]) <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -4
+      end
+    end
+
+    do link_index = 1 to links[0]
+      target_name = field(links[link_index], 1)
+      target_type = field(links[link_index], 2)
+      position_text = field(links[link_index], 3)
+      link_syntax = field(links[link_index], 4)
+      position = position_text
+      if target_name = "" | target_type = "" | invalidDefinitionText(target_name) | invalidDefinitionText(target_type) | ,
+         invalidDefinitionText(link_syntax) | position < 1 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -1
+      end
+      target_id = 0
+      target_dummy = 0
+      rc = findMemberState(target_name, target_id, target_dummy)
+      if rc = 1 then do
+        if insertMemberInternal(target_name, "", "", 1, target_id) <> 0 then do
+          call sqliteexec database_, "ROLLBACK"
+          return -6
+        end
+        dummy_count = dummy_count + 1
+      end
+      else if rc <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -6
+      end
+      if insertReferenceInternal(member_id, target_id, target_type, position, link_syntax) <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -4
+      end
+    end
+
+    if sqliteexec(database_, "COMMIT") <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    return 0
+
+  /** Amend only the supplied attributes and link positions. */
+  amendMemberWithDetails: method = .int
+    arg name = .string, member_type = .string, description = .string, ,
+        attribute_names = .string[], attribute_values = .string[], links = .string[], ,
+        expose member_id = .int, expose failure_operation = .string, manage_transaction = 1
+    member_id = 0
+    failure_operation = ""
+    if open_ = 0 | name = "" | member_type = "" then return -1
+    member_type = asciiUpper(member_type)
+    if invalidDefinitionText(name) | invalidDefinitionText(member_type) | invalidDefinitionText(description) then return -1
+    if attribute_names[0] <> attribute_values[0] then return -1
+    if beginDefinitionTransaction(manage_transaction) <> 0 then return -6
+    dummy_flag = 0
+    rc = findMemberState(name, member_id, dummy_flag)
+    if rc <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      if rc = 1 then return -3
+      return -6
+    end
+    statement = .binary
+    if sqliteprepare(database_, "UPDATE member SET member_type=?1, description=?2, is_dummy=0 WHERE member_id=?3", statement) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    if sqlitebindtext(statement, 1, member_type) <> 0 | sqlitebindtext(statement, 2, description) <> 0 | sqlitebindint(statement, 3, member_id) <> 0 then do
+      call sqlitefinalize statement
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -1
+    end
+    step_rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if step_rc <> 101 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    do attribute_index = 1 to attribute_names[0]
+      failure_operation = "ddAttribute " || attribute_names[attribute_index]
+      if attribute_names[attribute_index] = "" | invalidDefinitionText(attribute_names[attribute_index]) then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -1
+      end
+      if sqliteprepare(database_, "INSERT OR REPLACE INTO member_attribute(member_id, attribute_name, attribute_value) VALUES(?1, ?2, ?3)", statement) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+      if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, attribute_names[attribute_index]) <> 0 | sqlitebindtext(statement, 3, attribute_values[attribute_index]) <> 0 then do
+        call sqlitefinalize statement
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -1
+      end
+      step_rc = sqlitestep(statement)
+      call sqlitefinalize statement
+      if step_rc <> 101 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -4
+      end
+    end
+    do link_index = 1 to links[0]
+      target_name = field(links[link_index], 1)
+      target_type = field(links[link_index], 2)
+      position_text = field(links[link_index], 3)
+      link_syntax = field(links[link_index], 4)
+      position = position_text
+      failure_operation = "ddLink " || target_name
+      if target_name = "" | target_type = "" | invalidDefinitionText(target_name) | invalidDefinitionText(target_type) | ,
+         invalidDefinitionText(link_syntax) | position < 1 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -1
+      end
+      old_target_id = 0
+      call readInt("SELECT successor_id FROM member_reference WHERE caller_id=" || member_id || " AND position=" || position, old_target_id)
+      if sqliteexec(database_, "DELETE FROM member_reference WHERE caller_id=" || member_id || " AND position=" || position) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+      target_id = 0
+      target_dummy = 0
+      rc = findMemberState(target_name, target_id, target_dummy)
+      if rc = 1 then do
+        if insertMemberInternal(target_name, "", "", 1, target_id) <> 0 then do
+          call rollbackDefinitionTransaction(manage_transaction)
+          return -6
+        end
+      end
+      else if rc <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+      if insertReferenceInternal(member_id, target_id, target_type, position, link_syntax) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -4
+      end
+      if old_target_id > 0 & old_target_id <> target_id then do
+        old_dummy = 0
+        if findMemberStateById(old_target_id, old_dummy) = 0 & old_dummy <> 0 then do
+          usage = 0
+          if readInt("SELECT count(*) FROM member_reference WHERE successor_id=" || old_target_id, usage) <> 0 then do
+            call rollbackDefinitionTransaction(manage_transaction)
+            return -6
+          end
+          if usage = 0 then if sqliteexec(database_, "DELETE FROM member WHERE member_id=" || old_target_id) <> 0 then do
+            call rollbackDefinitionTransaction(manage_transaction)
+            return -6
+          end
+        end
+      end
+    end
+    if commitDefinitionTransaction(manage_transaction) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    return 0
+
+  /**
+   * Atomic definition variant used by the procedural facade. Alias rows use
+   * alias_type|alias_value; attribute names and values are parallel arrays.
+   */
+  defineMemberWithDetails: method = .int
+    arg name = .string, member_type = .string, description = .string, ,
+        aliases = .string[], attribute_names = .string[], attribute_values = .string[], ,
+        links = .string[], expose member_id = .int, expose dummy_count = .int, expose failure_operation = .string, ,
+        manage_transaction = 1
+    member_id = 0
+    dummy_count = 0
+    failure_operation = ""
+    if open_ = 0 | name = "" | member_type = "" then return -1
+    member_type = asciiUpper(member_type)
+    if invalidDefinitionText(name) | invalidDefinitionText(member_type) | invalidDefinitionText(description) then return -1
+    if attribute_names[0] <> attribute_values[0] then return -1
+    statement = .binary
+    step_rc = .int
+    position = .int
+    if beginDefinitionTransaction(manage_transaction) <> 0 then return -6
+
+    existing_id = 0
+    existing_dummy = 0
+    rc = findMemberState(name, existing_id, existing_dummy)
+    if rc = 0 then do
+      if existing_dummy = 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -3
+      end
+      member_id = existing_id
+      if sqliteprepare(database_, "UPDATE member SET member_type=?1, description=?2, is_dummy=0 WHERE member_id=?3", statement) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+      if sqlitebindtext(statement, 1, member_type) <> 0 | sqlitebindtext(statement, 2, description) <> 0 | sqlitebindint(statement, 3, member_id) <> 0 then do
+        call sqlitefinalize statement
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -1
+      end
+      step_rc = sqlitestep(statement)
+      call sqlitefinalize statement
+      if step_rc <> 101 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+    end
+    else if rc = 1 then do
+      if insertMemberInternal(name, member_type, description, 0, member_id) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+    end
+    else do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+
+    if ensureUpperAlias(member_id, name) <> 0 then do
+      failure_operation = "generated UPPER alias"
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -8
+    end
+    do alias_index = 1 to aliases[0]
+      failure_operation = "ddAlias " || field(aliases[alias_index], 2)
+      if insertAliasSpecInternal(member_id, aliases[alias_index]) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -4
+      end
+    end
+    do attribute_index = 1 to attribute_names[0]
+      failure_operation = "ddAttribute " || attribute_names[attribute_index]
+      if attribute_names[attribute_index] = "" | invalidDefinitionText(attribute_names[attribute_index]) then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -1
+      end
+      if sqliteprepare(database_, "INSERT OR REPLACE INTO member_attribute(member_id, attribute_name, attribute_value) VALUES(?1, ?2, ?3)", statement) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+      if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, attribute_names[attribute_index]) <> 0 | sqlitebindtext(statement, 3, attribute_values[attribute_index]) <> 0 then do
+        call sqlitefinalize statement
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -1
+      end
+      step_rc = sqlitestep(statement)
+      call sqlitefinalize statement
+      if step_rc <> 101 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+    end
+    do link_index = 1 to links[0]
+      target_name = field(links[link_index], 1)
+      target_type = field(links[link_index], 2)
+      position_text = field(links[link_index], 3)
+      link_syntax = field(links[link_index], 4)
+      failure_operation = "ddLink " || target_name
+      position = position_text
+      if position < 1 then if readInt("SELECT coalesce(max(position), 0) + 1 FROM member_reference WHERE caller_id=" || member_id, position) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+      if target_name = "" | target_type = "" | invalidDefinitionText(target_name) | invalidDefinitionText(target_type) | invalidDefinitionText(link_syntax) then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -1
+      end
+      target_id = 0
+      target_dummy = 0
+      rc = findMemberState(target_name, target_id, target_dummy)
+      if rc = 1 then do
+        if insertMemberInternal(target_name, "", "", 1, target_id) <> 0 then do
+          call rollbackDefinitionTransaction(manage_transaction)
+          return -6
+        end
+        dummy_count = dummy_count + 1
+      end
+      else if rc <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -6
+      end
+      if insertReferenceInternal(member_id, target_id, target_type, position, link_syntax) <> 0 then do
+        call rollbackDefinitionTransaction(manage_transaction)
+        return -4
+      end
+    end
+    if commitDefinitionTransaction(manage_transaction) <> 0 then do
+      call rollbackDefinitionTransaction(manage_transaction)
+      return -6
+    end
+    return 0
+
+  /** List unresolved dummy members as id|name|type|description rows. */
+  listDummies: method = .int
+    arg expose result = .string[]
+    if open_ = 0 then return -1
+    statement = .binary
+    if sqliteprepare(database_, "SELECT member_id, member_name, member_type, description FROM member WHERE is_dummy=1 ORDER BY member_name", statement) <> 0 then return -6
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      id = 0
+      name = ""
+      member_type = ""
+      description = ""
+      if sqlitecolumnint(statement, 0, id) <> 0 | sqlitecolumntext(statement, 1, name) <> 0 | ,
+         sqlitecolumntext(statement, 2, member_type) <> 0 | sqlitecolumntext(statement, 3, description) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      result[result[0] + 1] = id || "|" || name || "|" || member_type || "|" || description
+    end
+    call sqlitefinalize statement
+    return 0
+
+  /** Case-insensitive member search through the generated UPPER alias. */
+  findByNameInsensitive: method = .int
+    arg member_name = .string, expose matches = .string[]
+    if member_name = "" then return -1
+    return findByAliasTyped(asciiUpper(member_name), matches, "UPPER")
+
+  /**
+   * Execute a public dictionary query command.
+   *
+   * Supported commands are MEMBERS, DUMMIES, ALIAS, SUCCESSORS, CALLERS,
+   * LINKS, BOM and WHERE_USED. The argument is a member name, alias or
+   * member type as appropriate. Results retain the existing API row shapes.
+   * BOM and WHERE_USED accept max_depth and link_type.
+   */
+  executeCommand: method = .int
+    arg command_name = .string, argument = .string, expose result = .string[], ,
+        max_depth = 0, link_type = "", alias_type = ""
+    if open_ = 0 then return -1
+    command = upper(strip(command_name))
+    if command = "MEMBERS" then return listMembersWithCounts(argument, result)
+    if command = "DUMMIES" then return listDummies(result)
+    if command = "ALIAS" then do
+      if alias_type = "" then return findByAlias(argument, result)
+      return findByAliasTyped(argument, result, alias_type)
+    end
+    if command = "SUCCESSORS" then return executeMemberQuery(argument, "SUCCESSORS", result)
+    if command = "CALLERS" then return executeMemberQuery(argument, "CALLERS", result)
+    if command = "LINKS" then return executeMemberQuery(argument, "LINKS", result)
+    if command = "BOM" then return executeWalkQuery(argument, "BOM", max_depth, link_type, result)
+    if command = "WHERE_USED" then return executeWalkQuery(argument, "WHERE_USED", max_depth, link_type, result)
+    return -2
+
+  executeMemberQuery: method = .int
+    arg member_name = .string, command = .string, expose result = .string[]
+    member_id = 0
+    if getMemberId(member_name, member_id) <> 0 then return 1
+    if command = "SUCCESSORS" then return getSuccessors(member_id, result)
+    if command = "CALLERS" then return getCallers(member_id, result)
+    if command = "LINKS" then return getSuccessorLinks(member_id, result)
+    return -2
+
+  executeWalkQuery: method = .int
+    arg member_name = .string, command = .string, max_depth = .int, link_type = .string, ,
+        expose result = .string[]
+    member_id = 0
+    if getMemberId(member_name, member_id) <> 0 then return 1
+    if command = "BOM" then return walkBOM(member_id, result, max_depth, link_type)
+    if command = "WHERE_USED" then return walkWhereUsed(member_id, result, max_depth, link_type)
+    return -2
+
+  /** Return 1 for a dummy, 0 for a defined member. */
+  isDummy: method = .int
+    arg member_id = .int, expose dummy_flag = .int
+    if open_ = 0 | member_id < 1 then return -1
+    state = 0
+    rc = findMemberStateById(member_id, state)
+    if rc <> 0 then return rc
+    dummy_flag = state
+    return 0
+
+  invalidDefinitionText: method = .int
+    arg value = .string
+    return pos("|", value) <> 0
+
+  /** ASCII-only uppercasing used by the reserved generated alias. */
+  asciiUpper: method = .string
+    arg value = .string
+    return translate(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
+
+  normalizeAliasType: method = .string
+    arg alias_type = .string
+    if alias_type = "" then return ""
+    return asciiUpper(alias_type)
+
+  ensureUpperAlias: method = .int
+    arg member_id = .int, member_name = .string
+    expected = asciiUpper(member_name)
+    statement = .binary
+    if sqliteprepare(database_, "SELECT alias FROM member_alias WHERE member_id=?1 AND alias_type='UPPER'", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    if rc = 100 then do
+      current = ""
+      if sqlitecolumntext(statement, 0, current) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      call sqlitefinalize statement
+      if current <> expected then return -8
+      return 0
+    end
+    if rc <> 101 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    call sqlitefinalize statement
+    if sqliteprepare(database_, "INSERT INTO member_alias(member_id, alias, alias_type) VALUES(?1, ?2, 'UPPER')", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, expected) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then return -8
+    return 0
+
+  backfillUpperAliases: method = .int
+    statement = .binary
+    if sqliteprepare(database_, "SELECT member_id, member_name FROM member ORDER BY member_id", statement) <> 0 then return -6
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      member_id = 0
+      member_name = ""
+      if sqlitecolumnint(statement, 0, member_id) <> 0 | sqlitecolumntext(statement, 1, member_name) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      if ensureUpperAlias(member_id, member_name) <> 0 then do
+        call sqlitefinalize statement
+        return -8
+      end
+    end
+    call sqlitefinalize statement
+    return 0
+
+  findMemberState: method = .int
+    arg member_name = .string, expose member_id = .int, expose dummy_flag = .int
+    if open_ = 0 | member_name = "" then return -1
+    statement = .binary
+    if sqliteprepare(database_, "SELECT member_id, is_dummy FROM member WHERE member_name=?1", statement) <> 0 then return -6
+    if sqlitebindtext(statement, 1, member_name) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    if rc = 101 then do
+      call sqlitefinalize statement
+      return 1
+    end
+    if rc <> 100 | sqlitecolumnint(statement, 0, member_id) <> 0 | sqlitecolumnint(statement, 1, dummy_flag) <> 0 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    call sqlitefinalize statement
+    return 0
+
+  findMemberStateById: method = .int
+    arg member_id = .int, expose dummy_flag = .int
+    statement = .binary
+    if sqliteprepare(database_, "SELECT is_dummy FROM member WHERE member_id=?1", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    if rc = 101 then do
+      call sqlitefinalize statement
+      return 1
+    end
+    if rc <> 100 | sqlitecolumnint(statement, 0, dummy_flag) <> 0 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    call sqlitefinalize statement
+    return 0
+
+  insertMemberInternal: method = .int
+    arg name = .string, member_type = .string, description = .string, dummy_flag = .int, ,
+        expose member_id = .int
+    statement = .binary
+    if sqliteprepare(database_, "INSERT INTO member(member_name, member_type, description, is_dummy) VALUES(?1, ?2, ?3, ?4)", statement) <> 0 then return -6
+    if sqlitebindtext(statement, 1, name) <> 0 | sqlitebindtext(statement, 2, member_type) <> 0 | ,
+       sqlitebindtext(statement, 3, description) <> 0 | sqlitebindint(statement, 4, dummy_flag) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then return -6
+    if readInt("SELECT last_insert_rowid()", member_id) <> 0 then return -6
+    if ensureUpperAlias(member_id, name) <> 0 then return -8
+    return 0
+
+  insertAliasInternal: method = .int
+    arg member_id = .int, alias = .string
+    statement = .binary
+    if sqliteprepare(database_, "INSERT INTO member_alias(member_id, alias) VALUES(?1, ?2)", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, alias) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then return -6
+    return 0
+
+  insertReferenceInternal: method = .int
+    arg caller_id = .int, successor_id = .int, link_type = .string, position = .int, link_syntax = .string
+    statement = .binary
+    if sqliteprepare(database_, "INSERT INTO member_reference(caller_id, successor_id, link_type, position, link_syntax) VALUES(?1, ?2, ?3, ?4, ?5)", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, caller_id) <> 0 | sqlitebindint(statement, 2, successor_id) <> 0 | ,
+       sqlitebindtext(statement, 3, link_type) <> 0 | sqlitebindint(statement, 4, position) <> 0 | ,
+       sqlitebindtext(statement, 5, link_syntax) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then return -6
+    return 0
+
+  /** Add an alias association. Alias text is not globally unique. */
+  addAlias: method = .int
+    arg member_id = .int, alias = .string
+    if open_ = 0 | member_id < 1 | alias = "" then return -1
+    statement = .binary
+    if sqliteprepare(database_, "INSERT OR IGNORE INTO member_alias(member_id, alias, alias_type) VALUES(?1, ?2, NULL)", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, alias) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then return -6
+    return 0
+
+  /** Set or replace one typed alias. UPPER is maintained by the dictionary. */
+  setAlias: method = .int
+    arg member_id = .int, alias_type = .string, alias = .string
+    if open_ = 0 | member_id < 1 | alias = "" then return -1
+    normalized_type = normalizeAliasType(alias_type)
+    if normalized_type = "" then return addAlias(member_id, alias)
+    if normalized_type = "UPPER" then return -5
+    dummy_flag = 0
+    if findMemberStateById(member_id, dummy_flag) <> 0 then return 1
+    if sqliteexec(database_, "BEGIN") <> 0 then return -6
+    statement = .binary
+    if sqliteprepare(database_, "DELETE FROM member_alias WHERE member_id=?1 AND alias_type=?2", statement) <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, normalized_type) <> 0 then do
+      call sqlitefinalize statement
+      call sqliteexec database_, "ROLLBACK"
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if insertTypedAliasInternal(member_id, normalized_type, alias) <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if sqliteexec(database_, "COMMIT") <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    return 0
+
+  /** Remove an untyped alias or a typed alias. UPPER cannot be removed. */
+  removeAlias: method = .int
+    arg member_id = .int, alias = .string, alias_type = .string
+    if open_ = 0 | member_id < 1 | alias = "" then return -1
+    normalized_type = normalizeAliasType(alias_type)
+    if normalized_type = "UPPER" then return -5
+    statement = .binary
+    if normalized_type = "" then sql = "DELETE FROM member_alias WHERE member_id=?1 AND alias=?2 AND alias_type IS NULL"
+    else sql = "DELETE FROM member_alias WHERE member_id=?1 AND alias=?2 AND alias_type=?3"
+    if sqliteprepare(database_, sql, statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, alias) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    if normalized_type <> "" then if sqlitebindtext(statement, 3, normalized_type) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then return -6
+    return 0
+
+  /** List one member's aliases as normalized_type|alias_value rows. */
+  listAliases: method = .int
+    arg member_id = .int, expose aliases = .string[]
+    if open_ = 0 | member_id < 1 then return -1
+    dummy_flag = 0
+    if findMemberStateById(member_id, dummy_flag) <> 0 then return 1
+    statement = .binary
+    if sqliteprepare(database_, "SELECT coalesce(alias_type, ''), alias FROM member_alias WHERE member_id=?1 ORDER BY alias_type IS NULL, alias_type, alias", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      alias_type = ""
+      alias_value = ""
+      if sqlitecolumntext(statement, 0, alias_type) <> 0 | sqlitecolumntext(statement, 1, alias_value) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      aliases[aliases[0] + 1] = alias_type || "|" || alias_value
+    end
+    call sqlitefinalize statement
+    return 0
+
+  /** List every alias as member_id|member_name|normalized_type|alias_value. */
+  listAllAliases: method = .int
+    arg expose aliases = .string[]
+    if open_ = 0 then return -1
+    statement = .binary
+    if sqliteprepare(database_, "SELECT m.member_id, m.member_name, coalesce(a.alias_type, ''), a.alias FROM member m JOIN member_alias a ON a.member_id=m.member_id ORDER BY m.member_name, a.alias_type IS NULL, a.alias_type, a.alias", statement) <> 0 then return -6
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      member_id = 0
+      member_name = ""
+      alias_type = ""
+      alias_value = ""
+      if sqlitecolumnint(statement, 0, member_id) <> 0 | sqlitecolumntext(statement, 1, member_name) <> 0 | ,
+         sqlitecolumntext(statement, 2, alias_type) <> 0 | sqlitecolumntext(statement, 3, alias_value) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      aliases[aliases[0] + 1] = member_id || "|" || member_name || "|" || alias_type || "|" || alias_value
+    end
+    call sqlitefinalize statement
+    return 0
+
+  insertTypedAliasInternal: method = .int
+    arg member_id = .int, alias_type = .string, alias = .string
+    statement = .binary
+    if sqliteprepare(database_, "INSERT INTO member_alias(member_id, alias, alias_type) VALUES(?1, ?2, ?3)", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, alias) <> 0 | sqlitebindtext(statement, 3, alias_type) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then return -6
+    return 0
+
+  insertAliasSpecInternal: method = .int
+    arg member_id = .int, alias_spec = .string
+    alias_type = field(alias_spec, 1)
+    alias_value = field(alias_spec, 2)
+    if alias_value = "" | invalidDefinitionText(alias_type) | invalidDefinitionText(alias_value) then return -1
+    if alias_type = "__UN_TYPED__" then alias_type = ""
+    alias_type = normalizeAliasType(alias_type)
+    if alias_type = "UPPER" then return -5
+    statement = .binary
+    if alias_type = "" then sql = "INSERT OR IGNORE INTO member_alias(member_id, alias, alias_type) VALUES(?1, ?2, NULL)"
+    else sql = "INSERT OR REPLACE INTO member_alias(member_id, alias, alias_type) VALUES(?1, ?2, ?3)"
+    if sqliteprepare(database_, sql, statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    if alias_type = "" then do
+      if sqlitebindtext(statement, 2, alias_value) <> 0 then do
+        call sqlitefinalize statement
+        return -1
+      end
+    end
+    else do
+      if sqlitebindtext(statement, 2, alias_value) <> 0 | sqlitebindtext(statement, 3, alias_type) <> 0 then do
+        call sqlitefinalize statement
+        return -1
+      end
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then return -6
+    return 0
+
+  /** Set or replace one member attribute. Values may be empty or free-form. */
+  setAttribute: method = .int
+    arg member_id = .int, attribute_name = .string, attribute_value = .string
+    if open_ = 0 | member_id < 1 | attribute_name = "" | invalidDefinitionText(attribute_name) then return -1
+    dummy_flag = 0
+    if findMemberStateById(member_id, dummy_flag) <> 0 then return 1
+    if sqliteexec(database_, "BEGIN") <> 0 then return -6
+    statement = .binary
+    if sqliteprepare(database_, "UPDATE member_attribute SET attribute_value=?1 WHERE member_id=?2 AND attribute_name=?3", statement) <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if sqlitebindtext(statement, 1, attribute_value) <> 0 | sqlitebindint(statement, 2, member_id) <> 0 | ,
+       sqlitebindtext(statement, 3, attribute_name) <> 0 then do
+      call sqlitefinalize statement
+      call sqliteexec database_, "ROLLBACK"
+      return -1
+    end
+    step_rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if step_rc <> 101 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    changes = 0
+    if sqlitechanges(database_, changes) <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if changes = 0 then do
+      if sqliteprepare(database_, "INSERT INTO member_attribute(member_id, attribute_name, attribute_value) VALUES(?1, ?2, ?3)", statement) <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -6
+      end
+      if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, attribute_name) <> 0 | ,
+         sqlitebindtext(statement, 3, attribute_value) <> 0 then do
+        call sqlitefinalize statement
+        call sqliteexec database_, "ROLLBACK"
+        return -1
+      end
+      step_rc = sqlitestep(statement)
+      call sqlitefinalize statement
+      if step_rc <> 101 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -6
+      end
+    end
+    if sqliteexec(database_, "COMMIT") <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    return 0
+
+  /** Retrieve one member attribute; return 1 when it is absent. */
+  getAttribute: method = .int
+    arg member_id = .int, attribute_name = .string, expose attribute_value = .string
+    attribute_value = ""
+    if open_ = 0 | member_id < 1 | attribute_name = "" then return -1
+    statement = .binary
+    if sqliteprepare(database_, "SELECT attribute_value FROM member_attribute WHERE member_id=?1 AND attribute_name=?2", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, attribute_name) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    if rc = 101 then do
+      call sqlitefinalize statement
+      return 1
+    end
+    if rc <> 100 | sqlitecolumntext(statement, 0, attribute_value) <> 0 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    call sqlitefinalize statement
+    return 0
+
+  /** List one member's attributes as attribute_name|attribute_value rows. */
+  listAttributes: method = .int
+    arg member_id = .int, expose result = .string[]
+    if open_ = 0 | member_id < 1 then return -1
+    dummy_flag = 0
+    if findMemberStateById(member_id, dummy_flag) <> 0 then return 1
+    statement = .binary
+    if sqliteprepare(database_, "SELECT attribute_name, attribute_value FROM member_attribute WHERE member_id=?1 ORDER BY attribute_name", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      attribute_name = ""
+      attribute_value = ""
+      if sqlitecolumntext(statement, 0, attribute_name) <> 0 | sqlitecolumntext(statement, 1, attribute_value) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      result[result[0] + 1] = attribute_name || "|" || attribute_value
+    end
+    call sqlitefinalize statement
+    return 0
+
+  /** Remove one member attribute; return 1 when it is absent. */
+  removeAttribute: method = .int
+    arg member_id = .int, attribute_name = .string
+    if open_ = 0 | member_id < 1 | attribute_name = "" then return -1
+    statement = .binary
+    if sqliteprepare(database_, "DELETE FROM member_attribute WHERE member_id=?1 AND attribute_name=?2", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 | sqlitebindtext(statement, 2, attribute_name) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then return -6
+    changes = 0
+    if sqlitechanges(database_, changes) <> 0 then return -6
+    if changes = 0 then return 1
+    return 0
+
+  /** Add one positioned typed caller-to-successor link instance. */
+  addReference: method = .int
+    arg caller_id = .int, successor_id = .int, link_type = "contains", position = 0, link_syntax = ""
+    if open_ = 0 | caller_id < 1 | successor_id < 1 | link_type = "" then return -1
+    if sqliteexec(database_, "BEGIN") <> 0 then return -6
+    if position < 1 then do
+      if readInt("SELECT coalesce(max(position), 0) + 1 FROM member_reference WHERE caller_id=" || caller_id, position) <> 0 then do
+        call sqliteexec database_, "ROLLBACK"
+        return -6
+      end
+    end
+    statement = .binary
+    if sqliteprepare(database_, "INSERT INTO member_reference(caller_id, successor_id, link_type, position, link_syntax) VALUES(?1, ?2, ?3, ?4, ?5)", statement) <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if sqlitebindint(statement, 1, caller_id) <> 0 | sqlitebindint(statement, 2, successor_id) <> 0 | ,
+       sqlitebindtext(statement, 3, link_type) <> 0 | sqlitebindint(statement, 4, position) <> 0 | ,
+       sqlitebindtext(statement, 5, link_syntax) <> 0 then do
+      call sqlitefinalize statement
+      call sqliteexec database_, "ROLLBACK"
+      return -1
+    end
+    rc = sqlitestep(statement)
+    call sqlitefinalize statement
+    if rc <> 101 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    if sqliteexec(database_, "COMMIT") <> 0 then do
+      call sqliteexec database_, "ROLLBACK"
+      return -6
+    end
+    return 0
+
+  /**
+   * List members as name|type|uses|used-by rows, optionally filtered by type.
+   * This is a storage API record shape, not a SQL result exposed to callers.
+   */
+  getMemberListRow: method = .int
+    arg member_name = .string, expose result = .string
+    result = ""
+    if open_ = 0 | member_name = "" then return -1
+    statement = .binary
+    sql = "SELECT m.member_name, m.member_type, " || ,
+      "(SELECT count(*) FROM member_reference r WHERE r.caller_id=m.member_id), " || ,
+      "(SELECT count(*) FROM member_reference r WHERE r.successor_id=m.member_id) " || ,
+      "FROM member m WHERE m.member_name=?1"
+    if sqliteprepare(database_, sql, statement) <> 0 then return -6
+    if sqlitebindtext(statement, 1, member_name) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    if rc = 101 then do
+      call sqlitefinalize statement
+      return 1
+    end
+    if rc <> 100 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    name = ""
+    member_type = ""
+    uses = 0
+    used_by = 0
+    if sqlitecolumntext(statement, 0, name) <> 0 | sqlitecolumntext(statement, 1, member_type) <> 0 | ,
+       sqlitecolumnint(statement, 2, uses) <> 0 | sqlitecolumnint(statement, 3, used_by) <> 0 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    call sqlitefinalize statement
+    result = name || "|" || member_type || "|" || uses || "|" || used_by
+    return 0
+
+  /** Retrieve current member details as name|type|description|uses|used-by. */
+  getMemberDetails: method = .int
+    arg member_name = .string, expose result = .string
+    result = ""
+    if open_ = 0 | member_name = "" then return -1
+    statement = .binary
+    sql = "SELECT m.member_name, m.member_type, m.description, " || ,
+      "(SELECT count(*) FROM member_reference r WHERE r.caller_id=m.member_id), " || ,
+      "(SELECT count(*) FROM member_reference r WHERE r.successor_id=m.member_id) " || ,
+      "FROM member m WHERE m.member_name=?1"
+    if sqliteprepare(database_, sql, statement) <> 0 then return -6
+    if sqlitebindtext(statement, 1, member_name) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    if rc = 101 then do
+      call sqlitefinalize statement
+      return 1
+    end
+    if rc <> 100 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    name = ""
+    member_type = ""
+    description = ""
+    uses = 0
+    used_by = 0
+    if sqlitecolumntext(statement, 0, name) <> 0 | sqlitecolumntext(statement, 1, member_type) <> 0 | ,
+       sqlitecolumntext(statement, 2, description) <> 0 | sqlitecolumnint(statement, 3, uses) <> 0 | ,
+       sqlitecolumnint(statement, 4, used_by) <> 0 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    call sqlitefinalize statement
+    result = name || "|" || member_type || "|" || description || "|" || uses || "|" || used_by
+    return 0
+
+  listMembersWithFilters: method = .int
+    arg requested_type = .string, prefix = .string, any_string = .string, expose result = .string[]
+    if open_ = 0 then return -1
+    statement = .binary
+    sql = "SELECT m.member_name, m.member_type, " || ,
+      "(SELECT count(*) FROM member_reference r WHERE r.caller_id=m.member_id), " || ,
+      "(SELECT count(*) FROM member_reference r WHERE r.successor_id=m.member_id) " || ,
+      "FROM member m"
+    where_sql = ""
+    bind_index = 0
+    if requested_type <> "" then do
+      where_sql = " WHERE m.member_type COLLATE NOCASE=?1"
+      bind_index = 1
+    end
+    if prefix <> "" then do
+      if where_sql = "" then where_sql = " WHERE m.member_name LIKE ?1"
+      else where_sql = where_sql || " AND m.member_name LIKE ?2"
+      bind_index = bind_index + 1
+    end
+    if any_string <> "" then do
+      if where_sql = "" then where_sql = " WHERE m.member_name LIKE ?1"
+      else where_sql = where_sql || " AND m.member_name LIKE ?" || (bind_index + 1)
+      bind_index = bind_index + 1
+    end
+    sql = sql || where_sql || " ORDER BY m.member_name"
+    if sqliteprepare(database_, sql, statement) <> 0 then return -6
+    next_bind = 1
+    if requested_type <> "" then do
+      if sqlitebindtext(statement, next_bind, requested_type) <> 0 then do
+        call sqlitefinalize statement
+        return -1
+      end
+      next_bind = next_bind + 1
+    end
+    if prefix <> "" then do
+      if sqlitebindtext(statement, next_bind, prefix || "%") <> 0 then do
+        call sqlitefinalize statement
+        return -1
+      end
+      next_bind = next_bind + 1
+    end
+    if any_string <> "" then if sqlitebindtext(statement, next_bind, "%" || any_string || "%") <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      name = ""
+      member_type = ""
+      uses = 0
+      used_by = 0
+      if sqlitecolumntext(statement, 0, name) <> 0 | ,
+         sqlitecolumntext(statement, 1, member_type) <> 0 | ,
+         sqlitecolumnint(statement, 2, uses) <> 0 | ,
+         sqlitecolumnint(statement, 3, used_by) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      result[result[0] + 1] = name || "|" || member_type || "|" || uses || "|" || used_by
+    end
+    call sqlitefinalize statement
+    return 0
+
+  listMembersWithCounts: method = .int
+    arg requested_type = .string, expose result = .string[]
+    return listMembersWithFilters(requested_type, "", "", result)
+
+  /** Find all members carrying an alias; ambiguity is represented by rows. */
+  findByAlias: method = .int
+    arg alias = .string, expose matches = .string[]
+    return findByAliasTyped(alias, matches, "")
+
+  findByAliasTyped: method = .int
+    arg alias = .string, expose matches = .string[], alias_type = .string
+    if open_ = 0 | alias = "" then return -1
+    statement = .binary
+    normalized_type = normalizeAliasType(alias_type)
+    sql = "SELECT DISTINCT m.member_id, m.member_name, m.member_type " || ,
+      "FROM member m JOIN member_alias a ON a.member_id=m.member_id " || ,
+      "WHERE a.alias=?1 COLLATE BINARY"
+    if normalized_type <> "" then sql = sql || " AND a.alias_type=?2"
+    sql = sql || " ORDER BY m.member_name"
+    if sqliteprepare(database_, sql, statement) <> 0 then return -6
+    if sqlitebindtext(statement, 1, alias) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    if normalized_type <> "" then if sqlitebindtext(statement, 2, normalized_type) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      member_id = 0
+      member_name = ""
+      member_type = ""
+      if sqlitecolumnint(statement, 0, member_id) <> 0 | ,
+         sqlitecolumntext(statement, 1, member_name) <> 0 | ,
+         sqlitecolumntext(statement, 2, member_type) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      matches[matches[0] + 1] = member_id || "|" || member_name || "|" || member_type
+    end
+    call sqlitefinalize statement
+    return 0
+
+  /** Return direct successor names for one member. */
+  getSuccessors: method = .int
+    arg member_id = .int, expose members = .string[]
+    return getRelatedMembers(member_id, "caller_id", "successor_id", members)
+
+  /** Return direct caller names for one member. */
+  getCallers: method = .int
+    arg member_id = .int, expose members = .string[]
+    return getRelatedMembers(member_id, "successor_id", "caller_id", members)
+
+  /** Return direct successor name, link type, position and syntax rows. */
+  getSuccessorLinks: method = .int
+    arg member_id = .int, expose links = .string[]
+    if open_ = 0 | member_id < 1 then return -1
+    statement = .binary
+    sql = "SELECT m.member_name, r.link_type, r.position, r.link_syntax " || ,
+      "FROM member m JOIN member_reference r ON m.member_id=r.successor_id " || ,
+      "WHERE r.caller_id=?1 ORDER BY r.position"
+    if sqliteprepare(database_, sql, statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      member_name = ""
+      link_type = ""
+      position = 0
+      link_syntax = ""
+      if sqlitecolumntext(statement, 0, member_name) <> 0 | ,
+         sqlitecolumntext(statement, 1, link_type) <> 0 | ,
+         sqlitecolumnint(statement, 2, position) <> 0 | ,
+         sqlitecolumntext(statement, 3, link_syntax) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      links[links[0] + 1] = member_name || "|" || link_type || "|" || position || "|" || link_syntax
+    end
+    call sqlitefinalize statement
+    return 0
+
+  /** Return direct caller name, link type, position and syntax rows. */
+  getCallerLinks: method = .int
+    arg member_id = .int, expose links = .string[]
+    if open_ = 0 | member_id < 1 then return -1
+    statement = .binary
+    sql = "SELECT m.member_name, r.link_type, r.position, r.link_syntax " || ,
+      "FROM member m JOIN member_reference r ON m.member_id=r.caller_id " || ,
+      "WHERE r.successor_id=?1 ORDER BY m.member_name, r.position"
+    if sqliteprepare(database_, sql, statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      member_name = ""
+      link_type = ""
+      position = 0
+      link_syntax = ""
+      if sqlitecolumntext(statement, 0, member_name) <> 0 | ,
+         sqlitecolumntext(statement, 1, link_type) <> 0 | ,
+         sqlitecolumnint(statement, 2, position) <> 0 | ,
+         sqlitecolumntext(statement, 3, link_syntax) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      links[links[0] + 1] = member_name || "|" || link_type || "|" || position || "|" || link_syntax
+    end
+    call sqlitefinalize statement
+    return 0
+
+  /** Resolve one member name to its stable identifier. */
+  getMemberId: method = .int
+    arg member_name = .string, expose member_id = .int
+    if open_ = 0 | member_name = "" then return -1
+    statement = .binary
+    if sqliteprepare(database_, "SELECT member_id FROM member WHERE member_name=?1", statement) <> 0 then return -6
+    if sqlitebindtext(statement, 1, member_name) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    if rc = 101 then do
+      call sqlitefinalize statement
+      member_id = 0
+      return 1
+    end
+    if rc <> 100 | sqlitecolumnint(statement, 0, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    call sqlitefinalize statement
+    return 0
+
+  /**
+   * Walk the nested bill of material in stored position order.
+   *
+   * Result rows use depth|member|link_type|position|link_syntax|flags.
+   * The root is emitted as depth 0 with ROOT in the link_type column.
+   * Repeated occurrences remain separate rows. A cycle is detected only
+   * against the current path, so a shared child can occur below siblings.
+   * max_depth 0 means unlimited; link_type empty means all link types.
+   */
+  walkBOM: method = .int
+    arg root_id = .int, expose result = .string[], max_depth = 0, link_type = ""
+    if open_ = 0 | root_id < 1 then return -1
+    root_name = ""
+    if memberName(root_id, root_name) <> 0 then return -1
+    path = .string[]
+    path[1] = root_id
+    call appendWalkRow(result, 0, root_name, "ROOT", 0, "", "")
+    return bomWalk(root_id, 0, max_depth, link_type, result, path)
+
+  bomWalk: method = .int
+    arg member_id = .int, depth = .int, max_depth = .int, link_type = .string, ,
+        expose result = .string[], path = .string[]
+    links = .string[]
+    if getSuccessorLinks(member_id, links) <> 0 then return -6
+    do i = 1 to links[0]
+      successor_name = field(links[i], 1)
+      successor_type = field(links[i], 2)
+      position = field(links[i], 3)
+      syntax = field(links[i], 4)
+      if link_type <> "" & successor_type <> link_type then iterate
+      successor_id = 0
+      if getMemberId(successor_name, successor_id) <> 0 then return -6
+      child_depth = depth + 1
+      flags = ""
+      if pathContains(successor_id, path) then flags = "CYCLE"
+      else if max_depth > 0 & child_depth >= max_depth then flags = "DEPTH_LIMIT"
+      call appendWalkRow(result, child_depth, successor_name, successor_type, position, syntax, flags)
+      if flags <> "" then iterate
+      next_path = path
+      next_path[next_path[0] + 1] = successor_id
+      rc = bomWalk(successor_id, child_depth, max_depth, link_type, result, next_path)
+      if rc <> 0 then return rc
+    end
+    return 0
+
+  /** Walk the reverse where-used graph in stored position order. */
+  walkWhereUsed: method = .int
+    arg root_id = .int, expose result = .string[], max_depth = 0, link_type = ""
+    if open_ = 0 | root_id < 1 then return -1
+    root_name = ""
+    if memberName(root_id, root_name) <> 0 then return -1
+    path = .string[]
+    path[1] = root_id
+    call appendWalkRow(result, 0, root_name, "ROOT", 0, "", "")
+    return callerWalk(root_id, 0, max_depth, link_type, result, path)
+
+  callerWalk: method = .int
+    arg member_id = .int, depth = .int, max_depth = .int, link_type = .string, ,
+        expose result = .string[], path = .string[]
+    callers = .string[]
+    if getCallers(member_id, callers) <> 0 then return -6
+    target_name = ""
+    if memberName(member_id, target_name) <> 0 then return -6
+    seen_callers = .string[]
+    do i = 1 to callers[0]
+      caller_name = callers[i]
+      if pathContainsName(caller_name, seen_callers) then iterate
+      seen_callers[seen_callers[0] + 1] = caller_name
+      caller_id = 0
+      if getMemberId(caller_name, caller_id) <> 0 then return -6
+      links = .string[]
+      if getSuccessorLinks(caller_id, links) <> 0 then return -6
+      do j = 1 to links[0]
+        if field(links[j], 1) <> target_name then iterate
+        occurrence_type = field(links[j], 2)
+        if link_type <> "" & occurrence_type <> link_type then iterate
+        position = field(links[j], 3)
+        syntax = field(links[j], 4)
+        child_depth = depth + 1
+        flags = ""
+        if pathContains(caller_id, path) then flags = "CYCLE"
+        else if max_depth > 0 & child_depth >= max_depth then flags = "DEPTH_LIMIT"
+        call appendWalkRow(result, child_depth, caller_name, occurrence_type, position, syntax, flags)
+        if flags <> "" then iterate
+        next_path = path
+        next_path[next_path[0] + 1] = caller_id
+        rc = callerWalk(caller_id, child_depth, max_depth, link_type, result, next_path)
+        if rc <> 0 then return rc
+      end
+    end
+    return 0
+
+  memberName: method = .int
+    arg member_id = .int, expose member_name = .string
+    if open_ = 0 | member_id < 1 then return -1
+    statement = .binary
+    if sqliteprepare(database_, "SELECT member_name FROM member WHERE member_id=?1", statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    rc = sqlitestep(statement)
+    if rc = 101 then do
+      call sqlitefinalize statement
+      return 1
+    end
+    if rc <> 100 | sqlitecolumntext(statement, 0, member_name) <> 0 then do
+      call sqlitefinalize statement
+      return -6
+    end
+    call sqlitefinalize statement
+    return 0
+
+  appendWalkRow: method = .void
+    arg expose result = .string[], depth = .int, member_name = .string, ,
+        link_type = .string, position = .int, syntax = .string, flags = .string
+    result[result[0] + 1] = depth || "|" || member_name || "|" || link_type || "|" || position || "|" || syntax || "|" || flags
+    return
+
+  pathContains: method = .int
+    arg member_id = .int, path = .string[]
+    do i = 1 to path[0]
+      if path[i] = member_id then return 1
+    end
+    return 0
+
+  pathContainsName: method = .int
+    arg member_name = .string, names = .string[]
+    do i = 1 to names[0]
+      if names[i] = member_name then return 1
+    end
+    return 0
+
+  field: method = .string
+    arg row = .string, number = .int
+    rest = row
+    do i = 1 to number - 1
+      separator = pos("|", rest)
+      if separator = 0 then return ""
+      rest = substr(rest, separator + 1)
+    end
+    last_separator = pos("|", rest)
+    if last_separator = 0 then return rest
+    return left(rest, last_separator - 1)
+
+  getRelatedMembers: method = .int
+    arg member_id = .int, source_column = .string, target_column = .string, ,
+        expose members = .string[]
+    if open_ = 0 | member_id < 1 then return -1
+    statement = .binary
+    if source_column = "caller_id" & target_column = "successor_id" then
+      sql = "SELECT m.member_name FROM member m JOIN member_reference r ON m.member_id=r.successor_id WHERE r.caller_id=?1 ORDER BY m.member_name"
+    else if source_column = "successor_id" & target_column = "caller_id" then
+      sql = "SELECT m.member_name FROM member m JOIN member_reference r ON m.member_id=r.caller_id WHERE r.successor_id=?1 ORDER BY m.member_name"
+    else return -1
+    if sqliteprepare(database_, sql, statement) <> 0 then return -6
+    if sqlitebindint(statement, 1, member_id) <> 0 then do
+      call sqlitefinalize statement
+      return -1
+    end
+    do forever
+      rc = sqlitestep(statement)
+      if rc = 101 then leave
+      if rc <> 100 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      member_name = ""
+      if sqlitecolumntext(statement, 0, member_name) <> 0 then do
+        call sqlitefinalize statement
+        return -6
+      end
+      members[members[0] + 1] = member_name
+    end
+    call sqlitefinalize statement
+    return 0
+
+  readInt: method = .int
+    arg sql = .string, expose value = .int
+    statement = .binary
+    if sqliteprepare(database_, sql, statement) <> 0 then return 1
+    if sqlitestep(statement) <> 100 then do
+      call sqlitefinalize statement
+      return 1
+    end
+    rc = sqlitecolumnint(statement, 0, value)
+    call sqlitefinalize statement
+    return rc

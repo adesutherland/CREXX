@@ -1,0 +1,213 @@
+/* Focused procedural facade reporting check. */
+options levelb
+
+import data_DataDictionaryFacade
+import data_DataDictionary
+import rxfnsb
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: dictionary facade report " || label
+    return 1
+  end
+  return 0
+
+containsLine: procedure = .int
+  arg lines = .string[], needle = .string
+  do i = 1 to lines[0]
+    if pos(needle, lines[i]) > 0 then return 1
+  end
+  return 0
+
+main: procedure = .int
+  arg args = .string[]
+  filename = "facade_report_graph_test.db"
+  if args.0 > 0 then filename = args[1]
+  errors = 0
+  keep_left = .string[]
+  keep_left[1] = "A"
+  keep_left[2] = "B"
+  keep_left[3] = "A"
+  keep_right = .string[]
+  keep_right[1] = "B"
+  keep_right[2] = "C"
+  keep_right[3] = "C"
+  kept = ddKeep(keep_left, keep_right)
+  errors = errors + check(kept[0] = 3, "KEEP unique count")
+  errors = errors + check(kept[1] = "A" & kept[2] = "B" & kept[3] = "C", "KEEP order")
+  errors = errors + check(keep_left[0] = 3 & keep_left[3] = "A", "KEEP input unchanged")
+  dropped = ddDrop(keep_left, keep_right)
+  errors = errors + check(dropped[0] = 1 & dropped[1] = "A", "DROP overlap")
+  case_names = .string[]
+  case_names[1] = "customerName"
+  case_names[2] = "CustomerName"
+  case_excluded = .string[]
+  case_excluded[1] = "customerName"
+  case_kept = ddDrop(case_names, case_excluded)
+  errors = errors + check(case_kept[0] = 1 & case_kept[1] = "CustomerName", "DROP case sensitivity")
+  errors = errors + check(ddOpen(filename) = 0, "open")
+  errors = errors + check(ddAdd("ORDER_RECORD", "RECORD", "Order") = 0, "add root")
+  call ddAlias "ORDER_LAYOUT"
+  call ddAlias "ORDER", "SHORT"
+  call ddLink "CUSTOMER_NUMBER", "contains", 1, "customer_number"
+  call ddLink "ORDER_DATE", "contains", 2, "order_date"
+  call ddLink "ORDER_TOTAL", "contains", 3, "order_total"
+  errors = errors + check(ddAdd("CUSTOMER_NUMBER", "FIELD", "Customer number") = 0, "implicit root end")
+  errors = errors + check(ddAdd("ORDER_DATE", "FIELD", "Order date") = 0, "implicit customer end")
+  errors = errors + check(ddAdd("ORDER_TOTAL", "FIELD", "Total") = 0, "implicit date end")
+  errors = errors + check(ddAttribute("currency", "EUR") = 0, "attribute total")
+  errors = errors + check(ddEnd() = 0, "end field")
+
+  errors = errors + check(ddClose() = 0, "close before storage inspection")
+  dictionary = .DataDictionary()
+  errors = errors + check(dictionary.open(filename) = 0, "storage reopen")
+  root_id = 0
+  customer_id = 0
+  date_id = 0
+  total_id = 0
+  errors = errors + check(dictionary.getMemberId("ORDER_RECORD", root_id) = 0, "root id")
+  errors = errors + check(dictionary.getMemberId("CUSTOMER_NUMBER", customer_id) = 0, "customer id")
+  errors = errors + check(dictionary.getMemberId("ORDER_DATE", date_id) = 0, "date id")
+  errors = errors + check(dictionary.getMemberId("ORDER_TOTAL", total_id) = 0, "total id")
+  root_links = .string[]
+  errors = errors + check(dictionary.getSuccessorLinks(root_id, root_links) = 0, "stored root links")
+  errors = errors + check(root_links[0] = 3, "stored root link count")
+  errors = errors + check(root_links[1] = "CUSTOMER_NUMBER|contains|1|customer_number", "stored customer link")
+  errors = errors + check(root_links[2] = "ORDER_DATE|contains|2|order_date", "stored date link")
+  errors = errors + check(root_links[3] = "ORDER_TOTAL|contains|3|order_total", "stored total link")
+  customer_links = .string[]
+  date_links = .string[]
+  total_links = .string[]
+  errors = errors + check(dictionary.getSuccessorLinks(customer_id, customer_links) = 0, "customer outgoing query")
+  errors = errors + check(dictionary.getSuccessorLinks(date_id, date_links) = 0, "date outgoing query")
+  errors = errors + check(dictionary.getSuccessorLinks(total_id, total_links) = 0, "total outgoing query")
+  errors = errors + check(customer_links[0] = 0, "customer has no outgoing links")
+  errors = errors + check(date_links[0] = 0, "date has no outgoing links")
+  errors = errors + check(total_links[0] = 0, "total has no outgoing links")
+  errors = errors + check(dictionary.close() = 0, "storage close")
+
+  errors = errors + check(ddOpen(filename) = 0, "reopen facade")
+
+  bom = ddBom("ORDER_RECORD", 0, "")
+  errors = errors + check(ddRc() = 0, "BOM")
+  errors = errors + check(ddLastError() = "", "BOM diagnostic clear")
+  errors = errors + check(bom[0] = 10, "BOM line count")
+  errors = errors + check(pos("CYCLE", bom[4]) = 0, "BOM no cycles customer")
+  errors = errors + check(pos("CYCLE", bom[5]) = 0, "BOM no cycles date")
+  errors = errors + check(pos("CYCLE", bom[6]) = 0, "BOM no cycles total")
+  errors = errors + check(containsLine(bom, "CUSTOMER_NUMBER") = 1, "BOM customer")
+  errors = errors + check(containsLine(bom, "ORDER_DATE") = 1, "BOM date")
+  errors = errors + check(containsLine(bom, "ORDER_TOTAL") = 1, "BOM total")
+
+  used_by = ddWhereUsed("ORDER_TOTAL", 1, "contains")
+  errors = errors + check(ddRc() = 0, "used-by")
+  errors = errors + check(used_by[0] = 8, "used-by line count")
+  errors = errors + check(containsLine(used_by, "ORDER_RECORD") = 1, "used-by parent")
+  errors = errors + check(containsLine(used_by, "CUSTOMER_NUMBER") = 0, "used-by excludes customer")
+  errors = errors + check(containsLine(used_by, "ORDER_DATE") = 0, "used-by excludes date")
+  errors = errors + check(pos("ORDER_TOTAL", used_by[6]) = 0, "used-by excludes self")
+
+  unknown = ddBom("MISSING_MEMBER", 0, "")
+  errors = errors + check(ddRc() <> 0, "unknown BOM member")
+  errors = errors + check(unknown[0] = 0, "unknown BOM empty")
+  unknown_error = ddLastError()
+  errors = errors + check(pos("MISSING_MEMBER", unknown_error) > 0, "unknown member diagnostic")
+  errors = errors + check(ddLastError() = unknown_error, "diagnostic observational")
+  errors = errors + check(ddRc() <> 0, "status observational")
+  recovered = ddWhereUsed("ORDER_TOTAL", 1, "contains")
+  errors = errors + check(recovered[0] > 0, "recovery report")
+  errors = errors + check(ddRc() = 0, "recovery status")
+  errors = errors + check(ddLastError() = "", "recovery diagnostic clear")
+
+  members = ddMembers("")
+  errors = errors + check(ddRc() = 0, "members status")
+  errors = errors + check(containsLine(members, "ORDER_RECORD") = 1, "members content")
+  fields = ddMembers("FIELD")
+  errors = errors + check(ddRc() = 0, "filtered members status")
+  errors = errors + check(containsLine(fields, "ORDER_TOTAL") = 1, "filtered members content")
+  lower_fields = ddList("field", "", "")
+  errors = errors + check(ddRc() = 0, "case-insensitive type filter status")
+  errors = errors + check(containsLine(lower_fields, "ORDER_TOTAL") = 1, "case-insensitive type filter")
+  errors = errors + check(containsLine(lower_fields, "field") = 0, "member type normalized")
+  filtered = ddList("FIELD", "ORDER_", "TOTAL")
+  errors = errors + check(ddRc() = 0, "combined list filters status")
+  errors = errors + check(containsLine(filtered, "ORDER_TOTAL") = 1, "combined list filters content")
+  errors = errors + check(containsLine(filtered, "ORDER_DATE") = 0, "combined list filters exclude")
+  prefixed = ddList("", "ORDER_", "")
+  errors = errors + check(ddRc() = 0, "prefix list status")
+  errors = errors + check(containsLine(prefixed, "ORDER_RECORD") = 1, "prefix list content")
+  contained = ddList("", "", "DATE")
+  errors = errors + check(ddRc() = 0, "substring list status")
+  errors = errors + check(containsLine(contained, "ORDER_DATE") = 1, "substring list content")
+  selected = .string[]
+  selected[1] = "ORDER_TOTAL"
+  selected[2] = "MISSING_MEMBER"
+  selected[3] = "ORDER_RECORD"
+  selected_details = ddListMembers(selected)
+  errors = errors + check(ddRc() = 0, "selection listing status")
+  errors = errors + check(containsLine(selected_details, "ORDER_TOTAL") = 1, "selection listing total")
+  errors = errors + check(containsLine(selected_details, "ORDER_RECORD") = 1, "selection listing record")
+  errors = errors + check(containsLine(selected_details, "MISSING_MEMBER") = 0, "selection omits missing")
+  selected_filtered = ddListMembers(selected, "FIELD", "ORDER_", "TOTAL")
+  errors = errors + check(ddRc() = 0, "selection filters status")
+  errors = errors + check(containsLine(selected_filtered, "ORDER_TOTAL") = 1, "selection filters include")
+  errors = errors + check(containsLine(selected_filtered, "ORDER_RECORD") = 0, "selection filters exclude")
+  dummies = ddDummies()
+  errors = errors + check(ddRc() = 0, "dummies status")
+  errors = errors + check(containsLine(dummies, "(empty)") = 1, "dummies empty")
+  alias_match = ddFindAlias("ORDER", "SHORT")
+  errors = errors + check(ddRc() = 0, "alias lookup status")
+  errors = errors + check(containsLine(alias_match, "ORDER_RECORD") = 1, "alias lookup content")
+  root_aliases = ddListAliases("ORDER_RECORD")
+  errors = errors + check(ddRc() = 0, "member aliases status")
+  errors = errors + check(containsLine(root_aliases, "ORDER_LAYOUT") = 1, "member aliases content")
+  all_aliases = ddListAllAliases()
+  errors = errors + check(ddRc() = 0, "all aliases status")
+  errors = errors + check(containsLine(all_aliases, "ORDER_RECORD") = 1, "all aliases content")
+
+  details = ddMemberDetails("ORDER_TOTAL")
+  errors = errors + check(ddRc() = 0, "member details status")
+  errors = errors + check(containsLine(details, "ORDER_TOTAL") = 1, "member details name")
+  errors = errors + check(containsLine(details, "FIELD") = 1, "member details type")
+  errors = errors + check(containsLine(details, "Total") = 1, "member details description")
+  attributes = ddAttributes("ORDER_TOTAL")
+  errors = errors + check(ddRc() = 0, "attributes status")
+  errors = errors + check(containsLine(attributes, "currency") = 1, "attributes name")
+  errors = errors + check(containsLine(attributes, "EUR") = 1, "attributes value")
+  missing_details = ddMemberDetails("MISSING_MEMBER")
+  errors = errors + check(ddRc() <> 0 & missing_details[0] = 0, "unknown member details")
+  missing_attributes = ddAttributes("MISSING_MEMBER")
+  errors = errors + check(ddRc() <> 0 & missing_attributes[0] = 0, "unknown member attributes")
+  member_report = ddMemberReport("ORDER_TOTAL")
+  errors = errors + check(ddRc() = 0, "member report status")
+  errors = errors + check(containsLine(member_report, "Attributes") = 1, "member report attributes section")
+  errors = errors + check(containsLine(member_report, "currency") = 1, "member report attribute")
+  errors = errors + check(containsLine(member_report, "Outgoing links") = 1, "member report outgoing section")
+  errors = errors + check(containsLine(member_report, "(empty)") = 1, "member report empty outgoing links")
+  errors = errors + check(containsLine(member_report, "Incoming links") = 1, "member report incoming section")
+  errors = errors + check(containsLine(member_report, "ORDER_RECORD") = 1, "member report incoming link")
+  missing_report = ddMemberReport("MISSING_MEMBER")
+  errors = errors + check(ddRc() <> 0 & missing_report[0] = 0, "unknown member report")
+  perform_selection = .string[]
+  perform_selection[1] = "ORDER_TOTAL"
+  perform_selection[2] = "ORDER_DATE"
+  performed = ddPerform(perform_selection, "MEMBER_REPORT")
+  errors = errors + check(ddRc() = 0, "ddPerform status")
+  errors = errors + check(containsLine(performed, "REPORT OF ORDER_TOTAL") = 1, "ddPerform first member")
+  errors = errors + check(containsLine(performed, "END OF ORDER_TOTAL") = 1, "ddPerform first member end")
+  errors = errors + check(containsLine(performed, "REPORT OF ORDER_DATE") = 1, "ddPerform second member")
+  errors = errors + check(containsLine(performed, "END OF ORDER_DATE") = 1, "ddPerform second member end")
+  errors = errors + check(containsLine(performed, "currency") = 1, "ddPerform member output")
+  performed_attributes = ddPerform(perform_selection, "ATTRIBUTES", 0, "", 1)
+  errors = errors + check(ddRc() = 0, "ddPerform printing status")
+  unsupported = ddPerform(perform_selection, "REMOVE")
+  errors = errors + check(ddRc() <> 0 & unsupported[0] = 0, "ddPerform unsupported report")
+
+  errors = errors + check(ddClose() = 0, "close")
+  if errors <> 0 then do
+    say "FAIL: dictionary facade report errors=" || errors
+    return 1
+  end
+  say "PASS: procedural facade reporting"
+  return 0
