@@ -150,6 +150,12 @@ namespace and collected block; the preprocessor remains unaware of the
 embedded language's tags. Handler declarations currently require exactly one
 alias.
 
+Scripted handlers own the syntax of their block opener. RXPP forwards the
+handler block's array argument plus any additional opener words after the
+alias, so a DSL can use a declaration such as `MEMBER output, dictionary,
+operation`; ordinary `##DATA` aliases retain their historical array/callback
+parameter validation.
+
 ## Build metadata directives
 
 Recent additions separate macro discovery from output placement:

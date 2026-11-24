@@ -133,11 +133,8 @@ main: procedure = .int
   if rc <> 0 then return ddError("Dictionary definition failed")
   say "Dictionary definition completed."
 
-  say "Report of ORDER_RECORD"
-
   lines = ddMemberReport("ORDER_RECORD")
   if ddRc() = 0 then call ddPrint lines
-say "End of Report ORDER_RECORD"
 say " "
   /*
    * Replace the definition of ORDER_TOTAL.
@@ -271,12 +268,17 @@ say " "
   call ddprint selected_details
 
   /* Run the same report for every exact name in the KEEP/DROP selection.
-   * ddPerform returns the combined lines and prints them when the final
-   * argument is 1. */
-  say "Performed member reports for the selection"
-  performed_lines = ddPerform(selected, "MEMBER_REPORT", 0, "", 1)
-   say "-- Performed member reports for the selection"
+   * ddPerform returns the combined lines; the caller prints them once. */
+  say ""
+  performed_lines = ddPerform(selected, "MEMBER_REPORT", 0, "", 0)
   if ddRc() <> 0 then return ddError("Batch member report failed")
+  call ddPrint performed_lines
+
+  say ""
+  say "Graphviz DOT for ORDER_RECORD"
+  dot_lines = ddGraph("ORDER_RECORD", 0, "contains")
+  if ddRc() <> 0 then return ddError("Graph export failed")
+  call ddPrint dot_lines
   /*
    * Amend selected attributes and links.
    *

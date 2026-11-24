@@ -15,7 +15,7 @@ check: procedure = .int
 
 main: procedure = .int
   arg args = .string[]
-  filename = "data_dictionary_facade_test.db"
+  filename = ":memory:"
   if args.0 > 0 then filename = args[1]
   errors = 0
   rc = ddOpen(filename)

@@ -1,0 +1,96 @@
+/*
+ * Build and run the small procedural data-dictionary example.
+ *
+ * Run this graph from the CREXX project root. Generated files are placed
+ * in BUILD_DIR, keeping them separate from the source files.
+ *
+ * The sample runs against an in-memory SQLite dictionary, so each run
+ * starts with an empty dictionary and leaves no database file behind.
+ */
+
+BUILD_DIR = ".crexx-build/data-dictionary-facade-batch";
+
+/* Dictionary storage, procedural interface, reporting and sample sources. */
+MODULE_SOURCE = "examples/native/sqlite/data_dictionary.crexx";
+FACADE_SOURCE = "examples/native/sqlite/data_dictionary_facade.crexx";
+REPORT_SOURCE = "examples/native/sqlite/data_dictionary_report.crexx";
+SAMPLE_SOURCE = "examples/native/sqlite/data_dictionary_mini_sample.crexx";
+
+/*
+ * Shared rule for compiling each cREXX source to an .rxbin module.
+ * $out identifies the target in the build description.
+ */
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "COMPILE DATA DICTIONARY BATCH SAMPLE $out"
+END RULE;
+
+/* Rule for running the compiled sample. */
+RULE run_program
+  ACTION = "RUN"
+  DESCRIPTION = "RUN DATA DICTIONARY BATCH SAMPLE"
+END RULE;
+
+/*
+ * Compile the dictionary storage module.
+ * The facade depends on this module.
+ */
+BUILD "${BUILD_DIR}/data_dictionary.rxbin"
+  BUILD_NAME = dictionary_module
+  RULE = compile_program
+  INPUT = "${MODULE_SOURCE}"
+END BUILD;
+
+/*
+ * Compile the procedural facade after the storage and report modules.
+ * BUILD_NAME values connect these dependencies to their build targets.
+ */
+BUILD "${BUILD_DIR}/data_dictionary_facade.rxbin"
+  BUILD_NAME = dictionary_facade
+  RULE = compile_program
+  INPUT = "${FACADE_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_report
+END BUILD;
+
+/*
+ * Compile the report module. It can be built independently of the
+ * dictionary module; the facade waits for both to be available.
+ */
+BUILD "${BUILD_DIR}/data_dictionary_report.rxbin"
+  BUILD_NAME = dictionary_report
+  RULE = compile_program
+  INPUT = "${REPORT_SOURCE}"
+END BUILD;
+
+/*
+ * Compile the mini sample after its dictionary and facade dependencies.
+ */
+BUILD "${BUILD_DIR}/data_dictionary_mini_sample.rxbin"
+  BUILD_NAME = dictionary_mini_sample
+  RULE = compile_program
+  INPUT = "${SAMPLE_SOURCE}"
+  DEPENDS_ON_BUILD = dictionary_module
+  DEPENDS_ON_BUILD = dictionary_facade
+END BUILD;
+
+/*
+ * Run the sample from BUILD_DIR.
+ *
+ * -a passes the following value as an application argument.
+ * :memory: tells the sample to use a temporary SQLite dictionary.
+ * WORK_DIR also determines where relative output paths are resolved.
+ */
+BUILD "run-data-dictionary-facade-batch"
+  BUILD_NAME = run_dictionary_mini
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/data_dictionary_mini_sample.rxbin"
+  DEPENDS_ON_BUILD = dictionary_mini_sample
+  WORK_DIR = "${BUILD_DIR}"
+  ARGUMENT = "-a" ":memory:"
+END BUILD;
+
+/*
+ * With no explicit target, build the required modules and run the sample.
+ */
+DEFAULT_BUILD = run_dictionary_mini;

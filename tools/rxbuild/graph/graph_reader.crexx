@@ -1571,6 +1571,14 @@ build_target: procedure = .int
     if inputs[0] <> 1 then return graph_error(action || ' requires exactly one INPUT for ' || name)
     dir = dirname(name)
     output_name = basename_no_suffix(name)
+    naction=word(action,1)
+    do i=2 to words(action)
+       naction=naction||" "||word(action,i)
+    end
+    action=naction
+    if dry_run <> 0 then do
+      say 'RXBUILD:'
+    end
     if action = 'COMPILE RXPP' then rc = compile_rxpp(name,inputs[1],deps,toolchain_dir,environment_names,environment_values,unset_environment)
     else if action = 'COMPILE RXPP PROGRAM' then rc = compile_rxpp_program(name,inputs[1],deps,toolchain_dir,environment_names,environment_values,unset_environment)
     else if action = 'COMMAND' then rc = run_command_action(workdir,argument,argument_value,runtime_args,environment_names,environment_values,unset_environment)
