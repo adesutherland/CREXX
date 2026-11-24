@@ -1,0 +1,112 @@
+/*
+ * A small sales dictionary: definitions, references and reports.
+ * Demonstrates members, shared relationships, reports and selections.
+ * Run with :memory: or a fresh database; ddAdd does not overwrite members.
+ */
+options levelb
+
+import data_DataDictionaryFacade
+
+main: procedure = .int
+  arg args = .string[]
+
+  filename = ":memory:"
+  if args.0 > 0 then filename = args[1]
+  rc = ddOpen(filename)
+  if rc <> 0 then do
+    say "Cannot open dictionary:" ddLastError()
+    return 1
+  end
+
+  /*
+   * Define two records. Links are directed from each record to its fields.
+   * CUSTOMER_NUMBER is shared by both records. Forward references are
+   * retained as dummies until the field definitions below complete them.
+   */
+  call ddAdd "ORDER_RECORD", "RECORD", "Sales order"
+    call ddAlias "ORDER", "SHORT"
+    call ddAttribute "owner", "Sales"
+    call ddLink "CUSTOMER_NUMBER", "contains", 1, "customer_number"
+    call ddLink "ORDER_DATE", "contains", 2, "order_date"
+    call ddLink "ORDER_TOTAL", "contains", 3, "order_total"
+
+  call ddAdd "INVOICE_RECORD", "RECORD", "Sales invoice"
+    call ddLink "CUSTOMER_NUMBER", "contains", 1, "customer_number"
+    call ddLink "INVOICE_TOTAL", "contains", 2, "invoice_total"
+
+  /*
+   * Complete the field dummies. Each ddAdd completes the preceding
+   * definition; ddEnd completes the last one and checks the sequence.
+   */
+  call ddAdd "CUSTOMER_NUMBER", "FIELD", "Customer number"
+    call ddAlias "CUST_NO", "SHORT"
+    call ddAttribute "length", "12"
+  call ddAdd "ORDER_DATE", "FIELD", "Date of order"
+  call ddAdd "ORDER_TOTAL", "FIELD", "Order total"
+    call ddAttribute "currency", "EUR"
+  call ddAdd "INVOICE_TOTAL", "FIELD", "Invoice total"
+    call ddAttribute "currency", "EUR"
+
+  rc = ddEnd()
+  if rc <> 0 then return demoError("Definitions failed")
+
+  say ""
+  /* BOM follows outgoing links: the components of ORDER_RECORD. */
+  say "What does ORDER_RECORD contain?"
+  lines = ddBom("ORDER_RECORD", 0, "contains")
+  if ddRc() <> 0 then return demoError("BOM failed")
+  call ddPrint lines
+
+  say ""
+  /* Where-used follows links in reverse to find both records. */
+  say "Where is CUSTOMER_NUMBER used?"
+  lines = ddWhereUsed("CUSTOMER_NUMBER", 0, "contains")
+  if ddRc() <> 0 then return demoError("Where-used failed")
+  call ddPrint lines
+
+  say ""
+  /* An alias provides an alternative way to find a member. */
+  say "Which member has the alias CUST_NO?"
+  lines = ddFindAlias("CUST_NO", "SHORT")
+  if ddRc() <> 0 then return demoError("Alias lookup failed")
+  call ddPrint lines
+
+  /*
+   * KEEP combines exact member names from two queries without duplicates.
+   * DROP removes ORDER_DATE from the selection, not from the dictionary.
+   * ddListMembers retrieves current details for the remaining names.
+   */
+  records = ddMemberNames("RECORD", "", "")
+  if ddRc() <> 0 then return demoError("Record selection failed")
+  order_members = ddBomNames("ORDER_RECORD", 0, "contains")
+  if ddRc() <> 0 then return demoError("BOM selection failed")
+  selected = ddKeep(records, order_members)
+  excluded = .string[]
+  excluded[1] = "ORDER_DATE"
+  selected = ddDrop(selected, excluded)
+
+  say ""
+  say "Records and order members, excluding ORDER_DATE"
+  lines = ddListMembers(selected)
+  if ddRc() <> 0 then return demoError("Selection listing failed")
+  call ddPrint lines
+
+  say ""
+  say "Detailed report for every dictionary member"
+  /* Request a member report for each name in the complete selection.
+   * The returned array is available for further processing. */
+  records = ddMemberNames()
+  performed_lines = ddPerform(records, "MEMBER_REPORT", 0, "", 1)
+   rc = ddClose()
+  if rc <> 0 then do
+    say "Cannot close dictionary:" ddLastError()
+    return 1
+  end
+  return 0
+
+/* Print the original diagnostic before closing changes the DD status. */
+demoError: procedure = .int
+  arg message = .string
+  say message || ": " || ddLastError()
+  call ddClose
+  return 1

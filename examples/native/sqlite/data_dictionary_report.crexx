@@ -124,8 +124,7 @@ DataDictionaryReport: class
     do i = 1 to incoming_lines[0]
       lines[lines[0] + 1] = incoming_lines[i]
     end
-    lines[lines[0] + 1] = copies("=", length(lines[1]))
-    lines[lines[0] + 1] = "END OF " || member_name
+    lines[lines[0] + 1] = ">> END OF " || member_name
     return 0
 
   /** Format DUMMIES rows without exposing the storage member ID. */

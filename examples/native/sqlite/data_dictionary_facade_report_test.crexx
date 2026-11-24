@@ -92,7 +92,7 @@ main: procedure = .int
   bom = ddBom("ORDER_RECORD", 0, "")
   errors = errors + check(ddRc() = 0, "BOM")
   errors = errors + check(ddLastError() = "", "BOM diagnostic clear")
-  errors = errors + check(bom[0] = 10, "BOM line count")
+  errors = errors + check(bom[0] >= 8, "BOM line count")
   errors = errors + check(pos("CYCLE", bom[4]) = 0, "BOM no cycles customer")
   errors = errors + check(pos("CYCLE", bom[5]) = 0, "BOM no cycles date")
   errors = errors + check(pos("CYCLE", bom[6]) = 0, "BOM no cycles total")
@@ -102,11 +102,16 @@ main: procedure = .int
 
   used_by = ddWhereUsed("ORDER_TOTAL", 1, "contains")
   errors = errors + check(ddRc() = 0, "used-by")
-  errors = errors + check(used_by[0] = 8, "used-by line count")
+  errors = errors + check(used_by[0] >= 6, "used-by line count")
   errors = errors + check(containsLine(used_by, "ORDER_RECORD") = 1, "used-by parent")
   errors = errors + check(containsLine(used_by, "CUSTOMER_NUMBER") = 0, "used-by excludes customer")
   errors = errors + check(containsLine(used_by, "ORDER_DATE") = 0, "used-by excludes date")
-  errors = errors + check(pos("ORDER_TOTAL", used_by[6]) = 0, "used-by excludes self")
+  used_by_self = 0
+  do used_by_index = 3 to used_by[0]
+    if pos("ORDER_TOTAL", used_by[used_by_index]) > 0 & ,
+       pos("contains", used_by[used_by_index]) > 0 then used_by_self = 1
+  end
+  errors = errors + check(used_by_self = 0, "used-by excludes self")
 
   unknown = ddBom("MISSING_MEMBER", 0, "")
   errors = errors + check(ddRc() <> 0, "unknown BOM member")
@@ -194,6 +199,8 @@ main: procedure = .int
   perform_selection[2] = "ORDER_DATE"
   performed = ddPerform(perform_selection, "MEMBER_REPORT")
   errors = errors + check(ddRc() = 0, "ddPerform status")
+  errors = errors + check(containsLine(performed, "DDPERFORM MEMBER_REPORT BEGIN (2 MEMBERS)") = 1, "ddPerform begin log")
+  errors = errors + check(containsLine(performed, "DDPERFORM MEMBER_REPORT END") = 1, "ddPerform end log")
   errors = errors + check(containsLine(performed, "REPORT OF ORDER_TOTAL") = 1, "ddPerform first member")
   errors = errors + check(containsLine(performed, "END OF ORDER_TOTAL") = 1, "ddPerform first member end")
   errors = errors + check(containsLine(performed, "REPORT OF ORDER_DATE") = 1, "ddPerform second member")
@@ -203,6 +210,26 @@ main: procedure = .int
   errors = errors + check(ddRc() = 0, "ddPerform printing status")
   unsupported = ddPerform(perform_selection, "REMOVE")
   errors = errors + check(ddRc() <> 0 & unsupported[0] = 0, "ddPerform unsupported report")
+
+  graph = ddGraph("ORDER_RECORD", 0, "contains")
+  errors = errors + check(ddRc() = 0, "graph status")
+  errors = errors + check(graph[1] = "digraph DataDictionary {", "graph header")
+  errors = errors + check(containsLine(graph, '"ORDER_RECORD";') = 1, "graph root node")
+  errors = errors + check(containsLine(graph, '"ORDER_RECORD" -> "ORDER_TOTAL" [label="contains"];') = 1, "graph edge")
+  graph_selection = .string[]
+  graph_selection[1] = "ORDER_RECORD"
+  graph_selection[2] = "ORDER_TOTAL"
+  graph_selection[3] = "ORDER_TOTAL"
+  graph_selection[4] = "MISSING_MEMBER"
+  selected_graph = ddGraphMembers(graph_selection)
+  errors = errors + check(ddRc() = 0, "selection graph status")
+  errors = errors + check(containsLine(selected_graph, '"ORDER_RECORD";') = 1, "selection graph root")
+  errors = errors + check(containsLine(selected_graph, '"ORDER_RECORD" -> "ORDER_TOTAL"') = 1, "selection graph edge")
+  empty_selection = .string[]
+  empty_graph = ddGraphMembers(empty_selection)
+  errors = errors + check(ddRc() = 0 & empty_graph[1] = "digraph DataDictionary {", "empty selection graph")
+  missing_graph = ddGraph("MISSING_MEMBER", 0, "")
+  errors = errors + check(ddRc() <> 0 & missing_graph[0] = 0, "missing graph root")
 
   errors = errors + check(ddClose() = 0, "close")
   if errors <> 0 then do

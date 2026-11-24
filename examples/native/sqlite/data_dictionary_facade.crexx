@@ -7,7 +7,7 @@
  */
 options levelb
 
-namespace data_DataDictionaryFacade expose ddOpen ddClose ddBegin ddAdd ddReplace ddAmend ddRemove ddAlias ddAttribute ddLink ddEnd ddList ddMembers ddListMembers ddMemberNames ddBomNames ddWhereUsedNames ddKeep ddDrop ddPrint ddPerform ddDummies ddFindAlias ddListAliases ddListAllAliases ddMemberDetails ddAttributes ddMemberReport ddBom ddWhereUsed ddRc ddLastError
+namespace data_DataDictionaryFacade expose ddOpen ddClose ddBegin ddAdd ddReplace ddAmend ddRemove ddAlias ddAttribute ddLink ddEnd ddList ddMembers ddListMembers ddMemberNames ddBomNames ddWhereUsedNames ddKeep ddDrop ddPrint ddPerform ddGraph ddGraphMembers ddDummies ddFindAlias ddListAliases ddListAllAliases ddMemberDetails ddAttributes ddMemberReport ddBom ddWhereUsed ddRc ddLastError
 
 import data_DataDictionary
 import data_DataDictionaryReport
@@ -465,13 +465,14 @@ ddLastError: procedure = .string expose last_error
 ddFrameReport: procedure = .string[]
   arg title = .string, body = .string[]
   framed = .string[]
-  framed[1] = "REPORT OF " || title
-  framed[2] = copies("=", length(framed[1]))
+  framed[1] = ""
+  framed[2] = "REPORT OF " || title
+  framed[3] = copies("=", length(framed[1]))
   do i = 1 to body[0]
     framed[framed[0] + 1] = body[i]
   end
   framed[framed[0] + 1] = copies("=", length(framed[1]))
-  framed[framed[0] + 1] = "END OF " || title
+  framed[framed[0] + 1] = ">> END OF " || title
   return framed
 
 ddRc: procedure = .int expose last_rc
@@ -677,19 +678,20 @@ ddPrint: procedure = .int expose last_error last_rc
 ddPerform: procedure = .string[] expose open_ active_ last_error last_rc
   arg selected = .string[], command = .string, max_depth = 0, link_type = "", print_lines = 0
   lines = .string[]
-  operation = translate(strip(command), "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-  if operation <> "member_report" & operation <> "member_details" & operation <> "attributes" & ,
-     operation <> "bom" & operation <> "where_used" & operation <> "list_aliases" then do
+  operation = translate(strip(command), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
+  if operation <> "MEMBER_REPORT" & operation <> "MEMBER_DETAILS" & operation <> "ATTRIBUTES" & ,
+     operation <> "BOM" & operation <> "WHERE_USED" & operation <> "LIST_ALIASES" then do
     call ddReportFail("ddPerform: unsupported report " || command)
     return lines
   end
+  lines[1] = "-- DDPERFORM " || operation || " BEGIN (" || selected[0] || " MEMBERS)"
   do i = 1 to selected[0]
     member_name = selected[i]
-    if operation = "member_report" then result = ddMemberReport(member_name)
-    else if operation = "member_details" then result = ddMemberDetails(member_name)
-    else if operation = "attributes" then result = ddAttributes(member_name)
-    else if operation = "bom" then result = ddBom(member_name, max_depth, link_type)
-    else if operation = "where_used" then result = ddWhereUsed(member_name, max_depth, link_type)
+    if operation = "MEMBER_REPORT" then result = ddMemberReport(member_name)
+    else if operation = "MEMBER_DETAILS" then result = ddMemberDetails(member_name)
+    else if operation = "ATTRIBUTES" then result = ddAttributes(member_name)
+    else if operation = "BOM" then result = ddBom(member_name, max_depth, link_type)
+    else if operation = "WHERE_USED" then result = ddWhereUsed(member_name, max_depth, link_type)
     else result = ddListAliases(member_name)
     rc = ddRc()
     if rc <> 0 then do
@@ -703,9 +705,225 @@ ddPerform: procedure = .string[] expose open_ active_ last_error last_rc
     end
     if i < selected[0] then lines[lines[0] + 1] = ""
   end
+  lines[lines[0] + 1] = "-- DDPERFORM " || operation || " END"
   call ddSuccess
   if print_lines <> 0 then call ddPrint lines
   return lines
+
+/** Export one outgoing dictionary graph as deterministic Graphviz DOT. */
+ddGraph: procedure = .string[] expose dictionary open_ active_ last_error last_rc
+  arg member_name = .string, max_depth = 0, link_type = ""
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddGraph: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddGraph: complete the active definition first")
+    return lines
+  end
+  root_id = 0
+  rc = dictionary.getMemberId(member_name, root_id)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddGraph query rc=" || rc)
+    return lines
+  end
+  names = .string[]
+  ids = .int[]
+  depths = .int[]
+  edges = .string[]
+  names[1] = member_name
+  ids[1] = root_id
+  depths[1] = 0
+  queue_index = 1
+  do while queue_index <= names[0]
+    source_id = ids[queue_index]
+    source_depth = depths[queue_index]
+    if max_depth > 0 & source_depth >= max_depth then do
+      queue_index = queue_index + 1
+      iterate
+    end
+    links = .string[]
+    rc = dictionary.getSuccessorLinks(source_id, links)
+    if rc <> 0 then do
+      call ddReportFail(member_name || ": ddGraph query rc=" || rc)
+      empty = .string[]
+      return empty
+    end
+    do link_index = 1 to links[0]
+      target_name = ddSelectionField(links[link_index], 1)
+      edge_type = ddSelectionField(links[link_index], 2)
+      if link_type <> "" & edge_type <> link_type then iterate
+      target_id = 0
+      rc = dictionary.getMemberId(target_name, target_id)
+      if rc <> 0 then do
+        call ddReportFail(member_name || ": ddGraph query rc=" || rc)
+        empty = .string[]
+        return empty
+      end
+      target_index = ddGraphNodeIndex(names, target_name)
+      if target_index = 0 then do
+        target_index = names[0] + 1
+        names[target_index] = target_name
+        ids[target_index] = target_id
+        depths[target_index] = source_depth + 1
+      end
+      edges[edges[0] + 1] = queue_index || "|" || target_index || "|" || edge_type
+    end
+    queue_index = queue_index + 1
+  end
+  rc = ddGraphDot(names, edges, lines)
+  if rc <> 0 then do
+    call ddReportFail(member_name || ": ddGraph DOT encoding failed")
+    empty = .string[]
+    return empty
+  end
+  call ddSuccess
+  return lines
+
+/** Export only stored links whose source and target are in selected. */
+ddGraphMembers: procedure = .string[] expose dictionary open_ active_ last_error last_rc
+  arg selected = .string[]
+  lines = .string[]
+  if open_ = 0 then do
+    call ddReportFail("ddGraphMembers: dictionary is not open")
+    return lines
+  end
+  if active_ <> 0 then do
+    call ddReportFail("ddGraphMembers: complete the active definition first")
+    return lines
+  end
+  names = .string[]
+  ids = .int[]
+  do i = 1 to selected[0]
+    if ddGraphNodeIndex(names, selected[i]) <> 0 then iterate
+    member_id = 0
+    rc = dictionary.getMemberId(selected[i], member_id)
+    if rc = 1 then iterate
+    if rc <> 0 then do
+      call ddReportFail(selected[i] || ": ddGraphMembers query rc=" || rc)
+      return lines
+    end
+    names[names[0] + 1] = selected[i]
+    ids[ids[0] + 1] = member_id
+  end
+  edges = .string[]
+  do source_index = 1 to names[0]
+    links = .string[]
+    rc = dictionary.getSuccessorLinks(ids[source_index], links)
+    if rc <> 0 then do
+      call ddReportFail(names[source_index] || ": ddGraphMembers query rc=" || rc)
+      empty = .string[]
+      return empty
+    end
+    do link_index = 1 to links[0]
+      target_name = ddSelectionField(links[link_index], 1)
+      target_index = ddGraphNodeIndex(names, target_name)
+      if target_index = 0 then iterate
+      edge_type = ddSelectionField(links[link_index], 2)
+      edges[edges[0] + 1] = source_index || "|" || target_index || "|" || edge_type
+    end
+  end
+  rc = ddGraphDot(names, edges, lines)
+  if rc <> 0 then do
+    call ddReportFail("ddGraphMembers: DOT encoding failed")
+    empty = .string[]
+    return empty
+  end
+  call ddSuccess
+  return lines
+
+ddGraphNodeIndex: procedure = .int
+  arg names = .string[], wanted = .string
+  do i = 1 to names[0]
+    if names[i] = wanted then return i
+  end
+  return 0
+
+ddGraphDot: procedure = .int
+  arg names = .string[], edges = .string[], expose lines = .string[]
+
+  call arraydrop lines
+
+  lines[1] = "digraph DataDictionary {"
+
+  /* Graph layout */
+  lines[lines[0] + 1] = "  graph ["
+  lines[lines[0] + 1] = "    rankdir=TB,"
+  lines[lines[0] + 1] = '    bgcolor="white",'
+  lines[lines[0] + 1] = '    pad="0.3",'
+  lines[lines[0] + 1] = '    nodesep="0.25",'
+  lines[lines[0] + 1] = '    ranksep="0.55",'
+  lines[lines[0] + 1] = "    splines=polyline"
+  lines[lines[0] + 1] = "  ];"
+
+  /* Default appearance of members */
+  lines[lines[0] + 1] = "  node ["
+  lines[lines[0] + 1] = "    shape=box,"
+  lines[lines[0] + 1] = '    style="rounded,filled",'
+  lines[lines[0] + 1] = '    fillcolor="#EDF3F8",'
+  lines[lines[0] + 1] = '    color="#607D9B",'
+  lines[lines[0] + 1] = '    fontname="Arial",'
+  lines[lines[0] + 1] = "    fontsize=12,"
+  lines[lines[0] + 1] = '    fontcolor="#1F2933",'
+  lines[lines[0] + 1] = '    margin="0.16,0.10"'
+  lines[lines[0] + 1] = "  ];"
+
+  /* Default appearance of relationships */
+  lines[lines[0] + 1] = "  edge ["
+  lines[lines[0] + 1] = '    color="#718096",'
+  lines[lines[0] + 1] = '    fontname="Arial",'
+  lines[lines[0] + 1] = "    fontsize=10,"
+  lines[lines[0] + 1] = '    fontcolor="#596B7A",'
+  lines[lines[0] + 1] = "    arrowsize=0.7"
+  lines[lines[0] + 1] = "  ];"
+
+  dot_ok = .int
+
+  do i = 1 to names[0]
+    quoted = ddGraphDotQuote(names[i], dot_ok)
+    if dot_ok = 0 then return -1
+    lines[lines[0] + 1] = "  " || quoted || ";"
+  end
+
+  do i = 1 to edges[0]
+    source_index = ddSelectionField(edges[i], 1)
+    target_index = ddSelectionField(edges[i], 2)
+    edge_type = ddSelectionField(edges[i], 3)
+
+    source_quoted = ddGraphDotQuote(names[source_index], dot_ok)
+    if dot_ok = 0 then return -1
+
+    target_quoted = ddGraphDotQuote(names[target_index], dot_ok)
+    if dot_ok = 0 then return -1
+
+    type_quoted = ddGraphDotQuote(edge_type, dot_ok)
+    if dot_ok = 0 then return -1
+
+    lines[lines[0] + 1] = "  " || source_quoted || " -> " || target_quoted || " [label=" || type_quoted || "];"
+  end
+
+  lines[lines[0] + 1] = "}"
+  return 0
+ddGraphDotQuote: procedure = .string
+  arg value = .string, expose dot_ok = .int
+  dot_ok = 1
+  slash = d2c(92)
+  quote = d2c(34)
+  result = quote
+  do i = 1 to length(value)
+    character = substr(value, i, 1)
+    if character = slash then result = result || slash || slash
+    else if character = quote then result = result || slash || quote
+    else if character = d2c(10) | character = d2c(13) then result = result || slash || "n"
+    else if character = d2c(9) then result = result || slash || "t"
+    else if c2d(character) < 32 then do
+      dot_ok = 0
+      return ""
+    end
+    else result = result || character
+  end
+  return result || quote
 
 ddDummies: procedure = .string[] expose dictionary report open_ active_ last_error last_rc
   lines = .string[]

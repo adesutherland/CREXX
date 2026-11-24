@@ -82,3 +82,29 @@ The same sources can be built through the graph plan:
 The graph has separate dictionary, reporting-module, formatter-test and sample
 targets, plus the default `run_dictionary_sample` target. Its default run uses
 `:memory:` so repeated graph runs do not accumulate duplicate sample members.
+
+The focused Graphviz export sample writes `order.dot`, `shared.dot` and
+`complete.dot` in the graph-build output directory. The graph build then invokes
+Graphviz `COMMAND` targets to write `order.svg`, `shared.svg` and
+`complete.svg`. Keeping rendering in the graph build prevents binary PNG data
+from entering the cREXX UTF-8 output channel. Rerunning replaces these fixed
+sample filenames. It is built with:
+
+```powershell
+.\cmake-build-release\bin\crexx.exe `
+  examples\native\sqlite\data_dictionary_graph_sample.graph.build
+```
+
+It demonstrates `ddGraph` and `ddGraphMembers`. The sample prints DOT source;
+Graphviz is optional for the facade, but required by the rendering targets.
+Set `DOT_EXECUTABLE` near the top of
+`data_dictionary_graph_sample.graph.build` to the full path to `dot.exe`, or
+set Graphviz on `PATH` and use `"dot"` there:
+
+```text
+DOT_EXECUTABLE = "E:/Graphviz-16.1.2-win64/bin/dot.exe";
+```
+
+The graph build supplies `-a :memory:` by default. If Graphviz is unavailable,
+the sample still keeps the DOT files, while the render target fails; it does
+not install or execute a shell command.
