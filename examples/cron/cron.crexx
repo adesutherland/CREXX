@@ -1,0 +1,861 @@
+/* cron.crexx  -  cron for CREXX (Level B)       Linux, Windows, macOS
+ *
+ * CREXX port of CRON.rexx (Regina). Same engine, same crontab format, same
+ * commands. Compile once, then run with rxvme:
+ *
+ *     crexx cron.crexx -noexec            -> cron.rxbin
+ *     rxvme cron -a run jobs.crontab     -> arguments follow  -a
+ *
+ * COMMANDS (first argument):
+ *   run    crontab [opts]        scheduler loop (opts: SYNC VERBOSE DRYRUN ONCE)
+ *   tick   crontab [stamp]       run the jobs due at stamp (default now)
+ *   next   "m h dom mon dow" [stamp]   next fire time after stamp
+ *   match  "m h dom mon dow" [stamp]   1 / 0
+ *   valid  "m h dom mon dow"           1 / 0
+ *   add    crontab "m h dom mon dow" command...
+ *   list   crontab               numbered jobs with next fire time
+ *   remove crontab n             delete job n (numbers as in list)
+ *   stop   crontab               ask a running 'run' to exit (<= 5 s)
+ *   status crontab               running / not running
+ *   selftest                     built-in tests (uses temp files here)
+ *
+ * stamp = 'YYYY-MM-DD HH:MM' (also 'YYYY-MM-DDTHH:MM[:SS]'), default now.
+ *
+ * EXPRESSIONS: 5 fields  minute hour day-of-month month day-of-week
+ *   *  a  a-b  a,b,c  star/n  a-b/n  a/n ; month JAN..DEC ; weekday SUN..SAT
+ *   (0 and 7 = Sunday) ; @yearly @annually @monthly @weekly @daily
+ *   @midnight @hourly.  Like Vixie cron: if day-of-month and day-of-week are
+ *   both restricted, a day matching EITHER fires.
+ *
+ * CRONTAB FILE: "expr command" lines; '#' comments and blank lines skipped;
+ *   NAME=value lines set an environment variable for the jobs that follow.
+ *   Re-read every minute. Jobs start in the background (opts SYNC to wait).
+ *
+ * PORTABILITY NOTES (CREXX beta 1): ADDRESS does not use a shell, so every job
+ *   is written to a small script file (<crontab>.job.sh / .job.cmd) and that
+ *   script is run. File names must not contain spaces. Setting the
+ *   environment variable CRON_OS=WIN or UNIX overrides OS detection.
+ */
+options levelb numeric_classic
+import rxfnsb
+import rxplatform
+
+arg av = .string[]
+
+cmdline = ''
+do i = 1 to av.0
+  cmdline = cmdline av[i]
+end
+cmdline = strip(cmdline)
+
+action = upper(word(cmdline, 1))
+rest = subword(cmdline, 2)
+res = ''
+
+select
+  when action = 'RUN' then res = cron('RUN', word(rest, 1), subword(rest, 2), '')
+  when action = 'TICK' then res = cron('TICK', word(rest, 1), subword(rest, 2), '')
+  when action = 'LIST' then res = cron('LIST', word(rest, 1), '', '')
+  when action = 'STOP' then res = cron('STOP', word(rest, 1), '', '')
+  when action = 'STATUS' then res = cron('STATUS', word(rest, 1), '', '')
+  when action = 'REMOVE' then res = cron('REMOVE', word(rest, 1), word(rest, 2), '')
+  when action = 'SELFTEST' then res = cron('SELFTEST', '', '', '')
+  when action = 'NEXT' | action = 'MATCH' | action = 'VALID' then do
+    if left(rest, 1) = '@' then nw = 1
+    else nw = 5
+    res = cron(action, subw(rest, 1, nw), subword(rest, nw + 1), '')
+  end
+  when action = 'ADD' then do
+    afile = word(rest, 1)
+    erest = subword(rest, 2)
+    c1 = left(afile, 1)
+    if c1 = '@' | c1 = '*' | datatype(c1, 'W') then do
+      say 'ERROR: the crontab file comes first:  add <crontab> <expr> <command>'
+      exit 1
+    end
+    if left(erest, 1) = '@' then nw = 1
+    else nw = 5
+    res = cron('ADD', afile, subw(erest, 1, nw), subword(erest, nw + 1))
+  end
+  otherwise do
+    say 'usage: rxvme cron -a run|tick|next|match|valid|add|list|remove|stop|status|selftest ...'
+    exit 2
+  end
+end
+
+if res \= '' then say res
+if left(res, 6) = 'ERROR:' then exit 1
+if left(res, 8) = 'SELFTEST' & right(res, 8) \= '0 failed' then exit 1
+exit 0
+
+/* ------------------------------------------------------------------ */
+/* dispatcher - same shape as the Regina CRON() function               */
+/* ------------------------------------------------------------------ */
+
+cron: procedure = .string
+  arg action = .string, a1 = .string, a2 = .string, a3 = .string
+  action = upper(strip(action))
+  if action = 'VALID' then return validp(a1)
+  if action = 'MATCH' then return domatch(a1, a2)
+  if action = 'NEXT' then return donext(a1, a2)
+  if action = 'TICK' then return tick(a1, a2, a3)
+  if action = 'RUN' then return run(a1, a2)
+  if action = 'ADD' then return doadd(a1, a2, a3)
+  if action = 'LIST' then return dolist(a1)
+  if action = 'REMOVE' then return doremove(a1, a2)
+  if action = 'STOP' then return dostop(a1)
+  if action = 'STATUS' then return dostatus(a1)
+  if action = 'SELFTEST' then return selftest()
+  if action = 'OS' then do
+    if iswin() then return 'WIN'
+    return 'UNIX'
+  end
+  return 'ERROR: unknown action' action
+
+/* ------------------------------------------------------------------ */
+/* platform helpers                                                    */
+/* ------------------------------------------------------------------ */
+
+validp: procedure = .string
+  arg expr = .string
+  c = compile(expr)
+  if left(c, 3) = 'ERR' then return '0'
+  return '1'
+
+iswin: procedure = .int
+  os = getenv('CRON_OS')
+  if os = '' then os = getenv('OS')
+  if left(upper(os), 3) = 'WIN' then return 1
+  return 0
+
+cronsleep: procedure = .int
+  arg n = .int
+  if n < 1 then n = 1
+  return rxplatform..sleep(n * 1000)
+
+fileexists: procedure = .int
+  arg f = .string
+  junk = .string[]
+  if iswin() then address system 'cmd /c dir /b' f output junk
+  else address system 'test -f' f
+  if rc = 0 then return 1
+  return 0
+
+delfile: procedure
+  arg f = .string
+  junk = .string[]
+  if iswin() then address system 'cmd /c del /q' f output junk
+  else address system 'rm -f' f
+  return
+
+movefile: procedure
+  arg src = .string, dst = .string
+  junk = .string[]
+  if iswin() then address system 'cmd /c move /y' src dst output junk
+  else address system 'mv -f' src dst
+  return
+
+/* script text (lines separated by 0a) that starts one job */
+joblines: procedure = .string
+  arg cmd = .string, envtext = .string, win = .int, sync = .int
+  jl = ''
+  if sync = 1 then jl = cmd
+  else if win = 1 then jl = 'start "cron" /b cmd /c' cmd
+  else jl = '(' cmd ') &'
+  if envtext = '' then return jl
+  return envtext || '0a'x || jl
+
+/* start one job; returns '' (or the DRYRUN text) */
+runjob: procedure = .string
+  arg file = .string, cmd = .string, envtext = .string, opts = .string
+  opts = upper(opts)
+  sync = 0
+  if wordpos('SYNC', opts) > 0 then sync = 1
+  win = iswin()
+  body = joblines(cmd, envtext, win, sync)
+  if wordpos('DRYRUN', opts) > 0 then do
+    say 'DRYRUN:' translate(body, ' ', '0a'x)
+    return ''
+  end
+  script = file'.job.sh'
+  if win = 1 then script = file'.job.cmd'
+  call delfile script
+  rest = body
+  do while rest \= ''
+    p = pos('0a'x, rest)
+    if p = 0 then do
+      call lineout script, rest || ''
+      rest = ''
+    end
+    else do
+      call lineout script, left(rest, p - 1) || ''
+      rest = substr(rest, p + 1)
+    end
+  end
+  call lineout script
+  out = .string[]
+  if win = 1 then address system 'cmd /c' script output out
+  else address system 'sh' script output out
+  do j = 1 to out.0
+    say out[j]
+  end
+  call delfile script
+  return ''
+
+/* ------------------------------------------------------------------ */
+/* line helpers                                                        */
+/* ------------------------------------------------------------------ */
+
+norm: procedure = .string
+  arg line = .string
+  return strip(translate(line, '  ', '09'x || '0d'x))
+
+/* 1 if the (normalised) line is a job; 0 for blank / comment / NAME=value */
+joblinep: procedure = .int
+  arg line = .string
+  if line = '' then return 0
+  if left(line, 1) = '#' then return 0
+  w1 = word(line, 1)
+  if left(w1, 1) \= '@' & pos('=', w1) > 0 then return 0
+  return 1
+
+/* 1 if the (normalised) line is NAME=value */
+envlinep: procedure = .int
+  arg line = .string
+  if line = '' then return 0
+  if left(line, 1) = '#' then return 0
+  w1 = word(line, 1)
+  if left(w1, 1) \= '@' & pos('=', w1) > 0 then return 1
+  return 0
+
+/* count words starting at word 'start' */
+subw: procedure = .string
+  arg text = .string, start = .int, count = .int
+  r = ''
+  do i = start to start + count - 1
+    w = word(text, i)
+    if w = '' then leave
+    r = r w
+  end
+  return strip(r)
+
+/* expression part / command part of a job line */
+jobexpr: procedure = .string
+  arg line = .string
+  if left(line, 1) = '@' then return word(line, 1)
+  return subw(line, 1, 5)
+
+jobcmd: procedure = .string
+  arg line = .string
+  if left(line, 1) = '@' then return subword(line, 2)
+  return subword(line, 6)
+
+/* NOTE: in CREXX beta 1 lineout(file, x) writes nothing when x is a bare variable
+   or function result; 'x || ""' is written correctly, so every write uses that. */
+
+/* read a whole file into an array (without the trailing empty record) */
+readall: procedure = .string[]
+  arg file = .string
+  buf = .string[]
+  n = 0
+  if fileexists(file) = 0 then return buf
+  do while lines(file)
+    n = n + 1
+    buf[n] = linein(file)
+  end
+  call lineout file
+  do while n > 0
+    if buf[n] = '' then n = n - 1
+    else leave
+  end
+  out = .string[]
+  do k = 1 to n
+    out[k] = buf[k]
+  end
+  return out
+
+/* write an array to a file (via a temp file, then move into place) */
+writeall: procedure
+  arg file = .string, buf = .string[], cnt = .int
+  tmp = file'.tmp'
+  call delfile tmp
+  if cnt = 0 then call lineout tmp, ' '
+  do k = 1 to cnt
+    call lineout tmp, buf[k] || ''
+  end
+  call lineout tmp
+  call delfile file
+  call movefile tmp, file
+  return
+
+/* ------------------------------------------------------------------ */
+/* scheduler                                                           */
+/* ------------------------------------------------------------------ */
+
+run: procedure = .string
+  arg file = .string, opts = .string
+  opts = upper(opts)
+  if fileexists(file) = 0 then return 'ERROR: crontab not found:' file
+  stopf = file'.stop'
+  statf = file'.status'
+  call delfile stopf
+  started = nowstamp()
+  lasttick = '-'
+  total = 0
+  last = ''
+  if wordpos('ONCE', opts) = 0 then last = stampkey(parsestamp(''))   /* skip the minute in progress */
+  do forever
+    call heartbeat statf, started, lasttick, total
+    if fileexists(stopf) = 1 then do
+      call delfile stopf
+      call delfile statf
+      return 'OK: stopped'
+    end
+    st = parsestamp('')
+    key = stampkey(st)
+    if key \= last then do
+      last = key
+      n = tick(file, normstamp(st), opts)
+      lasttick = nowstamp()
+      if datatype(n, 'W') then total = total + n
+      if wordpos('ONCE', opts) > 0 then do
+        call delfile statf
+        return n
+      end
+    end
+    s = substr(time('L'), 7, 2) + 0
+    call cronsleep min(60 - s, 5)
+  end
+  return ''
+
+tick: procedure = .string
+  arg file = .string, stamp = .string, opts = .string
+  opts = upper(opts)
+  st = parsestamp(stamp)
+  if left(st, 3) = 'ERR' then return 'ERROR:' substr(st, 4)
+  y = word(st, 1) + 0
+  m = word(st, 2) + 0
+  d = word(st, 3) + 0
+  h = word(st, 4) + 0
+  mi = word(st, 5) + 0
+  if fileexists(file) = 0 then return 'ERROR: crontab not found:' file
+  shown = normstamp(st)
+  envtext = ''
+  n = 0
+  do while lines(file)
+    line = norm(linein(file))
+    if envlinep(line) = 1 then do
+      /* NAME=value for the jobs that follow */
+      p = pos('=', line)
+      nm = strip(left(line, p - 1))
+      vl = strip(strip(substr(line, p + 1)), 'B', '"')
+      el = 'export' nm'="'vl'"'
+      if iswin() then el = 'set' nm'='vl
+      if envtext = '' then envtext = el
+      else envtext = envtext || '0a'x || el
+      iterate
+    end
+    if joblinep(line) = 0 then iterate
+    expr = jobexpr(line)
+    cmd = jobcmd(line)
+    c = compile(expr)
+    if left(c, 3) = 'ERR' then do
+      say 'cron: skipped bad line "'line'":' substr(c, 4)
+      iterate
+    end
+    if cmd = '' then iterate
+    if matchc(c, y, m, d, h, mi) = 1 then do
+      if wordpos('VERBOSE', opts) > 0 then say shown 'run:' cmd
+      call runjob file, cmd, envtext, opts
+      n = n + 1
+    end
+  end
+  call lineout file
+  return n
+
+/* ------------------------------------------------------------------ */
+/* status / stop                                                       */
+/* ------------------------------------------------------------------ */
+
+nowstamp: procedure = .string
+  arg
+  dt = date('ST')
+  return left(dt, 4)'-'substr(dt, 5, 2)'-'substr(dt, 7, 2) left(time('L'), 8)
+
+abssecs: procedure = .int
+  arg
+  return date('B') * 86400 + time('S')
+
+heartbeat: procedure
+  arg statf = .string, started = .string, lasttick = .string, total = .int
+  call delfile statf
+  call lineout statf, started || ''
+  call lineout statf, abssecs() || ''
+  call lineout statf, lasttick || ''
+  call lineout statf, total || ''
+  call lineout statf
+  return
+
+dostatus: procedure = .string
+  arg file = .string
+  if fileexists(file) = 0 then return 'ERROR: crontab not found:' file
+  statf = file'.status'
+  if fileexists(statf) = 0 then return 'not running'
+  started = linein(statf)
+  beat = linein(statf)
+  lasttick = linein(statf)
+  total = linein(statf)
+  call lineout statf
+  if \datatype(beat, 'W') then return 'not running'
+  age = abssecs() - beat
+  if age > 15 then return 'not running (last seen' age 'seconds ago; was started' started')'
+  return 'running since' started', last minute checked' lasttick', jobs started:' total
+
+dostop: procedure = .string
+  arg file = .string
+  if fileexists(file) = 0 then return 'ERROR: crontab not found:' file
+  call delfile file'.stop'
+  call lineout file'.stop', 'stop'
+  call lineout file'.stop'
+  return 'OK: stop requested (takes up to 5 seconds)'
+
+/* ------------------------------------------------------------------ */
+/* crontab editing: ADD / LIST / REMOVE                                */
+/* ------------------------------------------------------------------ */
+
+countjobs: procedure = .int
+  arg file = .string
+  buf = readall(file)
+  n = 0
+  do k = 1 to buf.0
+    if joblinep(norm(buf[k])) = 1 then n = n + 1
+  end
+  return n
+
+doadd: procedure = .string
+  arg file = .string, expr = .string, cmd = .string
+  expr = space(expr, 1)
+  cmd = strip(cmd)
+  c = compile(expr)
+  if left(c, 3) = 'ERR' then return 'ERROR:' substr(c, 4)
+  if cmd = '' then return 'ERROR: empty command'
+  buf = readall(file)
+  n = buf.0
+  jobs = 0
+  do k = 1 to n
+    if joblinep(norm(buf[k])) = 1 then jobs = jobs + 1
+  end
+  n = n + 1
+  buf[n] = expr cmd
+  call writeall file, buf, n
+  jn = jobs + 1
+  return 'OK: added job' jn
+
+dolist: procedure = .string
+  arg file = .string
+  if fileexists(file) = 0 then return 'ERROR: crontab not found:' file
+  buf = readall(file)
+  out = ''
+  n = 0
+  do k = 1 to buf.0
+    line = norm(buf[k])
+    if joblinep(line) = 0 then iterate
+    n = n + 1
+    expr = jobexpr(line)
+    cmd = jobcmd(line)
+    c = compile(expr)
+    info = 'INVALID'
+    if left(c, 3) \= 'ERR' then info = donext(expr, '')
+    if n > 1 then out = out || '0a'x
+    out = out || right(n, 3) || '  ' || left(expr, 15) || '  ' || left(info, 16) || '  ' || cmd
+  end
+  if n = 0 then return '(no jobs)'
+  return out
+
+doremove: procedure = .string
+  arg file = .string, kx = .string
+  if fileexists(file) = 0 then return 'ERROR: crontab not found:' file
+  if \datatype(kx, 'W') then return 'ERROR: job number needed'
+  kk = kx + 0
+  if kk < 1 then return 'ERROR: job number needed'
+  buf = readall(file)
+  keep = .string[]
+  nk = 0
+  n = 0
+  removed = ''
+  do k = 1 to buf.0
+    line = norm(buf[k])
+    if joblinep(line) = 1 then do
+      n = n + 1
+      if n = kk then do
+        removed = line
+        iterate
+      end
+    end
+    nk = nk + 1
+    keep[nk] = buf[k]
+  end
+  if removed = '' then return 'ERROR: no job number' kk
+  call writeall file, keep, nk
+  return 'OK: removed job' kk':' removed
+
+/* ------------------------------------------------------------------ */
+/* expression engine                                                   */
+/* ------------------------------------------------------------------ */
+
+domatch: procedure = .string
+  arg expr = .string, ts = .string
+  c = compile(expr)
+  if left(c, 3) = 'ERR' then return 'ERROR:' substr(c, 4)
+  st = parsestamp(ts)
+  if left(st, 3) = 'ERR' then return 'ERROR:' substr(st, 4)
+  return matchc(c, word(st, 1) + 0, word(st, 2) + 0, word(st, 3) + 0, word(st, 4) + 0, word(st, 5) + 0)
+
+donext: procedure = .string
+  arg expr = .string, ts = .string
+  c = compile(expr)
+  if left(c, 3) = 'ERR' then return 'ERROR:' substr(c, 4)
+  st = parsestamp(ts)
+  if left(st, 3) = 'ERR' then return 'ERROR:' substr(st, 4)
+  return nextc(c, word(st, 1) + 0, word(st, 2) + 0, word(st, 3) + 0, word(st, 4) + 0, word(st, 5) + 0)
+
+/* n-th piece of text split on sep */
+piece: procedure = .string
+  arg text = .string, n = .int, sep = .string
+  rest = text
+  p = .int
+  do i = 1 to n - 1
+    p = pos(sep, rest)
+    if p = 0 then return ''
+    rest = substr(rest, p + length(sep))
+  end
+  p = pos(sep, rest)
+  if p = 0 then return rest
+  return left(rest, p - 1)
+
+/* compiled form:  mins|hrs|doms|mons|dows|domStar|dowStar  (sets as ' 1 5 ') */
+compile: procedure = .string
+  arg expr = .string
+  expr = strip(expr)
+  if left(expr, 1) = '@' then do
+    ux = upper(expr)
+    if ux = '@YEARLY' | ux = '@ANNUALLY' then expr = '0 0 1 1 *'
+    else if ux = '@MONTHLY' then expr = '0 0 1 * *'
+    else if ux = '@WEEKLY' then expr = '0 0 * * 0'
+    else if ux = '@DAILY' | ux = '@MIDNIGHT' then expr = '0 0 * * *'
+    else if ux = '@HOURLY' then expr = '0 * * * *'
+    else return 'ERR unknown macro' expr
+  end
+  if words(expr) \= 5 then return 'ERR need 5 fields, got' words(expr)
+  f1 = word(expr, 1)
+  f2 = word(expr, 2)
+  f3 = word(expr, 3)
+  f4 = word(expr, 4)
+  f5 = word(expr, 5)
+  mins = parsefield(f1, 0, 59, 59, '', 0)
+  if left(mins, 3) = 'ERR' then return 'ERR minute:' substr(mins, 4)
+  hrs = parsefield(f2, 0, 23, 23, '', 0)
+  if left(hrs, 3) = 'ERR' then return 'ERR hour:' substr(hrs, 4)
+  doms = parsefield(f3, 1, 31, 31, '', 0)
+  if left(doms, 3) = 'ERR' then return 'ERR day-of-month:' substr(doms, 4)
+  mons = parsefield(f4, 1, 12, 12, 'JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC', 1)
+  if left(mons, 3) = 'ERR' then return 'ERR month:' substr(mons, 4)
+  dows = parsefield(f5, 0, 7, 6, 'SUN MON TUE WED THU FRI SAT', 0)
+  if left(dows, 3) = 'ERR' then return 'ERR day-of-week:' substr(dows, 4)
+  ds = 0
+  if left(f3, 1) = '*' then ds = 1
+  ws = 0
+  if left(f5, 1) = '*' then ws = 1
+  return mins'|'hrs'|'doms'|'mons'|'dows'|'ds'|'ws
+
+/* one field -> ' v1 v2 ... ' or 'ERR text' */
+parsefield: procedure = .string
+  arg spec = .string, lo = .int, hi = .int, starhi = .int, names = .string, nbase = .int
+  spec = upper(strip(spec))
+  if spec = '' then return 'ERR empty field'
+  set = ' '
+  do while spec \= ''
+    part = ''
+    range = ''
+    stepx = ''
+    dash = 0
+    p = pos(',', spec)
+    if p = 0 then do
+      part = spec
+      spec = ''
+    end
+    else do
+      part = left(spec, p - 1)
+      spec = substr(spec, p + 1)
+    end
+    if part = '' then return 'ERR empty list item'
+    a = 0
+    b = 0
+    sl = pos('/', part)
+    step = 1
+    if sl > 0 then do
+      range = left(part, sl - 1)
+      stepx = substr(part, sl + 1)
+      if \datatype(stepx, 'W') then return 'ERR bad step "'stepx'"'
+      step = stepx + 0
+      if step < 1 then return 'ERR bad step "'stepx'"'
+    end
+    else range = part
+    if range = '*' then do
+      a = lo
+      b = starhi
+    end
+    else do
+      dash = pos('-', range)
+      if dash > 0 then do
+        a = atom(left(range, dash - 1), lo, hi, names, nbase)
+        b = atom(substr(range, dash + 1), lo, hi, names, nbase)
+      end
+      else do
+        a = atom(range, lo, hi, names, nbase)
+        if sl > 0 then b = hi
+        else b = a
+      end
+      if a < 0 | b < 0 then return 'ERR bad value in "'part'"'
+      if a > b then return 'ERR reversed range "'part'"'
+    end
+    do v = a to b by step
+      v2 = v
+      if hi = 7 & v = 7 then v2 = 0
+      if pos(' 'v2' ', set) = 0 then set = set || v2 || ' '
+    end
+  end
+  return set
+
+/* number or 3-letter name -> number; -1 when invalid / out of range */
+atom: procedure = .int
+  arg t = .string, lo = .int, hi = .int, names = .string, nbase = .int
+  v = -1
+  if datatype(t, 'W') then v = t + 0
+  else do
+    if names = '' | length(t) \= 3 then return -1
+    p = wordpos(t, names)
+    if p = 0 then return -1
+    v = p - 1 + nbase
+  end
+  if v < lo | v > hi then return -1
+  return v
+
+matchc: procedure = .string
+  arg c = .string, y = .int, m = .int, d = .int, h = .int, mi = .int
+  mins = piece(c, 1, '|')
+  hrs = piece(c, 2, '|')
+  doms = piece(c, 3, '|')
+  mons = piece(c, 4, '|')
+  dows = piece(c, 5, '|')
+  ds = piece(c, 6, '|')
+  ws = piece(c, 7, '|')
+  if pos(' 'mi' ', mins) = 0 then return '0'
+  if pos(' 'h' ', hrs) = 0 then return '0'
+  if pos(' 'm' ', mons) = 0 then return '0'
+  wd = (ymdbase(y, m, d) + 1) // 7                    /* 0 = Sunday */
+  domok = 0
+  if pos(' 'd' ', doms) > 0 then domok = 1
+  dowok = 0
+  if pos(' 'wd' ', dows) > 0 then dowok = 1
+  ok = 0
+  if ds = '1' | ws = '1' then do
+    if domok = 1 & dowok = 1 then ok = 1
+  end
+  else do
+    if domok = 1 | dowok = 1 then ok = 1
+  end
+  if ok = 1 then return '1'
+  return '0'
+
+nextc: procedure = .string
+  arg c = .string, y = .int, m = .int, d = .int, h = .int, mi = .int
+  mins = piece(c, 1, '|')
+  hrs = piece(c, 2, '|')
+  doms = piece(c, 3, '|')
+  mons = piece(c, 4, '|')
+  dows = piece(c, 5, '|')
+  ds = piece(c, 6, '|')
+  ws = piece(c, 7, '|')
+  b0 = ymdbase(y, m, d)
+  t0 = h * 60 + mi + 1                                 /* strictly after */
+  if t0 >= 1440 then do
+    b0 = b0 + 1
+    t0 = 0
+  end
+  do b = b0 to b0 + 3000
+    ymd = basetoymd(b)
+    yy = left(ymd, 4)
+    mm = substr(ymd, 5, 2) + 0
+    dd = substr(ymd, 7, 2) + 0
+    if pos(' 'mm' ', mons) = 0 then iterate
+    wd = (b + 1) // 7
+    domok = 0
+    if pos(' 'dd' ', doms) > 0 then domok = 1
+    dowok = 0
+    if pos(' 'wd' ', dows) > 0 then dowok = 1
+    ok = 0
+    if ds = '1' | ws = '1' then do
+      if domok = 1 & dowok = 1 then ok = 1
+    end
+    else do
+      if domok = 1 | dowok = 1 then ok = 1
+    end
+    if ok = 0 then iterate
+    s0 = 0
+    if b = b0 then s0 = t0
+    h0 = s0 % 60
+    do hh = h0 to 23
+      if pos(' 'hh' ', hrs) = 0 then iterate
+      m0 = 0
+      if hh = h0 then m0 = s0 // 60
+      do nm = m0 to 59
+        if pos(' 'nm' ', mins) > 0 then return yy'-'right(mm, 2, '0')'-'right(dd, 2, '0') right(hh, 2, '0')':'right(nm, 2, '0')
+      end
+    end
+  end
+  return ''
+
+/* ------------------------------------------------------------------ */
+/* date helpers (own calendar arithmetic; base = days since 0001-01-01) */
+/* ------------------------------------------------------------------ */
+
+daysin: procedure = .int
+  arg y = .int, m = .int
+  if m = 2 then do
+    if (y // 4 = 0 & y // 100 \= 0) | y // 400 = 0 then return 29
+    return 28
+  end
+  if m = 4 | m = 6 | m = 9 | m = 11 then return 30
+  return 31
+
+ymdbase: procedure = .int
+  arg y = .int, m = .int, d = .int
+  py = y - 1
+  b = 365 * py + py % 4 - py % 100 + py % 400
+  do k = 1 to m - 1
+    b = b + daysin(y, k)
+  end
+  return b + d - 1
+
+basetoymd: procedure = .string
+  arg b = .int
+  return date('ST', b, 'B')
+
+/* '' -> now; else 'YYYY-MM-DD HH:MM[:SS]' / '...THH:MM'.
+   Returns 'y m d h mi' (plain numbers) or 'ERR text'. */
+parsestamp: procedure = .string
+  arg ts = .string
+  ts = strip(ts)
+  if ts = '' then do
+    dt = date('ST')
+    tm = left(time('L'), 8)
+    ts = left(dt, 4) substr(dt, 5, 2) substr(dt, 7, 2) left(tm, 2) substr(tm, 4, 2)
+  end
+  else ts = translate(ts, '   ', 'T-:')
+  if words(ts) < 3 then return 'ERR bad timestamp (use YYYY-MM-DD HH:MM)'
+  ys = word(ts, 1)
+  ms = word(ts, 2)
+  dds = word(ts, 3)
+  hs = word(ts, 4)
+  if hs = '' then hs = '0'
+  mis = word(ts, 5)
+  if mis = '' then mis = '0'
+  if \datatype(ys, 'W') | \datatype(ms, 'W') | \datatype(dds, 'W') | \datatype(hs, 'W') | \datatype(mis, 'W') then return 'ERR bad timestamp (use YYYY-MM-DD HH:MM)'
+  y = ys + 0
+  m = ms + 0
+  d = dds + 0
+  h = hs + 0
+  mi = mis + 0
+  if y < 1 | y > 9999 | m < 1 | m > 12 then return 'ERR bad timestamp date'
+  if d < 1 | d > daysin(y, m) then return 'ERR bad timestamp date'
+  if h < 0 | h > 23 | mi < 0 | mi > 59 then return 'ERR bad timestamp time'
+  return y m d h mi
+
+stampkey: procedure = .string
+  arg st = .string
+  return st
+
+normstamp: procedure = .string
+  arg st = .string
+  return word(st, 1)'-'right(word(st, 2), 2, '0')'-'right(word(st, 3), 2, '0') right(word(st, 4), 2, '0')':'right(word(st, 5), 2, '0')
+
+/* ------------------------------------------------------------------ */
+/* built-in tests                                                      */
+/* ------------------------------------------------------------------ */
+
+chk: procedure = .int
+  arg name = .string, got = .string, want = .string
+  if got = want then do
+    say 'ok   ' name
+    return 0
+  end
+  say 'FAIL ' name ': got "'got'" want "'want'"'
+  return 1
+
+selftest: procedure = .string
+  arg
+  f = 0
+  t = 0
+  f = f + chk('sleep 1 second', cronsleep(1), 0)
+  f = f + chk('valid */5', validp('*/5 * * * *'), '1')
+  f = f + chk('valid names', validp('0 9 * JAN-MAR MON-FRI'), '1')
+  f = f + chk('invalid minute 60', validp('60 * * * *'), '0')
+  f = f + chk('invalid 4 fields', validp('* * * *'), '0')
+  f = f + chk('invalid step 0', validp('*/0 * * * *'), '0')
+  f = f + chk('invalid reversed', validp('30-10 * * * *'), '0')
+  f = f + chk('invalid name', validp('0 0 * FOO *'), '0')
+  f = f + chk('valid @daily', validp('@daily'), '1')
+
+  f = f + chk('next */15', donext('*/15 * * * *', '2026-11-14 10:07'), '2026-11-14 10:15')
+  f = f + chk('next strictly after', donext('*/15 * * * *', '2026-11-14 10:15'), '2026-11-14 10:30')
+  f = f + chk('next range/step', donext('5-30/10 * * * *', '2026-11-14 10:06'), '2026-11-14 10:15')
+  f = f + chk('next hour rollover', donext('0 * * * *', '2026-11-14 23:30'), '2026-11-15 00:00')
+  f = f + chk('next year rollover', donext('0 0 1 1 *', '2026-12-31 23:59'), '2027-01-01 00:00')
+  f = f + chk('next weekdays', donext('30 2 * * 1-5', '2026-11-14 12:00'), '2026-11-16 02:30')
+  f = f + chk('next sunday as 7', donext('0 0 * * 7', '2026-11-14 12:00'), '2026-11-15 00:00')
+  f = f + chk('next sunday as SUN', donext('0 0 * * SUN', '2026-11-14 12:00'), '2026-11-15 00:00')
+  f = f + chk('next feb 29', donext('0 0 29 2 *', '2026-11-14 12:00'), '2028-02-29 00:00')
+  f = f + chk('next dom OR dow', donext('0 0 13 * 5', '2026-11-14 12:00'), '2026-11-20 00:00')
+  f = f + chk('next dom OR dow (b)', donext('0 0 13 * 5', '2026-11-20 12:00'), '2026-11-27 00:00')
+  f = f + chk('next month name', donext('0 8 15 MAR *', '2026-11-14 12:00'), '2027-03-15 08:00')
+  f = f + chk('next @hourly', donext('@hourly', '2026-11-14 10:07'), '2026-11-14 11:00')
+  f = f + chk('next @weekly', donext('@weekly', '2026-11-14 10:07'), '2026-11-15 00:00')
+  f = f + chk('next list', donext('0,30 9,17 * * *', '2026-11-14 09:30'), '2026-11-14 17:00')
+  f = f + chk('next iso T stamp', donext('0 12 * * *', '2026-11-14T08:00:00'), '2026-11-14 12:00')
+  f = f + chk('next leap day rollover', donext('0 0 * * *', '2028-02-28 12:00'), '2028-02-29 00:00')
+  f = f + chk('next feb30 never', donext('0 0 30 2 *', '2026-01-01 00:00'), '')
+
+  f = f + chk('match yes', domatch('*/5 * * * *', '2026-11-14 10:10'), '1')
+  f = f + chk('match no', domatch('*/5 * * * *', '2026-11-14 10:11'), '0')
+  f = f + chk('match dow Sat', domatch('0 0 * * 6', '2026-11-14 00:00'), '1')
+  f = f + chk('match bad stamp', left(domatch('* * * * *', '2026-02-30 00:00'), 6), 'ERROR:')
+
+  f = f + chk('job lines unix bg', joblines('echo hi', '', 0, 0), '( echo hi ) &')
+  f = f + chk('job lines win bg', joblines('echo hi', '', 1, 0), 'start "cron" /b cmd /c echo hi')
+  f = f + chk('job lines sync', joblines('echo hi', '', 0, 1), 'echo hi')
+  f = f + chk('job lines env', translate(joblines('echo hi', 'export A="1"', 0, 1), '|', '0a'x), 'export A="1"|echo hi')
+
+  /* crontab: tick (dry run), add / list / remove */
+  ct = 'cron_selftest.crontab'
+  call delfile ct
+  f = f + chk('add creates file', doadd(ct, '*/10 * * * *', 'echo every10'), 'OK: added job 1')
+  f = f + chk('add 2', doadd(ct, '0 12 * * 6', 'echo saturday_noon'), 'OK: added job 2')
+  f = f + chk('add 3', doadd(ct, '@hourly', 'echo hourly'), 'OK: added job 3')
+  f = f + chk('add bad expr', left(doadd(ct, '99 * * * *', 'x'), 6), 'ERROR:')
+  f = f + chk('add empty cmd', left(doadd(ct, '* * * * *', ''), 6), 'ERROR:')
+  f = f + chk('tick 12:00 Sat', tick(ct, '2026-11-14 12:00', 'DRYRUN'), '3')
+  f = f + chk('tick 12:05', tick(ct, '2026-11-14 12:05', 'DRYRUN'), '0')
+  f = f + chk('tick missing file', left(tick('nope.crontab', '2026-11-14 12:00', ''), 6), 'ERROR:')
+  lst = cron('LIST', ct, '', '')
+  f = f + chk('list has job 3', pos('echo hourly', lst) > 0, '1')
+  f = f + chk('remove bad number', left(doremove(ct, '9'), 6), 'ERROR:')
+  f = f + chk('remove job 1', left(doremove(ct, '1'), 17), 'OK: removed job 1')
+  f = f + chk('renumbered', left(dolist(ct), 3), '  1')
+  f = f + chk('remove 2', left(doremove(ct, '1'), 17), 'OK: removed job 1')
+  f = f + chk('remove 3', left(doremove(ct, '1'), 17), 'OK: removed job 1')
+  f = f + chk('list empty', dolist(ct), '(no jobs)')
+  call delfile ct
+
+  say
+  return 'SELFTEST' f 'failed'
