@@ -1,0 +1,30 @@
+/* Build and run the cREXX cron sample's deterministic self-test. */
+BUILD_DIR = ".crexx-build/cron";
+SOURCE = "examples/cron/cron.crexx";
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "COMPILE cREXX CRON $out"
+END RULE;
+
+RULE run_program
+  ACTION = "RUN"
+  DESCRIPTION = "RUN cREXX CRON SELFTEST"
+END RULE;
+
+BUILD "${BUILD_DIR}/cron.rxbin"
+  BUILD_NAME = cron
+  RULE = compile_program
+  INPUT = "${SOURCE}"
+END BUILD;
+
+BUILD "run-cron-selftest"
+  BUILD_NAME = run_cron_selftest
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/cron.rxbin"
+  DEPENDS_ON_BUILD = cron
+  WORK_DIR = "${BUILD_DIR}"
+  ARGUMENT = "-a" "selftest"
+END BUILD;
+
+DEFAULT_BUILD = run_cron_selftest;

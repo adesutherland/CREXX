@@ -1,0 +1,7 @@
+# m h dom mon dow  command
+MAILTO=""
+*/5 * * * *        echo every five minutes
+30 2 * * 1-5       echo weekdays 02:30
+0 9,17 * * MON-FRI echo 9 and 17 on weekdays
+@hourly            echo top of the hour
+@daily             echo midnight
